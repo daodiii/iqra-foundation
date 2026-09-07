@@ -602,7 +602,8 @@ ff(['-i', MASTER, '-an', '-vf', 'scale=1280:720', '-c:v', 'libvpx-vp9', '-crf', 
   '-row-mt', '1', `${OUT}/iqra-hero-720.webm`]);
 
 // 3. Stills for the Stage, straight from the film.
-for (const [name, t] of [['still-arafat', '2.60'], ['still-koran', '3.90']]) {
+// Cut times measured on the web film (contact sheet, 2026-09-07): Arafat 1.3–2.3 s, Quran 2.3–3.3 s.
+for (const [name, t] of [['still-arafat', '1.80'], ['still-koran', '2.80']]) {
   const png = `${OUT}/${name}.png`;
   ff(['-ss', t, '-i', MASTER, '-frames:v', '1', png]);
   await sharp(png).avif({ quality: 50 }).toFile(`${OUT}/${name}.avif`);
