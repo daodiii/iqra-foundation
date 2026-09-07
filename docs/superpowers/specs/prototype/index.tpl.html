@@ -1,0 +1,105 @@
+<title>Iqra Motion Concepts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Amiri:wght@400;700&display=swap">
+<style>{{CSS}}</style>
+
+<div class="bar">
+  <span>Iqra Foundation · bevegelse</span>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-c="a" aria-selected="true">A · Partikler</button>
+    <button class="tab" role="tab" data-c="b" aria-selected="false">B · Gjennom bokstavene</button>
+    <button class="tab" role="tab" data-c="c" aria-selected="false">C · Linjen</button>
+  </div>
+</div>
+<p class="caption" id="caption"></p>
+
+<main>
+  <section id="a" class="concept active">
+    <div class="a-hero" id="a-hero">
+      <img class="a-still" src="{{HARAM}}" alt="">
+      <canvas id="a-canvas" aria-hidden="true"></canvas>
+      <div class="a-text">
+        <h1 class="h1 h1-light"><span class="line">Iqra betyr</span><span class="line">les<i class="dot">.</i></span></h1>
+        <p class="lede lede-light">Det er det første ordet i Koranen. For oss betyr det å lese, å lære, og å snakke med folk som lurer på noe.</p>
+        <button class="ghost" id="a-replay" type="button">Se igjen</button>
+      </div>
+    </div>
+    <div class="a-scroll">
+      <div class="a-block">
+        <span class="label">Visjon</span>
+        <p class="a-words">Vi vil ha et Norge der folk kjenner islam fra ekte møter, ikke fra overskrifter. Der det er lett å spørre, og lett å få et ærlig svar.</p>
+      </div>
+      <div class="a-block">
+        <span class="label">Misjon</span>
+        <p class="a-words">Vi forteller om islam på en vennlig og ærlig måte. Vi inviterer til samtaler, svarer på spørsmål og møter folk der de er. Slik bygger vi broer, og lærer av hverandre.</p>
+        <a class="cta cta-light" href="#">Still et spørsmål</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="b" class="concept">
+    <div class="b-pin" id="b-pin">
+      <div class="b-media" id="b-media">
+        <video class="b-video" id="b-video" muted loop playsinline preload="auto" poster="{{POSTER}}"><source src="{{VIDEO}}" type="video/webm"></video>
+        <div class="b-slides" aria-hidden="true"><img src="{{HIRA}}" alt=""><img src="{{ARAFAT}}" alt=""><img src="{{KORAN}}" alt=""><img src="{{HARAM}}" alt=""></div>
+        <div class="b-scrim"></div>
+      </div>
+      <svg class="b-mask" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <mask id="b-m">
+            <rect width="1000" height="600" fill="#fff"></rect>
+            <text id="b-word" x="500" y="318" text-anchor="middle" dominant-baseline="middle" font-family="Geist, 'Segoe UI', system-ui, sans-serif" font-weight="800" font-size="290" letter-spacing="-18" fill="#000">IQRA</text>
+          </mask>
+        </defs>
+        <rect width="1000" height="600" fill="#ffffff" mask="url(#b-m)"></rect>
+      </svg>
+      <div class="b-copy">
+        <h1 class="h1 h1-light"><span class="line">Iqra betyr</span><span class="line">les<i class="dot">.</i></span></h1>
+        <p class="lede lede-light">Det er det første ordet i Koranen. For oss betyr det å lese, å lære, og å snakke med folk som lurer på noe.</p>
+        <a class="cta cta-light" href="#">Still et spørsmål</a>
+      </div>
+      <div class="b-hint">Bla nedover</div>
+    </div>
+    <div class="b-after">
+      <span class="label label-dark">Visjon</span>
+      <div class="b-kin">
+        <div class="b-kin-line" data-dir="-1">Vi vil ha et Norge</div>
+        <div class="b-kin-line" data-dir="1">der folk kjenner islam</div>
+        <div class="b-kin-line" data-dir="-1">fra ekte møter,</div>
+        <div class="b-kin-line" data-dir="1">ikke fra overskrifter.</div>
+      </div>
+      <p class="b-sub">Der det er lett å spørre, og lett å få et ærlig svar.</p>
+    </div>
+    <div class="b-mission" id="b-mission">
+      <img class="b-mission-still" src="{{KORAN}}" alt="">
+      <div class="b-mission-grad"></div>
+      <div class="b-mission-inner">
+        <div class="b-mission-text">
+          <span class="label">Misjon</span>
+          <p class="b-mission-p">Vi forteller om islam på en vennlig og ærlig måte. Vi inviterer til samtaler, svarer på spørsmål og møter folk der de er. Slik bygger vi broer, og lærer av hverandre.</p>
+          <a class="cta cta-light" href="#">Still et spørsmål</a>
+        </div>
+        <div class="b-tree" id="b-tree"><canvas id="b-treecv" aria-hidden="true"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="c" class="concept">
+    <div class="c-page" id="c-page">
+      <svg class="c-svg" viewBox="0 0 100 240" preserveAspectRatio="none" aria-hidden="true">
+        <path id="c-path" d="M 98 8 C 90 0 78 2 74 10 C 70 18 82 22 80 14 C 78 8 70 12 72 18 C 74 26 72 31 66 31 L 30 31 C 20 31 12 33 12 42 L 12 118 L 92 118 L 92 172 L 12 172 L 12 218 C 12 226 18 228 24 228 L 60 228"></path>
+        <circle id="c-pen" r="0.5" cx="98" cy="10"></circle>
+      </svg>
+      <div class="c-ar" id="c-ar" lang="ar">اقرأ</div>
+      <div class="c-h1"><h1 class="h1">Les<i class="dot">.</i></h1></div>
+      <p class="c-lede lede c-reveal">Ett ord. Det første som ble åpenbart. Og det første vi sier til deg: les, spør, og snakk med oss.</p>
+      <div class="c-block c-visjon c-reveal"><span class="label label-dark">Visjon</span><p class="c-big">Vi vil ha et Norge der folk kjenner islam fra ekte møter, ikke fra overskrifter. Der det er lett å spørre, og lett å få et ærlig svar.</p></div>
+      <img class="c-still c-reveal" src="{{ARAFAT}}" alt="">
+      <div class="c-block c-misjon c-reveal"><span class="label label-dark">Misjon</span><p class="c-mid">Vi forteller om islam på en vennlig og ærlig måte. Vi inviterer til samtaler, svarer på spørsmål og møter folk der de er. Slik bygger vi broer, og lærer av hverandre.</p></div>
+      <a class="c-cta c-reveal" href="#">Still et spørsmål</a>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script>{{JS}}</script>

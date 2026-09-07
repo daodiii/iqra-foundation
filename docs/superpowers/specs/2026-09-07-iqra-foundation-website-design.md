@@ -179,21 +179,16 @@ Motion (time-based, triggered once at `start: 'top 75%'`): line *i* comes from `
 
 Layout: a section over the Quran still (object-fit cover, opacity 0.62 over night, vertical gradient to 0.85 night at the bottom). Inside, a two-column grid bottom-aligned: the text block left (label, mission text at 40 / 26 px, CTA), the **tree** right (`height: min(70vh, 640px)`). On phones the grid is one column with the tree above the text at 42vh.
 
-**The tree** (`components/mission/Tree.tsx`, inline SVG, viewBox `0 0 200 300`): a crimson seed (`circle r=4.5` at 100,289, the logo's dot), a stem `M100 288 C 102 250 96 210 100 160 C 103 130 99 110 100 78`, and three branches for the three actions in the mission text — `M99 196 C 82 182 62 166 46 134`, `M101 156 C 120 144 142 130 160 98`, `M100 116 C 90 98 76 84 64 56` — all `stroke: rgba(255,255,255,.92)`, width 1.6, round caps; two pale-gold leaves (`#f0d9a0`, path `M0 0 C 3 -7 11 -9 16 -3 C 11 3 3 4 0 0 Z`) at each branch tip and at the stem top, rotated to fan outward. Strokes use `stroke-dasharray = stroke-dashoffset = getTotalLength()` so they can draw; leaves and seed start at scale 0.
+**The tree** (`components/mission/tree.ts` + `Tree.tsx`, a `<canvas>` filling a `min(72vh, 680px)` box; 46vh on phones) is a port of the tree on quranic-grammar.com, whose working prototype is committed at `docs/superpowers/specs/prototype/app.js` (`buildIqraTree`). The build copies that function into TypeScript without changing its behaviour:
 
-**Motion, desktop and tablet (≥768 px, motion allowed):** the section is pinned over `+=120%` with `scrub: 0.6`; one timeline (time 0 → ~1.17):
+- **Generation:** a seeded random walk (`makeRnd`, multiplicative congruential) grows quadratic-bezier segments from the root: depth 0 always splits into **three limbs** (the three actions in the mission text), deeper levels into 2–3, to depth 4; each segment bends toward straight up (`lerp(ang, −π/2, 0.14)`), bows sideways, and shortens by 0.6–0.76. Seeds 9…199 are tried until a tree has 28–60 tips and a canopy balance `|minX+maxX|/(maxX−minX) < 0.16`. Roots: one recursive spread of depth 2 below the ground line.
+- **Fit:** the canopy is scaled to the box (`GY = 0.86 H`, `TOPY = 0.06 H`, width ≤ 0.92 W), centred with 30 % of its natural lean kept.
+- **Growth:** every segment has a birth time `0.3 + depth × 0.5 + jitter` and draws over 0.6 s of growth time; each tip light is born 0.62 after its twig. The seed (crimson `#ab5263` dot with a gold basin glow and a rose core, additive blending) appears over the first 0.3. Growth time `T` reaches 3.8 at the end of the pin; the tree is complete around 3.3; past 3.0 light-leaves occasionally drift down from the tips.
+- **Look:** strokes `rgba(227,179,92, 0.5 + 0.28 × (1 − depth/4))`, widths 6.5 / 4.2 / 2.8 / 1.8 / 1.1 by depth, round caps; roots at 0.26 alpha; lights: pale-gold cores `rgba(252,240,212)` r 1.8–4 with a 4.6× radial glow, twinkling; a ground line gradient at `GY`; four drifting mist ellipses; wind sway `sin(0.75 t + 0.004 y + phase) × 6 × height^1.8` on branches and lights. The canvas renders at `min(devicePixelRatio, 2)`, only while on screen (IntersectionObserver), and rebuilds on resize (debounced 240 ms).
 
-| time | tween |
-|---|---|
-| 0 → 1 | still scale 1.00 → 1.06, ease none |
-| 0.08 → 0.38 | text block y 40 → 0, opacity 0 → 1, expo.out |
-| 0.12 → 0.20 | seed scale 0 → 1, `back.out(2)` |
-| 0.18 → 0.58 | stem draws (dashoffset → 0), ease none |
-| 0.38 → 0.58 · 0.48 → 0.68 · 0.58 → 0.78 | branches 1, 2, 3 draw |
-| 0.70 → ~1.07 | leaves scale 0 → 1, `back.out(1.7)`, stagger 0.035 |
-| → 1.17 | hold |
+**Motion, desktop and tablet (≥768 px, motion allowed):** the section is pinned over `+=140%` with `scrub: 0.6`. On every ScrollTrigger update, `tree.setT(progress × 3.8)`. The same timeline drifts the still scale 1.00 → 1.06 across the pin and raises the text block (y 40 → 0, opacity 0 → 1, expo.out) between 0.08 and 0.38.
 
-**Phones:** no pin; the same timeline runs once, time-based over 3.2 s, when the section reaches 60 % of the viewport. **Reduced motion:** everything at its final state, no pin.
+**Phones:** no pin; when the section reaches 60 % of the viewport, `T` runs 0 → 3.8 over 4.5 s (linear) once, and the text block rises at the same time. **Reduced motion:** `T = 99` (fully grown, no wind, no twinkle, no leaves), text at rest, no pin.
 
 ## 9. Responsive rules
 
