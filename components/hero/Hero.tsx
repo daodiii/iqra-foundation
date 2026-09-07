@@ -69,6 +69,12 @@ export function Hero() {
               end: '+=300%',
               pin: true,
               scrub: 0.5,
+              // This trigger is built inside document.fonts.ready, so it is created
+              // last, and GSAP refreshes in creation order unless told otherwise.
+              // Every section below measures its start against our pin spacing, so we
+              // must refresh first: highest priority wins, and the sections carry
+              // descending priorities in document order (hero 2, visjon 1, rest 0).
+              refreshPriority: 2,
               onUpdate: (st) => setWordmarkOnDark(st.progress > 0.6),
             },
           });

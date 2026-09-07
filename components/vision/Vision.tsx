@@ -34,6 +34,11 @@ export function Vision() {
         tree?.setT(99);
         return () => tree?.destroy();
       }
+      // The section is a full viewport tall, so its copy is readable long before the
+      // trigger fires. Hide the lines here — in JS, so a failed script leaves the copy
+      // visible — or the fromTo below snaps them back out and replays them on screen.
+      // Reduced motion returns above and keeps its CSS rest state (vision.module.css).
+      gsap.set(lines, { opacity: 0 });
       const linesIn = () =>
         gsap.fromTo(lines,
           { x: (i, el) => 120 * dir(el), skewX: (i, el) => -8 * dir(el), opacity: 0 },
@@ -42,11 +47,13 @@ export function Vision() {
       mm.add('(min-width: 768px)', () => {
         ScrollTrigger.create({
           trigger: section, start: 'top top', end: '+=160%', pin: true, scrub: 0.6,
-          // The hero pins above us but builds its trigger inside document.fonts.ready,
-          // so ours is created first. Refresh order decides what a trigger measures:
-          // without this we would size ourselves against a hero that has no pin spacing
-          // yet and start 2700px too early. Lower priority refreshes later (spec 7).
-          refreshPriority: -1,
+          // Refresh order decides what a trigger measures, and it is creation order
+          // unless priorities say otherwise. The hero builds its trigger inside
+          // document.fonts.ready, so it is created after us; without an explicit
+          // priority we would size ourselves against a hero with no pin spacing and
+          // start 2700px too early. Highest refreshes first, so the sections descend
+          // in document order: hero 2, us 1, everything below the default 0.
+          refreshPriority: 1,
           onEnter: () => { linesIn(); setWordmarkOnDark(false); },
           onEnterBack: () => setWordmarkOnDark(false),
           // A resize re-runs the hero's onUpdate, which would paint the wordmark white
@@ -57,19 +64,26 @@ export function Vision() {
       });
       mm.add('(max-width: 767px)', () => {
         const p = { T: 0 };
-        let grown = false;
-        // The growth runs once, but the wordmark has to answer every time this white
-        // section arrives under the header, so the trigger itself is not `once` (spec 9).
+        // The tree starts growing as soon as it is properly on screen.
         ScrollTrigger.create({
-          trigger: section, start: 'top 60%', refreshPriority: -1,
+          trigger: section, start: 'top 60%', once: true, refreshPriority: 1,
           onEnter: () => {
-            setWordmarkOnDark(false);
-            if (grown) return;
-            grown = true;
             linesIn();
             gsap.to(p, { T: GROW, duration: 5, ease: EASE.none, onUpdate: () => tree?.setT(p.T) });
           },
+        });
+        // The wordmark waits for the header to actually be over us. At `top 60%` this
+        // section is only the bottom 40% of the screen and the header still sits on the
+        // hero's dark film, where navy on #0b1118 is ~1.5:1 — invisible. The hero pins
+        // on phones too (no matchMedia guard) and leaves data-on-dark="true" behind, so
+        // the handoff has to happen at `top top`, as it does on desktop (spec 9).
+        ScrollTrigger.create({
+          trigger: section, start: 'top top', refreshPriority: 1,
+          onEnter: () => setWordmarkOnDark(false),
           onEnterBack: () => setWordmarkOnDark(false),
+          // A resize re-runs the hero's onUpdate, which would repaint the wordmark
+          // white over our white section; say it once more while we hold the header.
+          onRefresh: (self) => { if (self.isActive) setWordmarkOnDark(false); },
         });
       });
       return () => { mm.revert(); tree?.destroy(); };
