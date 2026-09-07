@@ -1,0 +1,40 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--margin);
+  pointer-events: none; /* only the wordmark is clickable; the film underneath stays reachable */
+}
+
+.wordmark {
+  pointer-events: auto;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-navy);
+  opacity: 0; /* the hero timeline brings it in once the letters have opened */
+  transition: color 300ms var(--ease-out-expo);
+}
+
+.wordmark[data-on-dark="true"] {
+  color: #ffffff;
+}
+
+@media (max-width: 767px) {
+  .wordmark {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordmark {
+    opacity: 1;
+  }
+}

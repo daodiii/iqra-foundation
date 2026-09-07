@@ -1,0 +1,29 @@
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 40px var(--margin);
+  border-top: 1px solid var(--color-hairline);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 300ms var(--ease-out-expo);
+}
+
+.link:hover {
+  color: var(--color-crimson);
+}
+
+@media (max-width: 767px) {
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
