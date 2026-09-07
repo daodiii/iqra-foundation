@@ -15,6 +15,9 @@ HTMLMediaElement.prototype.load = vi.fn();
 HTMLMediaElement.prototype.pause = vi.fn();
 HTMLMediaElement.prototype.canPlayType = vi.fn().mockReturnValue('probably');
 
+// jsdom has no layout, so it has no scrollTo; ScrollTrigger's pin calls it on setup.
+window.scrollTo = () => {};
+
 class IO { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } }
 Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: IO });
 

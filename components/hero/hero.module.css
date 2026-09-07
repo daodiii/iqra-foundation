@@ -1,0 +1,156 @@
+.hero {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--color-film-black);
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+}
+
+.film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mask {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(11, 17, 24, 0) 40%, rgba(11, 17, 24, 0.82) 100%);
+  opacity: 0;
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.copy {
+  position: absolute;
+  left: var(--margin);
+  right: var(--margin);
+  bottom: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  align-items: flex-start;
+  color: #ffffff;
+  opacity: 0; /* the timeline brings it in over the full film; it is in the DOM from the start */
+}
+
+.h1 {
+  margin: 0;
+  font-size: 120px;
+  line-height: 0.94;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+}
+
+.line {
+  display: block;
+}
+
+.dot {
+  color: var(--color-crimson);
+}
+
+.lede {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.5;
+  max-width: 480px;
+  color: rgba(255, 255, 255, 0.82);
+  text-wrap: pretty;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-navy);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+@media (max-width: 767px) {
+  .copy {
+    bottom: 64px;
+  }
+
+  .h1 {
+    font-size: 60px;
+  }
+
+  .lede {
+    font-size: 17px;
+  }
+
+  .cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Reduced motion: the poster sits inside the closed letters; the copy follows
+   in normal flow on white (spec 6.5). */
+@media (prefers-reduced-motion: reduce) {
+  .hero {
+    height: auto;
+    background: #ffffff;
+  }
+
+  .stage {
+    position: relative;
+    height: 100svh;
+    /* The mask rect overflows by design; here the stage is positioned and the copy
+       is not, so without this clip the white rect would paint over the copy. */
+    overflow: hidden;
+    background: var(--color-film-black);
+  }
+
+  .hint {
+    display: none;
+  }
+
+  .copy {
+    position: static;
+    opacity: 1;
+    color: var(--color-navy);
+    padding: 48px 0 72px;
+    margin: 0 var(--margin);
+  }
+
+  .lede {
+    color: var(--color-ink-soft);
+  }
+
+  .cta {
+    background: var(--color-navy);
+    color: #ffffff;
+  }
+}

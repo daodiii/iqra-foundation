@@ -1,13 +1,13 @@
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
-import { site } from '@/content/site.no';
+import { Hero } from '@/components/hero/Hero';
 
 export default function Page() {
   return (
     <>
       <Header />
       <main>
-        <h1 style={{ padding: '120px var(--margin)' }}>{site.hero.h1Lines.join(' ')}.</h1>
+        <Hero />
       </main>
       <Footer />
     </>
