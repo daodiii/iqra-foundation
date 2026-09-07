@@ -229,7 +229,7 @@ function buildVisionTree(stage) {
     if (p <= 0) return;
     const ws = isRoot ? rootWidths() : widths();
     const w0 = ws[s.depth] || 1, w1 = ws[s.depth + 1] || w0 * 0.55;
-    ctx.strokeStyle = isRoot ? 'rgb(128,138,152)' : (s.depth >= 3 ? 'rgb(84,98,116)' : 'rgb(' + NAVY + ')');
+    ctx.strokeStyle = isRoot ? 'rgb(74,90,110)' : (s.depth >= 3 ? 'rgb(84,98,116)' : 'rgb(' + NAVY + ')');
     ctx.lineCap = 'round';
     let [px, py] = quad(s, 0);
     if (!isRoot) px += windX(py, s.ph, t);
@@ -254,16 +254,17 @@ function buildVisionTree(stage) {
     for (const s of rootSegs) drawSeg(s, t, true);
     for (const s of segs) drawSeg(s, t, false);
 
-    // the seed: the crimson dot, with a soft halo while it wakes
+    // the seed: the crimson dot wakes with a soft halo, then is absorbed as the trunk takes over
     const sp = clamp(T / 0.3, 0, 1);
-    if (sp > 0) {
-      const halo = clamp(1 - (T - 0.3) / 1.2, 0, 1) * 0.35;
+    const seedAlpha = sp * (1 - clamp((T - 0.35) / 0.6, 0, 1));
+    if (seedAlpha > 0) {
+      const halo = clamp(1 - (T - 0.3) / 0.9, 0, 1) * 0.35;
       if (halo > 0) {
         const g = ctx.createRadialGradient(W * 0.5, GY, 0, W * 0.5, GY, 60 * K);
         g.addColorStop(0, 'rgba(' + CRIMSON + ',' + halo + ')'); g.addColorStop(1, 'rgba(' + CRIMSON + ',0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(W * 0.5, GY, 60 * K, 0, 6.2832); ctx.fill();
       }
-      ctx.fillStyle = '#ab5263'; ctx.beginPath(); ctx.arc(W * 0.5, GY, 7 * K * sp, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(' + CRIMSON + ',' + seedAlpha + ')'; ctx.beginPath(); ctx.arc(W * 0.5, GY, 7 * K * sp, 0, 6.2832); ctx.fill();
     }
 
     // leaf-lights at the tips
