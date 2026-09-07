@@ -74,6 +74,11 @@ export function Hero() {
               // Every section below measures its start against our pin spacing, so we
               // must refresh first: highest priority wins, and the sections carry
               // descending priorities in document order (hero 2, visjon 1, rest 0).
+              // Do not "simplify" this key away: what turns sorting on is the key's
+              // PRESENCE — ScrollTrigger.js:1036 sets _sort on `"refreshPriority" in vars`
+              // — and the values are only the tie-break before the comparator (:2655)
+              // falls back to document position. Drop the keys and refreshes fall back to
+              // creation order, which puts us last again and Visjon 2700px too early.
               refreshPriority: 2,
               onUpdate: (st) => setWordmarkOnDark(st.progress > 0.6),
             },

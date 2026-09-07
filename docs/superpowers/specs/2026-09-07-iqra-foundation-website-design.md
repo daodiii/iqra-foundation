@@ -259,3 +259,63 @@ Breakpoints: phone < 768, tablet 768–1023, desktop ≥ 1024. Header 72 px ever
 - Hosting on Vercel assumed, not part of v1.
 - The loop's hard cut from the Haram back to the cave is accepted as part of the montage; a crossfaded seamless loop can be made later if it bothers anyone.
 - The tree's shape is deterministic (seeded) at a given box size, so it looks the same on every visit at the same viewport; different viewports may pick a different seed.
+
+## 16. Corrections found during implementation
+
+Written after the v1 build (branch `feat/v1-landing`). The numbered sections above stand as
+they were written; this records what building against them disproved, one line of evidence
+each.
+
+**§3 Design tokens.** `muted` #8a94a3 is **3.07:1 on white** — AA wants 4.5:1 for normal
+text, so it passes only at 24px, or 18.66px bold. It is a dark-ground colour: right for
+«BLA NEDOVER» on film-black, wrong for «VISJON» and the footer, both 12px on white, where
+Lighthouse's `color-contrast` audit scores 0. The three on-white usages now point at
+`ink-soft` #4b586a (7.23:1); the token's value is unchanged. — Also: the motion vocabulary
+lists `expo.out`, `power2.inOut`, `none` and `power2.in`, but the hero's arrival tween uses
+**`power2.out`**, which is not in the list.
+
+**§7 Visjon.** `scrub: 0.6` on the tree's trigger **does nothing**. GSAP wires the scrub
+tween inside `if (animation)` (ScrollTrigger.js:1067; `self.scrubDuration(scrub)` at :1071)
+and this trigger is bare — it drives the tree from `onUpdate` instead — so `self.progress`
+is raw scroll: at 1440px of pin a ~100px wheel notch steps growth time by 0.26 of 3.8, with
+no catch-up. The growth is therefore unsmoothed, and §7's intent is unmet on the section's
+centrepiece. — Also: the birth formula does not order a branch after its parent. Measured
+on the shipped tree (83 segments), **67 segments start drawing before their parent has
+finished**, worst overlap 0.326 growth units, and each limb's name lands ~0.8–1.0 before
+the branch it names has finished (names at 2.14–2.34, subtrees complete at 3.11–3.14). The
+lights are the one part that is safe: a tip's light is born 0.62 after a segment that draws
+in 0.6.
+
+**§9 Responsive rules.** Written for desktop only. It does not say what happens on phones,
+where nothing pins after the hero so every wordmark handoff needs its own trigger; and it
+does not mention that a ScrollTrigger refresh re-runs the hero's scrubbed `onUpdate` and
+repaints the wordmark, which is why three triggers carry an `onRefresh` guard.
+
+**§10 Performance budget.** "The LCP element is the poster (preloaded from `layout.tsx`)"
+does not hold — the LCP element is **the hero's SVG mask `<text>` node**, with 84% of LCP
+time spent in render delay. The preload is present and correctly pathed; the letters-mask
+technique is simply what paints last. — The **160 KB gz JS budget is not achievable on the
+mandated stack**: `/` measures **222.1 KiB gz**, of which **169.4 KiB is the shared Next
+16.3.4 + React 19 App Router floor** that even `/_not-found` pays. Not a bundler artefact —
+`next build --webpack` gives 220.4 KiB, within 1.7 KiB. Deleting GSAP entirely would still
+miss the budget.
+
+**§11 Accessibility.** It asks for visible focus rings but says nothing about focus landing
+on a **transparent** control. Both interactive elements start at opacity 0 — the wordmark
+until the hero opens, the CTA until the copy arrives — so the first Tab stop on `/` is an
+invisible link with an invisible focus ring. Still open.
+
+**§12 Error handling.** "The mask origin is recomputed on `refreshInit`" is unnecessary, and
+was not implemented. The SVG has a fixed `viewBox 0 0 1000 600`, so `getStartPositionOfChar`
+and `getBBox` return user units that do not change with the viewport; the prototype
+measures once as well.
+
+**§13 Testing.** The Playwright list never asks the phone project for the wordmark colour,
+yet **both** phone bugs found by hand during the build were wordmark handoffs. The phone
+scenario should assert `data-on-dark` — false at Visjon's top, true at Misjon's — and now
+does.
+
+**§15 Assumptions.** "Different viewports may pick a different seed" is false. `generate()`
+takes no box: it searches seeds 9…399 against shape criteria alone, and `fit()` maps the
+chosen tree into whatever box it is handed afterwards. It is the same tree at every
+viewport.

@@ -28,6 +28,15 @@ const canvasHasInk = (page: Page) => page.evaluate(() => {
   return false;
 });
 
+/** The three limb names then the root, in the order the tree paints them. From the content
+ *  file, so renaming a limb there does not leave a test asserting a name nothing renders. */
+const TREE_NAMES = [...site.vision.tree.limbs, site.vision.tree.root];
+
+/** `data-on-dark` is the whole wordmark contract: navy over white, white over the film and
+ *  the night still. It flips on `top top` triggers whose `isActive` is `scroll > start`, so
+ *  read it a few pixels INSIDE a section, never at exactly its top. */
+const wordmark = (page: Page) => page.locator('#site-wordmark');
+
 /**
  * The three pins are the page's whole scroll geometry, and nothing below the e2e level
  * can see them: vitest.setup.ts stubs matchMedia to `matches: false`, so no `mm.add`
@@ -76,11 +85,43 @@ test('desktop: visjon pins, the lines arrive, the tree grows and its names appea
   await expect(page.locator('#visjon [data-line]').first()).toHaveCSS('opacity', '1', { timeout: 5_000 });
   await page.evaluate((y) => window.scrollTo(0, y + window.innerHeight * 1.6), top);
   await page.waitForTimeout(2500);
-  for (const name of ['Dialog', 'Brobygging', 'Kunnskap', 'Iqra']) {
+  for (const name of TREE_NAMES) {
     await expect(page.locator('#visjon [data-limb], #visjon [data-root]').filter({ hasText: name })).toHaveCSS('opacity', '1', { timeout: 5_000 });
   }
   expect(await canvasHasInk(page)).toBe(true);
-  await expect(page.locator('#site-wordmark')).toHaveAttribute('data-on-dark', 'false');
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
+});
+
+/**
+ * Three `onRefresh` guards exist for this and nothing pinned them: on a refresh the hero's
+ * scrubbed `onUpdate` re-fires at progress 1 and paints the wordmark white, which over
+ * Visjon's white section is invisible. Visjon refreshes after the hero (priority 1 vs 2)
+ * and says it again. Resize the WIDTH only: every pin length is a percentage of viewport
+ * height, so the document geometry and the scroll position we are standing at are
+ * untouched, while `resize` still puts ScrollTrigger through a full `_refreshAll`.
+ */
+test('desktop: a resize while Visjon is pinned keeps the wordmark navy and the tree on screen', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'pinned layout is desktop only');
+  await pastHero(page);
+  const top = await docTop(page, '#visjon');
+  // Deep in the pin, so the tree is grown and there is something to lose.
+  await page.evaluate((y) => window.scrollTo(0, y + window.innerHeight * 1.5), top);
+  await page.waitForTimeout(2500);
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
+  expect(await canvasHasInk(page)).toBe(true);
+
+  await page.setViewportSize({ width: 1180, height: 900 });
+  await page.waitForTimeout(1200); // ScrollTrigger debounces resize by 200ms; the tree's own is 240ms
+
+  // Only meaningful if we are still where we think we are, so say so rather than assume it.
+  const pinnedTop = await page.evaluate(() => document.getElementById('visjon')!.getBoundingClientRect().top);
+  expect(Math.abs(pinnedTop), 'the resize moved us out of Visjon\'s pin').toBeLessThanOrEqual(1);
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
+  // The resize resized the canvas, which wipes its bitmap. It has to come back: the names
+  // are repositioned by the same function, so a blank canvas leaves labels floating in
+  // white. tree.ts repaints synchronously at the end of size() rather than trusting the
+  // frame loop, whose visibility gate can be stale for a batch of observer entries.
+  expect(await canvasHasInk(page), 'the tree went blank after the resize').toBe(true);
 });
 
 test('desktop: misjon pins, the text arrives and the wordmark turns white', async ({ page, isMobile }) => {
@@ -95,21 +136,34 @@ test('desktop: misjon pins, the text arrives and the wordmark turns white', asyn
   // element actually carrying the copy and the call to action.
   await expect(mission).toContainText(site.mission.text);
   await expect(mission.getByRole('link', { name: site.hero.cta })).toHaveAttribute('href', `mailto:${site.contact.email}`);
-  await expect(page.locator('#site-wordmark')).toHaveAttribute('data-on-dark', 'true');
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'true');
   await expect(page.locator('.pin-spacer')).toHaveCount(3); // hero, visjon, misjon
 });
 
-test('phone: no pins after the hero; the tree grows by itself and the text arrives', async ({ page, isMobile }) => {
+/**
+ * The wordmark assertions are the point of this test as much as the tree is: both phone
+ * bugs found by hand during the build were wordmark handoffs — white on Visjon's white,
+ * then navy on the night still — and neither is visible to any check above this level,
+ * because the phone handoffs live in `mm.add('(max-width: 767px)')` branches that jsdom
+ * never enters (vitest.setup.ts stubs matchMedia to `matches: false`).
+ */
+test('phone: no pins after the hero; the tree grows, the wordmark hands off, the text arrives', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'stacked layout is the phone layout');
   await pastHero(page);
   await expect(page.locator('.pin-spacer')).toHaveCount(1); // only the hero pins on phones
   const top = await docTop(page, '#visjon');
-  await page.evaluate((y) => window.scrollTo(0, y), top);
-  for (const name of ['Dialog', 'Brobygging', 'Kunnskap', 'Iqra']) {
+  // +10, not the exact top: both handoffs sit on `top top` triggers and ScrollTrigger's
+  // isActive is `scroll > start`, so at exactly the top the old colour still stands.
+  await page.evaluate((y) => window.scrollTo(0, y + 10), top);
+  // Navy on Visjon's white. The hero pins on phones too and leaves data-on-dark="true"
+  // behind, so this is a real handoff, not the initial attribute never having changed.
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
+  for (const name of TREE_NAMES) {
     await expect(page.locator('#visjon [data-limb], #visjon [data-root]').filter({ hasText: name })).toHaveCSS('opacity', '1', { timeout: 8_000 });
   }
   const mtop = await docTop(page, '#misjon');
-  await page.evaluate((y) => window.scrollTo(0, y), mtop);
+  await page.evaluate((y) => window.scrollTo(0, y + 10), mtop);
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'true'); // white over the night still
   const mission = page.locator('[data-mission-text]');
   await expect(mission).toHaveCSS('opacity', '1', { timeout: 5_000 });
   await expect(mission).toContainText(site.mission.text);

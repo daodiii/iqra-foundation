@@ -8,7 +8,7 @@
   font: 500 12px/1 var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: var(--color-ink-soft);
 }
 
 .link {

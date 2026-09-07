@@ -130,6 +130,11 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
   const model = generate();
   let tree = fit(model, { W: 1, H: 1 });
   let T = 0, raf = 0, visible = true;
+  // Under reduced motion nothing in `draw` depends on the clock — no wind, no twinkle,
+  // no leaves — so every frame paints the same ~1200 strokes and ~100 gradients. `painted`
+  // says the canvas already shows the current T at the current size; the frame loop then
+  // skips the repaint until something invalidates it (a resize, or a new T).
+  let painted = false;
   const leaves = Array.from({ length: 10 }, () => ({ live: false, x: 0, y: 0, vy: 0, ph: 0, life: 0, span: 0, s: 0 }));
   const widths = () => [30, 14, 7, 3.4, 1.8].map((w) => w * tree.K);
   const rootWidths = () => [18, 9, 4.5].map((w) => w * tree.K);
@@ -140,6 +145,11 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
     tree = fit(model, { W, H });
     tree.limbs.forEach((l, i) => { const el = opts.limbLabels[i]; if (el) { el.style.left = l.x + 'px'; el.style.top = l.y + 'px'; } });
     if (opts.rootLabel) opts.rootLabel.style.top = H - 6 + 'px';
+    // Setting canvas.width wiped the bitmap, so repaint now rather than waiting for the
+    // frame loop: `visible` can be momentarily stale (see the observer below), and under
+    // reduced motion the loop is not repainting at all.
+    painted = false;
+    draw(performance.now() / 1000);
   }
 
   const windX = (y: number, ph: number, t: number) => {
@@ -223,18 +233,37 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
       const a = Math.min(1, lf.life / 0.5) * Math.min(1, (lf.span - lf.life) / 0.8) * 0.6;
       ctx!.fillStyle = `rgba(${GOLD},${a})`; ctx!.fillRect(lf.x, lf.y, lf.s, lf.s);
     }
+    painted = true;
   }
 
-  function frame(now: number) { raf = requestAnimationFrame(frame); if (!visible) return; draw(now / 1000); }
+  function frame(now: number) {
+    raf = requestAnimationFrame(frame);
+    if (!visible) return;
+    // Someone who asked for less motion gets no motion here, so once the frame is on the
+    // canvas there is nothing to redraw until T or the box changes.
+    if (opts.reduced && painted) return;
+    draw(now / 1000);
+  }
   size();
   raf = requestAnimationFrame(frame);
-  const io = new IntersectionObserver((es) => { visible = es[0].isIntersecting; }, { threshold: 0.02 });
+  // Take the LAST entry, not the first. Entries are delivered oldest-first and several
+  // arrive together whenever the main thread was busy — a GSAP _refreshAll after a resize
+  // is exactly that — so `es[0]` on a [false, true] batch leaves `visible` false with the
+  // box on screen, and nothing repaints until the next intersection change.
+  const io = new IntersectionObserver((es) => { visible = es[es.length - 1].isIntersecting; }, { threshold: 0.02 });
   io.observe(stage);
   let rt = 0;
   const onResize = () => { window.clearTimeout(rt); rt = window.setTimeout(size, 240); };
   window.addEventListener('resize', onResize);
   return {
-    setT: (v) => { T = v; },
-    destroy() { cancelAnimationFrame(raf); io.disconnect(); window.removeEventListener('resize', onResize); },
+    // A new growth time invalidates the canvas; under reduced motion this is the only
+    // thing that ever asks the frame loop to paint again.
+    setT: (v) => { if (v !== T) { T = v; painted = false; } },
+    destroy() {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+      window.clearTimeout(rt);
+      window.removeEventListener('resize', onResize);
+    },
   };
 }

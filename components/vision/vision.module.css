@@ -22,7 +22,7 @@
   font: 500 12px/1 var(--font-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: var(--color-ink-soft);
 }
 
 .lines {

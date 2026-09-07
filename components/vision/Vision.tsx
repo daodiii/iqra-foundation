@@ -53,6 +53,11 @@ export function Vision() {
           // priority we would size ourselves against a hero with no pin spacing and
           // start 2700px too early. Highest refreshes first, so the sections descend
           // in document order: hero 2, us 1, everything below the default 0.
+          // Do not "simplify" this key away: what turns sorting on is the key's PRESENCE
+          // — ScrollTrigger.js:1036 sets _sort on `"refreshPriority" in vars` — and the
+          // values are only the tie-break before the comparator (:2655) falls back to
+          // document position. Delete the keys and the refresh reverts to creation order,
+          // which is the 2700px bug again.
           refreshPriority: 1,
           onEnter: () => { linesIn(); setWordmarkOnDark(false); },
           onEnterBack: () => setWordmarkOnDark(false),

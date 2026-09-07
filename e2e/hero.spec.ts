@@ -82,8 +82,10 @@ test.describe('reduced motion', () => {
 
   test('nothing pins or plays; the copy and the wordmark are simply there', async ({ page }) => {
     await page.goto('/');
-    // The src is only set from the client effect, so this is proof that the effect ran
-    // and took the reduced branch — without it "no pins" would also pass before hydration.
+    // The src is only set from the client effect, so this is proof that the effect RAN —
+    // without it "no pins" would also pass before hydration. It says nothing about which
+    // branch was taken: the src is assigned before the reducedMotion early return. The
+    // pin-spacer count and `paused` below are what establish the reduced branch.
     await expect(page.locator('#hero video')).toHaveAttribute('src', /iqra-loop-\d+\.(webm|mp4)$/);
     await expect(page.locator('.pin-spacer')).toHaveCount(0);
     await expect(page.locator('[data-copy]')).toBeVisible();
