@@ -1,0 +1,117 @@
+.vision {
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.inner {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 48px;
+  padding: 100px var(--margin) 60px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.label {
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.line {
+  font-size: clamp(26px, 3.6vw, 52px);
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: var(--color-navy);
+  will-change: transform;
+}
+
+.sub {
+  margin: 0;
+  font-size: clamp(17px, 1.4vw, 21px);
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+  max-width: 520px;
+}
+
+.tree {
+  position: relative;
+  width: 100%;
+  height: min(76vh, 720px);
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.limbName {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--color-navy);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rootName {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .inner {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 96px var(--margin) 48px;
+    gap: 24px;
+  }
+
+  .tree {
+    order: -1;
+    height: 52vh;
+  }
+
+  .limbName {
+    font-size: 14px;
+  }
+
+  .rootName {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .limbName,
+  .rootName {
+    opacity: 1;
+  }
+}
