@@ -5,7 +5,7 @@ if (reduced) document.body.classList.add('reduced');
 
 const captions = {
   a: 'A · Partikler. Lyset samler seg til ordet اقرأ, og går i oppløsning til en stjernehimmel over Mekka. Ordene under blir skarpe ett og ett når du blar.',
-  b: 'B · Gjennom bokstavene. Filmen spilles inne i bokstavene IQRA. Bla nedover, og bokstavene åpner seg til filmen fyller skjermen. Visjonen kommer inn fra sidene.',
+  b: 'B · Gjennom bokstavene. Filmen spilles inne i bokstavene IQRA. Bla nedover, og bokstavene åpner seg til filmen fyller skjermen. Så vokser et tre fra et frø: roten er Iqra, greinene er Dialog, Brobygging og Kunnskap.',
   c: 'C · Linjen. Én linje tegner hele siden: skriver ordet, understreker «Les.», rammer inn bildet, og ender som det røde punktumet. Pennespissen er prikken fra logoen.',
 };
 
@@ -84,6 +84,7 @@ const A = (() => {
     phase = 'gather'; t0 = performance.now(); last = 0;
     raf = requestAnimationFrame(frame);
   }
+  function onResize() { if (phase !== 'idle') start(); }
 
   return {
     init() {
@@ -106,46 +107,52 @@ const A = (() => {
     },
     destroy() { cancelAnimationFrame(raf); phase = 'idle'; window.removeEventListener('resize', onResize); },
   };
-  function onResize() { if (phase !== 'idle') start(); }
 })();
 
-/* ---------- The tree: three limbs from a seed, then twigs, lights, wind ---------- */
-function buildIqraTree(stage) {
+/* ---------- The vision tree: a seed, a fat root called Iqra, three limbs with names ---------- */
+function buildVisionTree(stage) {
   const cv = stage.querySelector('canvas');
   const ctx = cv.getContext('2d');
   const DPR = Math.min(devicePixelRatio || 1, 2);
-  const MAXD = 4, WIDTHS = [6.5, 4.2, 2.8, 1.8, 1.1], ROOTW = [3.2, 1.9, 1.1];
+  const limbLabels = [...stage.querySelectorAll('.tree-label')];      // left to right: Dialog, Brobygging, Kunnskap
+  const rootLabel = stage.querySelector('.tree-root-label');
+  const MAXD = 4;
+  const NAVY = '42,57,75', GOLD = '201,154,63', CRIMSON = '171,82,99';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, k) => a + (b - a) * k;
   const makeRnd = (seed) => { let s = seed; return () => { s = (s * 16807) % 2147483647; return s / 2147483647; }; };
-  let W = 0, H = 0, GY = 0, TOPY = 0, segs = [], rootSegs = [], lights = [], mist = [], leaves = [];
+  let W = 0, H = 0, GY = 0, TOPY = 0, K = 1, segs = [], rootSegs = [], lights = [], leaves = [], limbs = [];
   let T = 0, raf = 0, visible = true;
+  const widths = () => [30, 14, 7, 3.4, 1.8].map((w) => w * K);
+  const rootWidths = () => [18, 9, 4.5].map((w) => w * K);
 
   function genTree() {
-    for (let seed = 9; seed < 200; seed++) {
+    for (let seed = 9; seed < 400; seed++) {
       const rnd = makeRnd(seed);
       segs = []; const tips = [];
       (function branch(x, y, ang, len, depth, parent) {
-        ang = lerp(ang, -Math.PI / 2, depth === 0 ? 0 : 0.14);
+        ang = lerp(ang, -Math.PI / 2, depth === 0 ? 0 : 0.12);
         const x1 = x + Math.cos(ang) * len, y1 = y + Math.sin(ang) * len;
-        const perp = ang + Math.PI / 2, bow = (rnd() - 0.5) * len * (depth === 0 ? 0.2 : 0.55);
+        const perp = ang + Math.PI / 2, bow = (rnd() - 0.5) * len * (depth === 0 ? 0.12 : 0.5);
         const cx = (x + x1) / 2 + Math.cos(perp) * bow, cy = (y + y1) / 2 + Math.sin(perp) * bow;
         const id = segs.length;
         segs.push({ x0: x, y0: y, cx, cy, x1, y1, depth, parent, ph: rnd() * 6.283, id });
         if (depth >= MAXD) { tips.push(segs[id]); return; }
-        const n = depth === 0 ? 3 : (rnd() < 0.5 ? 2 : 3);   // three limbs for the three actions
-        const spread = [1.05, 0.66, 0.6, 0.52][depth] || 0.5;
+        const n = depth === 0 ? 3 : (rnd() < 0.55 ? 2 : 3);   // exactly three limbs, then twigs
+        const spread = [1.15, 0.7, 0.62, 0.54][depth] || 0.5;
         for (let k = 0; k < n; k++) {
-          const off = (k - (n - 1) / 2) * spread + (rnd() - 0.5) * 0.22;
-          branch(x1, y1, ang + off, len * (0.6 + rnd() * 0.16), depth + 1, id);
+          const off = (k - (n - 1) / 2) * spread + (rnd() - 0.5) * 0.2;
+          branch(x1, y1, ang + off, len * (depth === 0 ? 0.78 : 0.62 + rnd() * 0.14), depth + 1, id);
         }
       })(0, 0, -Math.PI / 2, 1, 0, -1);
       let minX = 0, maxX = 0;
       segs.forEach((s) => { minX = Math.min(minX, s.x1); maxX = Math.max(maxX, s.x1); });
       const balance = Math.abs(minX + maxX) / (maxX - minX);
-      if (tips.length >= 28 && tips.length <= 60 && balance < 0.16) {
+      const limbSegs = segs.filter((s) => s.depth === 1);
+      const limbsApart = limbSegs.length === 3 && Math.abs(limbSegs[0].x1 - limbSegs[2].x1) > 0.9;
+      if (tips.length >= 30 && tips.length <= 64 && balance < 0.12 && limbsApart) {
         const rl = makeRnd(seed + 100);
-        lights = tips.map((seg) => ({ seg, R: 1.8 + rl() * 2.2, ph: seg.ph, sx: 0, sy: 0 }));
+        lights = tips.map((seg) => ({ seg, R: (2.2 + rl() * 2.2) * K, ph: seg.ph, sx: 0, sy: 0 }));
         break;
       }
     }
@@ -153,126 +160,141 @@ function buildIqraTree(stage) {
     rootSegs = [];
     (function root(x, y, ang, len, depth) {
       const x1 = x + Math.cos(ang) * len, y1 = y + Math.sin(ang) * len;
-      const perp = ang + Math.PI / 2, bow = (rr() - 0.5) * len * 0.6;
+      const perp = ang + Math.PI / 2, bow = (rr() - 0.5) * len * 0.5;
       const cx = (x + x1) / 2 + Math.cos(perp) * bow, cy = (y + y1) / 2 + Math.sin(perp) * bow;
       rootSegs.push({ x0: x, y0: y, cx, cy, x1, y1, depth });
       if (depth >= 2) return;
       const n = depth === 0 ? 4 : 2;
       for (let k = 0; k < n; k++) {
-        const off = (k - (n - 1) / 2) * 0.9 + (rr() - 0.5) * 0.3;
-        root(x1, y1, ang + off * 0.6, len * 0.62, depth + 1);
+        const off = (k - (n - 1) / 2) * 1.0 + (rr() - 0.5) * 0.3;
+        root(x1, y1, ang + off * 0.7, len * 0.6, depth + 1);
       }
-    })(0, 0, Math.PI / 2, 0.34, 0);
+    })(0, 0, Math.PI / 2, 0.3, 0);
   }
 
   function fitTree() {
     let minY = 0, minX = 0, maxX = 0;
     segs.forEach((s) => { minY = Math.min(minY, s.y1); minX = Math.min(minX, s.x1); maxX = Math.max(maxX, s.x1); });
     const ky = (GY - TOPY) / (-minY || 1);
-    const kx = Math.min(ky, (W * 0.92) / Math.max(0.0001, maxX - minX));
+    const kx = Math.min(ky, (W * 0.9) / Math.max(0.0001, maxX - minX));
     const midX = (minX + maxX) / 2;
     const mapX = (v) => W * 0.5 + (v - midX * 0.7) * kx;
     const mapY = (v) => GY + v * ky;
     segs.forEach((s) => { s.X0 = mapX(s.x0); s.Y0 = mapY(s.y0); s.CX = mapX(s.cx); s.CY = mapY(s.cy); s.X1 = mapX(s.x1); s.Y1 = mapY(s.y1); });
+    const rk = (H - GY - 40 * K) / 0.42;   // the roots fill the room below the ground line, leaving space for the name
     rootSegs.forEach((s) => {
-      s.X0 = W * 0.5 + s.x0 * ky * 0.9; s.Y0 = GY + s.y0 * ky * 0.5;
-      s.CX = W * 0.5 + s.cx * ky * 0.9; s.CY = GY + s.cy * ky * 0.5;
-      s.X1 = W * 0.5 + s.x1 * ky * 0.9; s.Y1 = GY + s.y1 * ky * 0.5;
+      s.X0 = W * 0.5 + s.x0 * rk * 1.6; s.Y0 = GY + s.y0 * rk;
+      s.CX = W * 0.5 + s.cx * rk * 1.6; s.CY = GY + s.cy * rk;
+      s.X1 = W * 0.5 + s.x1 * rk * 1.6; s.Y1 = GY + s.y1 * rk;
     });
     segs.forEach((s) => { s.birth = 0.3 + s.depth * 0.5 + (s.ph % 1) * 0.24; });
-    rootSegs.forEach((s) => { s.birth = 0.3 + s.depth * 0.4; });
-    lights.forEach((L, i) => { L.birth = L.seg.birth + 0.62 + i * 0.012; });
+    rootSegs.forEach((s) => { s.birth = 0.25 + s.depth * 0.35; });
+    lights.forEach((L, i) => { L.birth = L.seg.birth + 0.62 + i * 0.01; });
+
+    // One label per limb: at the tip that reaches farthest along the limb's own direction.
+    const trunk = segs[0];
+    const limbSegs = segs.filter((s) => s.depth === 1).sort((a, b) => a.X1 - b.X1);
+    const limbOf = (s) => { while (s.depth > 1) s = segs[s.parent]; return s; };
+    limbs = limbSegs.map((limb, i) => {
+      const dx = limb.X1 - trunk.X1, dy = limb.Y1 - trunk.Y1, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+      let best = null, bp = -Infinity;
+      for (const L of lights) if (limbOf(L.seg) === limb) {
+        const p = (L.seg.X1 - trunk.X1) * ux + (L.seg.Y1 - trunk.Y1) * uy;
+        if (p > bp) { bp = p; best = L; }
+      }
+      const tip = best ? best.seg : limb;
+      const label = limbLabels[i];
+      const x = clamp(tip.X1 + ux * 34 * K, 40, W - 40), y = clamp(tip.Y1 + uy * 28 * K - 6 * K, 14, GY - 14);
+      if (label) { label.style.left = x + 'px'; label.style.top = y + 'px'; }
+      return { label, birth: limb.birth + 1.3 };   // the name arrives while the limb's twigs are still growing
+    });
+    if (rootLabel) { rootLabel.style.top = (H - 6) + 'px'; }
   }
 
   function size() {
     W = stage.clientWidth; H = stage.clientHeight;
-    GY = H * 0.86; TOPY = H * 0.06;
+    K = clamp(H / 640, 0.5, 1.4);
+    GY = H * 0.74; TOPY = H * 0.06;
     cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     genTree(); fitTree();
-    const rnd = makeRnd(3);
-    mist = Array.from({ length: 4 }, (_, i) => ({ x: rnd() * W, y: GY - 6 + i * 8, rx: W * (0.16 + rnd() * 0.18), ry: 8 + rnd() * 11, v: (rnd() - 0.5) * 7, ph: rnd() * 6.283 }));
     leaves = Array.from({ length: 10 }, () => ({ live: false }));
   }
 
-  const windX = (y, ph, t) => { if (reduced) return 0; const hn = clamp((GY - y) / (GY - TOPY), 0, 1); return Math.sin(t * 0.75 + y * 0.004 + ph) * 6 * Math.pow(hn, 1.8); };
+  const windX = (y, ph, t) => { if (reduced) return 0; const hn = clamp((GY - y) / (GY - TOPY), 0, 1); return Math.sin(t * 0.75 + y * 0.004 + ph) * 5 * K * Math.pow(hn, 1.8); };
   const quad = (s, u) => { const a = (1 - u) * (1 - u), b = 2 * (1 - u) * u, c = u * u; return [a * s.X0 + b * s.CX + c * s.X1, a * s.Y0 + b * s.CY + c * s.Y1]; };
 
+  // Tapered strokes: each segment is drawn in short pieces whose width runs from its own depth's width to the next.
   function drawSeg(s, t, isRoot) {
     const p = clamp((T - s.birth) / 0.6, 0, 1);
     if (p <= 0) return;
-    const w = (isRoot ? ROOTW : WIDTHS)[s.depth] || 1;
-    const alpha = isRoot ? 0.26 : 0.5 + 0.28 * (1 - s.depth / MAXD);
-    ctx.strokeStyle = 'rgba(227,179,92,' + alpha + ')'; ctx.lineWidth = w; ctx.lineCap = 'round';
-    ctx.beginPath();
-    for (let k = 0; k <= 7; k++) {
-      const u = (k / 7) * p;
+    const ws = isRoot ? rootWidths() : widths();
+    const w0 = ws[s.depth] || 1, w1 = ws[s.depth + 1] || w0 * 0.55;
+    ctx.strokeStyle = isRoot ? 'rgb(128,138,152)' : (s.depth >= 3 ? 'rgb(84,98,116)' : 'rgb(' + NAVY + ')');
+    ctx.lineCap = 'round';
+    let [px, py] = quad(s, 0);
+    if (!isRoot) px += windX(py, s.ph, t);
+    const steps = 8;
+    for (let k = 1; k <= steps; k++) {
+      const u = (k / steps) * p;
       let [x, y] = quad(s, u);
       if (!isRoot) x += windX(y, s.ph, t);
-      k === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      ctx.lineWidth = lerp(w0, w1, u);
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke();
+      px = x; py = y;
     }
-    ctx.stroke();
   }
 
   function drawTree(t) {
     ctx.clearRect(0, 0, W, H);
+    // ground line
     const gl = ctx.createLinearGradient(0, 0, W, 0);
-    gl.addColorStop(0, 'rgba(228,209,164,0)'); gl.addColorStop(0.5, 'rgba(228,209,164,.24)'); gl.addColorStop(1, 'rgba(228,209,164,0)');
+    gl.addColorStop(0, 'rgba(' + NAVY + ',0)'); gl.addColorStop(0.5, 'rgba(' + NAVY + ',0.35)'); gl.addColorStop(1, 'rgba(' + NAVY + ',0)');
     ctx.strokeStyle = gl; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, GY); ctx.lineTo(W, GY); ctx.stroke();
+
     for (const s of rootSegs) drawSeg(s, t, true);
     for (const s of segs) drawSeg(s, t, false);
 
-    // the seed: the logo's crimson dot, with a warm basin of light
+    // the seed: the crimson dot, with a soft halo while it wakes
     const sp = clamp(T / 0.3, 0, 1);
     if (sp > 0) {
-      ctx.globalCompositeOperation = 'lighter';
-      const fb = reduced ? 1 : 1 + 0.05 * Math.sin(t * 1.1);
-      const FR = 10 * fb * (0.6 + 0.4 * sp);
-      const bg = ctx.createRadialGradient(W * 0.5, GY, 0, W * 0.5, GY, FR * 7);
-      bg.addColorStop(0, 'rgba(244,204,124,' + 0.26 * sp + ')'); bg.addColorStop(0.5, 'rgba(227,179,92,.10)'); bg.addColorStop(1, 'rgba(227,179,92,0)');
-      ctx.fillStyle = bg; ctx.beginPath(); ctx.ellipse(W * 0.5, GY, FR * 7, FR * 3.2, 0, 0, 6.2832); ctx.fill();
-      const cg = ctx.createRadialGradient(W * 0.5, GY, 0, W * 0.5, GY, FR * 2);
-      cg.addColorStop(0, 'rgba(255,225,230,.95)'); cg.addColorStop(0.45, 'rgba(171,82,99,.55)'); cg.addColorStop(1, 'rgba(171,82,99,0)');
-      ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(W * 0.5, GY, FR * 2, 0, 6.2832); ctx.fill();
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = '#ab5263'; ctx.beginPath(); ctx.arc(W * 0.5, GY, 4.6 * sp, 0, 6.2832); ctx.fill();
+      const halo = clamp(1 - (T - 0.3) / 1.2, 0, 1) * 0.35;
+      if (halo > 0) {
+        const g = ctx.createRadialGradient(W * 0.5, GY, 0, W * 0.5, GY, 60 * K);
+        g.addColorStop(0, 'rgba(' + CRIMSON + ',' + halo + ')'); g.addColorStop(1, 'rgba(' + CRIMSON + ',0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(W * 0.5, GY, 60 * K, 0, 6.2832); ctx.fill();
+      }
+      ctx.fillStyle = '#ab5263'; ctx.beginPath(); ctx.arc(W * 0.5, GY, 7 * K * sp, 0, 6.2832); ctx.fill();
     }
 
-    if (!reduced) for (const m of mist) {
-      m.x += m.v / 60;
-      if (m.x < -m.rx) m.x = W + m.rx; if (m.x > W + m.rx) m.x = -m.rx;
-      const a = 0.04 + 0.02 * Math.sin(m.ph + t * 0.4);
-      const g = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.rx);
-      g.addColorStop(0, 'rgba(200,200,215,' + a + ')'); g.addColorStop(1, 'rgba(200,200,215,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(m.x, m.y, m.rx, m.ry, 0, 0, 6.2832); ctx.fill();
-    }
-
-    ctx.globalCompositeOperation = 'lighter';
+    // leaf-lights at the tips
     for (const L of lights) {
       const la = clamp((T - L.birth) / 0.5, 0, 1);
       if (la <= 0) continue;
       L.sx = L.seg.X1 + windX(L.seg.Y1, L.seg.ph, t); L.sy = L.seg.Y1;
-      const tw = reduced ? 0.85 : 0.72 + 0.28 * Math.sin(L.ph + t * (0.7 + (L.ph % 0.9)));
-      const glowR = L.R * 4.6;
-      const g = ctx.createRadialGradient(L.sx, L.sy, 0, L.sx, L.sy, glowR);
-      g.addColorStop(0, 'rgba(244,214,143,' + 0.32 * tw * la + ')'); g.addColorStop(1, 'rgba(244,214,143,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(L.sx, L.sy, glowR, 0, 6.2832); ctx.fill();
-      ctx.fillStyle = 'rgba(252,240,212,' + (0.8 + 0.2 * tw) * la + ')';
-      ctx.beginPath(); ctx.arc(L.sx, L.sy, L.R, 0, 6.2832); ctx.fill();
+      const tw = reduced ? 0.85 : 0.75 + 0.25 * Math.sin(L.ph + t * (0.7 + (L.ph % 0.9)));
+      const g = ctx.createRadialGradient(L.sx, L.sy, 0, L.sx, L.sy, L.R * 4);
+      g.addColorStop(0, 'rgba(' + GOLD + ',' + 0.28 * tw * la + ')'); g.addColorStop(1, 'rgba(' + GOLD + ',0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(L.sx, L.sy, L.R * 4, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(' + GOLD + ',' + (0.75 + 0.25 * tw) * la + ')';
+      ctx.beginPath(); ctx.arc(L.sx, L.sy, L.R * la, 0, 6.2832); ctx.fill();
     }
-    ctx.globalCompositeOperation = 'source-over';
+
+    // names: each limb's when its farthest light is lit; Iqra when the roots have taken hold
+    for (const l of limbs) if (l.label) l.label.style.opacity = clamp((T - l.birth) / 0.5, 0, 1);
+    if (rootLabel) rootLabel.style.opacity = clamp((T - 1.0) / 0.5, 0, 1);
 
     if (!reduced && T > 3) for (const lf of leaves) {
       if (!lf.live) {
         if (Math.random() < 0.006 && lights.length) {
           const src = lights[(Math.random() * lights.length) | 0];
-          lf.live = true; lf.x = src.sx; lf.y = src.sy; lf.vy = 14 + Math.random() * 12; lf.ph = Math.random() * 6.283; lf.life = 0; lf.span = 4 + Math.random() * 3; lf.s = 1.2 + Math.random() * 1.2;
+          lf.live = true; lf.x = src.sx; lf.y = src.sy; lf.vy = 14 + Math.random() * 12; lf.ph = Math.random() * 6.283; lf.life = 0; lf.span = 4 + Math.random() * 3; lf.s = (1.4 + Math.random() * 1.4) * K;
         }
         continue;
       }
       lf.life += 1 / 60; lf.y += lf.vy / 60; lf.x += Math.sin(lf.ph + t * 1.6) * 0.5;
       if (lf.y > GY || lf.life > lf.span) { lf.live = false; continue; }
-      const a = Math.min(1, lf.life / 0.5) * Math.min(1, (lf.span - lf.life) / 0.8) * 0.5;
-      ctx.fillStyle = 'rgba(240,205,135,' + a + ')'; ctx.fillRect(lf.x, lf.y, lf.s, lf.s);
+      const a = Math.min(1, lf.life / 0.5) * Math.min(1, (lf.span - lf.life) / 0.8) * 0.6;
+      ctx.fillStyle = 'rgba(' + GOLD + ',' + a + ')'; ctx.fillRect(lf.x, lf.y, lf.s, lf.s);
     }
   }
 
@@ -304,18 +326,28 @@ const B = (() => ({
     const bb = word.getBBox();
     const s0 = word.getStartPositionOfChar(0), e0 = word.getEndPositionOfChar(0);
     const origin = `${(s0.x + e0.x) / 2} ${bb.y + bb.height * 0.5}`;
+
+    // The vision tree lives beside the vision text.
+    if (this.tree) this.tree.destroy();
+    this.tree = buildVisionTree(document.getElementById('b-tree'));
+    const tree = this.tree;
+    const GROW = 3.8;
+    const vision = document.getElementById('b-vision');
+    const mission = document.getElementById('b-mission');
+    const kinLines = document.querySelectorAll('.b-kin-line');
+
     if (reduced) {
       gsap.set('.b-mask', { opacity: 0 });
       gsap.set(['.b-copy', '.b-scrim'], { opacity: 1 });
       gsap.set('.b-hint', { opacity: 0 });
+      tree.setT(99);
+      gsap.set('.b-mission-text', { opacity: 1 });
       return;
     }
-    // On arrival the film fades up inside the letters, slightly zoomed.
+
+    // Hero: film fades up inside the letters, then the letters open with the scroll.
     gsap.fromTo(video, { opacity: 0, scale: 1.18 }, { opacity: 1, scale: 1.12, duration: 1.6, ease: 'power2.out' });
-    // Scroll: letters grow steadily as windows (0 → 0.55), then rush open (0.55 → 0.85),
-    // the film settles to full size, the scrim and the headline arrive, then a hold.
     const tl = gsap.timeline({ scrollTrigger: { trigger: '#b-pin', start: 'top top', end: '+=300%', pin: true, scrub: 0.5 } });
-    // The mask stops rendering past ~15x (texture limits), so the last white slivers dissolve instead.
     tl.to('#b-word', { scale: 7, svgOrigin: origin, ease: 'none', duration: 0.55 }, 0)
       .to('#b-word', { scale: 14, svgOrigin: origin, ease: 'power2.in', duration: 0.25 }, 0.55)
       .to('.b-mask', { opacity: 0, ease: 'power2.inOut', duration: 0.16 }, 0.64)
@@ -324,30 +356,22 @@ const B = (() => ({
       .to('.b-scrim', { opacity: 1, duration: 0.2 }, 0.72)
       .fromTo('.b-copy', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.2, ease: 'expo.out' }, 0.82)
       .to({}, { duration: 0.16 });
-    document.querySelectorAll('.b-kin').forEach((k) => {
-      const lines = k.querySelectorAll('.b-kin-line');
-      gsap.fromTo(lines,
-        { x: (i, el) => 140 * Number(el.dataset.dir), skewX: (i, el) => -10 * Number(el.dataset.dir), opacity: 0 },
-        { x: 0, skewX: 0, opacity: 1, duration: 1.1, ease: 'expo.out', stagger: 0.09, scrollTrigger: { trigger: k, start: 'top 75%' } });
-    });
-    // Misjon: the night still, and the tree that grows from a seed as you scroll through the pin.
-    const mission = document.getElementById('b-mission');
-    if (this.tree) this.tree.destroy();
-    this.tree = buildIqraTree(document.getElementById('b-tree'));
-    const tree = this.tree;
-    const GROW = 3.8; // growth time at the end of the pin; the tree is complete around 3.3
-    const base = (tl) => tl
-      .fromTo('.b-mission-text', { y: 40, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.3, ease: 'expo.out' }, 0.08)
-      .fromTo('.b-mission-still', { scale: 1 }, { scale: 1.06, duration: 1, ease: 'none' }, 0);
-    if (reduced) { tree.setT(99); base(gsap.timeline()).progress(1); return; }
+
+    // Visjon: the lines come in once; the tree grows with the scroll (desktop) or by itself (phones).
+    const linesIn = () => gsap.fromTo(kinLines,
+      { x: (i, el) => 120 * Number(el.dataset.dir), skewX: (i, el) => -8 * Number(el.dataset.dir), opacity: 0 },
+      { x: 0, skewX: 0, opacity: 1, duration: 1.1, ease: 'expo.out', stagger: 0.09 });
     const mm = gsap.matchMedia();
     mm.add('(min-width: 768px)', () => {
-      base(gsap.timeline({ scrollTrigger: { trigger: mission, start: 'top top', end: '+=140%', pin: true, scrub: 0.6, onUpdate: (self) => tree.setT(self.progress * GROW) } }));
+      ScrollTrigger.create({ trigger: vision, start: 'top top', end: '+=160%', pin: true, scrub: 0.6, onEnter: linesIn, onUpdate: (self) => tree.setT(self.progress * GROW) });
+      gsap.timeline({ scrollTrigger: { trigger: mission, start: 'top top', end: '+=100%', pin: true, scrub: 0.6 } })
+        .fromTo('.b-mission-still', { scale: 1 }, { scale: 1.06, duration: 1, ease: 'none' }, 0)
+        .fromTo('.b-mission-text', { y: 40, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.3, ease: 'expo.out' }, 0.08);
     });
     mm.add('(max-width: 767px)', () => {
       const p = { T: 0 };
-      base(gsap.timeline({ scrollTrigger: { trigger: mission, start: 'top 60%', once: true } }))
-        .to(p, { T: GROW, duration: 4.5, ease: 'none', onUpdate: () => tree.setT(p.T) }, 0);
+      ScrollTrigger.create({ trigger: vision, start: 'top 60%', once: true, onEnter: () => { linesIn(); gsap.to(p, { T: GROW, duration: 5, ease: 'none', onUpdate: () => tree.setT(p.T) }); } });
+      gsap.fromTo('.b-mission-text', { y: 40, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 1, ease: 'expo.out', scrollTrigger: { trigger: mission, start: 'top 70%' } });
     });
   },
   destroy() { document.getElementById('b-video').pause(); if (this.tree) { this.tree.destroy(); this.tree = null; } },
