@@ -98,6 +98,21 @@
 }
 
 @media (max-width: 767px) {
+  /*
+   * `meet` fits the 1000x600 viewBox to whichever side binds, and on a phone that is
+   * the width: the word came out about 245px across a 390px screen, 63% of it, alone
+   * in a lot of white, while a desktop got a word that filled the screen. Widening the
+   * SVG past the viewport is what lets the fit scale up — the letters are sized by the
+   * box, not by the screen. Nothing else moves: the overlay rect inside is 41000 units
+   * across and still covers everything, the hero clips the overhang, and the mask
+   * origin is measured in viewBox units, which this does not touch.
+   */
+  .mask {
+    left: -21.5%;
+    right: auto;
+    width: 143%;
+  }
+
   .copy {
     bottom: 64px;
   }
