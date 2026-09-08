@@ -162,30 +162,10 @@
 }
 
 /*
- * Below this width the book shows one page rather than a spread (BookFigure passes
- * `single`), so the chrome moves out of the page's way: the chapter label goes to the
- * top and the hint sits tight to the bottom, leaving the middle of the screen to the
- * sheet itself.
+ * Below the desktop breakpoint the book never starts, so the article is the page and
+ * the canvas chrome is display:none — nothing here needs to move it out of the way.
  */
 @media (max-width: 767px) {
-  .hud {
-    top: calc(var(--header-h) + 10px);
-    left: 24px;
-  }
-
-  .label {
-    margin-bottom: 4px;
-  }
-
-  .chapter {
-    font-size: 18px;
-  }
-
-  .hint {
-    bottom: 14px;
-    font-size: 10px;
-  }
-
   .readable {
     padding-top: calc(var(--header-h) + 40px);
   }
