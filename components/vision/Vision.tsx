@@ -44,7 +44,53 @@ export function Vision() {
           { x: (i, el) => 120 * dir(el), skewX: (i, el) => -8 * dir(el), opacity: 0 },
           { x: 0, skewX: 0, opacity: 1, duration: 1.1, ease: EASE.out, stagger: 0.09 });
       const mm = gsap.matchMedia();
+
+      /*
+       * Where the tree stands when the section arrives, before the pin has any progress
+       * to give it: the seed woken and haloed, nothing grown. It has to be the pin's
+       * floor as well as the entrance's ceiling, or the first pixel of pinned scroll
+       * would put growth back to 0 and blink the seed out again.
+       */
+      const SEED_T = 0.24;
+
       mm.add('(min-width: 768px)', () => {
+        /*
+         * A screen of scrolling separates the hero letting go from this section reaching
+         * the top, and the pin starts at the far end of it. Everything used to wait for
+         * that, so the whole of it was spent looking at a label, a sub-line and an empty
+         * box with a hairline across it. The copy and the seed now arrive when the
+         * section does; the pin only grows what it has already been handed.
+         */
+        let wake: gsap.core.Tween | null = null;
+        let arrived = false;
+        const seed = { T: 0 };
+        const arrive = () => {
+          if (arrived) return;
+          arrived = true;
+          linesIn();
+          wake = gsap.to(seed, {
+            T: SEED_T, duration: 0.7, ease: EASE.out, onUpdate: () => tree?.setT(seed.T),
+          });
+        };
+        ScrollTrigger.create({
+          trigger: section, start: 'top 78%', once: true, refreshPriority: 1,
+          onEnter: arrive,
+          /*
+           * Landing here from a reload rather than scrolling in: the browser restores
+           * the scroll position, the start is already behind us, and `onEnter` has
+           * nothing left to fire on — so the lines would keep the opacity 0 set above,
+           * invisible and permanently so. The pin has always had the same hole, and
+           * nothing above this level can see it: hidden on purpose and hidden by
+           * accident look identical.
+           *
+           * Measured on refresh, never at creation. The hero builds its pin inside
+           * `document.fonts.ready`, which resolves after this effect runs, so at
+           * creation every position below the hero is a screen short and this would
+           * fire for a visitor who is still up in the film.
+           */
+          onRefresh: (self) => { if (self.progress > 0) arrive(); },
+        });
+
         ScrollTrigger.create({
           trigger: section, start: 'top top', end: '+=160%', pin: true, scrub: 0.6,
           // Refresh order decides what a trigger measures, and it is creation order
@@ -59,12 +105,14 @@ export function Vision() {
           // document position. Delete the keys and the refresh reverts to creation order,
           // which is the 2700px bug again.
           refreshPriority: 1,
-          onEnter: () => { linesIn(); setWordmarkOnDark(false); },
+          // The entrance tween and this share one tree, so whichever arrives second has
+          // to stop the other rather than fight it for `setT` frame by frame.
+          onEnter: () => { wake?.kill(); setWordmarkOnDark(false); },
           onEnterBack: () => setWordmarkOnDark(false),
           // A resize re-runs the hero's onUpdate, which would paint the wordmark white
           // again over our white section; say it once more while we hold the header.
           onRefresh: (self) => { if (self.isActive) setWordmarkOnDark(false); },
-          onUpdate: (self) => tree?.setT(self.progress * GROW),
+          onUpdate: (self) => tree?.setT(SEED_T + self.progress * (GROW - SEED_T)),
         });
       });
       mm.add('(max-width: 767px)', () => {
