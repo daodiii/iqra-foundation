@@ -17,7 +17,7 @@ export const site = {
     title: 'Iqra Foundation',
     description: 'Iqra betyr les. Vi snakker gjerne med deg om islam.',
   },
-  header: { wordmark: 'IQRA', homeLabel: 'Iqra Foundation, til toppen' },
+  header: { wordmark: 'IQRA', homeLabel: 'Iqra Foundation, til toppen', navLabel: 'Hovedmeny' },
   hero: {
     word: 'IQRA',
     h1Lines: ['Iqra betyr', 'les'],
