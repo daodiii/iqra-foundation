@@ -24,9 +24,6 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang={site.lang} className={geist.variable}>
-      <head>
-        <link rel="preload" as="image" href="/media/iqra-poster.jpg" />
-      </head>
       <body>{children}</body>
     </html>
   );

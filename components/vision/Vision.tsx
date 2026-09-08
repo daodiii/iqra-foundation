@@ -92,7 +92,7 @@ export function Vision() {
         });
 
         ScrollTrigger.create({
-          trigger: section, start: 'top top', end: '+=160%', pin: true, scrub: 0.6,
+          trigger: section, start: 'top top', end: '+=110%', pin: true, scrub: 0.6,
           // Refresh order decides what a trigger measures, and it is creation order
           // unless priorities say otherwise. The hero builds its trigger inside
           // document.fonts.ready, so it is created after us; without an explicit

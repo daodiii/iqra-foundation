@@ -10,9 +10,23 @@ async function pastHero(page: Page) {
     .poll(() => page.evaluate(() => document.getElementById('hero')?.parentElement?.classList.contains('pin-spacer') ?? false),
       { timeout: 15_000, message: 'the hero never pinned' })
     .toBe(true);
-  await page.evaluate(() => window.scrollTo(0, window.innerHeight * 3.2));
+  const pin = await pinOf(page, 'hero');
+  await page.evaluate((y) => window.scrollTo(0, y), pin + 200);
   await page.waitForTimeout(600);
 }
+
+/**
+ * How far a section is actually held, read off its own pin spacer rather than assumed
+ * from the `+=N%` in the source. Every scroll target below is a fraction of this, so
+ * tuning a pin length is a one-line change in the component and no change here.
+ */
+const pinOf = (page: Page, id: string) => page.evaluate((sel) => {
+  const section = document.getElementById(sel)!;
+  const spacer = section.parentElement!;
+  if (!spacer.classList.contains('pin-spacer')) return 0;
+  return spacer.getBoundingClientRect().height - section.getBoundingClientRect().height;
+}, id);
+
 
 const docTop = (page: Page, sel: string) => page.evaluate((s) => {
   const el = document.querySelector(s)!;
@@ -86,7 +100,7 @@ test('desktop: visjon pins, the lines arrive, the tree grows and its names appea
   await page.evaluate((y) => window.scrollTo(0, y + 10), top);
   await page.waitForTimeout(1500);
   await expect(page.locator('#visjon [data-line]').first()).toHaveCSS('opacity', '1', { timeout: 5_000 });
-  await page.evaluate((y) => window.scrollTo(0, y + window.innerHeight * 1.6), top);
+  await page.evaluate((y) => window.scrollTo(0, y), top + (await pinOf(page, 'visjon')) * 0.96);
   await page.waitForTimeout(2500);
   for (const name of TREE_NAMES) {
     await expect(page.locator('#visjon [data-limb], #visjon [data-root]').filter({ hasText: name })).toHaveCSS('opacity', '1', { timeout: 5_000 });
@@ -108,7 +122,7 @@ test('desktop: a resize while Visjon is pinned keeps the wordmark navy and the t
   await pastHero(page);
   const top = await docTop(page, '#visjon');
   // Deep in the pin, so the tree is grown and there is something to lose.
-  await page.evaluate((y) => window.scrollTo(0, y + window.innerHeight * 1.5), top);
+  await page.evaluate((y) => window.scrollTo(0, y), top + (await pinOf(page, 'visjon')) * 0.85);
   await page.waitForTimeout(2500);
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
   expect(await canvasHasInk(page)).toBe(true);

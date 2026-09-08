@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { site } from '@/content/site.no';
 import { EASE, gsap, reducedMotion, useGSAP } from '@/lib/gsap';
 import { pickSource } from '@/lib/media';
@@ -26,6 +27,13 @@ function measureOrigin(word: SVGTextElement): string {
 }
 
 export function Hero() {
+  /*
+   * The poster is what fills the letters until the film has decoded, so it wants to be
+   * fetched early. It used to be preloaded from the root layout, which put it in the
+   * head of every route — including /om-oss, where nothing uses it and Chrome says so
+   * in the console. Declared here it follows the only element that ever wants it.
+   */
+  ReactDOM.preload('/media/iqra-poster.jpg', { as: 'image' });
   const root = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const wordRef = useRef<SVGTextElement>(null);
@@ -83,7 +91,9 @@ export function Hero() {
             scrollTrigger: {
               trigger: section,
               start: 'top top',
-              end: '+=300%',
+              // 200%, not 300%: the opening is the same, it just asks for two screens
+              // of scrolling rather than three to give it.
+              end: '+=200%',
               pin: true,
               scrub: 0.5,
               // This trigger is built inside document.fonts.ready, so it is created

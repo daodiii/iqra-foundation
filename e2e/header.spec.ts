@@ -17,9 +17,15 @@ async function intoTheFilm(page: import('@playwright/test').Page) {
     .poll(() => page.evaluate(() => document.getElementById('hero')?.parentElement?.classList.contains('pin-spacer') ?? false),
       { timeout: 15_000, message: 'the hero never pinned' })
     .toBe(true);
-  await page.evaluate(() => window.scrollTo(0, window.innerHeight * 2.6));
+  await page.evaluate((y) => window.scrollTo(0, y), (await heroPin(page)) * 0.87);
   await page.waitForTimeout(900);
 }
+
+/** Read off the pin spacer, so tuning the hero's length does not move these targets. */
+const heroPin = (page: Page) => page.evaluate(() => {
+  const section = document.getElementById('hero')!;
+  return section.parentElement!.getBoundingClientRect().height - section.getBoundingClientRect().height;
+});
 
 /**
  * The header starts hidden and the hero fades it in once the letters have opened. That
@@ -35,7 +41,7 @@ test('landing: the header is hidden at the top and arrives with the film', async
   await expect(page.locator(wordmark)).toHaveCSS('opacity', '0');
   await expect(page.locator(nav)).toHaveCSS('opacity', '0');
 
-  await page.evaluate(() => window.scrollTo(0, window.innerHeight * 2.6));
+  await page.evaluate((y) => window.scrollTo(0, y), (await heroPin(page)) * 0.87);
   await page.waitForTimeout(900);
   await expect(page.locator(wordmark)).toHaveCSS('opacity', '1', { timeout: 5_000 });
   await expect(page.locator(nav)).toHaveCSS('opacity', '1');
@@ -140,7 +146,7 @@ test('landing: nothing invisible can be tabbed to without showing itself', async
   const ctaTabIndex = () => page.locator('#hero [data-copy] a').evaluate((el) => el.tabIndex);
   expect(await ctaTabIndex(), 'the hidden call to action is still a tab stop').toBe(-1);
 
-  await page.evaluate(() => window.scrollTo(0, window.innerHeight * 2.8));
+  await page.evaluate((y) => window.scrollTo(0, y), (await heroPin(page)) * 0.95);
   await expect(page.locator('#hero [data-copy]')).toHaveCSS('opacity', '1', { timeout: 8_000 });
   await expect.poll(ctaTabIndex, { timeout: 5_000, message: 'the call to action never came back' }).toBe(0);
 });

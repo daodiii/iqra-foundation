@@ -67,7 +67,13 @@ test('desktop: the book takes over, pins, and the chapter label follows the spre
   const label = section(page).locator('[data-chapter]');
   await expect(label).toHaveText('Omslag');
   const first = site.about.chapters[0];
-  await page.evaluate(() => window.scrollTo(0, window.innerHeight * 1.2));
+  // One turn in, whatever a turn currently costs: the book has four of them spread over
+  // its pin, and `chapterAt` rounds, so a quarter of the pin lands exactly on chapter I.
+  const pin = await page.evaluate(() => {
+    const s = document.getElementById('om-oss')!;
+    return s.parentElement!.getBoundingClientRect().height - s.getBoundingClientRect().height;
+  });
+  await page.evaluate((y) => window.scrollTo(0, y), pin / 4);
   await expect(label).toHaveText(`${first.num} · ${first.title}`, { timeout: 8_000 });
 
   // Back to the top: the label has to come with us, or it only ever counts upward.

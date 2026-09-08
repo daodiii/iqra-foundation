@@ -55,7 +55,7 @@ export function Book() {
           },
         });
         const st = ScrollTrigger.create({
-          trigger: section, start: 'top top', end: `+=${book.turns * 110}%`,
+          trigger: section, start: 'top top', end: `+=${book.turns * 70}%`,
           pin: true, scrub: 0.6, animation: tl,
           /*
            * The chapter label and the hint are positioned inside the section, and the
