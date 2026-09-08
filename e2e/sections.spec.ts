@@ -38,17 +38,20 @@ const TREE_NAMES = [...site.vision.tree.limbs, site.vision.tree.root];
 const wordmark = (page: Page) => page.locator('#site-wordmark');
 
 /**
- * The three pins are the page's whole scroll geometry, and nothing below the e2e level
- * can see them: vitest.setup.ts stubs matchMedia to `matches: false`, so no `mm.add`
- * branch ever runs in jsdom. This checks the contract the sections depend on — one
- * spacer each, in document order, laid end to end, and each section really pinned at the
- * top of its own spacer, which is what goes wrong when a trigger's start is measured
- * against a document that has not been pinned yet.
+ * The pins are the page's whole scroll geometry, and nothing below the e2e level can see
+ * them: vitest.setup.ts stubs matchMedia to `matches: false`, so no `mm.add` branch ever
+ * runs in jsdom. This checks the contract the sections depend on — one spacer each, in
+ * document order, laid end to end, and each section really pinned at the top of its own
+ * spacer, which is what goes wrong when a trigger's start is measured against a document
+ * that has not been pinned yet.
+ *
+ * Two, not three: Misjon is where the page lands and no longer pins. If a third spacer
+ * appears here, something has started holding the scroll again.
  */
-test('desktop: the three pins lie end to end, and each section pins where its spacer sits', async ({ page, isMobile }) => {
+test('desktop: the two pins lie end to end, and each section pins where its spacer sits', async ({ page, isMobile }) => {
   test.skip(isMobile, 'only the hero pins on phones');
   await page.goto('/');
-  await expect(page.locator('.pin-spacer')).toHaveCount(3, { timeout: 15_000 });
+  await expect(page.locator('.pin-spacer')).toHaveCount(2, { timeout: 15_000 });
 
   const spacers = await page.evaluate(() =>
     Array.from(document.querySelectorAll<HTMLElement>('.pin-spacer')).map((sp) => ({
@@ -57,7 +60,7 @@ test('desktop: the three pins lie end to end, and each section pins where its sp
       height: sp.offsetHeight,
     })),
   );
-  expect(spacers.map((s) => s.id)).toEqual(['hero', 'visjon', 'misjon']);
+  expect(spacers.map((s) => s.id)).toEqual(['hero', 'visjon']);
   for (let i = 1; i < spacers.length; i++) {
     expect(spacers[i].top).toBeGreaterThanOrEqual(spacers[i - 1].top + spacers[i - 1].height);
   }
@@ -124,20 +127,36 @@ test('desktop: a resize while Visjon is pinned keeps the wordmark navy and the t
   expect(await canvasHasInk(page), 'the tree went blank after the resize').toBe(true);
 });
 
-test('desktop: misjon pins, the text arrives and the wordmark turns white', async ({ page, isMobile }) => {
+/**
+ * Misjon is white now and does not pin: the copy arrives once and the section then sits
+ * still. The wordmark assertion is the one that would silently rot — it used to turn
+ * white over the night still, and white on this white section is invisible.
+ */
+test('desktop: misjon does not pin, the copy arrives and the wordmark stays navy', async ({ page, isMobile }) => {
   test.skip(isMobile, 'pinned layout is desktop only');
   await pastHero(page);
   const top = await docTop(page, '#misjon');
-  await page.evaluate((y) => window.scrollTo(0, y + window.innerHeight * 0.9), top);
+  await page.evaluate((y) => window.scrollTo(0, y + window.innerHeight * 0.4), top);
   await page.waitForTimeout(1500);
+
+  const stanza = page.locator('#misjon p[data-rise]').nth(1);
+  await expect(stanza).toHaveCSS('opacity', '1', { timeout: 5_000 });
   const mission = page.locator('[data-mission-text]');
-  await expect(mission).toHaveCSS('opacity', '1', { timeout: 5_000 });
-  // The hook is what the timeline animates; it is only worth animating if it is the
-  // element actually carrying the copy and the call to action.
-  await expect(mission).toContainText(site.mission.text);
-  await expect(mission.getByRole('link', { name: site.hero.cta })).toHaveAttribute('href', `mailto:${site.contact.email}`);
-  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'true');
-  await expect(page.locator('.pin-spacer')).toHaveCount(3); // hero, visjon, misjon
+  await expect(mission).toContainText('bygger vi broer');
+  await expect(mission.getByRole('link', { name: site.hero.cta }))
+    .toHaveAttribute('href', `mailto:${site.contact.email}`);
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
+  await expect(page.locator('.pin-spacer')).toHaveCount(2); // hero, visjon
+
+  // The drape is the section's only ornament, so a blank canvas is a blank section.
+  const painted = await page.evaluate(() => {
+    const c = document.querySelector('#misjon canvas') as HTMLCanvasElement;
+    const ctx = c.getContext('2d')!;
+    const data = ctx.getImageData(0, 0, c.width, c.height).data;
+    for (let i = 3; i < data.length; i += 4) if (data[i] > 20) return true;
+    return false;
+  });
+  expect(painted, 'the drape never painted').toBe(true);
 });
 
 /**
@@ -163,8 +182,9 @@ test('phone: no pins after the hero; the tree grows, the wordmark hands off, the
   }
   const mtop = await docTop(page, '#misjon');
   await page.evaluate((y) => window.scrollTo(0, y + 10), mtop);
-  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'true'); // white over the night still
-  const mission = page.locator('[data-mission-text]');
-  await expect(mission).toHaveCSS('opacity', '1', { timeout: 5_000 });
-  await expect(mission).toContainText(site.mission.text);
+  // Navy, not white: Misjon is a white section now, so this is the handoff that would
+  // have been left saying "on dark" from the old night still and shown nothing.
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
+  await expect(page.locator('#misjon p[data-rise]').nth(1)).toHaveCSS('opacity', '1', { timeout: 8_000 });
+  await expect(page.locator('[data-mission-text]')).toContainText('bygger vi broer');
 });
