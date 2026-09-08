@@ -159,10 +159,13 @@ export function drawFace(face: Face, W: number, H: number): HTMLCanvasElement {
   } else if (face.kind === 'ask') {
     c.fillStyle = NAVY;
     c.font = '600 66px Geist, sans-serif';
-    wrap(c, face.title, M, H * 0.46, W - M * 2, 82);
+    // `wrap` returns the y after the last line it set, and the lede has to start from
+    // there rather than from a fixed offset: «Har du et spørsmål?» takes two lines in
+    // this column, and a hardcoded +110 put the second line straight through the lede.
+    const after = wrap(c, face.title, M, H * 0.46, W - M * 2, 82);
     c.fillStyle = INK;
     c.font = '400 30px Geist, sans-serif';
-    wrap(c, face.lede, M, H * 0.46 + 110, W - M * 2 - 40, 42);
+    wrap(c, face.lede, M, after + 28, W - M * 2 - 40, 42);
   } else if (face.kind === 'contact') {
     c.fillStyle = NAVY;
     c.font = '400 32px Geist, sans-serif';
