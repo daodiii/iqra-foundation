@@ -13,16 +13,24 @@ describe('contentProblems', () => {
   });
 
   /**
-   * The email is not a special case any more: the roster and the figures are exactly as
-   * embarrassing to ship. Every placeholder in the content has to be reported, not a
-   * remembered list of the ones we happened to think of.
+   * The email is not a special case any more: the roster, the figures and the account
+   * number are exactly as embarrassing to ship. Every placeholder in the content has to
+   * be reported, not a remembered list of the ones we happened to think of.
+   *
+   * Both sides are derived from the content rather than named here. Naming a token makes
+   * the test fail on the day someone supplies the real value — which is the one day it
+   * ought to stay quiet — and that is precisely how it broke when the email arrived.
    */
   test('flags every placeholder, and only in production', () => {
+    const found = contentPlaceholders(site);
+    expect(found.length, 'nothing left to flag, so this test proves nothing').toBeGreaterThan(0);
+
     const problems = contentProblems(site, { production: true });
-    expect(problems).toHaveLength(contentPlaceholders(site).length);
-    expect(problems).toContain('contact.email is still the [EPOST] placeholder');
-    expect(problems.some((p) => p.includes('[Navn]'))).toBe(true);
-    expect(problems.some((p) => p.includes('[N]'))).toBe(true);
+    expect(problems).toHaveLength(found.length);
+    for (const { path, token } of found) {
+      expect(problems).toContain(`${path} is still the ${token} placeholder`);
+    }
+    expect(contentProblems(site, { production: false })).toEqual([]);
   });
 
   test('content with nothing left to fill in passes a production build', () => {
