@@ -39,15 +39,27 @@ export function contentPlaceholders(site) {
  * always a problem. Placeholders are a problem only when `production` is true, so local
  * builds and the e2e keep working until the real names, numbers and address arrive.
  */
-export function contentProblems(site, { production }) {
+export function contentProblems(site, { production, allowPlaceholders = false }) {
   const problems = [];
   walkStrings(site, (value, path) => {
     if (value.trim() === '') problems.push(`${path} is empty`);
   });
-  if (production) {
+  if (production && !allowPlaceholders) {
     for (const { path, token } of contentPlaceholders(site)) {
       problems.push(`${path} is still the ${token} placeholder`);
     }
   }
   return problems;
+}
+
+/**
+ * The placeholders that would do actual harm on a live page, as opposed to the ones that
+ * are merely unfinished. A visitor cannot be misled by a team member called [Navn], but
+ * these four are the numbers someone would try to send money to — so when the gate is
+ * deliberately held open they are what the build log has to say out loud.
+ */
+const PAYMENT = ['support.account', 'support.kid', 'support.vippsNumber', 'support.orgnr'];
+
+export function paymentPlaceholders(site) {
+  return contentPlaceholders(site).filter(({ path }) => PAYMENT.includes(path));
 }
