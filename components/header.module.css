@@ -26,6 +26,9 @@
 .nav {
   pointer-events: auto;
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 22px;
 }
 
 .navLink {
@@ -61,6 +64,10 @@
 @media (max-width: 767px) {
   .wordmark {
     font-size: 16px;
+  }
+
+  .nav {
+    gap: 16px;
   }
 
   .navLink {

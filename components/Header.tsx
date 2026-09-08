@@ -28,6 +28,14 @@ export function Header() {
         <Link href="/om-oss" prefetch={false} className={styles.navLink}>
           {site.about.label}
         </Link>
+        {/*
+          Rooted, not a bare `#stott-oss`: the section lives at the foot of the landing
+          page but this header is on every page, and from /om-oss a bare hash points at
+          an element that is not there.
+        */}
+        <Link href="/#stott-oss" prefetch={false} className={styles.navLink}>
+          {site.support.label}
+        </Link>
       </nav>
     </header>
   );

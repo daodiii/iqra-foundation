@@ -12,13 +12,18 @@ test('the wordmark goes home and is named for screen readers', () => {
   expect(link).toHaveTextContent(site.header.wordmark);
 });
 
-test('the nav is one link, to Om oss, inside a named landmark', () => {
+test('the nav is two links, Om oss then Støtt oss, inside a named landmark', () => {
   render(<Header />);
   const nav = screen.getByRole('navigation', { name: site.header.navLabel });
   expect(nav).toHaveAttribute('id', 'site-nav');
-  const link = within(nav).getByRole('link', { name: site.about.label });
-  expect(link).toHaveAttribute('href', '/om-oss');
-  expect(within(nav).getAllByRole('link')).toHaveLength(1);
+  expect(within(nav).getByRole('link', { name: site.about.label }))
+    .toHaveAttribute('href', '/om-oss');
+  // Rooted at `/`, so it still points at the landing page from a page that has no
+  // Støtt oss section of its own. A bare `#stott-oss` would go nowhere from /om-oss.
+  expect(within(nav).getByRole('link', { name: site.support.label }))
+    .toHaveAttribute('href', '/#stott-oss');
+  expect(within(nav).getAllByRole('link').map((el) => el.textContent))
+    .toEqual([site.about.label, site.support.label]);
 });
 
 test('setWordmarkOnDark flips the data attribute the stylesheet reads', () => {
