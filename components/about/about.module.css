@@ -25,9 +25,8 @@
 
 .label {
   margin: 0 0 8px;
-  font: 500 12px/1 var(--font-mono);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
   color: var(--color-muted);
 }
 
@@ -46,9 +45,8 @@
   transform: translateX(-50%);
   z-index: 2;
   margin: 0;
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
   color: var(--color-muted);
   pointer-events: none;
 }
@@ -125,9 +123,8 @@
 }
 
 .team li span:last-child {
-  font: 500 12px/1 var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
   color: var(--color-muted);
 }
 

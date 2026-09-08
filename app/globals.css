@@ -9,7 +9,6 @@
   --color-muted: #8a94a3;
   --color-hairline: #e3e7ec;
   --font-sans: var(--font-geist), "Segoe UI", system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), "Cascadia Mono", Consolas, monospace;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 

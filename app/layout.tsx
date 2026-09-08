@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist } from 'next/font/google';
 import { site } from '@/content/site.no';
 import './globals.css';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist' });
-const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
 
 /**
  * The page is live while the copy is still filler — bank account, Vipps number and the
@@ -24,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={site.lang} className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang={site.lang} className={geist.variable}>
       <head>
         <link rel="preload" as="image" href="/media/iqra-poster.jpg" />
       </head>

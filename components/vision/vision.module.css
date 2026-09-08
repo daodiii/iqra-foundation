@@ -19,9 +19,8 @@
 }
 
 .label {
-  font: 500 12px/1 var(--font-mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
   color: var(--color-ink-soft);
 }
 

@@ -63,9 +63,8 @@
 
 .label {
   margin: 0;
-  font: 500 12px/1 var(--font-mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
   color: rgba(255, 255, 255, 0.66);
 }
 
@@ -290,9 +289,8 @@
 
 .detailsTitle {
   margin: 0 0 6px;
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
   color: rgba(255, 255, 255, 0.6);
 }
 
@@ -322,9 +320,8 @@
 }
 
 .row dt {
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
   color: rgba(255, 255, 255, 0.55);
 }
 
