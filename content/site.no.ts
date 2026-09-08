@@ -10,6 +10,21 @@ const missionStanzas = [
   ['Slik bygger vi broer,', 'og lærer av hverandre.'],
 ] as const;
 
+/**
+ * Støtt oss. The amounts are a design choice and stand as they are; what each one buys
+ * is a claim about how the money is actually spent, and every one of them is mine
+ * rather than anyone's figure — so the whole outcome is bracketed, unit and all. The
+ * two lines of a tier have to be filled in together: «hver måned» is the same claim
+ * twelve times over, and they will read as a contradiction if only one is updated.
+ */
+const supportTiers = [
+  { kr: 100, once: '[4 samtaler på stand]', month: '[48 samtaler i året]' },
+  { kr: 250, once: '[10 samtaler på stand]', month: '[120 samtaler i året]' },
+  { kr: 500, once: '[en åpen kveld i moskeen]', month: '[12 åpne kvelder i året]' },
+  { kr: 1000, once: '[20 bøker til folk som spør]', month: '[240 bøker i året]' },
+  { kr: 2500, once: '[en uke på stand i Oslo]', month: '[stand hver eneste uke]' },
+] as const;
+
 export const site = {
   lang: 'nb',
   name: 'Iqra Foundation',
@@ -102,6 +117,48 @@ export const site = {
       para: 'Skriv til oss, så svarer et menneske. Vanligvis samme uka.',
       place: 'Iqra Foundation, Oslo',
     },
+  },
+  support: {
+    label: 'Støtt oss',
+    /** `{beløp}` is filled in with the chosen amount, so the sentence stays here. */
+    give: { once: 'Gi {beløp} kr med Vipps', month: 'Gi {beløp} kr i måneden med Vipps' },
+    unit: { once: 'kr', month: 'kr / mnd' },
+    frequency: { label: 'Hvor ofte', once: 'Én gang', month: 'Hver måned' },
+    amountLabel: 'Velg beløp',
+    tiers: supportTiers,
+    /**
+     * Vipps handles both a single gift and a standing one, AvtaleGiro exists only for
+     * the recurring case, and a plain transfer only makes sense for the one-off. So the
+     * second route follows the frequency rather than sitting there being wrong half the
+     * time, and there are two of these rather than one.
+     */
+    alt: { once: 'Eller overfør til konto', month: 'Eller sett opp AvtaleGiro' },
+    transfer: {
+      title: 'Bankoverføring',
+      para: 'Overfør beløpet selv, og merk betalingen med navnet ditt hvis du vil ha skattefradrag. Da vet vi hvem gaven kom fra.',
+    },
+    avtalegiro: {
+      title: 'AvtaleGiro',
+      para: 'Fast trekk fra kontoen din hver måned. Du oppretter den i nettbanken din med tallene under, og du kan stoppe den selv når som helst.',
+    },
+    fields: {
+      account: 'Kontonummer',
+      kid: 'KID',
+      amount: 'Beløp',
+      vipps: 'Vipps',
+      orgnr: 'Organisasjonsnummer',
+    },
+    account: '[KONTO]',
+    kid: '[KID]',
+    vippsNumber: '[NUMMER]',
+    orgnr: '[ORG.NR]',
+    /**
+     * True only if the foundation is on Skatteetaten's list of approved recipients
+     * (skatteloven § 6-50) — approval is per organisation and has to be applied for.
+     * The bracket is load-bearing: it holds the production build until whoever fills in
+     * the organisation number has confirmed the approval that makes this sentence true.
+     */
+    tax: 'Gaver mellom 500 og 25 000 kroner i året gir skattefradrag. Vi rapporterer gaven på organisasjonsnummer [ORG.NR], og trenger fødselsnummeret ditt for å gjøre det.',
   },
   contact: { email: '[EPOST]' },
 } as const;

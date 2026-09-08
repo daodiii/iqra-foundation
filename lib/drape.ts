@@ -1,28 +1,46 @@
 /**
- * The drape to the right of the Misjon copy: a bundle of fine filaments, each one a
- * bezier stroked with its own gradient that is transparent at both tips. The feathering
- * is the point — the shape has no edge anywhere, only more or less density, which is
- * what makes it read as light rather than as a graphic pasted on the page.
+ * A bundle of fine filaments, each one a bezier stroked with its own gradient that is
+ * transparent at both tips. The feathering is the point — the shape has no edge
+ * anywhere, only more or less density, which is what makes it read as light rather than
+ * as a graphic pasted on the page.
  *
- * Settings below are the ones chosen from the mockups (bredde 51 %, tetthet 105 %,
- * turkis #62bfbd, vinkel −26°); they are constants rather than props because there is
- * one drape on the site and the layout in mission.module.css is sized against COVER.
+ * Two sections use it. Misjon has it down the right of the copy on white (bredde 51 %,
+ * tetthet 105 %, turkis #62bfbd, vinkel −26°, the settings chosen from the mockups);
+ * Støtt oss has it filling a dark section behind the type. What differs between them is
+ * the palette, how much of the section it covers and how far it leans — everything else,
+ * including the geometry of the bundle itself, is the same drape.
  */
 
-/** Fraction of the section width the drape covers, measured from the right edge. */
+/**
+ * Fraction of the section width the drape covers, measured from the right edge.
+ * mission.module.css reserves its second column against this, so the two must agree.
+ */
 export const COVER = 0.51;
 /** Degrees. Negative leans the top of the drape left and the bottom right. */
 const ANGLE = -26;
 /** A band is already a diagonal by being wide and short, so it needs far less tilt. */
 const BAND_ANGLE = -8;
+/** A field is seen whole rather than as a column, and reads as a smear past about −20°. */
+const FIELD_ANGLE = -16;
 
 /**
- * A phone has no right-hand side, so the drape becomes a band above the copy. That is
- * the same bundle turned a quarter turn — sweeping left to right instead of top to
- * bottom — rather than the side drape squashed into a short box, which would just be a
- * diagonal smear in one corner of it.
+ * `side` is the drape down the right of Misjon. `band` is the same bundle turned a
+ * quarter turn — sweeping left to right instead of top to bottom — because a phone has
+ * no right-hand side; it is not the side drape squashed into a short box, which would
+ * be a diagonal smear in one corner of it. `field` is `side` with the cover opened up
+ * far enough that the drape reads as the section's weather rather than as a column
+ * beside it: the feathered cool edge lands somewhere around a third of the way in and
+ * the ground takes over from there, which is what leaves the left of Støtt oss dark
+ * enough to set white type on. It is `cover`, not the bundle, that makes it a field.
  */
-export type DrapeMode = 'side' | 'band';
+export type DrapeMode = 'side' | 'band' | 'field';
+
+/**
+ * `light` is built to sit on white and `deep` on the night ground, which is a different
+ * ramp rather than the same one dimmed: on white the drape has to hold its own against
+ * the page, and on near-black it has to stay under the type.
+ */
+export type DrapePalette = 'light' | 'deep';
 const DENSITY = 1.05;
 const STRANDS = Math.round(340 * Math.sqrt(DENSITY));
 const ALPHA = 0.21 * DENSITY;
@@ -38,8 +56,18 @@ const TEAL: RGB = [0x62, 0xbf, 0xbd];
 type RGB = [number, number, number];
 type Stop = { at: number; c: RGB };
 
-export type DrapeHandle = { destroy(): void };
-export type DrapeOptions = { reduced: boolean; mode: DrapeMode };
+export type DrapeHandle = {
+  destroy(): void;
+  /** `field` only: how much of the section the bundle spreads across. */
+  setCover(cover: number): void;
+};
+export type DrapeOptions = {
+  reduced: boolean;
+  mode: DrapeMode;
+  palette?: DrapePalette;
+  /** `field` only; `side` and `band` are sized against COVER, which the layout knows. */
+  cover?: number;
+};
 
 const lighten = (c: RGB, f: number): RGB => [
   Math.round(c[0] + (255 - c[0]) * f),
@@ -53,7 +81,8 @@ const lighten = (c: RGB, f: number): RGB => [
  * more chroma than the brand does, because a ramp built only from the brand navy —
  * which is very close to grey — reads as smoke on a white page.
  */
-export function ramp(): Stop[] {
+export function ramp(palette: DrapePalette = 'light'): Stop[] {
+  if (palette === 'deep') return deepRamp();
   const pale = lighten(TEAL, 0.82);
   return [
     { at: 0.0, c: pale },
@@ -65,6 +94,24 @@ export function ramp(): Stop[] {
     { at: 0.74, c: [196, 122, 156] },
     { at: 0.86, c: [171, 82, 99] },
     { at: 1.0, c: [224, 188, 203] },
+  ];
+}
+
+/**
+ * The same journey on the night ground, and a shorter one: the pale ends of the light
+ * ramp are what let it read on white, and on near-black they are the two places the
+ * drape would stop being weather and start being a stripe. It runs from a turquoise
+ * held back from the logo's own into the brand blue, down through the brand navy —
+ * which is the darkest point, so the middle of the section sinks rather than glows —
+ * and out through plum into the brand burgundy.
+ */
+function deepRamp(): Stop[] {
+  return [
+    { at: 0.0, c: [70, 150, 150] },
+    { at: 0.28, c: [63, 91, 122] },
+    { at: 0.52, c: [42, 57, 75] },
+    { at: 0.78, c: [128, 70, 92] },
+    { at: 1.0, c: [171, 82, 99] },
   ];
 }
 
@@ -92,10 +139,15 @@ export function createDrape(canvas: HTMLCanvasElement, opts: DrapeOptions): Drap
   const octx = off.getContext('2d');
   if (!octx) return null;
 
-  const stops = ramp();
+  const stops = ramp(opts.palette);
   const band = opts.mode === 'band';
-  const rad = ((band ? BAND_ANGLE : ANGLE) * Math.PI) / 180;
+  const field = opts.mode === 'field';
+  const angle = band ? BAND_ANGLE : field ? FIELD_ANGLE : ANGLE;
+  const rad = (angle * Math.PI) / 180;
   const ca = Math.cos(rad), sa = Math.sin(rad);
+  // Read at the top of every frame rather than closed over, so setCover is a value the
+  // next frame picks up instead of a rebuild of the whole bundle.
+  let cover = field ? (opts.cover ?? 1) : COVER;
   let raf = 0, onScreen = true, resizeTimer = 0;
   const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
 
@@ -116,8 +168,8 @@ export function createDrape(canvas: HTMLCanvasElement, opts: DrapeOptions): Drap
     // along each strand — and only then placed on the canvas. That is what lets the
     // same geometry be a drape down the right or a band across the top: the bundle is
     // unchanged and only the placement turns a quarter turn.
-    const L = 1 - COVER;
-    const pvx = band ? ow * 0.5 : ow * (L + COVER * 0.5);
+    const L = 1 - cover;
+    const pvx = band ? ow * 0.5 : ow * (L + cover * 0.5);
     const pvy = oh * 0.5;
     const rot = (x: number, y: number): [number, number] => {
       const dx = x - pvx, dy = y - pvy;
@@ -127,7 +179,7 @@ export function createDrape(canvas: HTMLCanvasElement, opts: DrapeOptions): Drap
     // canvas so the strands still run out of the frame rather than ending inside it.
     const place = band
       ? (a: number, b: number) => rot(ow * (0.8333 * b + 0.2667), oh * (a * 1.15 - 0.075))
-      : (a: number, b: number) => rot(ow * (L + COVER * a), oh * b);
+      : (a: number, b: number) => rot(ow * (L + cover * a), oh * b);
 
     for (let i = 0; i < STRANDS; i++) {
       const s = i / (STRANDS - 1);
@@ -198,6 +250,13 @@ export function createDrape(canvas: HTMLCanvasElement, opts: DrapeOptions): Drap
   window.addEventListener('resize', onResize);
 
   return {
+    setCover(next: number) {
+      if (!field) return;
+      cover = next;
+      // With reduced motion there is no frame loop to pick the new value up, so the one
+      // still frame has to be redrawn here or the drape simply never changes.
+      if (opts.reduced) draw(0);
+    },
     destroy() {
       if (raf) cancelAnimationFrame(raf);
       window.clearTimeout(resizeTimer);

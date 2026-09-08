@@ -211,3 +211,132 @@ test('phone: no pins after the hero; the tree grows, the wordmark hands off, the
   await expect(page.locator('#misjon p[data-rise]').nth(1)).toHaveCSS('opacity', '1', { timeout: 8_000 });
   await expect(page.locator('[data-mission-text]')).toContainText('bygger vi broer');
 });
+
+/**
+ * Støtt oss is the first dark ground since the hero, so it owns a wordmark handoff in
+ * both directions. The way back up is Misjon's to make, and that is the half that rots
+ * silently: a wordmark left white over Misjon's white section looks like no wordmark.
+ */
+test('desktop: støtt oss goes dark, the field fills it, and the second route follows the frequency', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the phone layout has its own test');
+  await pastHero(page);
+  const top = await docTop(page, '#stott-oss');
+  await page.evaluate((y) => window.scrollTo(0, y + 10), top);
+  await page.waitForTimeout(1500);
+
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'true');
+  await expect(page.locator('.pin-spacer')).toHaveCount(2); // still just hero and visjon
+
+  const section = page.locator('#stott-oss');
+  const s = site.support;
+
+  // How far across the section the drape actually reaches, in tenths from the left. It
+  // is deliberately not the whole width — the cool edge feathers out around a third of
+  // the way in and the night ground takes over, which is what the white type sits on.
+  const painted = await page.evaluate(() => {
+    const c = document.querySelector('#stott-oss canvas') as HTMLCanvasElement;
+    const ctx = c.getContext('2d')!;
+    const data = ctx.getImageData(0, 0, c.width, c.height).data;
+    const hit = new Array(10).fill(0);
+    for (let y = 0; y < c.height; y += 4) {
+      for (let x = 0; x < c.width; x += 4) {
+        if (data[(y * c.width + x) * 4 + 3] > 20) {
+          hit[Math.min(9, Math.floor(x / (c.width / 10)))]++;
+        }
+      }
+    }
+    const inked = hit.map((n, i) => (n > 200 ? i : -1)).filter((i) => i >= 0);
+    return { columns: inked.length, leftmost: inked[0] ?? 10 };
+  });
+  expect(painted.columns, 'the field never painted').toBeGreaterThanOrEqual(6);
+
+  /*
+   * The amount opens the field out, and this is the only assertion that can tell a field
+   * from Misjon's fixed 51 % column: the cover is a number the section drives, so if the
+   * wiring from the chosen amount back to the renderer ever breaks, the page still looks
+   * entirely plausible and nothing else here would notice.
+   */
+  const tiers = section.getByRole('group', { name: s.amountLabel }).getByRole('button');
+  await tiers.nth(4).click();
+  await expect(section.locator('[data-amount]')).toHaveText(/2\s*500/);
+  await page.waitForTimeout(1800); // the cover tween is 0.9s
+  const opened = await page.evaluate(() => {
+    const c = document.querySelector('#stott-oss canvas') as HTMLCanvasElement;
+    const data = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+    const hit = new Array(10).fill(0);
+    for (let y = 0; y < c.height; y += 4) {
+      for (let x = 0; x < c.width; x += 4) {
+        if (data[(y * c.width + x) * 4 + 3] > 20) {
+          hit[Math.min(9, Math.floor(x / (c.width / 10)))]++;
+        }
+      }
+    }
+    return hit.findIndex((n) => n > 200);
+  });
+  expect(opened, 'the largest gift did not spread the field any further')
+    .toBeLessThan(painted.leftmost);
+  await tiers.nth(1).click();
+  await expect(section.locator('[data-amount]')).toHaveText(`250 ${s.unit.once}`);
+
+  /*
+   * Shut until asked for, which is two separate things: the panel collapses to no height
+   * at all, and its contents go inert so they are not in the tab order or the
+   * accessibility tree while they are out of sight. Neither is `toBeHidden` — a row
+   * clipped by an ancestor's overflow keeps a box of its own, and Playwright rightly
+   * calls it visible — so measure the clip and read the attribute.
+   */
+  const clip = '#stott-detaljer > div';
+  const shut = await page.evaluate((sel) => {
+    const el = document.querySelector(sel) as HTMLElement;
+    return {
+      height: Math.round(el.getBoundingClientRect().height),
+      inert: el.firstElementChild!.hasAttribute('inert'),
+    };
+  }, clip);
+  expect(shut).toEqual({ height: 0, inert: true });
+
+  await section.getByRole('button', { name: s.alt.once }).click();
+  await expect(section.getByRole('heading', { name: s.transfer.title })).toBeVisible();
+  await expect(section.getByText(s.account)).toBeVisible();
+  await expect
+    .poll(() => page.evaluate((sel) => {
+      const el = document.querySelector(sel) as HTMLElement;
+      return el.firstElementChild!.hasAttribute('inert') ? -1 : Math.round(el.getBoundingClientRect().height);
+    }, clip), { timeout: 5_000, message: 'the panel never opened' })
+    .toBeGreaterThan(150);
+
+  // AvtaleGiro is the recurring mechanism, so «hver måned» has to offer it instead of a
+  // transfer nobody can make repeat on their own.
+  await section.getByRole('button', { name: s.frequency.month }).click();
+  await expect(section.getByRole('button', { name: s.alt.month })).toBeVisible();
+  await expect(section.getByRole('heading', { name: s.avtalegiro.title })).toBeVisible();
+  await expect(section.getByText(s.kid)).toBeVisible();
+  await expect(section.getByRole('button', { name: /Vipps/ })).toHaveText(/i måneden/);
+
+  // Back up into Misjon, which is white and has to take the wordmark back.
+  const mtop = await docTop(page, '#misjon');
+  await page.evaluate((y) => window.scrollTo(0, y + 10), mtop);
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false', { timeout: 5_000 });
+});
+
+test('phone: støtt oss hands the wordmark over, and the button spans the column', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'the phone layout');
+  await pastHero(page);
+  const top = await docTop(page, '#stott-oss');
+  await page.evaluate((y) => window.scrollTo(0, y + 10), top);
+  await page.waitForTimeout(800);
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'true');
+
+  const section = page.locator('#stott-oss');
+  const s = site.support;
+  await section.getByRole('button', { name: s.frequency.month }).click();
+  await section.getByRole('button', { name: s.alt.month }).click();
+  await expect(section.getByText(s.kid)).toBeVisible();
+
+  // The one thing the phone layout changes: a payment button sized to its own words
+  // leaves a 58px target adrift in the middle of a 375px screen.
+  const box = await section.getByRole('button', { name: /Vipps/ }).boundingBox();
+  const width = page.viewportSize()!.width;
+  expect(box!.width, 'the Vipps button is not the width of the column')
+    .toBeGreaterThan(width - 2 * 24 - 4); // --margin is 24px below 768
+});

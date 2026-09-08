@@ -2,9 +2,9 @@
 
 import { useRef } from 'react';
 import { site } from '@/content/site.no';
+import { createDrape, type DrapeMode } from '@/lib/drape';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { setWordmarkOnDark } from '@/lib/wordmark';
-import { createDrape, type DrapeMode } from './drape';
 import styles from './mission.module.css';
 
 const stanzas = site.mission.stanzas;
