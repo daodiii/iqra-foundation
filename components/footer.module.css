@@ -12,6 +12,12 @@
 
 /* 44px of target out of 12px of type, with the negative margin giving the row its
  * layout back unchanged. */
+.org {
+  /* Never between the year and the address: «Organisasjonsnummer 000 000 000 · Oslo» is
+     one fact and reads as two if a narrow window breaks it. */
+  white-space: nowrap;
+}
+
 .link {
   padding: 16px 8px;
   margin: -16px -8px;

@@ -4,7 +4,7 @@
   position: relative;
   min-height: 100svh;
   overflow: hidden;
-  background: #eae8e4;
+  background: var(--color-paper);
 }
 
 .canvas {

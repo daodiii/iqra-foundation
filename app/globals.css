@@ -8,6 +8,8 @@
   --color-ink-soft: #4b586a;
   --color-muted: #8a94a3;
   --color-hairline: #e3e7ec;
+  /* The warm ground Om oss sits on, so the cream stock of the book reads as cream. */
+  --color-paper: #eae8e4;
   --font-sans: var(--font-geist), "Segoe UI", system-ui, sans-serif;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }

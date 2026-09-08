@@ -172,3 +172,38 @@ test('phone: the header and footer links are targets a thumb can hit', async ({ 
     expect(Math.round(box!.width), `${name} is only ${box!.width}px wide`).toBeGreaterThanOrEqual(44);
   }
 });
+
+/**
+ * `noindex` keeps the page out of search and does nothing at all to a link pasted into a
+ * chat, which is how most people will first meet this site. The image has to be absolute
+ * — a relative og:image is silently dropped by every unfurler — and /om-oss has to carry
+ * its own, because nested metadata is replaced rather than merged and it would otherwise
+ * show the landing page's title.
+ */
+test('a shared link carries a card, on both routes', async ({ page }) => {
+  for (const [path, title] of [['/', site.meta.title], ['/om-oss', site.about.meta.title]] as const) {
+    await page.goto(path);
+    await expect(page.locator('meta[property="og:title"]'), path).toHaveAttribute('content', title);
+    await expect(page.locator('meta[property="og:site_name"]'), path).toHaveAttribute('content', site.name);
+    const image = await page.locator('meta[property="og:image"]').getAttribute('content');
+    expect(image, `${path} has no share image`).toBeTruthy();
+    expect(image, `${path} og:image is relative, which unfurlers drop`).toMatch(/^https?:\/\//);
+    expect(image).toContain('/media/iqra-poster.jpg');
+    await expect(page.locator('meta[property="og:image:alt"]'), path)
+      .toHaveAttribute('content', site.meta.imageAlt);
+  }
+});
+
+/**
+ * A site that asks for money and says it will report the gift on an organisation number
+ * has to say what that number is somewhere other than inside the panel doing the asking.
+ * On every page, so it is asserted on the one that has no Støtt oss section of its own.
+ */
+test('om oss: the footer says who the organisation is', async ({ page }) => {
+  await page.goto('/om-oss');
+  const footer = page.locator('footer');
+  await expect(footer).toContainText(site.support.fields.orgnr);
+  await expect(footer).toContainText(site.support.orgnr);
+  await expect(footer).toContainText(site.footer.place);
+  await expect(footer).toContainText(String(new Date().getFullYear()));
+});

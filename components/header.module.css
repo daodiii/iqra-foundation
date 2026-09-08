@@ -13,6 +13,16 @@
 }
 
 /*
+ * A page whose content is a document, not a stack of full-bleed sections: without a
+ * ground the paragraphs scroll straight under the wordmark and the two print through
+ * each other. The same colour as the page, so it reads as the top of the page rather
+ * than as a bar that has appeared.
+ */
+.header[data-ground] {
+  background: var(--color-paper);
+}
+
+/*
  * The padding is the target and the negative margin gives the layout back: outer size is
  * content + 20 - 20, so the wordmark sits exactly where it did while the thing a finger
  * has to hit is 44px rather than 24.

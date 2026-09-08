@@ -31,7 +31,11 @@ export const site = {
   meta: {
     title: 'Iqra Foundation',
     description: 'Iqra betyr les. Vi snakker gjerne med deg om islam.',
+    /** What a shared link shows. The poster is the film's first frame. */
+    imageAlt: 'Fjell i dis, i lyset før soloppgang.',
   },
+  /** The organisation number is `support.orgnr`: one gift, one number, one place. */
+  footer: { place: 'Oslo' },
   header: { wordmark: 'IQRA', homeLabel: 'Iqra Foundation, til toppen', navLabel: 'Hovedmeny' },
   hero: {
     word: 'IQRA',
