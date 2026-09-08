@@ -28,13 +28,11 @@ export function Book() {
       if (!section) return;
       const canvas = section.querySelector('canvas');
       const label = section.querySelector<HTMLElement>('[data-chapter]');
+      const chrome = section.querySelectorAll<HTMLElement>('[data-chrome]');
       // Reduced motion gets the article, not a book it cannot turn.
       if (!canvas || reducedMotion()) return;
 
-      // A phone is too narrow for a spread, so below 768px the book shows one page and
-      // the sheet turns off it. That is a different scene, not a smaller one, so it is
-      // rebuilt at the breakpoint rather than restyled.
-      const mount = (single: boolean) => () => {
+      const mount = () => {
         // The section starts as `off`, which is right for no JS and no WebGL — but that
         // state also sets `display:none` on the canvas, and a display:none canvas
         // measures zero. Switch it on BEFORE building the renderer, or the book sizes
@@ -42,7 +40,7 @@ export function Book() {
         // draws. Back to `off` if the renderer declines, which is a driver that cannot
         // compile the shaders.
         section.dataset.canvas = 'on';
-        const book: BookHandle | null = createBook(canvas, { single });
+        const book: BookHandle | null = createBook(canvas);
         if (!book) { section.dataset.canvas = 'off'; return; }
 
         const at = { p: 0 };
@@ -57,15 +55,37 @@ export function Book() {
           },
         });
         const st = ScrollTrigger.create({
-          trigger: section, start: 'top top', end: `+=${book.turns * 110}%`,
+          trigger: section, start: 'top top', end: `+=${book.turns * 70}%`,
           pin: true, scrub: 0.6, animation: tl,
+          /*
+           * The chapter label and the hint are positioned inside the section, and the
+           * header is fixed. So the moment the pin lets go, the chrome rides up the
+           * screen and prints straight through the wordmark. Take it out over the last
+           * of the pin, while the section is still being held: by the time it moves,
+           * there is nothing left to collide. Also right on its own terms — «bla for å
+           * bla om» is the wrong thing to say on the page you stop at.
+           */
+          onUpdate: (self) => {
+            const o = 1 - gsap.utils.clamp(0, 1, (self.progress - 0.94) / 0.06);
+            for (const el of chrome) el.style.opacity = String(o);
+          },
         });
-        return () => { st.kill(); book.destroy(); };
+        return () => {
+          st.kill();
+          book.destroy();
+          for (const el of chrome) el.style.opacity = '';
+        };
       };
 
+      /*
+       * The book is a spread, and a spread only reads at desktop widths: the page is
+       * drawn on a 768px texture, so body copy set at 32px there renders at
+       * `32 × pageWidth / 768` — about 10px on a 768px screen and 19px at 1440. Below
+       * the spec's desktop breakpoint the section keeps `data-canvas="off"` and the
+       * article underneath is the page, which is the same document at 18px.
+       */
       const mm = gsap.matchMedia();
-      mm.add('(min-width: 768px)', mount(false));
-      mm.add('(max-width: 767px)', mount(true));
+      mm.add('(min-width: 1024px)', mount);
 
       return () => { mm.revert(); section.dataset.canvas = 'off'; };
     },
@@ -75,11 +95,11 @@ export function Book() {
   return (
     <section ref={root} id="om-oss" className={styles.about} data-canvas="off">
       <canvas className={styles.canvas} aria-hidden="true" />
-      <div className={styles.hud} aria-hidden="true">
+      <div className={styles.hud} data-chrome aria-hidden="true">
         <p className={styles.label}>{site.about.label}</p>
         <p className={styles.chapter} data-chapter>{chapterLabels[0]}</p>
       </div>
-      <p className={styles.hint} aria-hidden="true">{site.about.hint}</p>
+      <p className={styles.hint} data-chrome aria-hidden="true">{site.about.hint}</p>
 
       <article className={styles.readable}>
         <h1>{site.about.cover.title}</h1>

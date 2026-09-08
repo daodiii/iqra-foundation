@@ -96,7 +96,7 @@ export function drawFace(face: Face, W: number, H: number): HTMLCanvasElement {
     c.fillStyle = g;
     c.fillRect(0, 0, W, H);
     c.fillStyle = 'rgba(255,255,255,.55)';
-    c.font = '500 22px Geist Mono, monospace';
+    c.font = '500 20px Geist, sans-serif';
     c.fillText(face.mark.toUpperCase(), M, M + 22);
     c.font = '600 104px Geist, sans-serif';
     c.fillStyle = '#fff';
@@ -110,8 +110,8 @@ export function drawFace(face: Face, W: number, H: number): HTMLCanvasElement {
   }
 
   c.fillStyle = INK;
-  c.font = '500 21px Geist Mono, monospace';
-  c.fillText(face.label.toUpperCase(), M, M + 20);
+  c.font = '500 21px Geist, sans-serif';
+  c.fillText(face.label, M, M + 20);
 
   if (face.kind === 'opener') {
     c.fillStyle = CRIMSON;
@@ -135,9 +135,8 @@ export function drawFace(face: Face, W: number, H: number): HTMLCanvasElement {
         c.font = '500 30px Geist, sans-serif';
         c.fillText(m.name, M, y);
         c.fillStyle = MUTED;
-        c.font = '500 19px Geist Mono, monospace';
-        const role = m.role.toUpperCase();
-        c.fillText(role, W - M - c.measureText(role).width, y - 2);
+        c.font = '500 19px Geist, sans-serif';
+        c.fillText(m.role, W - M - c.measureText(m.role).width, y - 2);
         c.strokeStyle = HAIRLINE;
         c.lineWidth = 1;
         c.beginPath(); c.moveTo(M, y + 18); c.lineTo(W - M, y + 18); c.stroke();
@@ -152,17 +151,20 @@ export function drawFace(face: Face, W: number, H: number): HTMLCanvasElement {
         c.font = '600 66px Geist, sans-serif';
         c.fillText(f.value, x, y + 50);
         c.fillStyle = MUTED;
-        c.font = '500 19px Geist Mono, monospace';
-        c.fillText(f.label.toUpperCase(), x, y + 84);
+        c.font = '500 19px Geist, sans-serif';
+        c.fillText(f.label, x, y + 84);
       });
     }
   } else if (face.kind === 'ask') {
     c.fillStyle = NAVY;
     c.font = '600 66px Geist, sans-serif';
-    wrap(c, face.title, M, H * 0.46, W - M * 2, 82);
+    // `wrap` returns the y after the last line it set, and the lede has to start from
+    // there rather than from a fixed offset: «Har du et spørsmål?» takes two lines in
+    // this column, and a hardcoded +110 put the second line straight through the lede.
+    const after = wrap(c, face.title, M, H * 0.46, W - M * 2, 82);
     c.fillStyle = INK;
     c.font = '400 30px Geist, sans-serif';
-    wrap(c, face.lede, M, H * 0.46 + 110, W - M * 2 - 40, 42);
+    wrap(c, face.lede, M, after + 28, W - M * 2 - 40, 42);
   } else if (face.kind === 'contact') {
     c.fillStyle = NAVY;
     c.font = '400 32px Geist, sans-serif';
@@ -179,7 +181,7 @@ export function drawFace(face: Face, W: number, H: number): HTMLCanvasElement {
   }
 
   c.fillStyle = MUTED;
-  c.font = '500 18px Geist Mono, monospace';
-  c.fillText(face.folio.toUpperCase(), M, H - 60);
+  c.font = '500 18px Geist, sans-serif';
+  c.fillText(face.folio, M, H - 60);
   return cv;
 }

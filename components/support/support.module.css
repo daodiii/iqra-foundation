@@ -63,9 +63,8 @@
 
 .label {
   margin: 0;
-  font: 500 12px/1 var(--font-mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
   color: rgba(255, 255, 255, 0.66);
 }
 
@@ -76,12 +75,20 @@
   gap: clamp(6px, 1vh, 12px);
 }
 
+/*
+ * One line, always. The amount itself cannot break (kroner() groups with a non-breaking
+ * space) but «kr / mnd» can, and did: at the top tier on a wide screen the unit came
+ * away and «mnd» sat alone on a second line under the number. `nowrap` settles that, and
+ * the ceiling comes down to 150px so the longest case — «2 500 kr / mnd» — still fits
+ * the 600px the column leaves rather than running under its own edge.
+ */
 .amount {
   margin: 0;
-  font-size: clamp(66px, 13vw, 168px);
+  font-size: clamp(66px, 11.5vw, 150px);
   font-weight: 700;
   letter-spacing: -0.06em;
   line-height: 0.86;
+  white-space: nowrap;
   /* Five amounts of three different widths swap in and out of this one line. */
   font-variant-numeric: tabular-nums;
 }
@@ -282,9 +289,8 @@
 
 .detailsTitle {
   margin: 0 0 6px;
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
   color: rgba(255, 255, 255, 0.6);
 }
 
@@ -314,9 +320,8 @@
 }
 
 .row dt {
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
   color: rgba(255, 255, 255, 0.55);
 }
 

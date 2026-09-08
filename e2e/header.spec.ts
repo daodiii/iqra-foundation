@@ -17,9 +17,15 @@ async function intoTheFilm(page: import('@playwright/test').Page) {
     .poll(() => page.evaluate(() => document.getElementById('hero')?.parentElement?.classList.contains('pin-spacer') ?? false),
       { timeout: 15_000, message: 'the hero never pinned' })
     .toBe(true);
-  await page.evaluate(() => window.scrollTo(0, window.innerHeight * 2.6));
+  await page.evaluate((y) => window.scrollTo(0, y), (await heroPin(page)) * 0.87);
   await page.waitForTimeout(900);
 }
+
+/** Read off the pin spacer, so tuning the hero's length does not move these targets. */
+const heroPin = (page: Page) => page.evaluate(() => {
+  const section = document.getElementById('hero')!;
+  return section.parentElement!.getBoundingClientRect().height - section.getBoundingClientRect().height;
+});
 
 /**
  * The header starts hidden and the hero fades it in once the letters have opened. That
@@ -35,7 +41,7 @@ test('landing: the header is hidden at the top and arrives with the film', async
   await expect(page.locator(wordmark)).toHaveCSS('opacity', '0');
   await expect(page.locator(nav)).toHaveCSS('opacity', '0');
 
-  await page.evaluate(() => window.scrollTo(0, window.innerHeight * 2.6));
+  await page.evaluate((y) => window.scrollTo(0, y), (await heroPin(page)) * 0.87);
   await page.waitForTimeout(900);
   await expect(page.locator(wordmark)).toHaveCSS('opacity', '1', { timeout: 5_000 });
   await expect(page.locator(nav)).toHaveCSS('opacity', '1');
@@ -107,4 +113,97 @@ test('om oss: the Støtt oss link goes back to the landing page and finds the se
   await linkNamed(page, site.support.label).click();
   await expect(page).toHaveURL((url) => url.pathname === '/' && url.hash === '#stott-oss');
   await expect(page.locator('#stott-oss')).toBeVisible();
+});
+
+/**
+ * The header is transparent at the top of the landing page, so the first Tab used to
+ * land on an invisible link with an invisible focus ring: the ring was drawn, on
+ * something at opacity 0. Both halves are asserted because they are fixed differently —
+ * the wordmark shows itself on `:focus-visible`, the nav has to do it on the container,
+ * since that is the element the hero fades and no child can climb out of its parent's
+ * opacity. The call to action cannot do either for the same reason, so it leaves the tab
+ * order instead until the copy has arrived.
+ */
+test('landing: nothing invisible can be tabbed to without showing itself', async ({ page }) => {
+  await page.goto('/');
+  await expect
+    .poll(() => page.evaluate(() => document.getElementById('hero')?.parentElement?.classList.contains('pin-spacer') ?? false),
+      { timeout: 15_000, message: 'the hero never pinned' })
+    .toBe(true);
+  await expect(page.locator(wordmark)).toHaveCSS('opacity', '0');
+
+  await page.keyboard.press('Tab');
+  await expect(page.locator(wordmark)).toBeFocused();
+  await expect(page.locator(wordmark), 'the wordmark took focus while invisible').toHaveCSS('opacity', '1');
+
+  await page.keyboard.press('Tab');
+  await expect(page.locator(navLinks).first()).toBeFocused();
+  await expect(page.locator(nav), 'the nav took focus while invisible').toHaveCSS('opacity', '1');
+
+  // Out of the tab order while the copy it belongs to is still transparent, and back in
+  // once the copy has landed. Read as a property rather than by tabbing: what follows
+  // the nav when the CTA is skipped is browser chrome, which Playwright cannot see.
+  const ctaTabIndex = () => page.locator('#hero [data-copy] a').evaluate((el) => el.tabIndex);
+  expect(await ctaTabIndex(), 'the hidden call to action is still a tab stop').toBe(-1);
+
+  await page.evaluate((y) => window.scrollTo(0, y), (await heroPin(page)) * 0.95);
+  await expect(page.locator('#hero [data-copy]')).toHaveCSS('opacity', '1', { timeout: 8_000 });
+  await expect.poll(ctaTabIndex, { timeout: 5_000, message: 'the call to action never came back' }).toBe(0);
+});
+
+/**
+ * The only two links a phone visitor has before the foot of the page, and both were
+ * 11px tall: real text at a real size, with no padding to stand on. WCAG asks 24, Apple
+ * 44. The width matters as much as the height and neither is visible in a screenshot.
+ */
+test('phone: the header and footer links are targets a thumb can hit', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'touch targets');
+  await page.goto('/om-oss'); // no hero here, so the header is visible from the start
+  const targets = [
+    ['wordmark', page.locator(wordmark)],
+    ['nav: Om oss', linkNamed(page, site.about.label)],
+    ['nav: Støtt oss', linkNamed(page, site.support.label)],
+    ['footer email', page.locator('footer a')],
+  ] as const;
+  for (const [name, locator] of targets) {
+    const box = await locator.boundingBox();
+    expect(box, `${name} has no box`).not.toBeNull();
+    expect(Math.round(box!.height), `${name} is only ${box!.height}px tall`).toBeGreaterThanOrEqual(44);
+    expect(Math.round(box!.width), `${name} is only ${box!.width}px wide`).toBeGreaterThanOrEqual(44);
+  }
+});
+
+/**
+ * `noindex` keeps the page out of search and does nothing at all to a link pasted into a
+ * chat, which is how most people will first meet this site. The image has to be absolute
+ * — a relative og:image is silently dropped by every unfurler — and /om-oss has to carry
+ * its own, because nested metadata is replaced rather than merged and it would otherwise
+ * show the landing page's title.
+ */
+test('a shared link carries a card, on both routes', async ({ page }) => {
+  for (const [path, title] of [['/', site.meta.title], ['/om-oss', site.about.meta.title]] as const) {
+    await page.goto(path);
+    await expect(page.locator('meta[property="og:title"]'), path).toHaveAttribute('content', title);
+    await expect(page.locator('meta[property="og:site_name"]'), path).toHaveAttribute('content', site.name);
+    const image = await page.locator('meta[property="og:image"]').getAttribute('content');
+    expect(image, `${path} has no share image`).toBeTruthy();
+    expect(image, `${path} og:image is relative, which unfurlers drop`).toMatch(/^https?:\/\//);
+    expect(image).toContain('/media/iqra-poster.jpg');
+    await expect(page.locator('meta[property="og:image:alt"]'), path)
+      .toHaveAttribute('content', site.meta.imageAlt);
+  }
+});
+
+/**
+ * A site that asks for money and says it will report the gift on an organisation number
+ * has to say what that number is somewhere other than inside the panel doing the asking.
+ * On every page, so it is asserted on the one that has no Støtt oss section of its own.
+ */
+test('om oss: the footer says who the organisation is', async ({ page }) => {
+  await page.goto('/om-oss');
+  const footer = page.locator('footer');
+  await expect(footer).toContainText(site.support.fields.orgnr);
+  await expect(footer).toContainText(site.support.orgnr);
+  await expect(footer).toContainText(site.footer.place);
+  await expect(footer).toContainText(String(new Date().getFullYear()));
 });

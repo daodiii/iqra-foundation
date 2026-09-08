@@ -6,7 +6,7 @@ import { site } from '@/content/site.no';
 // in this file looks at the fonts; it only needs the module to import.
 vi.mock('next/font/google', () => {
   const font = () => ({ variable: '', className: '', style: { fontFamily: '' } });
-  return { Geist: font, Geist_Mono: font };
+  return { Geist: font };
 });
 
 // The noindex is not a preference, it is tied to the filler: as long as the content still

@@ -10,10 +10,15 @@ import styles from './header.module.css';
  *
  * `data-on-dark` lives on the wordmark and the nav follows it through a sibling selector,
  * so there is still exactly one attribute saying what the ground behind the header is.
+ *
+ * `ground` is for a page whose content is an ordinary document rather than full-bleed
+ * sections: the header is transparent so the film can run under it, and on a page that
+ * simply scrolls, the copy runs under it instead and prints through the wordmark. The
+ * page that has a ground says so; nothing here guesses.
  */
-export function Header() {
+export function Header({ ground = false }: { ground?: boolean } = {}) {
   return (
-    <header className={styles.header}>
+    <header className={styles.header} data-ground={ground || undefined}>
       <Link
         id="site-wordmark"
         href="/"

@@ -1,6 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const heroPinLength = (page: Page) => page.evaluate(() => window.innerHeight * 3);
+/** Read off the pin spacer, not assumed from the `+=N%` the hero asks for. */
+const heroPinLength = (page: Page) => page.evaluate(() => {
+  const section = document.getElementById('hero')!;
+  return section.parentElement!.getBoundingClientRect().height - section.getBoundingClientRect().height;
+});
 
 /** The hero builds its timeline inside `document.fonts.ready`, so the pin lands some way
  *  after load — how far after depends on the font cache. Wait for the pin, not for a guess. */

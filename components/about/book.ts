@@ -29,9 +29,6 @@ const GUTTER = 0.9;
 const LIGHT: [number, number, number] = [-1.6, 2.0, 2.4];
 const CLEAR: [number, number, number] = [0.918, 0.91, 0.894];
 
-/** A phone is too narrow for a spread, so it gets one page and the sheet turns off it. */
-export type BookOptions = { single: boolean };
-
 export type BookHandle = {
   /** 0 to `turns`; fractional values are a sheet in flight. */
   setProgress(p: number): void;
@@ -115,8 +112,7 @@ export function chapterIndex(p: number, chapters: number): number {
   return Math.max(0, Math.min(chapters + 1, Math.round(p)));
 }
 
-export function createBook(canvas: HTMLCanvasElement, opts: BookOptions): BookHandle | null {
-  const single = opts.single;
+export function createBook(canvas: HTMLCanvasElement): BookHandle | null {
   const gl = canvas.getContext('webgl', { antialias: true, alpha: false });
   if (!gl) return null;
 
@@ -204,14 +200,8 @@ export function createBook(canvas: HTMLCanvasElement, opts: BookOptions): BookHa
     const asp = canvas.width / canvas.height;
     // A closed book is one page, not a spread, so centre on the page while it is shut
     // and drift to the spine as it opens; otherwise the first screen sits hard right.
-    // On a phone it never opens into a spread, so it stays centred on the one page.
-    const cx = single ? PW * 0.5 : PW * 0.5 * (1 - Math.min(1, Math.max(0, progress)));
-    const tanHalf = Math.tan(FOV / 2);
-    // One page on a tall screen is bound by width, so the distance is fitted rather than
-    // guessed; the spread keeps the two distances the desktop layout was built against.
-    const dist = single
-      ? Math.max((PH * 0.62) / tanHalf, (PW * 0.66) / (tanHalf * asp))
-      : asp < 1.35 ? 3.9 : 3.05;
+    const cx = PW * 0.5 * (1 - Math.min(1, Math.max(0, progress)));
+    const dist = asp < 1.35 ? 3.9 : 3.05;
     const eye = [cx, 0.06, dist];
     const mvp = mul(perspective(FOV, asp, 0.1, 40), lookAt(eye, [cx, -0.02, 0], [0, 1, 0]));
 
@@ -231,9 +221,7 @@ export function createBook(canvas: HTMLCanvasElement, opts: BookOptions): BookHa
     // back of the sheet already turned. The left one is flipped to pi, so the camera
     // sees its BACK face — its content has to be the back texture or it renders blank.
     sheet(tex[2 * i + 2] ?? blank, blank, FLAT, apex, 0);
-    // No left page on a phone: there is no spread, so the turning sheet simply lifts and
-    // sweeps off the left of the frame, which is what turning one page looks like.
-    if (!single && i > 0) sheet(blank, tex[2 * i - 1] ?? blank, FLAT, apex, Math.PI);
+    if (i > 0) sheet(blank, tex[2 * i - 1] ?? blank, FLAT, apex, Math.PI);
 
     // And the sheet in the air: flat at both ends of the turn, tightest in the middle.
     const curl = FLAT - (FLAT - THETA_MIN) * Math.sin(Math.PI * t);

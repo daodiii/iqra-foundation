@@ -45,3 +45,7 @@ test-results/
 playwright-report/
 .lighthouseci/
 scripts/.frames/
+
+# review and browser-tool artifacts
+.impeccable/
+.playwright-mcp/

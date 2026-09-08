@@ -9,12 +9,22 @@ import { site } from '@/content/site.no';
 export const metadata: Metadata = {
   title: site.about.meta.title,
   description: site.about.meta.description,
+  // Nested metadata is replaced, not merged: without this the card for /om-oss would
+  // carry the landing page's title and description from the root layout.
+  openGraph: {
+    type: 'article',
+    locale: 'nb_NO',
+    siteName: site.name,
+    title: site.about.meta.title,
+    description: site.about.meta.description,
+    images: [{ url: '/media/iqra-poster.jpg', width: 1920, height: 1080, alt: site.meta.imageAlt }],
+  },
 };
 
 export default function OmOss() {
   return (
     <>
-      <Header />
+      <Header ground />
       <main>
         <Book />
       </main>
