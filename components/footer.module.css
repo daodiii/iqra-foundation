@@ -11,7 +11,11 @@
   color: var(--color-ink-soft);
 }
 
+/* 44px of target out of 12px of type, with the negative margin giving the row its
+ * layout back unchanged. */
 .link {
+  padding: 16px 8px;
+  margin: -16px -8px;
   color: inherit;
   text-decoration: none;
   transition: color 300ms var(--ease-out-expo);
@@ -25,5 +29,8 @@
   .footer {
     flex-direction: column;
     align-items: flex-start;
+    /* Stacked, the link's -16px top margin eats into the gap, so ask for 16 more than
+     * the 24 the two lines are meant to have between them. */
+    gap: 40px;
   }
 }

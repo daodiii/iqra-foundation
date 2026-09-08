@@ -108,3 +108,61 @@ test('om oss: the Støtt oss link goes back to the landing page and finds the se
   await expect(page).toHaveURL((url) => url.pathname === '/' && url.hash === '#stott-oss');
   await expect(page.locator('#stott-oss')).toBeVisible();
 });
+
+/**
+ * The header is transparent at the top of the landing page, so the first Tab used to
+ * land on an invisible link with an invisible focus ring: the ring was drawn, on
+ * something at opacity 0. Both halves are asserted because they are fixed differently —
+ * the wordmark shows itself on `:focus-visible`, the nav has to do it on the container,
+ * since that is the element the hero fades and no child can climb out of its parent's
+ * opacity. The call to action cannot do either for the same reason, so it leaves the tab
+ * order instead until the copy has arrived.
+ */
+test('landing: nothing invisible can be tabbed to without showing itself', async ({ page }) => {
+  await page.goto('/');
+  await expect
+    .poll(() => page.evaluate(() => document.getElementById('hero')?.parentElement?.classList.contains('pin-spacer') ?? false),
+      { timeout: 15_000, message: 'the hero never pinned' })
+    .toBe(true);
+  await expect(page.locator(wordmark)).toHaveCSS('opacity', '0');
+
+  await page.keyboard.press('Tab');
+  await expect(page.locator(wordmark)).toBeFocused();
+  await expect(page.locator(wordmark), 'the wordmark took focus while invisible').toHaveCSS('opacity', '1');
+
+  await page.keyboard.press('Tab');
+  await expect(page.locator(navLinks).first()).toBeFocused();
+  await expect(page.locator(nav), 'the nav took focus while invisible').toHaveCSS('opacity', '1');
+
+  // Out of the tab order while the copy it belongs to is still transparent, and back in
+  // once the copy has landed. Read as a property rather than by tabbing: what follows
+  // the nav when the CTA is skipped is browser chrome, which Playwright cannot see.
+  const ctaTabIndex = () => page.locator('#hero [data-copy] a').evaluate((el) => el.tabIndex);
+  expect(await ctaTabIndex(), 'the hidden call to action is still a tab stop').toBe(-1);
+
+  await page.evaluate(() => window.scrollTo(0, window.innerHeight * 2.8));
+  await expect(page.locator('#hero [data-copy]')).toHaveCSS('opacity', '1', { timeout: 8_000 });
+  await expect.poll(ctaTabIndex, { timeout: 5_000, message: 'the call to action never came back' }).toBe(0);
+});
+
+/**
+ * The only two links a phone visitor has before the foot of the page, and both were
+ * 11px tall: real text at a real size, with no padding to stand on. WCAG asks 24, Apple
+ * 44. The width matters as much as the height and neither is visible in a screenshot.
+ */
+test('phone: the header and footer links are targets a thumb can hit', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'touch targets');
+  await page.goto('/om-oss'); // no hero here, so the header is visible from the start
+  const targets = [
+    ['wordmark', page.locator(wordmark)],
+    ['nav: Om oss', linkNamed(page, site.about.label)],
+    ['nav: Støtt oss', linkNamed(page, site.support.label)],
+    ['footer email', page.locator('footer a')],
+  ] as const;
+  for (const [name, locator] of targets) {
+    const box = await locator.boundingBox();
+    expect(box, `${name} has no box`).not.toBeNull();
+    expect(Math.round(box!.height), `${name} is only ${box!.height}px tall`).toBeGreaterThanOrEqual(44);
+    expect(Math.round(box!.width), `${name} is only ${box!.width}px wide`).toBeGreaterThanOrEqual(44);
+  }
+});

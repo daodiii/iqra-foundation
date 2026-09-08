@@ -36,6 +36,7 @@ export function Hero() {
       const video = videoRef.current;
       const word = wordRef.current;
       if (!section || !video || !word) return;
+      const cta = section.querySelector<HTMLAnchorElement>('[data-copy] a');
 
       // Media: pick the loop after hydration, never before (spec 6.4).
       video.src = pickSource({
@@ -51,6 +52,17 @@ export function Hero() {
       // has a hero to turn it back on. Hiding it is therefore the hero's job, done here
       // rather than in the stylesheet, and only once we know we are going to animate.
       gsap.set(headerElements(), { opacity: 0 });
+      /*
+       * The call to action comes in with the copy, so until then it is a transparent
+       * link at the bottom of the film and it should not be a tab stop. Not `inert`, and
+       * not on the copy as a whole: the headline and the lede are deliberately left
+       * readable to a screen reader the entire time (that is why the copy is faded with
+       * `opacity` and never `autoAlpha`), and this takes nothing out of that tree. It
+       * only stops focus landing somewhere the eye cannot follow — the header solves the
+       * same problem the other way, by showing itself when it is focused, which the copy
+       * cannot do because its own parent carries the opacity.
+       */
+      if (cta) cta.tabIndex = -1;
 
       video.load();
       Promise.resolve(video.play()).catch(() => {}); // autoplay refused: the poster stays, nothing else changes
@@ -85,7 +97,12 @@ export function Hero() {
               // falls back to document position. Drop the keys and refreshes fall back to
               // creation order, which puts us last again and Visjon 2700px too early.
               refreshPriority: 2,
-              onUpdate: (st) => setWordmarkOnDark(st.progress > 0.6),
+              onUpdate: (st) => {
+                setWordmarkOnDark(st.progress > 0.6);
+                // The copy tween runs from 0.695 to 0.864 of the pin; by 0.8 there is
+                // enough of the button on screen to focus something visible.
+                if (cta) cta.tabIndex = st.progress > 0.8 ? 0 : -1;
+              },
             },
           });
           tl.to(word, { scale: 7, svgOrigin: origin, ease: EASE.none, duration: 0.55 }, 0)
@@ -104,6 +121,7 @@ export function Hero() {
       });
       return () => {
         cancelled = true;
+        if (cta) cta.tabIndex = 0;
       };
     },
     { scope: root },

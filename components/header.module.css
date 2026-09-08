@@ -12,8 +12,15 @@
   pointer-events: none; /* only the links are clickable; the film underneath stays reachable */
 }
 
+/*
+ * The padding is the target and the negative margin gives the layout back: outer size is
+ * content + 20 - 20, so the wordmark sits exactly where it did while the thing a finger
+ * has to hit is 44px rather than 24.
+ */
 .wordmark {
   pointer-events: auto;
+  padding: 10px 8px;
+  margin: -10px -8px;
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 0.08em;
@@ -28,11 +35,18 @@
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 6px;
 }
 
+/* Same bargain as the wordmark: 44px of target, no change to where anything sits. The
+ * nav's own gap comes down from 22 to 6 so the 8px each link now carries on either side
+ * adds back to the 22 the header was drawn with. */
 .navLink {
+  padding: 16px 8px;
   font: 500 12px/1 var(--font-mono);
+  /* Fixed, not the shorthand's unitless 1: the phone size drops the type to 11px and
+   * with it the line box, which left the target 43px tall — one pixel short. */
+  line-height: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none;
@@ -61,13 +75,31 @@
   color: #ffffff;
 }
 
+/*
+ * The hero hides the header until the letters have opened, and it hides it by setting
+ * opacity on these two elements — so on the landing page the first Tab used to land on
+ * an invisible link with an invisible focus ring. `!important` is what beats the inline
+ * style GSAP writes. On the nav it has to sit on the container: that is what carries the
+ * opacity, and no child can climb out of its parent's.
+ *
+ * Both are over white at the top of the hero, so navy and ink read normally when they
+ * come back.
+ */
+.wordmark:focus-visible {
+  opacity: 1 !important;
+}
+
+.nav:focus-within {
+  opacity: 1 !important;
+}
+
 @media (max-width: 767px) {
   .wordmark {
     font-size: 16px;
   }
 
   .nav {
-    gap: 16px;
+    gap: 0;
   }
 
   .navLink {
