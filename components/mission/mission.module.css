@@ -100,9 +100,10 @@
 }
 
 /*
- * A phone has no right-hand side. The drape becomes a band across the top and the copy
- * sits under it on white; the band still carries the colour, but this is the layout that
- * most deserves its own pass once the section is on a real device.
+ * A phone has no right-hand side, so the drape becomes a band above the copy and the
+ * renderer turns the bundle a quarter turn to match (drape.ts, mode 'band'). The band's
+ * bottom edge is a cut through the middle of the page rather than a bleed off the
+ * screen, so it is faded out where it meets the white the copy sits on.
  */
 @media (max-width: 860px) {
   .mission {
@@ -110,13 +111,29 @@
   }
 
   .drape {
-    height: 40svh;
+    height: 34svh;
     bottom: auto;
+    -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 62%, transparent 100%);
   }
 
   .inner {
     grid-template-columns: 1fr;
-    padding: calc(40svh + clamp(40px, 6vh, 72px)) var(--margin) clamp(56px, 8vh, 88px);
+    padding: calc(34svh + clamp(28px, 5vh, 56px)) var(--margin) clamp(56px, 8vh, 88px);
+  }
+
+  /*
+   * The lines are hand-set, so the type has to shrink faster than the desktop clamp
+   * does or «på en vennlig og ærlig måte.» re-wraps on a 360px screen and the breaks
+   * stop meaning anything.
+   */
+  .stanza {
+    font-size: clamp(19px, 5.6vw, 30px);
+    margin-bottom: clamp(20px, 3.4vh, 30px);
+  }
+
+  .label {
+    margin-bottom: clamp(20px, 3.4vh, 34px);
   }
 
   .cta {

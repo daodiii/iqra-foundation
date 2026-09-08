@@ -182,6 +182,29 @@ test('phone: no pins after the hero; the tree grows, the wordmark hands off, the
   }
   const mtop = await docTop(page, '#misjon');
   await page.evaluate((y) => window.scrollTo(0, y + 10), mtop);
+  await page.waitForTimeout(600);
+
+  // The drape is a band above the copy here, not a column beside it, and the renderer
+  // turns the bundle a quarter turn to fill it. A band that still drew the side geometry
+  // would paint a diagonal smear in one corner and leave most of the strip empty, so
+  // this checks both the shape of the box and that colour actually reaches across it.
+  const band = await page.evaluate(() => {
+    const section = document.getElementById('misjon')!;
+    const c = section.querySelector('canvas') as HTMLCanvasElement;
+    const ctx = c.getContext('2d')!;
+    const data = ctx.getImageData(0, 0, c.width, c.height).data;
+    let painted = 0;
+    const columns = new Set<number>();
+    for (let y = 0; y < c.height; y += 3) {
+      for (let x = 0; x < c.width; x += 3) {
+        if (data[(y * c.width + x) * 4 + 3] > 20) { painted++; columns.add(Math.round(x / (c.width / 10))); }
+      }
+    }
+    return { w: c.width, h: c.height, sectionH: section.clientHeight, painted, columns: columns.size };
+  });
+  expect(band.h, 'the drape is not a band').toBeLessThan(band.sectionH * 0.6);
+  expect(band.painted, 'the band never painted').toBeGreaterThan(0);
+  expect(band.columns, 'the colour only reached part of the band').toBeGreaterThanOrEqual(8);
   // Navy, not white: Misjon is a white section now, so this is the handoff that would
   // have been left saying "on dark" from the old night still and shown nothing.
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');

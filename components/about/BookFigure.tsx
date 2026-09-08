@@ -28,37 +28,46 @@ export function Book() {
       if (!section) return;
       const canvas = section.querySelector('canvas');
       const label = section.querySelector<HTMLElement>('[data-chapter]');
+      // Reduced motion gets the article, not a book it cannot turn.
+      if (!canvas || reducedMotion()) return;
 
-      // The section starts as `off`, which is right for no JS and no WebGL — but that
-      // state also sets `display:none` on the canvas, and a display:none canvas measures
-      // zero. Switch it on BEFORE building the renderer, or the book sizes itself against
-      // nothing, keeps the default 300x150 backing store and never draws. Back to `off`
-      // if the renderer declines, which is a driver that cannot compile the shaders.
-      let book: BookHandle | null = null;
-      if (canvas && !reducedMotion()) {
+      // A phone is too narrow for a spread, so below 768px the book shows one page and
+      // the sheet turns off it. That is a different scene, not a smaller one, so it is
+      // rebuilt at the breakpoint rather than restyled.
+      const mount = (single: boolean) => () => {
+        // The section starts as `off`, which is right for no JS and no WebGL — but that
+        // state also sets `display:none` on the canvas, and a display:none canvas
+        // measures zero. Switch it on BEFORE building the renderer, or the book sizes
+        // itself against nothing, keeps the default 300x150 backing store and never
+        // draws. Back to `off` if the renderer declines, which is a driver that cannot
+        // compile the shaders.
         section.dataset.canvas = 'on';
-        book = createBook(canvas);
-        if (!book) section.dataset.canvas = 'off';
-      }
-      if (!book) return;
+        const book: BookHandle | null = createBook(canvas, { single });
+        if (!book) { section.dataset.canvas = 'off'; return; }
 
-      const at = { p: 0 };
-      let shown = -1;
-      const tl = gsap.timeline({ paused: true });
-      tl.to(at, {
-        p: book.turns, duration: 1, ease: EASE.none,
-        onUpdate: () => {
-          book.setProgress(at.p);
-          const c = book.chapterAt(at.p);
-          if (label && c !== shown) { shown = c; label.textContent = chapterLabels[c] ?? ''; }
-        },
-      });
-      const st = ScrollTrigger.create({
-        trigger: section, start: 'top top', end: `+=${book.turns * 110}%`,
-        pin: true, scrub: 0.6, animation: tl,
-      });
+        const at = { p: 0 };
+        let shown = -1;
+        const tl = gsap.timeline({ paused: true });
+        tl.to(at, {
+          p: book.turns, duration: 1, ease: EASE.none,
+          onUpdate: () => {
+            book.setProgress(at.p);
+            const c = book.chapterAt(at.p);
+            if (label && c !== shown) { shown = c; label.textContent = chapterLabels[c] ?? ''; }
+          },
+        });
+        const st = ScrollTrigger.create({
+          trigger: section, start: 'top top', end: `+=${book.turns * 110}%`,
+          pin: true, scrub: 0.6, animation: tl,
+        });
+        return () => { st.kill(); book.destroy(); };
+      };
 
-      return () => { st.kill(); book.destroy(); delete section.dataset.canvas; };
+      const mm = gsap.matchMedia();
+      mm.add('(min-width: 768px)', mount(false));
+      mm.add('(max-width: 767px)', mount(true));
+
+      return () => { mm.revert(); section.dataset.canvas = 'off'; };
     },
     { scope: root },
   );

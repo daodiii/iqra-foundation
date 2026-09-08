@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import sharp from 'sharp';
 import { site } from '@/content/site.no';
 
 const section = (page: Page) => page.locator('#om-oss');
@@ -73,6 +74,43 @@ test('desktop: the book takes over, pins, and the chapter label follows the spre
   // Back to the top: the label has to come with us, or it only ever counts upward.
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect(label).toHaveText('Omslag', { timeout: 8_000 });
+});
+
+/**
+ * A phone is too narrow for a spread, so the book shows one page and the sheet turns off
+ * it. The camera distance is fitted to the viewport rather than picked from the two
+ * desktop values, so this checks the page actually fills the frame: a spread's camera on
+ * a portrait screen leaves the page a stamp in the middle of a lot of ground.
+ */
+test('phone: the book runs as a single page and fills the frame', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'the single-page book is the phone layout');
+  await page.goto('/om-oss');
+  const hasWebGL = await page.evaluate(() => Boolean(document.createElement('canvas').getContext('webgl')));
+  test.skip(!hasWebGL, 'no WebGL here, which is the fallback path');
+
+  await expect(section(page)).toHaveAttribute('data-canvas', 'on', { timeout: 15_000 });
+  await expect(page.locator('.pin-spacer')).toHaveCount(1);
+
+  const backing = await page.evaluate(() => {
+    const c = document.querySelector('#om-oss canvas') as HTMLCanvasElement;
+    return c.width;
+  });
+  expect(backing).toBeGreaterThan(300);
+
+  // Screenshot rather than readPixels: without `preserveDrawingBuffer` the drawing
+  // buffer is undefined once the frame has been composited, so reading it back measures
+  // a blank buffer and passes or fails for reasons unrelated to the page.
+  const png = await section(page).locator('canvas').screenshot();
+  const { data, info } = await sharp(png).raw().toBuffer({ resolveWithObject: true });
+  const row = Math.round(info.height / 2) * info.width * info.channels;
+  const edge = [data[row], data[row + 1], data[row + 2]];
+  let wide = 0;
+  for (let x = 0; x < info.width; x++) {
+    const i = row + x * info.channels;
+    const d = Math.abs(data[i] - edge[0]) + Math.abs(data[i + 1] - edge[1]) + Math.abs(data[i + 2] - edge[2]);
+    if (d > 10) wide++;
+  }
+  expect(wide / info.width, 'the page does not fill the width of a phone').toBeGreaterThan(0.5);
 });
 
 test('reduced motion gets the article, not a book it cannot turn', async ({ page }) => {

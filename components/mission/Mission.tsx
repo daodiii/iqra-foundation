@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { site } from '@/content/site.no';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { setWordmarkOnDark } from '@/lib/wordmark';
-import { createDrape, type DrapeHandle } from './drape';
+import { createDrape, type DrapeMode } from './drape';
 import styles from './mission.module.css';
 
 const stanzas = site.mission.stanzas;
@@ -24,7 +24,20 @@ export function Mission() {
       if (!section) return;
       const canvas = section.querySelector('canvas');
       const reduced = reducedMotion();
-      const drape: DrapeHandle | null = canvas ? createDrape(canvas, { reduced }) : null;
+
+      // 860px is also the breakpoint in mission.module.css, where the layout stops
+      // reserving a column on the right and puts a band above the copy instead. The
+      // drape has to be rebuilt at that line, not merely restyled: a band is the same
+      // bundle placed a quarter turn round, not the side drape squashed short.
+      const mm = gsap.matchMedia();
+      if (canvas) {
+        const mount = (mode: DrapeMode) => () => {
+          const drape = createDrape(canvas, { reduced, mode });
+          return () => drape?.destroy();
+        };
+        mm.add('(min-width: 861px)', mount('side'));
+        mm.add('(max-width: 860px)', mount('band'));
+      }
 
       // This section is white now, like Visjon above it, so the wordmark stays navy
       // through both. It still has to be said rather than assumed: on a refresh the
@@ -38,7 +51,7 @@ export function Mission() {
         onRefresh: (self) => { if (self.isActive) setWordmarkOnDark(false); },
       });
 
-      if (reduced) return () => { watcher.kill(); drape?.destroy(); };
+      if (reduced) return () => { watcher.kill(); mm.revert(); };
 
       const rise = section.querySelectorAll<HTMLElement>('[data-rise]');
       const rule = section.querySelector<HTMLElement>('[data-rule]');
@@ -57,7 +70,7 @@ export function Mission() {
         trigger: section, start: 'top 72%', once: true, onEnter: () => tl.play(),
       });
 
-      return () => { entrance.kill(); watcher.kill(); drape?.destroy(); };
+      return () => { entrance.kill(); watcher.kill(); mm.revert(); };
     },
     { scope: root },
   );

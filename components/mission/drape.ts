@@ -13,6 +13,16 @@
 export const COVER = 0.51;
 /** Degrees. Negative leans the top of the drape left and the bottom right. */
 const ANGLE = -26;
+/** A band is already a diagonal by being wide and short, so it needs far less tilt. */
+const BAND_ANGLE = -8;
+
+/**
+ * A phone has no right-hand side, so the drape becomes a band above the copy. That is
+ * the same bundle turned a quarter turn — sweeping left to right instead of top to
+ * bottom — rather than the side drape squashed into a short box, which would just be a
+ * diagonal smear in one corner of it.
+ */
+export type DrapeMode = 'side' | 'band';
 const DENSITY = 1.05;
 const STRANDS = Math.round(340 * Math.sqrt(DENSITY));
 const ALPHA = 0.21 * DENSITY;
@@ -29,7 +39,7 @@ type RGB = [number, number, number];
 type Stop = { at: number; c: RGB };
 
 export type DrapeHandle = { destroy(): void };
-export type DrapeOptions = { reduced: boolean };
+export type DrapeOptions = { reduced: boolean; mode: DrapeMode };
 
 const lighten = (c: RGB, f: number): RGB => [
   Math.round(c[0] + (255 - c[0]) * f),
@@ -83,7 +93,8 @@ export function createDrape(canvas: HTMLCanvasElement, opts: DrapeOptions): Drap
   if (!octx) return null;
 
   const stops = ramp();
-  const rad = (ANGLE * Math.PI) / 180;
+  const band = opts.mode === 'band';
+  const rad = ((band ? BAND_ANGLE : ANGLE) * Math.PI) / 180;
   const ca = Math.cos(rad), sa = Math.sin(rad);
   let raf = 0, onScreen = true, resizeTimer = 0;
   const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
@@ -101,14 +112,22 @@ export function createDrape(canvas: HTMLCanvasElement, opts: DrapeOptions): Drap
     octx!.clearRect(0, 0, ow, oh);
     octx!.lineCap = 'round';
 
-    // Every x is expressed inside the band, so the drape scales with COVER rather than
-    // sliding across the page, and the rotation is about the band's own centre.
+    // Strands are built in the bundle's own space — `a` runs across the bundle, `b`
+    // along each strand — and only then placed on the canvas. That is what lets the
+    // same geometry be a drape down the right or a band across the top: the bundle is
+    // unchanged and only the placement turns a quarter turn.
     const L = 1 - COVER;
-    const pvx = ow * (L + COVER * 0.5), pvy = oh * 0.5;
+    const pvx = band ? ow * 0.5 : ow * (L + COVER * 0.5);
+    const pvy = oh * 0.5;
     const rot = (x: number, y: number): [number, number] => {
       const dx = x - pvx, dy = y - pvy;
       return [pvx + dx * ca - dy * sa, pvy + dx * sa + dy * ca];
     };
+    // `b` spans -0.62 to 1.18, and in band mode that has to reach off both sides of the
+    // canvas so the strands still run out of the frame rather than ending inside it.
+    const place = band
+      ? (a: number, b: number) => rot(ow * (0.8333 * b + 0.2667), oh * (a * 1.15 - 0.075))
+      : (a: number, b: number) => rot(ow * (L + COVER * a), oh * b);
 
     for (let i = 0; i < STRANDS; i++) {
       const s = i / (STRANDS - 1);
@@ -118,11 +137,12 @@ export function createDrape(canvas: HTMLCanvasElement, opts: DrapeOptions): Drap
       const w2 = Math.cos(tSec * 0.083 + s * 2.4) * 0.03;
 
       // The strands start and end far outside the frame so they still run off the edges
-      // once the whole bundle is tilted.
-      const [x0, y0] = rot(ow * (L + COVER * (-0.06 + 1.1 * s + w1)), oh * -0.62);
-      const [x1, y1] = rot(ow * (L + COVER * (1.26 - 0.92 * s + w2 * 1.6)), oh * (0.24 + 0.1 * s));
-      const [x2, y2] = rot(ow * (L + COVER * (0.02 + 1.02 * s - w1 * 1.3)), oh * (0.62 + 0.1 * s));
-      const [x3, y3] = rot(ow * (L + COVER * (0.3 + 1.15 * s)), oh * (1.18 + w2 * 0.6));
+      // once the whole bundle is tilted. The fold is the third control point running the
+      // opposite way across the bundle, which is what gives the drape a front and a back.
+      const [x0, y0] = place(-0.06 + 1.1 * s + w1, -0.62);
+      const [x1, y1] = place(1.26 - 0.92 * s + w2 * 1.6, 0.24 + 0.1 * s);
+      const [x2, y2] = place(0.02 + 1.02 * s - w1 * 1.3, 0.62 + 0.1 * s);
+      const [x3, y3] = place(0.3 + 1.15 * s, 1.18 + w2 * 0.6);
 
       const c = sample(stops, s + Math.sin(tSec * 0.05) * 0.03);
       const edge = Math.min(1, Math.min(s, 1 - s) / 0.13);
