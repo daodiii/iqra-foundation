@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, expect, test, vi } from 'vitest';
+import { site } from '@/content/site.no';
 import { Hero } from './Hero';
 
 beforeEach(() => {
@@ -13,7 +14,8 @@ test('the letters, the headline and the lede come from the content file', () => 
   const h1 = screen.getByRole('heading', { level: 1 });
   expect(h1.textContent).toBe('Iqra betyrles.');
   expect(screen.getByText(/første ordet i Koranen/)).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Still et spørsmål' })).toHaveAttribute('href', 'mailto:[EPOST]');
+  expect(screen.getByRole('link', { name: site.hero.cta }))
+    .toHaveAttribute('href', `mailto:${site.contact.email}`);
 });
 
 test('the video is decorative, looped, muted, and gets the webm loop at desktop width', () => {

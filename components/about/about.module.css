@@ -1,0 +1,201 @@
+/* A warm ground, so the cream stock of the pages reads as cream rather than as dirty
+   white. The two were chosen together and neither works with the other's neighbour. */
+.about {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  background: #eae8e4;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hud {
+  position: absolute;
+  left: var(--margin);
+  top: calc(var(--header-h) + 26px);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.label {
+  margin: 0 0 8px;
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.chapter {
+  margin: 0;
+  font-size: clamp(20px, 2.2vw, 30px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--color-navy);
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 2;
+  margin: 0;
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  pointer-events: none;
+}
+
+/*
+ * The article is the page. While the canvas is running it is taken out of sight but
+ * left in the DOM and in the accessibility tree, so the book is never the only copy of
+ * the content. `clip-path` rather than `display:none`, for the same reason.
+ */
+.readable {
+  position: relative;
+  z-index: 1;
+  max-width: 70ch;
+  margin: 0 auto;
+  padding: calc(var(--header-h) + 72px) var(--margin) 96px;
+  color: var(--color-navy);
+}
+
+.about[data-canvas='on'] .readable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.about[data-canvas='off'] .canvas,
+.about[data-canvas='off'] .hud,
+.about[data-canvas='off'] .hint {
+  display: none;
+}
+
+.readable h1 {
+  margin: 0 0 20px;
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.readable h2 {
+  margin: 64px 0 16px;
+  font-size: clamp(26px, 3.2vw, 40px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.readable p {
+  margin: 0 0 16px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+}
+
+.team,
+.figures {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.team li {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: baseline;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-hairline);
+  margin-bottom: 10px;
+  font-size: 17px;
+}
+
+.team li span:last-child {
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.figures li {
+  font-size: 17px;
+  color: var(--color-ink-soft);
+  margin-bottom: 8px;
+}
+
+.figures b {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--color-navy);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  background: var(--color-crimson);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.cta:hover {
+  background: #96475a;
+}
+
+/*
+ * Below this width the book shows one page rather than a spread (BookFigure passes
+ * `single`), so the chrome moves out of the page's way: the chapter label goes to the
+ * top and the hint sits tight to the bottom, leaving the middle of the screen to the
+ * sheet itself.
+ */
+@media (max-width: 767px) {
+  .hud {
+    top: calc(var(--header-h) + 10px);
+    left: 24px;
+  }
+
+  .label {
+    margin-bottom: 4px;
+  }
+
+  .chapter {
+    font-size: 18px;
+  }
+
+  .hint {
+    bottom: 14px;
+    font-size: 10px;
+  }
+
+  .readable {
+    padding-top: calc(var(--header-h) + 40px);
+  }
+
+  .readable h2 {
+    margin-top: 44px;
+  }
+
+  .cta {
+    width: 100%;
+    justify-content: center;
+  }
+}

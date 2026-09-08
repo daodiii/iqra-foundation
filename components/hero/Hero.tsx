@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { site } from '@/content/site.no';
 import { EASE, gsap, reducedMotion, useGSAP } from '@/lib/gsap';
 import { pickSource } from '@/lib/media';
-import { setWordmarkOnDark } from '@/lib/wordmark';
+import { headerElements, setWordmarkOnDark } from '@/lib/wordmark';
 import { maskOrigin } from './maskOrigin';
 import styles from './hero.module.css';
 
@@ -46,6 +46,11 @@ export function Hero() {
       setWordmarkOnDark(false);
 
       if (reducedMotion()) return; // poster inside the closed letters; copy shown by CSS (spec 6.5)
+
+      // The header is visible by default, because every page has one and only this page
+      // has a hero to turn it back on. Hiding it is therefore the hero's job, done here
+      // rather than in the stylesheet, and only once we know we are going to animate.
+      gsap.set(headerElements(), { opacity: 0 });
 
       video.load();
       Promise.resolve(video.play()).catch(() => {}); // autoplay refused: the poster stays, nothing else changes
@@ -91,10 +96,10 @@ export function Hero() {
             .to(q('[data-scrim]'), { opacity: 1, duration: 0.2 }, 0.72)
             .fromTo(q('[data-copy]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.2, ease: EASE.out }, 0.82)
             .to({}, { duration: 0.16 });
-          // The wordmark sits in the header, outside this context's scope, so it goes
-          // in as an element: a selector string would be looked up inside the hero.
-          const wordmark = document.getElementById('site-wordmark');
-          if (wordmark) tl.to(wordmark, { opacity: 1, duration: 0.2 }, 0.7);
+          // The header sits outside this context's scope, so it goes in as elements:
+          // a selector string would be looked up inside the hero.
+          const header = headerElements();
+          if (header.length) tl.to(header, { opacity: 1, duration: 0.2 }, 0.7);
         });
       });
       return () => {

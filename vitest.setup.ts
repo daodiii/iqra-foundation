@@ -1,5 +1,11 @@
 import '@testing-library/jest-dom/vitest';
-import { vi } from 'vitest';
+import { cleanup } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
+
+// Without this every render stays mounted for the rest of the file: queries then match
+// the previous test's DOM as well as this one's, and any component holding a frame loop
+// (the tree, the drape) never gets its cleanup and keeps animating alongside the tests.
+afterEach(cleanup);
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -31,6 +37,12 @@ const ctx2d = new Proxy({}, {
   },
   set: () => true,
 });
-HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(ctx2d as unknown as CanvasRenderingContext2D);
+// Only '2d' is stubbed. jsdom genuinely has no WebGL, so asking for it must return null
+// the way a real browser without it does — otherwise the book's renderer is handed a
+// context whose every call returns undefined and it fails deep inside shader compilation
+// instead of falling back to the readable article.
+HTMLCanvasElement.prototype.getContext = vi.fn((type: string) =>
+  type === '2d' ? (ctx2d as unknown as CanvasRenderingContext2D) : null,
+) as unknown as HTMLCanvasElement['getContext'];
 
 Object.defineProperty(document, 'fonts', { value: { ready: Promise.resolve(), load: () => Promise.resolve([]) } });
