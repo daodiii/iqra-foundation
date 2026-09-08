@@ -74,18 +74,27 @@ export function Book() {
           st.kill();
           book.destroy();
           for (const el of chrome) el.style.opacity = '';
+          // Back to `off`, or a window dragged narrower keeps a canvas that nothing is
+          // drawing on any more and an article still clipped out of sight behind it:
+          // a blank warm rectangle where the page should be. Only the outer cleanup
+          // used to say this, and that runs on unmount, never on a media-query change.
+          section.dataset.canvas = 'off';
         };
       };
 
       /*
-       * The book is a spread, and a spread only reads at desktop widths: the page is
-       * drawn on a 768px texture, so body copy set at 32px there renders at
-       * `32 × pageWidth / 768` — about 10px on a 768px screen and 19px at 1440. Below
-       * the spec's desktop breakpoint the section keeps `data-canvas="off"` and the
-       * article underneath is the page, which is the same document at 18px.
+       * The book is a spread, and a spread only reads once there is room for one. The
+       * page is drawn on a 768px texture, so the type it shows scales with the rendered
+       * page — `32px × pageWidth / 768` for body copy — which measures about 10px on a
+       * 768px screen, 13.5px at 1024 and 19px at 1440.
+       *
+       * 1200, not the spec's 1024 desktop breakpoint: at 1024 the book technically runs
+       * and is still worse to read than the article it replaces, which is the whole
+       * fault this was meant to fix. Below this the section keeps `data-canvas="off"`
+       * and the article underneath is the page, at 18px.
        */
       const mm = gsap.matchMedia();
-      mm.add('(min-width: 1024px)', mount);
+      mm.add('(min-width: 1200px)', mount);
 
       return () => { mm.revert(); section.dataset.canvas = 'off'; };
     },
