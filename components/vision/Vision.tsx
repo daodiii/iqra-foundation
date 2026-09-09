@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { site } from '@/content/site.no';
-import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
+import { ACT_SNAP, EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { setWordmarkOnDark } from '@/lib/wordmark';
 import { createVisionTree, GROW, type TreeHandle } from './tree';
 // TreeFigure, not Tree: on a case-insensitive filesystem './Tree' resolves to tree.ts.
@@ -93,17 +93,18 @@ export function Vision() {
 
         ScrollTrigger.create({
           trigger: section, start: 'top top', end: '+=110%', pin: true, scrub: 0.6,
-          // Refresh order decides what a trigger measures, and it is creation order
-          // unless priorities say otherwise. The hero builds its trigger inside
-          // document.fonts.ready, so it is created after us; without an explicit
-          // priority we would size ourselves against a hero with no pin spacing and
-          // start 2700px too early. Highest refreshes first, so the sections descend
-          // in document order: hero 2, us 1, everything below the default 0.
-          // Do not "simplify" this key away: what turns sorting on is the key's PRESENCE
-          // — ScrollTrigger.js:1036 sets _sort on `"refreshPriority" in vars` — and the
-          // values are only the tie-break before the comparator (:2655) falls back to
-          // document position. Delete the keys and the refresh reverts to creation order,
-          // which is the 2700px bug again.
+          // Take the pin a frame early, so grabbing it at speed does not read as a jump.
+          anticipatePin: 1,
+          snap: ACT_SNAP,
+          // Refresh order decides what a trigger measures, and it is creation order unless
+          // priorities say otherwise. The hero used to build its trigger inside
+          // document.fonts.ready, so it was created after us, and without an explicit
+          // priority we sized ourselves against a hero with no pin spacing and started
+          // 2700px too early. The hero is synchronous now, so creation order is document
+          // order and this is belt-and-braces — kept for one commit so a regression is
+          // attributable. Removing it is a separate change (2026-09-09 scroll-fluidity
+          // spec); note that what turns sorting on is the key's PRESENCE, not its value —
+          // ScrollTrigger.js:1036 sets _sort on `"refreshPriority" in vars`.
           refreshPriority: 1,
           // The entrance tween and this share one tree, so whichever arrives second has
           // to stop the other rather than fight it for `setT` frame by frame.
