@@ -222,6 +222,32 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
    * and leave the CSS ground showing rather than to render something broken.
    */
   if (!gl.getExtension('EXT_color_buffer_float') && !gl.getExtension('EXT_color_buffer_half_float')) return null;
+  /*
+   * And decline again where there is no GPU behind the context at all.
+   *
+   * A software rasteriser answers every capability question with yes and then runs the
+   * solver on the CPU. Measured on 2026-09-09, headless Chromium on SwiftShader: the
+   * landing page holds 60fps at the hero, 242 frames in four seconds — and 9 frames in four
+   * seconds once a box with ink is on screen, single frames as long as 1.7 seconds. Remove
+   * the canvases and it is 178 again. That is not a simulation anyone is watching; it is a
+   * page that has stopped repainting, and everything else on it stops with it. GSAP holds a
+   * tween to 33ms of its own time per frame once frames run past half a second
+   * (`ticker.lagSmoothing(500, 33)`), so a one-second entrance crawls: 0.9950, 0.9967,
+   * 0.9978, 0.9991 — visibly finished, never actually finishing.
+   *
+   * So the same judgement as the line above, for the same reason: the ground and the still
+   * picture are already in the CSS and they are what this leaves showing. It costs a real
+   * visitor nothing, because a real visitor with a GPU never takes this branch — but a VM,
+   * a remote desktop, a blocklisted driver and continuous integration all do, and each of
+   * them is better served by a page that scrolls than by ink at two frames a second.
+   *
+   * Read through `WEBGL_debug_renderer_info` because plain `RENDERER` is masked — Chromium
+   * answers it with "WebKit WebGL". Where the extension is withheld for privacy we cannot
+   * tell, and the answer to not knowing is to run, not to decline.
+   */
+  const debug = gl.getExtension('WEBGL_debug_renderer_info');
+  const renderer = debug ? String(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)) : '';
+  if (/swiftshader|llvmpipe|softpipe|software rasterizer|basic render/i.test(renderer)) return null;
   gl.getExtension('OES_texture_float_linear');
 
   const compile = (type: number, src: string) => {
