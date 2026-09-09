@@ -55,6 +55,54 @@ if (typeof window !== 'undefined') {
    * `/#stott-oss` link is a native anchor jump. Both are covered by e2e.
    */
   if (!reducedMotion()) ScrollTrigger.normalizeScroll(true);
+
+  /*
+   * The snap is deaf for the first half second of its life. Settle the one act that can be
+   * caught by it, once, by hand.
+   *
+   * `snapDelayedCall` — the thing that eventually settles a stranded act — is scheduled from
+   * one place in the normal run of events, `self.update()` at ScrollTrigger.js:1744, and
+   * that line is guarded on `!_startup`. `_startup` is cleared by a `delayedCall(0.5)` set
+   * up inside `ScrollTrigger.enable()`, which `registerPlugin` above ran synchronously
+   * (`register()` calls `enable()` on the spot when there is a document). So the clock
+   * started a few lines up, on this same ticker, and 0.6 is reliably after it.
+   *
+   * Which matters because that half second is the moment a landing page gets scrolled.
+   * Measured on 2026-09-09 with this block removed: a scroll coming to rest at 95% of the
+   * hero's pin was left there — 1710 of 1800 on desktop, 1594 of 1678 on a Pixel 7 —
+   * whenever it landed roughly 350ms to 600ms after navigation. From 730ms on it settled by
+   * itself. `ACT_SNAP` was written for exactly that rescue and never got the chance to run.
+   *
+   * The obvious repairs are both worse than the bug, and were measured being so. Asking
+   * ScrollTrigger to have another look — `refresh()`, or a run of `update()`s — re-arms the
+   * snap but also wakes its scroll memory, and the position it remembers is the one from
+   * before the visitor scrolled: parked at 87% of the hero, a Pixel 7 was thrown back to
+   * 144 of 1678 by a refresh, and a desktop was walked from 1566 all the way to 0 by the
+   * updates. So nothing here touches ScrollTrigger's own machinery. It reads the same
+   * policy object the triggers were given, and where that policy says an act is stranded it
+   * drives the scroll home itself — which is also what the hero does for its opening.
+   */
+  gsap.delayedCall(0.6, () => {
+    const before = window.scrollY;
+    requestAnimationFrame(() => {
+      // Still moving? Then ScrollTrigger is awake and its own snap will collect them.
+      if (window.scrollY !== before) return;
+      const toScroll = ScrollTrigger.getScrollFunc(window);
+      for (const st of ScrollTrigger.getAll()) {
+        const snap = st.vars.snap as typeof ACT_SNAP | undefined;
+        if (!snap || !st.isActive || st.getTween(true)?.isActive()) continue;
+        const to = snap.snapTo(st.progress, st);
+        if (Math.abs(to - st.progress) < 0.001) continue; // the middle of an act: leave it alone
+        const at = { y: window.scrollY };
+        gsap.to(at, {
+          y: st.start + to * (st.end - st.start),
+          duration: ACT_SNAP.duration.max,
+          ease: ACT_SNAP.ease,
+          onUpdate: () => toScroll(at.y),
+        });
+      }
+    });
+  });
 }
 
 export { gsap, ScrollTrigger, useGSAP };
