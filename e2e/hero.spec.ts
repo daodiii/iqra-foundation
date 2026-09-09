@@ -56,8 +56,22 @@ test.describe('hero', () => {
     await expect(page.locator('[data-copy]')).toHaveCSS('opacity', '1', { timeout: 5_000 });
     await expect(page.locator('#site-wordmark')).toHaveCSS('opacity', '1', { timeout: 5_000 });
     await expect(page.locator('#site-wordmark')).toHaveAttribute('data-on-dark', 'true');
-    const t = await page.evaluate(() => (document.querySelector('#hero video') as HTMLVideoElement).currentTime);
-    expect(t).toBeGreaterThan(0);
+    /*
+     * Polled, and it reports what it saw. Every other assertion here retries; this one was a
+     * single sample of the one thing on the page that depends on a multi-megabyte fetch
+     * finishing — and six headless browsers pull that file off one dev server at once.
+     * Measured: on its own the film is running 46ms after load, and twelve pages at once
+     * were all running inside 500ms, so nothing here is normally close. It failed roughly
+     * one suite run in eight all the same, and the state at that moment is what says whether
+     * the film was refused (paused) or simply had not arrived (readyState 0 or 1) — so the
+     * failure message carries it rather than leaving the next reader to guess.
+     */
+    await expect
+      .poll(() => page.evaluate(() => {
+        const v = document.querySelector('#hero video') as HTMLVideoElement;
+        return `${v.currentTime > 0 ? 'playing' : 'stalled'} at t=${v.currentTime.toFixed(2)}, paused=${v.paused}, readyState=${v.readyState}`;
+      }), { timeout: 10_000, message: 'the film never started' })
+      .toMatch(/^playing/);
 
     // Hero.tsx reaches the wordmark by id and quietly does nothing when it cannot find
     // it, so the reveal has to be checked in both directions: back at the top the header
