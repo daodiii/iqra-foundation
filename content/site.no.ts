@@ -11,18 +11,41 @@ const missionStanzas = [
 ] as const;
 
 /**
- * Støtt oss. The amounts are a design choice and stand as they are; what each one buys
- * is a claim about how the money is actually spent, and every one of them is mine
- * rather than anyone's figure — so the whole outcome is bracketed, unit and all. The
- * two lines of a tier have to be filled in together: «hver måned» is the same claim
- * twelve times over, and they will read as a contradiction if only one is updated.
+ * Støtt oss asks for a standing gift, so these are monthly amounts and there is no
+ * one-off/monthly toggle to set them against. They start at 200 because the site's own
+ * skattefradrag sentence puts the floor for a deductible year at 500 kroner, and the
+ * smallest of these clears it two and a half times over.
+ *
+ * What each amount BUYS is deliberately not here. Naming outcomes was considered and
+ * rejected: every figure would have been mine rather than anyone's, and a page that tells
+ * you what your money turns into has to be able to show that it did.
  */
-const supportTiers = [
-  { kr: 100, once: '[4 samtaler på stand]', month: '[48 samtaler i året]' },
-  { kr: 250, once: '[10 samtaler på stand]', month: '[120 samtaler i året]' },
-  { kr: 500, once: '[en åpen kveld i moskeen]', month: '[12 åpne kvelder i året]' },
-  { kr: 1000, once: '[20 bøker til folk som spør]', month: '[240 bøker i året]' },
-  { kr: 2500, once: '[en uke på stand i Oslo]', month: '[stand hver eneste uke]' },
+const supportTiers = [200, 300, 500, 1000] as const;
+
+/**
+ * The three ways to give, in the order the film's colours run — slate, gold, night.
+ *
+ * They are inert text, which is the whole reason they lead: every number on this page is
+ * still a placeholder, and a route you copy into your own bank is the one kind of payment
+ * that needs nothing built. Vipps sits in the middle because it is how people here
+ * actually pay, and AvtaleGiro last because it is the only one that repeats by itself.
+ */
+const supportRoutes = [
+  {
+    label: 'Kontonummer',
+    value: '[KONTO]',
+    how: 'Overfør beløpet selv, og merk betalingen med navnet ditt.',
+  },
+  {
+    label: 'Vipps',
+    value: '[NUMMER]',
+    how: 'Åpne Vipps, velg Betal, og søk opp nummeret.',
+  },
+  {
+    label: 'AvtaleGiro',
+    value: '[KID]',
+    how: 'Fast trekk hver måned. Du oppretter den i nettbanken din.',
+  },
 ] as const;
 
 export const site = {
@@ -129,37 +152,37 @@ export const site = {
   },
   support: {
     label: 'Støtt oss',
-    /** `{beløp}` is filled in with the chosen amount, so the sentence stays here. */
-    give: { once: 'Gi {beløp} kr med Vipps', month: 'Gi {beløp} kr i måneden med Vipps' },
-    unit: { once: 'kr', month: 'kr / mnd' },
-    frequency: { label: 'Hvor ofte', once: 'Én gang', month: 'Hver måned' },
-    amountLabel: 'Velg beløp',
+    /**
+     * Two hand-set lines, sized at runtime so the longer of them lands on the measure.
+     * They are written from what Om oss already says — «Rundt tjue stykker» and «Ingen av
+     * oss gjør dette på heltid» — and claim nothing about the foundation's finances.
+     * Changing them is a one-line edit: the heading measures whatever it is given.
+     */
+    title: ['Tjue stykker gjør arbeidet.', 'Faste givere gjør at det fortsetter.'],
+    routes: supportRoutes,
+    routesLabel: 'Slik gir du',
+    giver: {
+      label: 'Fast giver',
+      unit: 'kr i måneden',
+      amountLabel: 'Velg beløp',
+      /** The amount preselected on arrival, as an index into `tiers`. */
+      preselect: 1,
+    },
     tiers: supportTiers,
     /**
-     * Vipps handles both a single gift and a standing one, AvtaleGiro exists only for
-     * the recurring case, and a plain transfer only makes sense for the one-off. So the
-     * second route follows the frequency rather than sitting there being wrong half the
-     * time, and there are two of these rather than one.
+     * The QR is bracketed like every other number on this page, and for the same reason:
+     * a real one has to be issued by Vipps against a real number. Drawing a plausible
+     * square here would be worse than leaving it out — it would be the one placeholder on
+     * the site that a visitor could try, and it would fail silently in their bank app.
      */
-    alt: { once: 'Eller overfør til konto', month: 'Eller sett opp AvtaleGiro' },
-    transfer: {
-      title: 'Bankoverføring',
-      para: 'Overfør beløpet selv, og merk betalingen med navnet ditt hvis du vil ha skattefradrag. Da vet vi hvem gaven kom fra.',
-    },
-    avtalegiro: {
-      title: 'AvtaleGiro',
-      para: 'Fast trekk fra kontoen din hver måned. Du oppretter den i nettbanken din med tallene under, og du kan stoppe den selv når som helst.',
+    qr: {
+      value: '[QR-KODE]',
+      title: 'Vipps',
+      how: 'Skann koden, eller søk opp nummeret i appen. Du velger beløpet selv.',
     },
     fields: {
-      account: 'Kontonummer',
-      kid: 'KID',
-      amount: 'Beløp',
-      vipps: 'Vipps',
       orgnr: 'Organisasjonsnummer',
     },
-    account: '[KONTO]',
-    kid: '[KID]',
-    vippsNumber: '[NUMMER]',
     orgnr: '[ORG.NR]',
     /**
      * True only if the foundation is on Skatteetaten's list of approved recipients

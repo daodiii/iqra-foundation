@@ -27,6 +27,13 @@ window.scrollTo = () => {};
 class IO { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } }
 Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: IO });
 
+// jsdom has no ResizeObserver either, and unlike IntersectionObserver it is not guarded at
+// its call site: Støtt oss re-measures its heading with one, so without this the section
+// throws on mount and every test in that file fails with the same ReferenceError — which
+// reads like a broken component rather than a missing piece of the environment.
+class RO { observe() {} unobserve() {} disconnect() {} }
+Object.defineProperty(window, 'ResizeObserver', { writable: true, value: RO });
+
 // A 2D context stub: every drawing call is a no-op; gradients are inert objects.
 const gradient = { addColorStop: () => {} };
 const ctx2d = new Proxy({}, {

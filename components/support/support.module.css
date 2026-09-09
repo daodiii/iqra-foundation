@@ -1,170 +1,211 @@
 /*
- * The page has been white since the hero. This is the one dark panel at the foot of it,
- * and the drape that ran down the side of Misjon fills the whole of it — same bundle,
- * opened out, on the night ground rather than under it.
+ * The ask, at the foot of the page. It was a checkout on a full-bleed night ground; it is
+ * now the third of the film's boxes — the Quran's gold and bronze in ink — and it reads top
+ * to bottom rather than out from a giant number.
+ *
+ * The night has not gone, it has become an object: the card at the bottom is the film's
+ * last scene, the Haram after dark, and the one place on the page where the ink is light in
+ * water rather than pigment on paper.
  */
 .support {
   position: relative;
   min-height: 100svh;
   overflow: hidden;
-  background: var(--color-night);
-  color: #ffffff;
+  background: transparent;
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.field {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/*
- * The drape is at its densest through the middle, which is exactly where the amount sits.
- * This sinks the centre so white type has a ground rather than a colour to sit on, and
- * leaves the edges alone so the section still reads as weather.
- */
-.scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: radial-gradient(
-    60% 56% at 50% 50%,
-    rgba(6, 11, 17, 0.72),
-    rgba(6, 11, 17, 0.22) 68%,
-    transparent
-  );
 }
 
 .inner {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   width: 100%;
-  max-width: 760px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: clamp(12px, 1.7vh, 18px);
-  padding: clamp(72px, 11vh, 132px) var(--margin);
+  gap: clamp(16px, 1.8vh, 22px);
+  padding: clamp(88px, 12vh, 140px) var(--margin);
 }
 
-/* Crimson on near-black is too close to the ground to find. */
-.inner :focus-visible {
+.head {
+  padding: clamp(30px, 3.4vw, 48px) clamp(32px, 3.8vw, 56px);
+}
+
+.label {
+  margin: 0 0 clamp(16px, 2vh, 22px);
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
+  color: var(--color-ink-soft);
+}
+
+/*
+ * Sized in Support.tsx, not here: the longer of the two hand-set lines is measured and the
+ * type scaled so it lands on the measure. The value below is only what shows in the moment
+ * before that runs, and if the script never runs at all.
+ */
+.title {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 74px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.title span {
+  display: block;
+  /* The measurement fits the line to the measure, so it must not be allowed to wrap while
+     it waits for that — a wrapped line measures as two and the fit comes out half-size. */
+  white-space: nowrap;
+}
+
+/* The second line is the turn in the sentence, so it is set back rather than shouted. */
+.title span + span {
+  color: var(--color-ink-soft);
+}
+
+.routes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(14px, 1.4vw, 20px);
+}
+
+.route {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: clamp(22px, 2vw, 28px) clamp(24px, 2.2vw, 30px) clamp(24px, 2.2vw, 30px);
+}
+
+.routeLabel {
+  margin: 0;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
+  color: var(--color-ink-soft);
+}
+
+/*
+ * The number, in its own stop of the film's colour. `color` is set inline from
+ * `film.routes` so the three sections cannot drift apart — the palette is imported, never
+ * copied. Tabular figures because these are account numbers, and a real one will be long.
+ */
+.routeValue {
+  margin: 4px 0 2px;
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.routeHow {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+}
+
+/*
+ * The card. It is the one object on the page that is not paper, so it carries no white
+ * card class — the night ground and its ink come from `wash.night`, and this positions it.
+ */
+.giver {
+  position: relative;
+  z-index: 1;
+  border-radius: 22px;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--ground);
+  background-image: var(--ink-still);
+  color: #ffffff;
+}
+
+/*
+ * White type sits on this card, and the ink under it is light rather than pigment — the one
+ * place on the page where the decoration can get BRIGHTER than the words. The scrim sinks
+ * it back under them: heaviest where the amount and the code are, lightest at the edges, so
+ * the card still reads as weather rather than as a panel with a photograph behind it.
+ */
+.giverScrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(8, 13, 21, 0.42) 0%, rgba(8, 13, 21, 0.2) 40%, rgba(8, 13, 21, 0.5) 100%),
+    radial-gradient(78% 86% at 50% 52%, rgba(8, 13, 21, 0.62), rgba(8, 13, 21, 0.34) 72%, transparent);
+}
+
+.giverInner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(24px, 3vw, 48px);
+  align-items: center;
+  padding: clamp(30px, 3.4vw, 48px) clamp(32px, 3.8vw, 56px);
+}
+
+/* Crimson on this ground is too close to it to find. */
+.giverInner :focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 3px;
 }
 
-.label {
+.choose {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vh, 16px);
+  align-items: flex-start;
+}
+
+.giverLabel {
   margin: 0;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
   color: rgba(255, 255, 255, 0.66);
 }
 
-.figure {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(6px, 1vh, 12px);
-}
-
 /*
- * One line, always. The amount itself cannot break (kroner() groups with a non-breaking
- * space) but «kr / mnd» can, and did: at the top tier on a wide screen the unit came
- * away and «mnd» sat alone on a second line under the number. `nowrap` settles that, and
- * the ceiling comes down to 150px so the longest case — «2 500 kr / mnd» — still fits
- * the 600px the column leaves rather than running under its own edge.
+ * One line, always. The amount cannot break — `kroner()` groups with a non-breaking space —
+ * but the unit beside it can, and did: «kr i måneden» came away and sat on a line of its
+ * own under the number.
  */
 .amount {
   margin: 0;
-  font-size: clamp(66px, 11.5vw, 150px);
+  font-size: clamp(44px, 5.4vw, 76px);
   font-weight: 700;
-  letter-spacing: -0.06em;
-  line-height: 0.86;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
   white-space: nowrap;
-  /* Five amounts of three different widths swap in and out of this one line. */
+  /* Four amounts of two different widths swap in and out of this one line. */
   font-variant-numeric: tabular-nums;
 }
 
 .unit {
-  font-size: 0.24em;
+  font-size: 0.3em;
   font-weight: 500;
   letter-spacing: -0.01em;
-  vertical-align: 0.5em;
-  /* The space before this is a real one in the markup, not a margin: the figure sits in
-     a live region, and «250kr» is what a screen reader would otherwise be handed. */
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.outcome {
-  margin: 0;
-  max-width: 20ch;
-  font-size: clamp(19px, 2.4vw, 30px);
-  font-weight: 500;
-  letter-spacing: -0.028em;
-  line-height: 1.16;
-  text-wrap: balance;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-top: clamp(6px, 1.2vh, 12px);
-}
-
-.toggle {
-  display: inline-flex;
-  padding: 3px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.toggle button {
-  font: 500 13px/1 var(--font-sans);
-  padding: 9px 18px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: #ffffff;
-  opacity: 0.62;
-  cursor: pointer;
-  transition:
-    background 200ms var(--ease-out-expo),
-    color 200ms var(--ease-out-expo),
-    opacity 200ms var(--ease-out-expo);
-}
-
-.toggle button[aria-pressed='true'] {
-  background: #ffffff;
-  color: var(--color-night);
-  opacity: 1;
+  /* The space before this is a real one in the markup, not a margin: the figure sits in a
+     live region, and «300kr i måneden» is what a screen reader would otherwise be handed. */
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .tiers {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 8px;
+  margin-top: 4px;
 }
 
 .tier {
   font: 500 14px/1 var(--font-sans);
-  padding: 12px 16px;
+  padding: 12px 18px;
   border-radius: 999px;
   background: transparent;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   cursor: pointer;
   font-variant-numeric: tabular-nums;
   transition:
@@ -174,185 +215,105 @@
 }
 
 .tier:hover {
-  border-color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.68);
 }
 
 .tier[aria-pressed='true'] {
   background: #ffffff;
   border-color: #ffffff;
-  color: var(--color-night);
+  color: #0c131d;
 }
 
 .pay {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  margin-top: clamp(8px, 1.4vh, 16px);
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.payTitle {
+  margin: 0;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.66);
 }
 
 /*
- * Vipps orange, which is deliberately the only colour on the site from outside the
- * palette — a payment button that wore the brand's own crimson would read as one more
- * of our buttons rather than as the thing people already know how to press. The value
- * is read off their material and has to be checked against their brand guidelines, as
- * does the wordmark, which is set here in the site's own face rather than imitated.
+ * The placeholder for a code Vipps has to issue. Deliberately the shape of the thing and
+ * plainly not the thing: a drawn square would be the one placeholder on this site a visitor
+ * could actually try, and it would fail in their bank app rather than on the page.
  */
-.vipps {
-  --vipps: #ff5b24;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 58px;
-  padding: 0 32px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--vipps);
-  color: #ffffff;
-  font: 500 16.5px/1 var(--font-sans);
-  cursor: pointer;
-  transition: filter 200ms var(--ease-out-expo);
-}
-
-.vipps:hover {
-  filter: brightness(0.93);
-}
-
-.alt {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 4px;
-  background: none;
-  border: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
-  color: rgba(255, 255, 255, 0.78);
-  font: 400 14px/1 var(--font-sans);
-  cursor: pointer;
-  transition:
-    color 200ms var(--ease-out-expo),
-    border-color 200ms var(--ease-out-expo);
-}
-
-.alt:hover {
-  color: #ffffff;
-  border-color: #ffffff;
-}
-
-.chevron {
-  width: 8px;
-  height: 8px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: translateY(-2px) rotate(45deg);
-  transition: transform 300ms var(--ease-out-expo);
-}
-
-.alt[aria-expanded='true'] .chevron {
-  transform: translateY(1px) rotate(225deg);
-}
-
-/*
- * `grid-template-rows: 0fr → 1fr` rather than a measured pixel height: the panel's
- * contents change with the frequency, so any number cached here would be the other
- * panel's. The clip is a separate element so the box's border and padding collapse with
- * it instead of showing as a line when it is shut.
- */
-.details {
-  width: min(100%, 560px);
+.qr {
   display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition:
-    grid-template-rows 380ms var(--ease-out-expo),
-    opacity 260ms linear;
-}
-
-.details[data-open='true'] {
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
-
-.detailsClip {
-  min-height: 0;
-  overflow: hidden;
-}
-
-.detailsBox {
-  padding: 18px 22px 20px;
-  text-align: left;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  place-items: center;
+  width: clamp(120px, 12vw, 150px);
+  aspect-ratio: 1;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
   border-radius: 14px;
-  background: rgba(6, 11, 17, 0.5);
-}
-
-.detailsTitle {
-  margin: 0 0 6px;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.72);
+  text-align: center;
 }
 
-.detailsPara {
-  margin: 0 0 14px;
-  font-size: 14.5px;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.rows {
+.payHow {
   margin: 0;
-}
-
-.row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
-  padding: 9px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.row:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-
-.row dt {
-  font: 500 12px/1 var(--font-sans);
-  letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.row dd {
-  margin: 0;
-  font-size: 16px;
-  color: #ffffff;
-  font-variant-numeric: tabular-nums;
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .tax {
-  margin: 2px 0 0;
-  max-width: 46ch;
+  margin: 0;
+  max-width: 62ch;
   font-size: 13px;
   line-height: 1.55;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-ink-soft);
+  /* It sits on the ink rather than on a card, so it needs a ground of its own to stay
+     readable wherever the pigment happens to be dark that second. */
+  background: rgba(255, 255, 255, 0.72);
+  padding: 12px 16px;
+  border-radius: 12px;
 }
 
-@media (max-width: 600px) {
-  .vipps {
+@media (max-width: 900px) {
+  .routes {
+    grid-template-columns: 1fr;
+  }
+
+  .giverInner {
+    grid-template-columns: 1fr;
+    gap: clamp(22px, 4vw, 32px);
+  }
+
+  .inner {
+    padding: clamp(72px, 10vh, 110px) var(--margin);
+  }
+
+  /*
+   * Stacked, the QR and its line read as a row rather than a column: the code is small and
+   * a caption under it leaves the card looking bottom-heavy on a narrow screen.
+   */
+  .pay {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .payTitle {
     width: 100%;
+  }
+
+  .payHow {
+    flex: 1;
+    min-width: 180px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .details,
-  .chevron,
-  .toggle button,
-  .tier,
-  .vipps,
-  .alt {
+  .tier {
     transition: none;
   }
 }

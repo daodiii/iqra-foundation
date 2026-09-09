@@ -54,9 +54,16 @@ const SUPPORT: InkPalette = {
  * the way the three paper grounds do.
  */
 const SUPPORT_CARD: InkPalette = {
-  ink: [['#d9b783', 3], ['#f0dcb4', 2], ['#6f8aa6', 2], ['#3a8a66', 1]],
+  ink: [['#d9b783', 3], ['#c9a878', 2], ['#6f8aa6', 2], ['#3a8a66', 1]],
   ground: '#0c131d',
   additive: true,
+  /*
+   * Light adds where pigment subtracts, and it adds much faster: at the load the paper
+   * palettes carry, six overlapping drops summed past white and the card became a bright
+   * cloud with the type lost in it. This is the one palette where the ceiling is the
+   * problem rather than the floor.
+   */
+  strength: 0.42,
 };
 
 export const film = {

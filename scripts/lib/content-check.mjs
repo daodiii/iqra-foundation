@@ -55,11 +55,22 @@ export function contentProblems(site, { production, allowPlaceholders = false })
 /**
  * The placeholders that would do actual harm on a live page, as opposed to the ones that
  * are merely unfinished. A visitor cannot be misled by a team member called [Navn], but
- * these four are the numbers someone would try to send money to — so when the gate is
+ * these are the numbers someone would try to send money to — so when the gate is
  * deliberately held open they are what the build log has to say out loud.
+ *
+ * Patterns, not a list of exact paths. The ways to give are an array now, and a list would
+ * have gone quiet about a fourth route the moment somebody added one — which is precisely
+ * the drift this exists to catch. `[0]` is how `walkStrings` writes an array index.
  */
-const PAYMENT = ['support.account', 'support.kid', 'support.vippsNumber', 'support.orgnr'];
+const PAYMENT = [
+  /** Every route's number: the account, the Vipps number, the KID. */
+  /^support\.routes\[\d+\]\.value$/,
+  /** The code a visitor would point a bank app at. */
+  /^support\.qr\.value$/,
+  /** The number the gift is reported on, which is what makes the deduction real. */
+  /^support\.orgnr$/,
+];
 
 export function paymentPlaceholders(site) {
-  return contentPlaceholders(site).filter(({ path }) => PAYMENT.includes(path));
+  return contentPlaceholders(site).filter(({ path }) => PAYMENT.some((re) => re.test(path)));
 }

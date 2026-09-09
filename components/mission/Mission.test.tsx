@@ -57,9 +57,27 @@ test('the copy is only ever transparent, never visibility:hidden', () => {
   });
 });
 
-test('the drape is decorative and the section no longer carries a photograph', () => {
+/**
+ * The ink is decoration and nothing else, so it must not reach the accessibility tree. The
+ * canvas carries no label of its own; what hides it is the box around it, so this asserts
+ * on that ancestor rather than on the canvas element.
+ */
+test('the ink is decorative and the section carries no photograph', () => {
   const section = mount();
-  expect(section.querySelector('canvas')).toHaveAttribute('aria-hidden', 'true');
+  const canvas = section.querySelector('canvas');
+  expect(canvas).not.toBeNull();
+  expect(canvas!.closest('[aria-hidden="true"]')).not.toBeNull();
   expect(section.querySelector('img')).toBeNull();
   expect(section.querySelector('picture')).toBeNull();
+});
+
+/**
+ * jsdom has no WebGL, so `createInk` declines here exactly as it does on a device without
+ * it. The section still has to render its words: this is the fallback path, and without
+ * this it would only ever be exercised on somebody else's hardware.
+ */
+test('the copy renders even though the ink cannot start', () => {
+  const section = mount();
+  expect(within(section).getByText(/bygger vi broer/)).toBeInTheDocument();
+  expect(within(section).getByRole('link', { name: site.hero.cta })).toBeInTheDocument();
 });
