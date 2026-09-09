@@ -10,7 +10,8 @@ beforeEach(() => {
 
 test('the letters, the headline and the lede come from the content file', () => {
   render(<Hero />);
-  expect(document.getElementById('hero-word')?.textContent).toBe('IQRA');
+  const lines = [...document.querySelectorAll('#hero-lockup text')].map((t) => t.textContent);
+  expect(lines).toEqual(['IQRA', 'FOUNDATION']);
   const h1 = screen.getByRole('heading', { level: 1 });
   expect(h1.textContent).toBe('Iqra betyrles.');
   expect(screen.getByText(/første ordet i Koranen/)).toBeInTheDocument();

@@ -37,11 +37,12 @@ async function whatIsOnTop(page: Page, selector: string) {
 test.describe('hero', () => {
   test('at the top the letters are closed and the copy hidden', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#hero-word')).toHaveCount(1);
+    await expect(page.locator('#hero-lockup text')).toHaveText(['IQRA', 'FOUNDATION']);
     await expect(page.locator('[data-mask]')).toHaveCSS('opacity', '1');
     await expect(page.locator('[data-copy]')).toHaveCSS('opacity', '0');
     await expect(page.locator('#site-wordmark')).toHaveCSS('opacity', '0');
-    const transform = await page.locator('#hero-word').getAttribute('transform');
+    // The scale is on the group, not on either line: check where it actually lands.
+    const transform = await page.locator('#hero-lockup').getAttribute('transform');
     expect(transform === null || /^matrix\(1,0,0,1,0,0\)$/.test(transform)).toBe(true);
   });
 
@@ -64,6 +65,75 @@ test.describe('hero', () => {
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect(page.locator('#site-wordmark')).toHaveCSS('opacity', '0', { timeout: 5_000 });
     await expect(page.locator('#site-wordmark')).toHaveAttribute('data-on-dark', 'false');
+  });
+
+  /**
+   * The whole opening hangs off one point: the mask grows out of it, so whatever sits
+   * under it is what fills the screen (Hero.tsx, ORIGIN). It has to be inside a letter,
+   * and inside an upright stroke rather than a crossbar, or the film never opens through
+   * the lettering. The component cannot notice when that stops being true, so check it
+   * here, where there is a real font.
+   *
+   * The origin is read back out of the matrix GSAP applied rather than repeated from the
+   * source, and the letters are redrawn on a canvas from each line's own attributes and
+   * computed style. `textBaseline: 'middle'` is what Chromium renders SVG's
+   * `dominant-baseline: middle` as, and Chromium is all this config runs.
+   */
+  test('the letters open from a point inside an upright stroke', async ({ page }) => {
+    await page.goto('/');
+    await heroPinned(page);
+    const pin = await heroPinLength(page);
+    await page.evaluate((y) => window.scrollTo(0, y), pin * 0.3);
+
+    // svgOrigin becomes a translate of origin * (1 - scale); undo it to get the point back.
+    const readOrigin = () => page.evaluate(() => {
+      const m = document.getElementById('hero-lockup')?.getAttribute('transform')?.match(/matrix\(([^)]+)\)/);
+      if (!m) return null;
+      const [scale, , , , tx, ty] = m[1].split(',').map(Number);
+      return scale > 1.5 ? { x: tx / (1 - scale), y: ty / (1 - scale) } : null;
+    });
+    await expect.poll(readOrigin, { timeout: 10_000, message: 'the lockup never scaled' }).not.toBeNull();
+    const origin = (await readOrigin())!;
+
+    const ink = await page.evaluate(({ x: ox, y: oy }) => {
+      const W = 1000, H = 600; // the mask's viewBox, which is what the origin is in
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#000';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (const line of document.querySelectorAll<SVGTextElement>('#hero-lockup text')) {
+        const style = getComputedStyle(line);
+        ctx.letterSpacing = style.letterSpacing === 'normal' ? '0px' : style.letterSpacing;
+        ctx.font = `${style.fontWeight} ${parseFloat(style.fontSize)}px ${style.fontFamily}`;
+        ctx.fillText(line.textContent ?? '', Number(line.getAttribute('x')), Number(line.getAttribute('y')));
+      }
+      const pixels = ctx.getImageData(0, 0, W, H).data;
+      const inked = (x: number, y: number) =>
+        x >= 0 && x < W && y >= 0 && y < H && pixels[(y * W + x) * 4 + 3] > 128;
+      const px = Math.round(ox), py = Math.round(oy);
+      // How far the ink reaches from the point, along each axis: a stem is tall, a
+      // crossbar is not, and a counter is neither.
+      const reach = (dx: number, dy: number) => {
+        let n = 0;
+        while (inked(px + dx * (n + 1), py + dy * (n + 1))) n++;
+        return n;
+      };
+      return {
+        origin: [px, py],
+        onInk: inked(px, py),
+        across: reach(-1, 0) + reach(1, 0) + 1,
+        down: reach(0, -1) + reach(0, 1) + 1,
+      };
+    }, origin);
+
+    expect(ink, 'the origin is not inside a letter').toMatchObject({ onInk: true });
+    // The stem measures 206 units tall and 50 across; a crossbar or a counter edge would
+    // be a fraction of that vertically.
+    expect(ink.down, `the ink at ${ink.origin} is not an upright stroke: ${JSON.stringify(ink)}`)
+      .toBeGreaterThan(150);
   });
 
   test('the loop never reaches the logo card', async ({ page }) => {

@@ -38,7 +38,12 @@ export const site = {
   footer: { place: 'Oslo' },
   header: { wordmark: 'IQRA', homeLabel: 'Iqra Foundation, til toppen', navLabel: 'Hovedmeny' },
   hero: {
-    word: 'IQRA',
+    /**
+     * The lockup the mask cuts out of the white. Two lines, because the name is the
+     * name: IQRA large, FOUNDATION set smaller underneath and tracked out to the same
+     * width. The sizes live in Hero.tsx, because they are drawing, not copy.
+     */
+    wordLines: ['IQRA', 'FOUNDATION'],
     h1Lines: ['Iqra betyr', 'les'],
     lede: 'Det er det første ordet i Koranen. For oss betyr det å lese, å lære, og å snakke med folk som lurer på noe.',
     cta: 'Still et spørsmål',
