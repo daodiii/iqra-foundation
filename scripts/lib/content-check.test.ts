@@ -63,14 +63,36 @@ describe('contentProblems', () => {
 
 describe('paymentPlaceholders', () => {
   /**
-   * These four are the reason the loud warning exists. They are the numbers a visitor
-   * would try to send money to, so if the set ever drifts — a field renamed, a fifth one
-   * added — the build log would go quiet about exactly the thing it is there to shout.
+   * These are the reason the loud warning exists: the numbers a visitor would try to send
+   * money to. If the set ever drifts — a field renamed, another one added — the build log
+   * would go quiet about exactly the thing it is there to shout.
    */
   test('finds the payment details, and nothing that is merely unfinished', () => {
     const paths = paymentPlaceholders(site).map((p) => p.path);
-    expect(paths).toEqual(['support.account', 'support.kid', 'support.vippsNumber', 'support.orgnr']);
+    expect(paths).toEqual([
+      'support.routes[0].value',
+      'support.routes[1].value',
+      'support.routes[2].value',
+      'support.qr.value',
+      'support.orgnr',
+    ]);
     expect(paths.some((p) => p.startsWith('about.'))).toBe(false);
+  });
+
+  /**
+   * The ways to give are an array now, so the set has to be matched by shape. A list of
+   * exact paths would pass the test above and still go silent the moment somebody added a
+   * fourth route — which is the drift the comment worries about, not a hypothetical.
+   */
+  test('a route added later is caught without anyone updating a list', () => {
+    const extended = {
+      ...site,
+      support: {
+        ...site.support,
+        routes: [...site.support.routes, { label: 'Ny', value: '[NYTT NUMMER]', how: 'x' }],
+      },
+    };
+    expect(paymentPlaceholders(extended).map((p) => p.path)).toContain('support.routes[3].value');
   });
 
   test('it is a subset of every placeholder, not a separate list that can drift', () => {

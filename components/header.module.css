@@ -68,6 +68,54 @@
 }
 
 /*
+ * The header floats over the sections, and the sections are ink now.
+ *
+ * Below the hero the wordmark and the nav are navy, which was safe while the boxes were a
+ * pale wash. It is not safe against a fluid: measured against the ground actually behind
+ * the header, navy fell to **1.37:1** over Visjon's slate and 1.77:1 over Støtt oss's
+ * bronze, where 4.5 is the floor. Lighthouse scored the page 1.00 for accessibility and was
+ * right to — it never scrolls, so it only ever saw the header over the film.
+ *
+ * A light haze rather than a bar: strongest at the very top where the type sits, gone by
+ * a little past the header's own height, so it reads as light on the top edge of the box
+ * rather than as a panel that has appeared. Over the white gutters between the boxes it is
+ * invisible, which is most of the page.
+ */
+.scrim {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 104px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out-expo);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(255, 255, 255, 0.9) 42%,
+    rgba(255, 255, 255, 0.52) 72%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+/* Only where the type is navy. Over the film the wordmark is white, and a white haze
+   would be working against it. */
+.wordmark[data-on-dark='false'] ~ .scrim {
+  opacity: 1;
+}
+
+/* A page with a ground of its own has no ink to lift the type off. */
+.header[data-ground] .scrim {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim {
+    transition: none;
+  }
+}
+
+/*
  * One attribute for the whole header. It sits on the wordmark because a dozen tests and
  * the hero's own timeline already address it there; the nav reads the same value through
  * the sibling combinator rather than keeping a second copy of the truth.

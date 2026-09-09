@@ -7,39 +7,17 @@
   align-items: center;
 }
 
-/* The same box Visjon carries. It sits under the drape, so the drape paints its own ramp
-   over the top of the box's softer version of the same colours. */
-.mission::before {
-  content: '';
-  position: absolute;
-  inset: var(--box-inset-y, 12.5%) var(--box-inset-x, 11.6%);
-  z-index: 0;
-  border-radius: var(--box-radius, 30px);
-  background-color: #ffffff;
-  background-image: var(--wash-image);
-}
-
-.drape {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  pointer-events: none;
-  z-index: 1;
-}
-
 /*
- * The second column reserves the room the drape covers (COVER in drape.ts, 51 % of the
- * section) so the copy can never grow into it. It is expressed against the inner width,
- * which is the section minus two margins, hence the small correction.
+ * The card sits left and the ink fills the rest. The second column is empty on purpose —
+ * it is the room the colour is given, and expressing it as a column means the copy can
+ * never grow into it however long the words get.
  */
 .inner {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) calc(51% + 24px);
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
   gap: clamp(28px, 3.5vw, 56px);
   align-items: center;
   padding: clamp(96px, 13vh, 150px) var(--margin);
@@ -49,10 +27,11 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  padding: clamp(36px, 4.2vw, 60px);
 }
 
 .label {
-  margin: 0 0 clamp(30px, 4.6vh, 52px);
+  margin: 0 0 clamp(28px, 4vh, 44px);
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
   color: var(--color-ink-soft);
@@ -62,11 +41,12 @@
  * The lines are set by hand in the content file, so this must never be given a
  * character-based max-width: the browser would re-wrap them and the breaks would land
  * wherever it ran out of room. The size is instead chosen to fit the longest hand-set
- * line — «på en vennlig og ærlig måte.» — in the column the drape leaves.
+ * line — «på en vennlig og ærlig måte.» — in the card, and `nowrap` on each line makes a
+ * size that stops fitting show as an overflow rather than as a silent re-wrap.
  */
 .stanza {
-  margin: 0 0 clamp(24px, 3.2vh, 38px);
-  font-size: clamp(23px, 2.78vw, 40px);
+  margin: 0 0 clamp(22px, 3vh, 34px);
+  font-size: clamp(22px, 2.5vw, 37px);
   line-height: 1.2;
   font-weight: 500;
   letter-spacing: -0.028em;
@@ -74,22 +54,25 @@
 }
 
 .stanza:last-of-type {
-  margin-bottom: clamp(38px, 5.4vh, 60px);
+  margin-bottom: clamp(32px, 4.6vh, 50px);
 }
 
 .line {
   display: block;
+  white-space: nowrap;
 }
 
+/* Inline, so it stays on the end of the last line rather than becoming a line of its own. */
 .dot {
+  display: inline;
   color: var(--color-crimson);
 }
 
 .rule {
   height: 1px;
-  width: min(100%, 460px);
+  width: min(100%, 420px);
   background: var(--color-hairline);
-  margin: 0 0 clamp(28px, 3.8vh, 42px);
+  margin: 0 0 clamp(26px, 3.4vh, 38px);
   transform-origin: left center;
 }
 
@@ -111,40 +94,32 @@
 }
 
 /*
- * A phone has no right-hand side, so the drape becomes a band above the copy and the
- * renderer turns the bundle a quarter turn to match (drape.ts, mode 'band'). The band's
- * bottom edge is a cut through the middle of the page rather than a bleed off the
- * screen, so it is faded out where it meets the white the copy sits on.
+ * A phone has no second column to give the colour, so the card simply sits on the ink with
+ * the box showing above and below it. The type shrinks faster than the desktop clamp does,
+ * or «på en vennlig og ærlig måte.» runs out of a 360px card and the hand-set breaks stop
+ * meaning anything.
  */
 @media (max-width: 860px) {
   .mission {
     display: block;
   }
 
-  .drape {
-    height: 34svh;
-    bottom: auto;
-    -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 100%);
-    mask-image: linear-gradient(180deg, #000 62%, transparent 100%);
-  }
-
   .inner {
     grid-template-columns: 1fr;
-    padding: calc(34svh + clamp(28px, 5vh, 56px)) var(--margin) clamp(56px, 8vh, 88px);
+    padding: clamp(72px, 11vh, 110px) var(--margin);
   }
 
-  /*
-   * The lines are hand-set, so the type has to shrink faster than the desktop clamp
-   * does or «på en vennlig og ærlig måte.» re-wraps on a 360px screen and the breaks
-   * stop meaning anything.
-   */
   .stanza {
-    font-size: clamp(19px, 5.6vw, 30px);
+    font-size: clamp(18px, 5.1vw, 30px);
     margin-bottom: clamp(20px, 3.4vh, 30px);
   }
 
   .label {
     margin-bottom: clamp(20px, 3.4vh, 34px);
+  }
+
+  .text {
+    padding: clamp(24px, 6vw, 40px);
   }
 
   .cta {

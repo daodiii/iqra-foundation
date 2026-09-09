@@ -29,6 +29,12 @@ export function Header({ ground = false }: { ground?: boolean } = {}) {
       >
         {site.header.wordmark}
       </Link>
+      {/*
+        After the wordmark, not before it: the stylesheet reads `data-on-dark` off the
+        wordmark through a sibling combinator, so everything that follows the ground's
+        colour has to come after the element that states it.
+      */}
+      <span className={styles.scrim} aria-hidden="true" />
       <nav id="site-nav" className={styles.nav} aria-label={site.header.navLabel}>
         <Link href="/om-oss" prefetch={false} className={styles.navLink}>
           {site.about.label}
