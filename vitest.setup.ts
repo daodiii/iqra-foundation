@@ -45,4 +45,9 @@ HTMLCanvasElement.prototype.getContext = vi.fn((type: string) =>
   type === '2d' ? (ctx2d as unknown as CanvasRenderingContext2D) : null,
 ) as unknown as HTMLCanvasElement['getContext'];
 
+// Goes with the context stub above: jsdom has no Path2D either, and the tree collects each
+// depth of branches into one so the whole depth casts a single blurred stroke.
+class Path2DStub { moveTo() {} lineTo() {} }
+Object.defineProperty(window, 'Path2D', { writable: true, value: Path2DStub });
+
 Object.defineProperty(document, 'fonts', { value: { ready: Promise.resolve(), load: () => Promise.resolve([]) } });

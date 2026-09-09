@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { site } from '@/content/site.no';
-import { ACT_SNAP, EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
+import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { setWordmarkOnDark } from '@/lib/wordmark';
 import { createVisionTree, GROW, type TreeHandle } from './tree';
 // TreeFigure, not Tree: on a case-insensitive filesystem './Tree' resolves to tree.ts.
@@ -10,6 +10,14 @@ import { Tree } from './TreeFigure';
 import styles from './vision.module.css';
 
 const dir = (el: Element) => Number((el as HTMLElement).dataset.dir);
+
+/**
+ * How long the tree takes to open, in seconds. Nothing holds the reader here now that the
+ * pin is gone, so it has to be shorter than a pass down the section rather than longer: at
+ * five — the figure the phone branch used to run — a normal scroll left a half-grown tree
+ * behind it.
+ */
+const OPEN = 3;
 
 export function Vision() {
   const root = useRef<HTMLElement>(null);
@@ -39,108 +47,59 @@ export function Vision() {
       // visible — or the fromTo below snaps them back out and replays them on screen.
       // Reduced motion returns above and keeps its CSS rest state (vision.module.css).
       gsap.set(lines, { opacity: 0 });
-      const linesIn = () =>
+
+      /*
+       * The tree opens by itself, and there is no longer a desktop branch and a phone
+       * branch — the phone's shape of it, a clock rather than a pin, everywhere.
+       *
+       * It used to be scrubbed by a pin: a screen and a bit of scrolling whose only
+       * content was the tree opening, so the section held you still while you turned a
+       * crank to be shown the thing you had already arrived at. Growing it on a clock
+       * says the same thing and gives the scroll back; it also removes the last pin
+       * after the hero, so nothing below the film sticks.
+       */
+      const growth = { T: 0 };
+      let arrived = false;
+      const arrive = () => {
+        if (arrived) return;
+        arrived = true;
         gsap.fromTo(lines,
           { x: (i, el) => 120 * dir(el), skewX: (i, el) => -8 * dir(el), opacity: 0 },
           { x: 0, skewX: 0, opacity: 1, duration: 1.1, ease: EASE.out, stagger: 0.09 });
-      const mm = gsap.matchMedia();
+        gsap.to(growth, { T: GROW, duration: OPEN, ease: EASE.none, onUpdate: () => tree?.setT(growth.T) });
+      };
 
-      /*
-       * Where the tree stands when the section arrives, before the pin has any progress
-       * to give it: the seed woken and haloed, nothing grown. It has to be the pin's
-       * floor as well as the entrance's ceiling, or the first pixel of pinned scroll
-       * would put growth back to 0 and blink the seed out again.
-       */
-      const SEED_T = 0.24;
-
-      mm.add('(min-width: 768px)', () => {
+      ScrollTrigger.create({
+        trigger: section, start: 'top 78%', once: true, refreshPriority: 1,
+        onEnter: arrive,
         /*
-         * A screen of scrolling separates the hero letting go from this section reaching
-         * the top, and the pin starts at the far end of it. Everything used to wait for
-         * that, so the whole of it was spent looking at a label, a sub-line and an empty
-         * box with a hairline across it. The copy and the seed now arrive when the
-         * section does; the pin only grows what it has already been handed.
+         * Landing here from a reload rather than scrolling in: the browser restores the
+         * scroll position, the start is already behind us, and `onEnter` has nothing left
+         * to fire on — so the lines would keep the opacity 0 set above, invisible and
+         * permanently so. Hidden on purpose and hidden by accident look identical.
+         *
+         * Measured on refresh, never at creation. The hero builds its pin inside
+         * `document.fonts.ready`, which resolves after this effect runs, so at creation
+         * every position below the hero is a screen short and this would fire for a
+         * visitor who is still up in the film.
          */
-        let wake: gsap.core.Tween | null = null;
-        let arrived = false;
-        const seed = { T: 0 };
-        const arrive = () => {
-          if (arrived) return;
-          arrived = true;
-          linesIn();
-          wake = gsap.to(seed, {
-            T: SEED_T, duration: 0.7, ease: EASE.out, onUpdate: () => tree?.setT(seed.T),
-          });
-        };
-        ScrollTrigger.create({
-          trigger: section, start: 'top 78%', once: true, refreshPriority: 1,
-          onEnter: arrive,
-          /*
-           * Landing here from a reload rather than scrolling in: the browser restores
-           * the scroll position, the start is already behind us, and `onEnter` has
-           * nothing left to fire on — so the lines would keep the opacity 0 set above,
-           * invisible and permanently so. The pin has always had the same hole, and
-           * nothing above this level can see it: hidden on purpose and hidden by
-           * accident look identical.
-           *
-           * Measured on refresh, never at creation. The hero builds its pin inside
-           * `document.fonts.ready`, which resolves after this effect runs, so at
-           * creation every position below the hero is a screen short and this would
-           * fire for a visitor who is still up in the film.
-           */
-          onRefresh: (self) => { if (self.progress > 0) arrive(); },
-        });
+        onRefresh: (self) => { if (self.progress > 0) arrive(); },
+      });
 
-        ScrollTrigger.create({
-          trigger: section, start: 'top top', end: '+=110%', pin: true, scrub: 0.6,
-          // Take the pin a frame early, so grabbing it at speed does not read as a jump.
-          anticipatePin: 1,
-          snap: ACT_SNAP,
-          // Refresh order decides what a trigger measures, and it is creation order unless
-          // priorities say otherwise. The hero used to build its trigger inside
-          // document.fonts.ready, so it was created after us, and without an explicit
-          // priority we sized ourselves against a hero with no pin spacing and started
-          // 2700px too early. The hero is synchronous now, so creation order is document
-          // order and this is belt-and-braces — kept for one commit so a regression is
-          // attributable. Removing it is a separate change (2026-09-09 scroll-fluidity
-          // spec); note that what turns sorting on is the key's PRESENCE, not its value —
-          // ScrollTrigger.js:1036 sets _sort on `"refreshPriority" in vars`.
-          refreshPriority: 1,
-          // The entrance tween and this share one tree, so whichever arrives second has
-          // to stop the other rather than fight it for `setT` frame by frame.
-          onEnter: () => { wake?.kill(); setWordmarkOnDark(false); },
-          onEnterBack: () => setWordmarkOnDark(false),
-          // A resize re-runs the hero's onUpdate, which would paint the wordmark white
-          // again over our white section; say it once more while we hold the header.
-          onRefresh: (self) => { if (self.isActive) setWordmarkOnDark(false); },
-          onUpdate: (self) => tree?.setT(SEED_T + self.progress * (GROW - SEED_T)),
-        });
+      // The wordmark waits for the header to actually be over us. At the section's own
+      // arrival it is still down the screen, and the header is on the hero's dark film
+      // where navy on #0b1118 is ~1.5:1 — invisible. The hero pins on phones too and
+      // leaves data-on-dark="true" behind, so the handoff belongs at `top top` (spec 9).
+      ScrollTrigger.create({
+        trigger: section, start: 'top top', refreshPriority: 1,
+        onEnter: () => setWordmarkOnDark(false),
+        onEnterBack: () => setWordmarkOnDark(false),
+        // A resize re-runs the hero's onUpdate, which would repaint the wordmark white
+        // over our white section; say it once more while we hold the header.
+        onRefresh: (self) => { if (self.isActive) setWordmarkOnDark(false); },
       });
-      mm.add('(max-width: 767px)', () => {
-        const p = { T: 0 };
-        // The tree starts growing as soon as it is properly on screen.
-        ScrollTrigger.create({
-          trigger: section, start: 'top 60%', once: true, refreshPriority: 1,
-          onEnter: () => {
-            linesIn();
-            gsap.to(p, { T: GROW, duration: 5, ease: EASE.none, onUpdate: () => tree?.setT(p.T) });
-          },
-        });
-        // The wordmark waits for the header to actually be over us. At `top 60%` this
-        // section is only the bottom 40% of the screen and the header still sits on the
-        // hero's dark film, where navy on #0b1118 is ~1.5:1 — invisible. The hero pins
-        // on phones too (no matchMedia guard) and leaves data-on-dark="true" behind, so
-        // the handoff has to happen at `top top`, as it does on desktop (spec 9).
-        ScrollTrigger.create({
-          trigger: section, start: 'top top', refreshPriority: 1,
-          onEnter: () => setWordmarkOnDark(false),
-          onEnterBack: () => setWordmarkOnDark(false),
-          // A resize re-runs the hero's onUpdate, which would repaint the wordmark
-          // white over our white section; say it once more while we hold the header.
-          onRefresh: (self) => { if (self.isActive) setWordmarkOnDark(false); },
-        });
-      });
-      return () => { mm.revert(); tree?.destroy(); };
+
+      return () => tree?.destroy();
     },
     { scope: root },
   );
