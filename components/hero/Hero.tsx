@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { site } from '@/content/site.no';
-import { EASE, gsap, reducedMotion, useGSAP } from '@/lib/gsap';
+import { ACT_SNAP, EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { pickSource } from '@/lib/media';
 import { headerElements, setWordmarkOnDark } from '@/lib/wordmark';
 import styles from './hero.module.css';
@@ -68,7 +68,7 @@ export function Hero() {
   const lockupRef = useRef<SVGGElement>(null);
 
   useGSAP(
-    (self) => {
+    () => {
       const section = root.current;
       const video = videoRef.current;
       const lockup = lockupRef.current;
@@ -105,57 +105,67 @@ export function Hero() {
       Promise.resolve(video.play()).catch(() => {}); // autoplay refused: the poster stays, nothing else changes
 
       const q = gsap.utils.selector(section);
+      // On arrival the film fades up inside the letters, slightly zoomed.
+      gsap.fromTo(video, { opacity: 0, scale: 1.18 }, { opacity: 1, scale: 1.12, duration: 1.6, ease: 'power2.out' });
+      // Spec 6.2: letters grow as windows, then rush open; the last slivers dissolve.
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: 'top top',
+          // 200%, not 300%: the opening is the same, it just asks for two screens
+          // of scrolling rather than three to give it.
+          end: '+=200%',
+          pin: true,
+          scrub: 0.5,
+          // Take the pin a frame early. Without this a pin grabbed at speed is applied
+          // after the scroll that triggered it, which the eye reads as a jump.
+          anticipatePin: 1,
+          snap: ACT_SNAP,
+          /*
+           * This used to be built inside `document.fonts.ready`, which made it the last
+           * trigger created and cost 1800px of document height the moment the fonts
+           * landed — everything below the hero moved under whoever was already
+           * scrolling. It is created synchronously now, so the pin spacing is there on
+           * the first frame, and creation order is document order again.
+           *
+           * Which makes this key redundant rather than load-bearing: it was here because
+           * refreshes fall back to creation order, and ours was last. Kept for one more
+           * commit so that if anything below lands wrong, it is attributable to the
+           * un-deferring alone. Removing it is a separate change (see the 2026-09-09
+           * scroll-fluidity spec); what turns sorting on is the key's PRESENCE, not its
+           * value — ScrollTrigger.js:1036 sets _sort on `"refreshPriority" in vars`.
+           */
+          refreshPriority: 2,
+          onUpdate: (st) => {
+            setWordmarkOnDark(st.progress > 0.6);
+            // The copy tween runs from 0.695 to 0.864 of the pin; by 0.8 there is
+            // enough of the button on screen to focus something visible.
+            if (cta) cta.tabIndex = st.progress > 0.8 ? 0 : -1;
+          },
+        },
+      });
+      tl.to(lockup, { scale: 7, svgOrigin: ORIGIN, ease: EASE.none, duration: 0.55 }, 0)
+        .to(lockup, { scale: 14, svgOrigin: ORIGIN, ease: EASE.in2, duration: 0.25 }, 0.55)
+        .to(q('[data-mask]'), { opacity: 0, ease: EASE.inOut, duration: 0.16 }, 0.64)
+        .to(video, { scale: 1, ease: EASE.in1, duration: 0.5 }, 0.4)
+        .to(q('[data-hint]'), { opacity: 0, duration: 0.08 }, 0)
+        .to(q('[data-scrim]'), { opacity: 1, duration: 0.2 }, 0.72)
+        .fromTo(q('[data-copy]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.2, ease: EASE.out }, 0.82)
+        .to({}, { duration: 0.16 });
+      // The header sits outside this context's scope, so it goes in as elements:
+      // a selector string would be looked up inside the hero.
+      const header = headerElements();
+      if (header.length) tl.to(header, { opacity: 1, duration: 0.2 }, 0.7);
+
+      /*
+       * The pin no longer waits for the fonts, but the sections below are text and their
+       * heights still change when Geist swaps in. One refresh re-measures them. `next/font`
+       * self-hosts with a metric-matched fallback, so this is a few pixels rather than the
+       * screen it used to be.
+       */
       let cancelled = false;
       document.fonts.ready.then(() => {
-        if (cancelled) return;
-        // The fonts land after this callback has returned, so join the context by
-        // hand: animations made outside it escape the hook's cleanup, and React's
-        // Strict Mode double mount would then leave two pinned triggers behind.
-        self.add(() => {
-          // On arrival the film fades up inside the letters, slightly zoomed.
-          gsap.fromTo(video, { opacity: 0, scale: 1.18 }, { opacity: 1, scale: 1.12, duration: 1.6, ease: 'power2.out' });
-          // Spec 6.2: letters grow as windows, then rush open; the last slivers dissolve.
-          const tl = gsap.timeline({
-            scrollTrigger: {
-              trigger: section,
-              start: 'top top',
-              // 200%, not 300%: the opening is the same, it just asks for two screens
-              // of scrolling rather than three to give it.
-              end: '+=200%',
-              pin: true,
-              scrub: 0.5,
-              // This trigger is built inside document.fonts.ready, so it is created
-              // last, and GSAP refreshes in creation order unless told otherwise.
-              // Every section below measures its start against our pin spacing, so we
-              // must refresh first: highest priority wins, and the sections carry
-              // descending priorities in document order (hero 2, visjon 1, rest 0).
-              // Do not "simplify" this key away: what turns sorting on is the key's
-              // PRESENCE — ScrollTrigger.js:1036 sets _sort on `"refreshPriority" in vars`
-              // — and the values are only the tie-break before the comparator (:2655)
-              // falls back to document position. Drop the keys and refreshes fall back to
-              // creation order, which puts us last again and Visjon 2700px too early.
-              refreshPriority: 2,
-              onUpdate: (st) => {
-                setWordmarkOnDark(st.progress > 0.6);
-                // The copy tween runs from 0.695 to 0.864 of the pin; by 0.8 there is
-                // enough of the button on screen to focus something visible.
-                if (cta) cta.tabIndex = st.progress > 0.8 ? 0 : -1;
-              },
-            },
-          });
-          tl.to(lockup, { scale: 7, svgOrigin: ORIGIN, ease: EASE.none, duration: 0.55 }, 0)
-            .to(lockup, { scale: 14, svgOrigin: ORIGIN, ease: EASE.in2, duration: 0.25 }, 0.55)
-            .to(q('[data-mask]'), { opacity: 0, ease: EASE.inOut, duration: 0.16 }, 0.64)
-            .to(video, { scale: 1, ease: EASE.in1, duration: 0.5 }, 0.4)
-            .to(q('[data-hint]'), { opacity: 0, duration: 0.08 }, 0)
-            .to(q('[data-scrim]'), { opacity: 1, duration: 0.2 }, 0.72)
-            .fromTo(q('[data-copy]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.2, ease: EASE.out }, 0.82)
-            .to({}, { duration: 0.16 });
-          // The header sits outside this context's scope, so it goes in as elements:
-          // a selector string would be looked up inside the hero.
-          const header = headerElements();
-          if (header.length) tl.to(header, { opacity: 1, duration: 0.2 }, 0.7);
-        });
+        if (!cancelled) ScrollTrigger.refresh();
       });
       return () => {
         cancelled = true;

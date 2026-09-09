@@ -6,8 +6,8 @@ const heroPinLength = (page: Page) => page.evaluate(() => {
   return section.parentElement!.getBoundingClientRect().height - section.getBoundingClientRect().height;
 });
 
-/** The hero builds its timeline inside `document.fonts.ready`, so the pin lands some way
- *  after load — how far after depends on the font cache. Wait for the pin, not for a guess. */
+/** The pin is built synchronously now, so this should settle on the first poll. It stays a
+ *  poll rather than a bare assertion because hydration still has to run first. */
 const heroPinned = (page: Page) =>
   expect
     .poll(() => page.evaluate(() => document.getElementById('hero')?.parentElement?.classList.contains('pin-spacer') ?? false),
@@ -144,6 +144,58 @@ test.describe('hero', () => {
       return v.duration;
     });
     expect(duration).toBeLessThanOrEqual(4.35);
+  });
+});
+
+/**
+ * The bug this guards: the hero used to build its pinned trigger inside
+ * `document.fonts.ready`, so the document gained 1800px of pin spacing after first paint
+ * and every section below the hero slid down under anyone already scrolling. Holding the
+ * font back makes the window between paint and font load wide enough to measure in.
+ */
+test.describe('the page does not move when the fonts land', () => {
+  test('the pin exists before the fonts do, and nothing below shifts when they arrive', async ({ page }) => {
+    let release: (() => void) | undefined;
+    const held = new Promise<void>((resolve) => { release = resolve; });
+
+    // Hold every font response until we say so. `next/font` self-hosts, so these are
+    // same-origin /_next/static/media/*.woff2 requests.
+    await page.route(/\.(woff2?|ttf|otf)(\?|$)/, async (route) => {
+      await held;
+      await route.continue();
+    });
+
+    // `domcontentloaded`, not the default `load`: fonts are subresources, so holding them
+    // holds the load event, and waiting for it would deadlock against our own route.
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+    // While the fonts are still in flight the pin must already be there.
+    await heroPinned(page);
+    const before = await page.evaluate(() => ({
+      height: document.documentElement.scrollHeight,
+      visjon: document.getElementById('visjon')!.getBoundingClientRect().top + window.scrollY,
+      fontsDone: document.fonts.status === 'loaded',
+    }));
+    expect(before.fontsDone, 'the fonts were not actually held back').toBe(false);
+
+    release!();
+    await page.evaluate(() => document.fonts.ready);
+    // The hero asks for one refresh once the fonts land; give it a frame to run.
+    await page.waitForTimeout(500);
+
+    const after = await page.evaluate(() => ({
+      height: document.documentElement.scrollHeight,
+      visjon: document.getElementById('visjon')!.getBoundingClientRect().top + window.scrollY,
+    }));
+
+    // 10px covers the metric-matched fallback swapping for the real face. It does not
+    // come close to admitting the screen of pin spacing this is guarding against.
+    expect(Math.abs(after.visjon - before.visjon),
+      `Visjon moved from ${before.visjon} to ${after.visjon} when the fonts landed`)
+      .toBeLessThanOrEqual(10);
+    expect(Math.abs(after.height - before.height),
+      `the document grew from ${before.height} to ${after.height} when the fonts landed`)
+      .toBeLessThanOrEqual(10);
   });
 });
 

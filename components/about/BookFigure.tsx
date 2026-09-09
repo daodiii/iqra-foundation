@@ -57,6 +57,9 @@ export function Book() {
         const st = ScrollTrigger.create({
           trigger: section, start: 'top top', end: `+=${book.turns * 70}%`,
           pin: true, scrub: 0.6, animation: tl,
+          // Take the pin a frame early, so grabbing it at speed does not read as a jump.
+          // No snap here on purpose: turning pages wants to stop anywhere.
+          anticipatePin: 1,
           /*
            * The chapter label and the hint are positioned inside the section, and the
            * header is fixed. So the moment the pin lets go, the chrome rides up the
