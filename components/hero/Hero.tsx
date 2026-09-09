@@ -6,25 +6,54 @@ import { site } from '@/content/site.no';
 import { EASE, gsap, reducedMotion, useGSAP } from '@/lib/gsap';
 import { pickSource } from '@/lib/media';
 import { headerElements, setWordmarkOnDark } from '@/lib/wordmark';
-import { maskOrigin } from './maskOrigin';
 import styles from './hero.module.css';
 
-/** Fallback origin (viewBox units) when text metrics are unavailable, e.g. in jsdom. */
-const FALLBACK_ORIGIN = '210 318';
+/**
+ * Where the letters open from: the middle of the R's upright stem.
+ *
+ * The mask grows out of this point, so whatever sits under it is what fills the screen on
+ * the way out, and it has to be ink. A counter, or the gap between the two lines, would
+ * blow up into white and blank the film out instead of opening it (spec 6.3). A stem is
+ * the one shape that keeps working at any scale, because it stays a full-height window and
+ * only ever grows wider. Measured, the stem's run through this point is 451–500 across and
+ * 163–368 down, so the margin is 25 units left, 24 right, 137 up and 68 down.
+ *
+ * It is 24 units left of the frame's centre, which is 2.4% of the width and not something
+ * the eye catches — but it is not nothing, so: the R's stem is the nearest upright to the
+ * middle, and the letters are tracked too tight to bring it closer. Loosening IQRA's
+ * tracking walks the stem right by half a unit per unit of tracking while widening the
+ * lockup by three, and the lockup already sits 12px from both edges of a 360px phone. The
+ * stem runs out of road long before it reaches the middle.
+ */
+const ORIGIN = '476 300';
 
-function measureOrigin(word: SVGTextElement): string {
-  try {
-    const bb = word.getBBox();
-    return maskOrigin({
-      start: word.getStartPositionOfChar(0).x,
-      end: word.getEndPositionOfChar(0).x,
-      bbY: bb.y,
-      bbHeight: bb.height,
-    });
-  } catch {
-    return FALLBACK_ORIGIN;
-  }
-}
+/**
+ * The lockup, in viewBox units: IQRA large, FOUNDATION at a quarter of its size and
+ * tracked out to the same width underneath. The tracking is doing real work — drop it
+ * and the second line is three quarters the width of the first.
+ *
+ * Neither `x` is 500, for two separate reasons, and neither is a slip.
+ *
+ * The 22 between them squares the two lines up. `textAnchor="middle"` centres the advance
+ * box, which carries one trailing letter-space, and IQRA's tracking is negative where
+ * FOUNDATION's is positive, so the same anchor pulls them opposite ways: at 500 each the
+ * ink came out 188–844 against 174–808, the second line 25 units left and 22 narrow. This
+ * puts FOUNDATION's F on IQRA's I and its N 7 units inside the A, which is where the eye
+ * wants it — the A is a diagonal, so aligning to its widest point, down at the baseline,
+ * reads as overhanging.
+ *
+ * The 16 they are both shifted by centres the lockup in the frame. IQRA is not centred on
+ * its own anchor: the I's stem starts a sidebearing in, while the A's foot overhangs its
+ * advance, which left the ink at 188–844 — 16 right of centre. Invisible on a desktop, but
+ * on a 375px phone the mask is deliberately near full-bleed, and 16 units showed up as 20px
+ * of margin on the left against 2px on the right. Now the ink measures 173–825, centred on
+ * 499, and the margins come out 249/252 at 1440px and 13/15 on a Pixel 7. Re-measure all of
+ * it if the font or the sizes change.
+ */
+const LINE = [
+  { size: 290, tracking: -18, x: 484, y: 290 },
+  { size: 74, tracking: 18.6, x: 506, y: 423 },
+] as const;
 
 export function Hero() {
   /*
@@ -36,14 +65,14 @@ export function Hero() {
   ReactDOM.preload('/media/iqra-poster.jpg', { as: 'image' });
   const root = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const wordRef = useRef<SVGTextElement>(null);
+  const lockupRef = useRef<SVGGElement>(null);
 
   useGSAP(
     (self) => {
       const section = root.current;
       const video = videoRef.current;
-      const word = wordRef.current;
-      if (!section || !video || !word) return;
+      const lockup = lockupRef.current;
+      if (!section || !video || !lockup) return;
       const cta = section.querySelector<HTMLAnchorElement>('[data-copy] a');
 
       // Media: pick the loop after hydration, never before (spec 6.4).
@@ -83,7 +112,6 @@ export function Hero() {
         // hand: animations made outside it escape the hook's cleanup, and React's
         // Strict Mode double mount would then leave two pinned triggers behind.
         self.add(() => {
-          const origin = measureOrigin(word);
           // On arrival the film fades up inside the letters, slightly zoomed.
           gsap.fromTo(video, { opacity: 0, scale: 1.18 }, { opacity: 1, scale: 1.12, duration: 1.6, ease: 'power2.out' });
           // Spec 6.2: letters grow as windows, then rush open; the last slivers dissolve.
@@ -115,8 +143,8 @@ export function Hero() {
               },
             },
           });
-          tl.to(word, { scale: 7, svgOrigin: origin, ease: EASE.none, duration: 0.55 }, 0)
-            .to(word, { scale: 14, svgOrigin: origin, ease: EASE.in2, duration: 0.25 }, 0.55)
+          tl.to(lockup, { scale: 7, svgOrigin: ORIGIN, ease: EASE.none, duration: 0.55 }, 0)
+            .to(lockup, { scale: 14, svgOrigin: ORIGIN, ease: EASE.in2, duration: 0.25 }, 0.55)
             .to(q('[data-mask]'), { opacity: 0, ease: EASE.inOut, duration: 0.16 }, 0.64)
             .to(video, { scale: 1, ease: EASE.in1, duration: 0.5 }, 0.4)
             .to(q('[data-hint]'), { opacity: 0, duration: 0.08 }, 0)
@@ -146,21 +174,25 @@ export function Hero() {
           <defs>
             <mask id="hero-letters">
               <rect x="-20000" y="-20000" width="41000" height="41000" fill="#fff" />
-              <text
-                ref={wordRef}
-                id="hero-word"
-                x="500"
-                y="318"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontWeight="800"
-                fontSize="290"
-                letterSpacing="-18"
-                fill="#000"
-                style={{ fontFamily: 'var(--font-geist), "Segoe UI", system-ui, sans-serif' }}
-              >
-                {site.hero.word}
-              </text>
+              {/* One group, so the two lines zoom as the single piece of lettering they read as. */}
+              <g ref={lockupRef} id="hero-lockup">
+                {site.hero.wordLines.map((line, i) => (
+                  <text
+                    key={line}
+                    x={LINE[i].x}
+                    y={LINE[i].y}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontWeight="800"
+                    fontSize={LINE[i].size}
+                    letterSpacing={LINE[i].tracking}
+                    fill="#000"
+                    style={{ fontFamily: 'var(--font-geist), "Segoe UI", system-ui, sans-serif' }}
+                  >
+                    {line}
+                  </text>
+                ))}
+              </g>
             </mask>
           </defs>
           <rect x="-20000" y="-20000" width="41000" height="41000" fill="#ffffff" mask="url(#hero-letters)" />
