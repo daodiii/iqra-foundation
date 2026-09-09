@@ -93,12 +93,27 @@ if (typeof window !== 'undefined') {
         if (!snap || !st.isActive || st.getTween(true)?.isActive()) continue;
         const to = snap.snapTo(st.progress, st);
         if (Math.abs(to - st.progress) < 0.001) continue; // the middle of an act: leave it alone
+        /*
+         * And it lets go of the wheel the moment anything else takes it.
+         *
+         * Writing a scroll position every frame means winning every argument, including the
+         * ones it should lose: a `/#stott-oss` link, `Support.tsx`'s `scrollIntoView`, a
+         * hand. Measured before this guard, `e2e/hero.spec.ts` sent the page home to 0 while
+         * this was running and arrived back at 1800 — two runs in ten, and none in eight with
+         * the settle taken out. So each frame it checks the page is still where it left it,
+         * and stands down if it is not. Two pixels of slack because the browser rounds.
+         */
         const at = { y: window.scrollY };
-        gsap.to(at, {
+        let wrote = at.y;
+        const drive = gsap.to(at, {
           y: st.start + to * (st.end - st.start),
           duration: ACT_SNAP.duration.max,
           ease: ACT_SNAP.ease,
-          onUpdate: () => toScroll(at.y),
+          onUpdate: () => {
+            if (Math.abs(window.scrollY - wrote) > 2) return void drive.kill();
+            toScroll(at.y);
+            wrote = window.scrollY;
+          },
         });
       }
     });
