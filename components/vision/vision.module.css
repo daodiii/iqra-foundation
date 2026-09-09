@@ -1,9 +1,28 @@
 .vision {
-  background: #ffffff;
+  position: relative;
+  background: transparent;
   overflow: hidden;
 }
 
+/*
+ * The box. It is a backdrop, not a container: inset from the section so plain white shows
+ * in the gutter around it, and carrying the colour itself (`--wash-image`, defined in
+ * wash.module.css). The page holds the colour in, rather than the box holding it back.
+ * Behind everything, so the tree and the copy sit on it untouched.
+ */
+.vision::before {
+  content: '';
+  position: absolute;
+  inset: var(--box-inset-y, 12.5%) var(--box-inset-x, 11.6%);
+  z-index: 0;
+  border-radius: var(--box-radius, 30px);
+  background-color: #ffffff;
+  background-image: var(--wash-image);
+}
+
 .inner {
+  position: relative;
+  z-index: 1;
   min-height: 100svh;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -12,7 +31,15 @@
   padding: 100px var(--margin) 60px;
 }
 
+/*
+ * A container, so the headline can be sized against this column rather than the viewport.
+ * The lines are broken by hand in the content file — each one is a phrase — and a size in
+ * `vw` stopped honouring that the moment the box narrowed and the column stopped tracking
+ * the window. Measured across 900-1440px, the largest size that keeps every hand-set line
+ * on one line is a flat 10% of this column at every width; 9.8 leaves a little room.
+ */
 .text {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -31,7 +58,10 @@
 }
 
 .line {
-  font-size: clamp(26px, 3.6vw, 52px);
+  /* The floor is 20px because at 768px — the narrowest width that still gets two columns
+     — the column is only 219px wide. That range is cramped whatever the size; raising the
+     single-column breakpoint is the real fix and belongs with the Visjon rework. */
+  font-size: clamp(20px, 9.8cqi, 52px);
   line-height: 1.05;
   font-weight: 600;
   letter-spacing: -0.035em;

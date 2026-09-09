@@ -33,12 +33,14 @@ const docTop = (page: Page, sel: string) => page.evaluate((s) => {
   return el.getBoundingClientRect().top + window.scrollY;
 }, sel);
 
+/** Anything drawn at all, sampled across the whole canvas rather than down one column:
+ *  the tree is a line drawing now and a single column of pixels can miss it honestly. */
 const canvasHasInk = (page: Page) => page.evaluate(() => {
   const c = document.querySelector('#visjon canvas') as HTMLCanvasElement;
-  const ctx = c.getContext('2d')!;
-  const x = Math.floor(c.width / 2);
-  const data = ctx.getImageData(x, 0, 1, c.height).data;
-  for (let i = 3; i < data.length; i += 4) if (data[i] > 40) return true;
+  const data = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+  for (let y = 0; y < c.height; y += 3) {
+    for (let x = 0; x < c.width; x += 3) if (data[(y * c.width + x) * 4 + 3] > 40) return true;
+  }
   return false;
 });
 
@@ -59,13 +61,14 @@ const wordmark = (page: Page) => page.locator('#site-wordmark');
  * spacer, which is what goes wrong when a trigger's start is measured against a document
  * that has not been pinned yet.
  *
- * Two, not three: Misjon is where the page lands and no longer pins. If a third spacer
- * appears here, something has started holding the scroll again.
+ * One, not two: Visjon's tree opens on a clock now and gave its pin back, so the hero is
+ * the only thing on the page that holds you. A second spacer here means something below
+ * the film has started sticking again.
  */
-test('desktop: the two pins lie end to end, and each section pins where its spacer sits', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'only the hero pins on phones');
+test('desktop: the hero is the only pin, and it pins where its spacer sits', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the hero pins on phones too, but the rest of this file is desktop');
   await page.goto('/');
-  await expect(page.locator('.pin-spacer')).toHaveCount(2, { timeout: 15_000 });
+  await expect(page.locator('.pin-spacer')).toHaveCount(1, { timeout: 15_000 });
 
   const spacers = await page.evaluate(() =>
     Array.from(document.querySelectorAll<HTMLElement>('.pin-spacer')).map((sp) => ({
@@ -74,7 +77,7 @@ test('desktop: the two pins lie end to end, and each section pins where its spac
       height: sp.offsetHeight,
     })),
   );
-  expect(spacers.map((s) => s.id)).toEqual(['hero', 'visjon']);
+  expect(spacers.map((s) => s.id)).toEqual(['hero']);
   for (let i = 1; i < spacers.length; i++) {
     expect(spacers[i].top).toBeGreaterThanOrEqual(spacers[i - 1].top + spacers[i - 1].height);
   }
@@ -93,20 +96,24 @@ test('desktop: the two pins lie end to end, and each section pins where its spac
   }
 });
 
-test('desktop: visjon pins, the lines arrive, the tree grows and its names appear', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'pinned layout is desktop only');
+/**
+ * The tree used to be scrubbed by a pin here, and this test scrolled through the pin to
+ * open it. It runs on a clock now, so arriving IS the interaction — nothing below scrolls
+ * a pixel after the first line, and what follows is what arriving has to be worth.
+ */
+test('desktop: visjon does not pin; the lines arrive and the tree opens on its own', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the two-column layout is desktop only');
   await pastHero(page);
   const top = await docTop(page, '#visjon');
   await page.evaluate((y) => window.scrollTo(0, y + 10), top);
-  await page.waitForTimeout(1500);
   await expect(page.locator('#visjon [data-line]').first()).toHaveCSS('opacity', '1', { timeout: 5_000 });
-  await page.evaluate((y) => window.scrollTo(0, y), top + (await pinOf(page, 'visjon')) * 0.96);
-  await page.waitForTimeout(2500);
+  // Generous, because this is a 3s tween finishing on its own and not a scroll we drive.
   for (const name of TREE_NAMES) {
-    await expect(page.locator('#visjon [data-limb], #visjon [data-root]').filter({ hasText: name })).toHaveCSS('opacity', '1', { timeout: 5_000 });
+    await expect(page.locator('#visjon [data-limb], #visjon [data-root]').filter({ hasText: name })).toHaveCSS('opacity', '1', { timeout: 12_000 });
   }
   expect(await canvasHasInk(page)).toBe(true);
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
+  await expect(page.locator('.pin-spacer')).toHaveCount(1); // the section holds nothing
 });
 
 /**
@@ -117,22 +124,24 @@ test('desktop: visjon pins, the lines arrive, the tree grows and its names appea
  * height, so the document geometry and the scroll position we are standing at are
  * untouched, while `resize` still puts ScrollTrigger through a full `_refreshAll`.
  */
-test('desktop: a resize while Visjon is pinned keeps the wordmark navy and the tree on screen', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'pinned layout is desktop only');
+test('desktop: a resize on Visjon keeps the wordmark navy and the tree on screen', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the two-column layout is desktop only');
   await pastHero(page);
   const top = await docTop(page, '#visjon');
-  // Deep in the pin, so the tree is grown and there is something to lose.
-  await page.evaluate((y) => window.scrollTo(0, y), top + (await pinOf(page, 'visjon')) * 0.85);
-  await page.waitForTimeout(2500);
+  await page.evaluate((y) => window.scrollTo(0, y + 10), top);
+  await page.waitForTimeout(4500); // the tree opens on a 3s clock; there has to be one to lose
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
   expect(await canvasHasInk(page)).toBe(true);
 
   await page.setViewportSize({ width: 1180, height: 900 });
   await page.waitForTimeout(1200); // ScrollTrigger debounces resize by 200ms; the tree's own is 240ms
 
-  // Only meaningful if we are still where we think we are, so say so rather than assume it.
-  const pinnedTop = await page.evaluate(() => document.getElementById('visjon')!.getBoundingClientRect().top);
-  expect(Math.abs(pinnedTop), 'the resize moved us out of Visjon\'s pin').toBeLessThanOrEqual(1);
+  // Only meaningful if we are still looking at the thing, so say so rather than assume it.
+  const onScreen = await page.evaluate(() => {
+    const r = document.querySelector('#visjon canvas')!.getBoundingClientRect();
+    return r.bottom > 0 && r.top < window.innerHeight;
+  });
+  expect(onScreen, 'the resize took Visjon off screen').toBe(true);
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
   // The resize resized the canvas, which wipes its bitmap. It has to come back: the names
   // are repositioned by the same function, so a blank canvas leaves labels floating in
@@ -160,7 +169,7 @@ test('desktop: misjon does not pin, the copy arrives and the wordmark stays navy
   await expect(mission.getByRole('link', { name: site.hero.cta }))
     .toHaveAttribute('href', `mailto:${site.contact.email}`);
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
-  await expect(page.locator('.pin-spacer')).toHaveCount(2); // hero, visjon
+  await expect(page.locator('.pin-spacer')).toHaveCount(1); // only the hero
 
   // The drape is the section's only ornament, so a blank canvas is a blank section.
   const painted = await page.evaluate(() => {
@@ -183,7 +192,7 @@ test('desktop: misjon does not pin, the copy arrives and the wordmark stays navy
 test('phone: no pins after the hero; the tree grows, the wordmark hands off, the text arrives', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'stacked layout is the phone layout');
   await pastHero(page);
-  await expect(page.locator('.pin-spacer')).toHaveCount(1); // only the hero pins on phones
+  await expect(page.locator('.pin-spacer')).toHaveCount(1); // the hero is the only pin
   const top = await docTop(page, '#visjon');
   // +10, not the exact top: both handoffs sit on `top top` triggers and ScrollTrigger's
   // isActive is `scroll > start`, so at exactly the top the old colour still stands.
@@ -239,7 +248,7 @@ test('desktop: støtt oss goes dark, the field fills it, and the second route fo
   await page.waitForTimeout(1500);
 
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'true');
-  await expect(page.locator('.pin-spacer')).toHaveCount(2); // still just hero and visjon
+  await expect(page.locator('.pin-spacer')).toHaveCount(1); // still just the hero
 
   const section = page.locator('#stott-oss');
   const s = site.support;

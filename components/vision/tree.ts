@@ -1,12 +1,36 @@
-/** Growth time at the end of the Visjon pin; the tree is complete around 3.3. */
+import { ramp, sample } from '@/lib/drape';
+
+/** Growth time when the tree is fully open; the figure is complete around 3.3. */
 export const GROW = 3.8;
 
 const MAXD = 4;
 const NAVY = '42,57,75';
-const TWIG = 'rgb(84,98,116)';
 const ROOT = 'rgb(74,90,110)';
-const GOLD = '201,154,63';
 const CRIMSON = '171,82,99';
+/*
+ * The tips. A warm core inside a rose bloom, which is the top of the same ramp the
+ * branches climb — so the lights read as the tree flowering rather than as lamps hung in
+ * it. This replaced a gold that was the one colour on the site belonging to nothing else.
+ */
+const BLOOM = '196,122,156';
+const BLOOM_CORE = '255,225,205';
+/** The point at the very centre of a bloom — a shade warmer than the halo around it. */
+const BLOOM_TIP = '255,236,196';
+/** The glow the whole figure is drawn with, so the line itself looks lit rather than inked. */
+const GLOW = `rgba(${BLOOM},0.52)`;
+
+/*
+ * Branch colour is the drape's ramp, read off height: turquoise at the ground, through the
+ * brand blue and navy, out to burgundy at the tips. Imported rather than copied — the ramp
+ * is the same object Misjon's drape paints with, so the two figures cannot drift apart.
+ * The bottom 12% is skipped so the trunk starts at the blue rather than the pale teal the
+ * ramp opens on, which would wash out against the panel.
+ */
+const RAMP = ramp('light');
+const branchColour = (heightFraction: number) => {
+  const [r, g, b] = sample(RAMP, 0.12 + clamp(heightFraction, 0, 1) * 0.88);
+  return `rgb(${r},${g},${b})`;
+};
 
 export type Seg = {
   x0: number; y0: number; cx: number; cy: number; x1: number; y1: number;
@@ -93,10 +117,12 @@ export function fit(model: TreeModel, box: { W: number; H: number }): FittedTree
     ...s, X0: mapX(s.x0), Y0: mapY(s.y0), CX: mapX(s.cx), CY: mapY(s.cy), X1: mapX(s.x1), Y1: mapY(s.y1),
     birth: 0.3 + s.depth * 0.5 + (s.ph % 1) * 0.24,
   }));
-  const rk = (H - GY - 40 * K) / 0.42;
+  /* The same kx/ky as the branches, so the roots are the figure's own scale continuing
+     below the line. Sized instead to the space under the ground line — which is what they
+     used to be — they came out as wide as the crown and read as a second tree. */
   const rootSegs: FittedSeg[] = model.rootSegs.map((s) => ({
-    ...s, X0: W * 0.5 + s.x0 * rk * 1.6, Y0: GY + s.y0 * rk, CX: W * 0.5 + s.cx * rk * 1.6, CY: GY + s.cy * rk,
-    X1: W * 0.5 + s.x1 * rk * 1.6, Y1: GY + s.y1 * rk, birth: 0.25 + s.depth * 0.35,
+    ...s, X0: mapX(s.x0), Y0: mapY(s.y0), CX: mapX(s.cx), CY: mapY(s.cy), X1: mapX(s.x1), Y1: mapY(s.y1),
+    birth: 0.25 + s.depth * 0.35,
   }));
   const byId = new Map(segs.map((s) => [s.id, s]));
   const lights: Light[] = model.tips.map((t, i) => {
@@ -130,21 +156,38 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
   const model = generate();
   let tree = fit(model, { W: 1, H: 1 });
   let T = 0, raf = 0, visible = true;
+  /* A segment's colour is fixed by where its tip sits, so it changes when the tree is
+     refitted and never between frames. Sampled there, looked up here. */
+  let segColour: string[] = [];
   // Under reduced motion nothing in `draw` depends on the clock — no wind, no twinkle,
-  // no leaves — so every frame paints the same ~1200 strokes and ~100 gradients. `painted`
-  // says the canvas already shows the current T at the current size; the frame loop then
-  // skips the repaint until something invalidates it (a resize, or a new T).
+  // no leaves — so every frame repaints the identical picture, blurs and gradients and
+  // all. `painted` says the canvas already shows the current T at the current size; the
+  // frame loop then skips the repaint until something invalidates it (a resize, a new T).
   let painted = false;
   const leaves = Array.from({ length: 10 }, () => ({ live: false, x: 0, y: 0, vy: 0, ph: 0, life: 0, span: 0, s: 0 }));
-  const widths = () => [30, 14, 7, 3.4, 1.8].map((w) => w * tree.K);
-  const rootWidths = () => [18, 9, 4.5].map((w) => w * tree.K);
+  /*
+   * (6.2 - depth * 1.25) up the branches and (3.4 - depth) down the roots. One weight per
+   * depth, flat along the segment rather than tapered: a segment is then a single path and
+   * a single stroke, which is what makes the glow in `draw` affordable — with a shadow set,
+   * every stroke call is a blur.
+   */
+  const widths = () => [6.2, 4.95, 3.7, 2.45, 1.2].map((w) => Math.max(1, w * tree.K));
+  const rootWidths = () => [3.4, 2.4, 1.4].map((w) => Math.max(1, w * tree.K));
 
   function size() {
     const W = stage.clientWidth, H = stage.clientHeight;
     canvas.width = W * DPR; canvas.height = H * DPR; ctx!.setTransform(DPR, 0, 0, DPR, 0, 0);
     tree = fit(model, { W, H });
+    const span = tree.GY - tree.TOPY || 1;
+    segColour = [];
+    tree.segs.forEach((sg) => { segColour[sg.id] = branchColour((tree.GY - sg.Y1) / span); });
     tree.limbs.forEach((l, i) => { const el = opts.limbLabels[i]; if (el) { el.style.left = l.x + 'px'; el.style.top = l.y + 'px'; } });
-    if (opts.rootLabel) opts.rootLabel.style.top = H - 6 + 'px';
+    // Under the roots, not at the foot of the box: the roots are drawn at the branches'
+    // scale now, so they stop well short of the bottom and a fixed offset strands the name.
+    if (opts.rootLabel) {
+      const deepest = tree.rootSegs.reduce((m, s) => Math.max(m, s.Y1), tree.GY);
+      opts.rootLabel.style.top = Math.min(deepest + 26 * tree.K, H - 4) + 'px';
+    }
     // Setting canvas.width wiped the bitmap, so repaint now rather than waiting for the
     // frame loop: `visible` can be momentarily stale (see the observer below), and under
     // reduced motion the loop is not repainting at all.
@@ -162,23 +205,57 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
     return [a * s.X0 + b * s.CX + c * s.X1, a * s.Y0 + b * s.CY + c * s.Y1];
   };
 
-  function drawSeg(s: FittedSeg, t: number, isRoot: boolean) {
-    const p = clamp((T - s.birth) / 0.6, 0, 1);
-    if (p <= 0) return;
-    const ws = isRoot ? rootWidths() : widths();
-    const w0 = ws[s.depth] || 1, w1 = ws[s.depth + 1] || w0 * 0.55;
-    ctx!.strokeStyle = isRoot ? ROOT : s.depth >= 3 ? TWIG : `rgb(${NAVY})`;
-    ctx!.lineCap = 'round';
-    let [px, py] = quad(s, 0);
-    if (!isRoot) px += windX(py, s.ph, t);
+  /** How much of a segment is out of the ground at the current growth time. */
+  const grown = (s: FittedSeg) => clamp((T - s.birth) / 0.6, 0, 1);
+
+  /* A pen is anything with moveTo/lineTo — the context itself for the colour pass, a
+     Path2D for the glow — so one function draws the curve for both. */
+  type Pen = { moveTo(x: number, y: number): void; lineTo(x: number, y: number): void };
+  function trace(pen: Pen, s: FittedSeg, p: number, t: number, isRoot: boolean) {
+    const [px, py] = quad(s, 0);
+    pen.moveTo(isRoot ? px : px + windX(py, s.ph, t), py);
+    // Walked in steps because growth shows a fraction of the curve, and the wind bends it.
     const steps = 8;
     for (let k = 1; k <= steps; k++) {
-      const u = (k / steps) * p;
-      const [qx, y] = quad(s, u);
-      const x = isRoot ? qx : qx + windX(y, s.ph, t);
-      ctx!.lineWidth = lerp(w0, w1, u);
-      ctx!.beginPath(); ctx!.moveTo(px, py); ctx!.lineTo(x, y); ctx!.stroke();
-      px = x; py = y;
+      const [qx, y] = quad(s, (k / steps) * p);
+      pen.lineTo(isRoot ? qx : qx + windX(y, s.ph, t), y);
+    }
+  }
+
+  function drawSeg(s: FittedSeg, t: number, isRoot: boolean) {
+    const p = grown(s);
+    if (p <= 0) return;
+    ctx!.strokeStyle = isRoot ? ROOT : segColour[s.id] ?? `rgb(${NAVY})`;
+    ctx!.lineWidth = (isRoot ? rootWidths() : widths())[s.depth] || 1;
+    ctx!.beginPath();
+    trace(ctx!, s, p, t, isRoot);
+    ctx!.stroke();
+  }
+
+  /*
+   * The glow, in one pass per depth rather than one per segment.
+   *
+   * Canvas casts its shadow per draw call, and a shadowed stroke is a blur — so glowing
+   * each segment where it is drawn put ninety blurs in every frame, and cost 17ms of the
+   * frame on its own (measured 2026-09-09, against the same page with shadowBlur
+   * swallowed). Every segment at one depth shares one width, so a depth is one path and
+   * one stroke: eight blurs a frame. The colour pass then paints the same geometry on top
+   * at the same widths, so nothing of this survives except the halo outside the line.
+   */
+  function glowPass(list: FittedSeg[], ws: number[], isRoot: boolean, t: number) {
+    for (let d = 0; d < ws.length; d++) {
+      const path = new Path2D();
+      let first: FittedSeg | null = null;
+      for (const s of list) {
+        const p = s.depth === d ? grown(s) : 0;
+        if (p <= 0) continue;
+        first ??= s;
+        trace(path, s, p, t, isRoot);
+      }
+      if (!first) continue;
+      ctx!.strokeStyle = isRoot ? ROOT : segColour[first.id] ?? `rgb(${NAVY})`;
+      ctx!.lineWidth = ws[d];
+      ctx!.stroke(path);
     }
   }
 
@@ -188,6 +265,15 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
     const gl = ctx!.createLinearGradient(0, 0, W, 0);
     gl.addColorStop(0, `rgba(${NAVY},0)`); gl.addColorStop(0.5, `rgba(${NAVY},0.35)`); gl.addColorStop(1, `rgba(${NAVY},0)`);
     ctx!.strokeStyle = gl; ctx!.lineWidth = 1; ctx!.beginPath(); ctx!.moveTo(0, GY); ctx!.lineTo(W, GY); ctx!.stroke();
+    /* Every stroke of the figure carries the bloom's own rose, softly. It is what keeps a
+       one-pixel twig from reading as a scratch on the panel, and it is the difference
+       between a diagram of a tree and a lit one. */
+    ctx!.lineCap = 'round';
+    ctx!.shadowColor = GLOW;
+    ctx!.shadowBlur = 18 * K;
+    glowPass(tree.rootSegs, rootWidths(), true, t);
+    glowPass(tree.segs, widths(), false, t);
+    ctx!.shadowBlur = 0;
     for (const s of tree.rootSegs) drawSeg(s, t, true);
     for (const s of tree.segs) drawSeg(s, t, false);
 
@@ -209,11 +295,14 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
       if (la <= 0) continue;
       L.sx = L.seg.X1 + windX(L.seg.Y1, L.seg.ph, t); L.sy = L.seg.Y1;
       const tw = opts.reduced ? 0.85 : 0.75 + 0.25 * Math.sin(L.ph + t * (0.7 + (L.ph % 0.9)));
-      const g = ctx!.createRadialGradient(L.sx, L.sy, 0, L.sx, L.sy, L.R * 4);
-      g.addColorStop(0, `rgba(${GOLD},${0.28 * tw * la})`); g.addColorStop(1, `rgba(${GOLD},0)`);
-      ctx!.fillStyle = g; ctx!.beginPath(); ctx!.arc(L.sx, L.sy, L.R * 4, 0, 6.2832); ctx!.fill();
-      ctx!.fillStyle = `rgba(${GOLD},${(0.75 + 0.25 * tw) * la})`;
-      ctx!.beginPath(); ctx!.arc(L.sx, L.sy, L.R * la, 0, 6.2832); ctx!.fill();
+      const g = ctx!.createRadialGradient(L.sx, L.sy, 0, L.sx, L.sy, L.R * 6);
+      g.addColorStop(0, `rgba(${BLOOM_CORE},${0.95 * tw * la})`);
+      g.addColorStop(0.35, `rgba(${BLOOM},${0.42 * tw * la})`);
+      g.addColorStop(1, `rgba(${BLOOM},0)`);
+      ctx!.fillStyle = g; ctx!.beginPath(); ctx!.arc(L.sx, L.sy, L.R * 6, 0, 6.2832); ctx!.fill();
+      // A small bright point inside a wide halo, rather than a dot with a tight glow.
+      ctx!.fillStyle = `rgba(${BLOOM_TIP},${0.98 * la})`;
+      ctx!.beginPath(); ctx!.arc(L.sx, L.sy, L.R * 0.62 * la, 0, 6.2832); ctx!.fill();
     }
 
     tree.limbs.forEach((l, i) => { const el = opts.limbLabels[i]; if (el) el.style.opacity = String(clamp((T - l.birth) / 0.5, 0, 1)); });
@@ -231,7 +320,7 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
       lf.life += 1 / 60; lf.y += lf.vy / 60; lf.x += Math.sin(lf.ph + t * 1.6) * 0.5;
       if (lf.y > GY || lf.life > lf.span) { lf.live = false; continue; }
       const a = Math.min(1, lf.life / 0.5) * Math.min(1, (lf.span - lf.life) / 0.8) * 0.6;
-      ctx!.fillStyle = `rgba(${GOLD},${a})`; ctx!.fillRect(lf.x, lf.y, lf.s, lf.s);
+      ctx!.fillStyle = `rgba(${BLOOM},${a})`; ctx!.fillRect(lf.x, lf.y, lf.s, lf.s);
     }
     painted = true;
   }
