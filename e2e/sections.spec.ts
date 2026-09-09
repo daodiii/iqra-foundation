@@ -282,13 +282,6 @@ test('desktop: the støtt oss heading fills its measure without overflowing', as
   await pastHero(page);
   const top = await docTop(page, '#stott-oss');
   await page.evaluate((y) => window.scrollTo(0, y + 10), top);
-  await expect
-    .poll(() => page.evaluate(() => {
-      const h2 = document.querySelector('#stott-oss [data-title]') as HTMLElement;
-      return parseFloat(h2.style.fontSize || '0');
-    }), { timeout: 8_000, message: 'the heading never sized itself' })
-    .toBeGreaterThan(24);
-
   const fit = await page.evaluate(() => {
     const h2 = document.querySelector('#stott-oss [data-title]') as HTMLElement;
     const measure = h2.clientWidth;

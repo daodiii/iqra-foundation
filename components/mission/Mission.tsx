@@ -5,7 +5,7 @@ import wash from '@/components/wash.module.css';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
-import { createInk, type InkHandle } from '@/lib/ink';
+import { createInkWhenNear, type InkHandle } from '@/lib/ink';
 import { setWordmarkOnDark } from '@/lib/wordmark';
 import styles from './mission.module.css';
 
@@ -33,7 +33,7 @@ export function Mission() {
 
       const inkCanvas = section.querySelector<HTMLCanvasElement>('[data-ink]');
       const ink: InkHandle | null = inkCanvas
-        ? createInk(inkCanvas, { reduced, palette: film.mission, host: section })
+        ? createInkWhenNear(inkCanvas, { reduced, palette: film.mission, host: section })
         : null;
 
       // This section is white paper on ink, like Visjon above it, so the wordmark stays

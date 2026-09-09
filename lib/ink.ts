@@ -159,7 +159,19 @@ const FRAG = {
 type FragName = keyof typeof FRAG;
 
 /** Jacobi iterations for the pressure solve. Below about ten the flow visibly loses swirl. */
-const PRESSURE_STEPS = 14;
+const PRESSURE_STEPS = 10;
+/**
+ * Seconds between simulation steps.
+ *
+ * Ink spreading through water is a slow event, and stepping it thirty times a second looks
+ * identical to stepping it sixty — this is not an animation whose smoothness anyone reads,
+ * it is a field that drifts. Halving the rate halves the cost of the most expensive thing
+ * on the page, which is what makes several of these affordable at once.
+ *
+ * A touch under 1/30 so a display running at exactly 30Hz does not alternate between one
+ * step and none, which reads as a stutter where a steady half-rate does not.
+ */
+const STEP_EVERY = 0.031;
 /** The canvas is drawn at half CSS resolution and scaled up; the field has no edges to soften. */
 const DRAW_SCALE = 0.5;
 /** Simulation grid along the short side. Dropped on phones, where the box is small anyway. */
@@ -178,6 +190,19 @@ const DROP_EVERY = 0.9;
  * for them to meet, fold into each other and thin out.
  */
 const SETTLE_STEPS = 84;
+/**
+ * How much of the settle happens before the first frame is shown, and how much is spread
+ * over the frames after it.
+ *
+ * All of it at once is a stall of a few hundred milliseconds on a real GPU and well over a
+ * second under software rendering — and it lands at the exact moment the section arrives,
+ * which is when its copy is supposed to be animating in. Misjon's entrance was still at
+ * three per cent opacity five seconds after it should have finished, because the ink was
+ * holding the main thread. So the picture is made good enough to show in one burst, and the
+ * rest of the blooming is paid for a few steps at a time while the page is already moving.
+ */
+const SETTLE_FIRST = 12;
+const SETTLE_PER_FRAME = 5;
 
 export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandle | null {
   const context = canvas.getContext('webgl2', {
@@ -457,11 +482,22 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
    * which says what the motion says and asks nothing of anyone who has turned motion off.
    * The frame loop below never starts in that case.
    */
+  let settleLeft = 0;
   function settle() {
     if (seeded) return;
     seeded = true;
     for (let i = 0; i < 6; i++) drop(true);
-    for (let i = 0; i < SETTLE_STEPS; i++) step(1 / 60);
+    for (let i = 0; i < SETTLE_FIRST; i++) step(1 / 60);
+    settleLeft = SETTLE_STEPS - SETTLE_FIRST;
+  }
+
+  /** The rest of the settle, a few steps at a time. Returns true while there is more. */
+  function settleMore(): boolean {
+    if (settleLeft <= 0) return false;
+    const n = Math.min(settleLeft, SETTLE_PER_FRAME);
+    for (let i = 0; i < n; i++) step(1 / 60);
+    settleLeft -= n;
+    return true;
   }
 
   let raf = 0;
@@ -474,11 +510,18 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
     raf = requestAnimationFrame(frame);
     if (broken) return;
     if (!onScreen) { last = now; return; }
+    const elapsed = (now - last) / 1000;
+    // Half rate. The callback still runs every frame — it is the solver and the repaint
+    // that are skipped, which is where all of the cost is.
+    if (elapsed < STEP_EVERY) return;
     if (needsResize && !resize()) return;
-    const dt = Math.min(0.02, (now - last) / 1000);
+    // Clamped, so a tab that was backgrounded for a minute does not resume by advancing
+    // the fluid a minute in one step, which blows the velocity field apart.
+    const dt = Math.min(0.04, elapsed);
     last = now;
     const t = (now - started) / 1000;
     if (!seeded) settle();
+    settleMore();
     if (t > nextDrop) { drop(false); nextDrop = t + DROP_EVERY + Math.random() * 1.1; }
     step(dt);
     present(t);
@@ -490,8 +533,23 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
   if (!resize()) { releaseTargets(); return null; }
   settle();
   present(0);
+  // Revealed only now that there is a picture on it. The canvas starts transparent in CSS,
+  // so what has been showing until this moment is the still gradient underneath.
+  canvas.style.opacity = '1';
 
-  if (!opts.reduced) {
+  if (opts.reduced) {
+    /*
+     * No frame loop to finish the settle in, so it is finished on its own short one and
+     * then stopped. Spread over frames rather than run in a block for the same reason as
+     * everywhere else: this is a section arriving, and the main thread has other work.
+     */
+    const finish = () => {
+      if (broken || !settleMore()) { raf = 0; return; }
+      present(0);
+      raf = requestAnimationFrame(finish);
+    };
+    raf = requestAnimationFrame(finish);
+  } else {
     last = started = performance.now();
     raf = requestAnimationFrame(frame);
   }
@@ -508,8 +566,20 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
     : null;
   io?.observe(canvas);
 
+  /*
+   * Under reduced motion there is no frame loop to notice the flag, and resizing the canvas
+   * wipes its bitmap — so a window resize would leave a blank box where the picture was.
+   * The still frame has to be made again here, on the spot.
+   */
   const ro = typeof ResizeObserver === 'function'
-    ? new ResizeObserver(() => { needsResize = true; })
+    ? new ResizeObserver(() => {
+        needsResize = true;
+        if (!opts.reduced || broken) return;
+        if (!resize()) return;
+        settle();
+        while (settleMore());
+        present(0);
+      })
     : null;
   ro?.observe(canvas);
 
@@ -563,5 +633,66 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
       // remounts (the phone breakpoint) would climb towards it without this.
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     },
+  };
+}
+
+/**
+ * How far ahead of the viewport a box starts building itself.
+ *
+ * Nearly a screen, so the work is finished before you arrive rather than at the moment you
+ * do. Building is a WebGL2 context and ten shader programs, and no amount of spreading the
+ * solver out helps with that — the only way for it not to be felt is for it to have already
+ * happened. The sections are a screen apart, so at most two are ever live.
+ */
+const NEAR = '60%';
+
+/**
+ * The same simulation, built only once its box is nearly on screen.
+ *
+ * Three of these run on the landing page and a fourth inside Støtt oss, and building one is
+ * not cheap: a WebGL2 context, ten shader programs, and enough solver steps for the opening
+ * drops to bloom. Doing all four at mount put roughly eight thousand draw calls on the main
+ * thread before the page was interactive — on a machine with a real GPU that is a stutter,
+ * and under software rendering, which is what continuous integration and a Lighthouse run
+ * both use, it is long enough that the hero's own setup misses its deadline. The suite
+ * failed in twenty-seven places that had nothing to do with ink.
+ *
+ * Deferring costs nothing visually. The box already carries its colour in CSS, the canvas
+ * is transparent until it has painted, and the sections are a screen apart — so they build
+ * one at a time, as you arrive at each, which is also when the simulation first matters.
+ */
+export function createInkWhenNear(canvas: HTMLCanvasElement, opts: InkOptions): InkHandle {
+  let live: InkHandle | null = null;
+  let destroyed = false;
+
+  const build = () => {
+    if (destroyed || live) return;
+    live = createInk(canvas, opts);
+  };
+
+  // No observer to defer with — build now rather than never.
+  if (typeof IntersectionObserver !== 'function') {
+    build();
+    return {
+      destroy() { destroyed = true; live?.destroy(); live = null; },
+      stir(x, y) { live?.stir(x, y); },
+    };
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    if (!entries.some((e) => e.isIntersecting)) return;
+    io.disconnect();
+    build();
+  }, { rootMargin: NEAR });
+  io.observe(canvas);
+
+  return {
+    destroy() {
+      destroyed = true;
+      io.disconnect();
+      live?.destroy();
+      live = null;
+    },
+    stir(x, y) { live?.stir(x, y); },
   };
 }

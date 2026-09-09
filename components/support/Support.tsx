@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import wash from '@/components/wash.module.css';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
-import { createInk, type InkHandle } from '@/lib/ink';
+import { createInkWhenNear, type InkHandle } from '@/lib/ink';
 import { setWordmarkOnDark } from '@/lib/wordmark';
 import styles from './support.module.css';
 
@@ -21,15 +21,6 @@ const tiers = support.tiers;
 function kroner(n: number): string {
   return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
-
-/** The size the heading is measured at. Any value works; this one keeps the arithmetic
- *  readable, since the result is just `available / (widthAt100 / 100)`. */
-const MEASURE_AT = 100;
-/** Ceiling, in px. Past this the two lines start to out-shout the hero. */
-const TITLE_MAX = 78;
-/** The 2.5% the line is held back from the measure. Fitting it exactly lets rounding
- *  decide, and rounding sometimes wraps — the same slack Misjon's drape needed. */
-const TITLE_SLACK = 0.975;
 
 /**
  * Støtt oss: the ask, rebuilt.
@@ -59,7 +50,7 @@ export function Support() {
 
       const boxCanvas = section.querySelector<HTMLCanvasElement>('[data-ink]');
       const ink = boxCanvas
-        ? createInk(boxCanvas, { reduced, palette: film.support, host: section })
+        ? createInkWhenNear(boxCanvas, { reduced, palette: film.support, host: section })
         : null;
 
       /*
@@ -69,7 +60,7 @@ export function Support() {
        */
       const cardCanvas = section.querySelector<HTMLCanvasElement>('[data-ink-card]');
       cardInk.current = cardCanvas
-        ? createInk(cardCanvas, { reduced, palette: film.supportCard, host: cardCanvas.parentElement })
+        ? createInkWhenNear(cardCanvas, { reduced, palette: film.supportCard, host: cardCanvas.parentElement })
         : null;
 
       /*
@@ -112,41 +103,6 @@ export function Support() {
     { scope: root },
   );
 
-  /*
-   * The heading is sized to its own words rather than to a guess: measured at a reference
-   * size, then scaled so the longer of the two hand-set lines lands on the measure. The
-   * same idea as the hero tracking FOUNDATION out to the width of IQRA, applied to a
-   * sentence — and it means the copy can be rewritten in the content file with no number
-   * here to update.
-   *
-   * It has to run again when the font arrives. Measured in the fallback face, Geist's
-   * narrower figures leave the heading several points too small, and nothing about the
-   * page changes afterwards to trigger a re-measure.
-   */
-  useEffect(() => {
-    const h2 = root.current?.querySelector<HTMLElement>('[data-title]');
-    if (!h2) return;
-    const fit = () => {
-      const available = h2.clientWidth;
-      if (!available) return;
-      h2.style.fontSize = `${MEASURE_AT}px`;
-      const range = document.createRange();
-      let widest = 0;
-      h2.querySelectorAll('span').forEach((line) => {
-        range.selectNodeContents(line);
-        widest = Math.max(widest, range.getBoundingClientRect().width);
-      });
-      if (!widest) return;
-      const size = (available * TITLE_SLACK) / (widest / MEASURE_AT);
-      h2.style.fontSize = `${Math.min(TITLE_MAX, size).toFixed(1)}px`;
-    };
-    fit();
-    document.fonts?.ready.then(fit).catch(() => {});
-    const ro = new ResizeObserver(fit);
-    ro.observe(h2);
-    return () => ro.disconnect();
-  }, []);
-
   const amount = kroner(tiers[idx]);
 
   return (
@@ -158,8 +114,9 @@ export function Support() {
       <div className={styles.inner}>
         <div className={`${wash.card} ${styles.head}`} data-rise>
           <p id="stott-label" className={styles.label}>{support.label}</p>
-          {/* Two spans, because the break is chosen rather than found, and the measuring
-              above needs each line as its own box to measure. */}
+          {/* Two spans, because the break is chosen rather than found — and because the
+              stylesheet sizes the heading to the longer LINE, which needs each to be a box
+              of its own rather than two clauses in one flowing paragraph. */}
           <h2 className={styles.title} data-title>
             {support.title.map((line) => <span key={line}>{line}</span>)}
           </h2>

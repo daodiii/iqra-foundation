@@ -26,7 +26,9 @@
   padding: clamp(88px, 12vh, 140px) var(--margin);
 }
 
+/* A query container, so the heading below can be sized against this card's own width. */
 .head {
+  container-type: inline-size;
   padding: clamp(30px, 3.4vw, 48px) clamp(32px, 3.8vw, 56px);
 }
 
@@ -38,13 +40,27 @@
 }
 
 /*
- * Sized in Support.tsx, not here: the longer of the two hand-set lines is measured and the
- * type scaled so it lands on the measure. The value below is only what shows in the moment
- * before that runs, and if the script never runs at all.
+ * The heading lands ON the measure rather than merely inside it, and it does that in CSS.
+ *
+ * `6.63cqi` is not a guess. Set at 100px in Geist 600, the longer of the two hand-set lines
+ * — «Faste givere gjør at det fortsetter.» — measures 1470px, so it fills a card of width W
+ * at a size of W × 0.975 / 14.70, and 0.975 is the 2.5% of slack that stops rounding from
+ * deciding. `cqi` is a percentage of the container's content box, which is exactly the
+ * measure, so the whole fit is that one number.
+ *
+ * This was JavaScript first: measure the line, scale the type, re-measure when the font
+ * arrives. It worked and it shifted the document 27px the moment Geist landed, because the
+ * heading resized under content that had already been laid out. A number in the stylesheet
+ * cannot shift, needs no re-measure, and costs nothing.
+ *
+ * The cost is that the number belongs to THIS sentence in THIS face. Rewrite the title in
+ * the content file and it has to be re-measured — which is not left to anyone's memory:
+ * `sections.spec.ts` asserts the longer line both fits the card and fills at least three
+ * quarters of it, so a rewrite that outgrows or under-fills this fails loudly.
  */
 .title {
   margin: 0;
-  font-size: clamp(30px, 4vw, 74px);
+  font-size: min(78px, 6.63cqi);
   font-weight: 600;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -52,8 +68,9 @@
 
 .title span {
   display: block;
-  /* The measurement fits the line to the measure, so it must not be allowed to wrap while
-     it waits for that — a wrapped line measures as two and the fit comes out half-size. */
+  /* The size is chosen to fit the line exactly, so a wrap would mean the size is wrong.
+     `nowrap` makes that show as an overflow the e2e catches, rather than as a quiet
+     re-break that looks deliberate. */
   white-space: nowrap;
 }
 
@@ -221,7 +238,9 @@
 .tier[aria-pressed='true'] {
   background: #ffffff;
   border-color: #ffffff;
-  color: #0c131d;
+  /* The card's own ground, inherited rather than repeated: it is set by `wash.night` on
+     the card and is the palette's value, so the two cannot drift. */
+  color: var(--ground);
 }
 
 .pay {
@@ -258,7 +277,11 @@
 
 .payHow {
   margin: 0;
-  max-width: 34ch;
+  /* px, not ch. `ch` is the width of a zero in the CURRENT face, so the measure itself
+     changes when Geist replaces the fallback — the paragraph re-wraps, gains or loses a
+     line, and the document height moves under a reader who has not scrolled. The hero's
+     own "nothing shifts when the fonts arrive" test caught exactly that. */
+  max-width: 280px;
   font-size: 14px;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.78);
@@ -266,7 +289,8 @@
 
 .tax {
   margin: 0;
-  max-width: 62ch;
+  /* px for the same reason as `.payHow`: a `ch` measure moves when the face swaps. */
+  max-width: 460px;
   font-size: 13px;
   line-height: 1.55;
   color: var(--color-ink-soft);

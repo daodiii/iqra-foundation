@@ -46,12 +46,20 @@
   background-image: var(--ink-still);
 }
 
+/*
+ * Transparent until the simulation has a first frame on it, so what shows until then is the
+ * still gradient underneath rather than an empty black rectangle. `lib/ink.ts` fades it in
+ * once it has painted; on a device that declines, it simply never appears and the gradient
+ * is the whole answer.
+ */
 .ink {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   display: block;
+  opacity: 0;
+  transition: opacity 520ms linear;
   /* The copy sits above this; a canvas that swallowed pointer events would also swallow
      the text selection of anything overlapping it. The section listens for the pointer. */
   pointer-events: none;
