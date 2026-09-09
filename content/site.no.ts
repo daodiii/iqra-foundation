@@ -86,8 +86,6 @@ export const site = {
     label: 'Misjon',
     stanzas: missionStanzas,
     text: missionStanzas.flat().join(' '),
-    /** The drape to the right of the copy. Read by the renderer, not by the layout. */
-    drape: { label: 'Et bånd av farge i blått, turkis og vinrødt' },
   },
   about: {
     label: 'Om oss',

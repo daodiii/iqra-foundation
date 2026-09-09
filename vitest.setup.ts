@@ -4,7 +4,7 @@ import { afterEach, vi } from 'vitest';
 
 // Without this every render stays mounted for the rest of the file: queries then match
 // the previous test's DOM as well as this one's, and any component holding a frame loop
-// (the tree, the drape) never gets its cleanup and keeps animating alongside the tests.
+// (the tree, the ink) never gets its cleanup and keeps animating alongside the tests.
 afterEach(cleanup);
 
 Object.defineProperty(window, 'matchMedia', {

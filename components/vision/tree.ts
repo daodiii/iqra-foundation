@@ -1,4 +1,4 @@
-import { ramp, sample } from '@/lib/drape';
+import { ramp, sample } from '@/lib/ramp';
 
 /** Growth time when the tree is fully open; the figure is complete around 3.3. */
 export const GROW = 3.8;
@@ -20,13 +20,16 @@ const BLOOM_TIP = '255,236,196';
 const GLOW = `rgba(${BLOOM},0.52)`;
 
 /*
- * Branch colour is the drape's ramp, read off height: turquoise at the ground, through the
- * brand blue and navy, out to burgundy at the tips. Imported rather than copied — the ramp
- * is the same object Misjon's drape paints with, so the two figures cannot drift apart.
- * The bottom 12% is skipped so the trunk starts at the blue rather than the pale teal the
- * ramp opens on, which would wash out against the panel.
+ * Branch colour is the brand ramp, read off height: turquoise at the ground, through the
+ * brand blue and navy, out to burgundy at the tips. The bottom 12% is skipped so the trunk
+ * starts at the blue rather than the pale teal the ramp opens on, which would wash out
+ * against the card.
+ *
+ * The ramp used to be shared with Misjon's drape, and was imported rather than copied so
+ * the two figures could not drift apart. The drape is gone and the tree is the ramp's only
+ * reader now, which is the whole reason `lib/ramp.ts` still exists.
  */
-const RAMP = ramp('light');
+const RAMP = ramp();
 const branchColour = (heightFraction: number) => {
   const [r, g, b] = sample(RAMP, 0.12 + clamp(heightFraction, 0, 1) * 0.88);
   return `rgb(${r},${g},${b})`;
