@@ -1,0 +1,66 @@
+/*
+ * The white middle of the page. Visjon and Misjon each sit in a box, and the colour lives
+ * INSIDE the boxes — the page around them stays #ffffff, so the tint reads as something
+ * the sections hold rather than something spilled behind them.
+ *
+ * The colours are the drape's own ramp (`lib/drape.ts`): turquoise #62bfbd, the
+ * periwinkle and violet it passes through, and the brand burgundy #ab5263. They are not
+ * re-picked here. The drape's own comment explains why its mid-ramp hues carry more
+ * chroma than the brand does — a ramp built from the brand navy alone, which is nearly
+ * grey, "reads as smoke on a white page". At these alphas that applies twice over.
+ *
+ * The gradient is written once, here, and both boxes use it through `--wash-image`.
+ * Custom properties inherit and are substituted at the point of use, so each box resolves
+ * `--wash-blob` in its own context and one number still tunes both.
+ *
+ * Gradients, not a canvas. The drape is already a canvas renderer, and a second one
+ * behind two sections would cost real paint time against an asserted 0.9 performance
+ * budget, for something meant to be soft.
+ */
+.field {
+  /* The one knob, now that the page around the boxes is plain white. */
+  --wash-blob: 0.2;
+  --wash-core: 0.18;
+  /*
+   * The box runs at 88.3% of the section's width and 86.3% of its height, and the copy
+   * moves with it: `--margin` is what both sections already use for their horizontal
+   * padding, so raising it here — and only here — keeps the text the same 52px inside the
+   * box edge it has always been. Percentages, not pixels, so the 20% holds at every width
+   * rather than only at the one it was measured on.
+   */
+  --box-inset-x: 5.84%;
+  --box-inset-y: 6.88%;
+  --margin: calc(5.84% + 52px);
+  --box-radius: 30px;
+
+  --wash-image:
+    radial-gradient(58% 34% at 10% 4%, rgba(98, 191, 189, var(--wash-blob)) 0%, transparent 68%),
+    radial-gradient(52% 30% at 90% 17%, rgba(143, 176, 224, var(--wash-blob)) 0%, transparent 70%),
+    radial-gradient(64% 36% at 22% 45%, rgba(138, 127, 192, var(--wash-blob)) 0%, transparent 68%),
+    radial-gradient(56% 32% at 86% 62%, rgba(196, 122, 156, var(--wash-blob)) 0%, transparent 68%),
+    radial-gradient(60% 34% at 30% 88%, rgba(171, 82, 99, var(--wash-blob)) 0%, transparent 70%),
+    radial-gradient(90% 55% at 50% 40%, rgba(63, 91, 122, var(--wash-core)) 0%, transparent 76%);
+
+  /*
+   * Deliberately NOT positioned. Each section positions its own box against itself, so
+   * this element needs no containing block — and creating one would make it the offset
+   * parent for Visjon's pin spacer while the hero's stays on the body, which silently
+   * puts the two spacers in different coordinate spaces. `sections.spec.ts` compares them
+   * with `offsetTop`, and caught exactly that: Visjon's read 0 instead of 2700.
+   */
+  background: #ffffff;
+}
+
+/*
+ * A phone has no room to give away, so the box barely steps in at all. The desktop
+ * proportions would leave the copy in a column too narrow to set, and a further 15% would
+ * push the box past the screen edge — there is nothing left to give.
+ */
+@media (max-width: 767px) {
+  .field {
+    --box-inset-x: 2.5%;
+    --box-inset-y: 2%;
+    --margin: calc(2.5% + 14px);
+    --box-radius: 20px;
+  }
+}

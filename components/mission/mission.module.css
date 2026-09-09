@@ -2,9 +2,21 @@
   position: relative;
   min-height: 100svh;
   overflow: hidden;
-  background: #ffffff;
+  background: transparent;
   display: flex;
   align-items: center;
+}
+
+/* The same box Visjon carries. It sits under the drape, so the drape paints its own ramp
+   over the top of the box's softer version of the same colours. */
+.mission::before {
+  content: '';
+  position: absolute;
+  inset: var(--box-inset-y, 12.5%) var(--box-inset-x, 11.6%);
+  z-index: 0;
+  border-radius: var(--box-radius, 30px);
+  background-color: #ffffff;
+  background-image: var(--wash-image);
 }
 
 .drape {
@@ -14,7 +26,7 @@
   height: 100%;
   display: block;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 /*
@@ -24,7 +36,7 @@
  */
 .inner {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) calc(51% + 24px);
