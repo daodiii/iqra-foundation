@@ -55,6 +55,30 @@ const LINE = [
   { size: 74, tracking: 18.6, x: 506, y: 423 },
 ] as const;
 
+/** How long the film takes to open itself, in seconds, whatever the gesture was. */
+const OPENING = 1.2;
+
+/** What a keyboard scrolls a page with, either way; all of it has to be held off. */
+const SCROLL_KEYS = new Set([' ', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End']);
+
+/** The half of it that asks to go down. Pressing Home at the top asks for nothing. */
+const ONWARD_KEYS = new Set([' ', 'PageDown', 'ArrowDown', 'End']);
+
+/** The three ways a page gets scrolled by hand. */
+const GESTURES = ['wheel', 'touchmove', 'keydown'] as const;
+
+/** Is this event a scroll at all? Only a listed key is, and any other type is. */
+const scrolls = (e: Event) => e.type !== 'keydown' || SCROLL_KEYS.has((e as KeyboardEvent).key);
+
+/**
+ * Is it a scroll that asks to go DOWN? A wheel says so itself, a key by which key it is.
+ * A finger is taken at its word: at the top of the page a drag the other way is a rubber
+ * band, and tracking one across two events to refuse it is more than it is worth.
+ */
+const onward = (e: Event) =>
+  e.type === 'wheel' ? (e as WheelEvent).deltaY > 0
+    : e.type !== 'keydown' || ONWARD_KEYS.has((e as KeyboardEvent).key);
+
 export function Hero() {
   /*
    * The poster is what fills the letters until the film has decoded, so it wants to be
@@ -158,6 +182,77 @@ export function Hero() {
       if (header.length) tl.to(header, { opacity: 1, duration: 0.2 }, 0.7);
 
       /*
+       * The first scroll plays the whole opening, and the same one every time.
+       *
+       * Scrubbed to scroll, a nudge and a flick leave the letters at two different points,
+       * so one gesture gives two visitors two different pages. The snap cannot be what
+       * fixes that. It deliberately leaves the middle of an act alone — and for the first
+       * half second after ScrollTrigger boots it is never even scheduled, because the
+       * restart at ScrollTrigger.js:1744 is guarded on `!_startup`, and that half second is
+       * exactly when a landing page gets scrolled. Measured: a wheel at 490ms left the hero
+       * at 60px of an 1800px pin and nothing came to collect it. So the opening is driven
+       * from here, on a tween of its own, and it takes OPENING seconds however it started.
+       *
+       * `getScrollFunc` rather than `window.scrollTo`: it is the setter `normalizeScroll`
+       * is already writing through, so the two never disagree about where the page is.
+       */
+      const st = tl.scrollTrigger;
+      // Non-passive, because both of these have to be able to refuse the gesture.
+      const hard = { capture: true, passive: false } as const;
+      let release: (() => void) | null = null;
+      const swallow = (e: Event) => {
+        if (scrolls(e)) e.preventDefault();
+      };
+
+      const open = (from: ScrollTrigger) => {
+        /*
+         * Nothing else moves the page while the film opens, or a hand still on the wheel
+         * writes its own scroll position over the tween's every other frame. The normalizer
+         * owns scrolling here, so it is disabled and the browser's own is refused; both come
+         * back the moment the tween is done with them.
+         */
+        const normalizer = ScrollTrigger.normalizeScroll();
+        normalizer?.disable();
+        GESTURES.forEach((type) => window.addEventListener(type, swallow, hard));
+        release = () => {
+          release = null;
+          GESTURES.forEach((type) => window.removeEventListener(type, swallow, hard));
+          normalizer?.enable();
+        };
+        // The setter is what has to go through GSAP; the position is the page's own.
+        const toScroll = ScrollTrigger.getScrollFunc(window);
+        const at = { y: window.scrollY };
+        gsap.to(at, {
+          y: from.end,
+          duration: OPENING,
+          ease: EASE.inOut,
+          onUpdate: () => toScroll(at.y),
+          onComplete: () => release?.(),
+          onInterrupt: () => release?.(),
+        });
+      };
+
+      /*
+       * A hand starts it, and only a hand: the header's `/#stott-oss` link and
+       * `Support.tsx`'s `scrollIntoView` both travel through this pin on their way somewhere
+       * else, and neither is asking to watch the film. Reading the trigger's position at that
+       * moment covers the other ways in — a restored scroll position, a hash in the URL — by
+       * declining to play anywhere but from the top. One shot either way.
+       *
+       * `touchmove` and not `touchstart`: a finger put down on the film is not yet a scroll,
+       * and tapping the page should not start the reel.
+       */
+      const arm = (e: Event) => {
+        if (!onward(e)) return;
+        GESTURES.forEach((type) => window.removeEventListener(type, arm, hard));
+        if (st && st.progress < 0.02) {
+          swallow(e);
+          open(st);
+        }
+      };
+      GESTURES.forEach((type) => window.addEventListener(type, arm, hard));
+
+      /*
        * The pin no longer waits for the fonts, but the sections below are text and their
        * heights still change when Geist swaps in. One refresh re-measures them. `next/font`
        * self-hosts with a metric-matched fallback, so this is a few pixels rather than the
@@ -169,6 +264,8 @@ export function Hero() {
       });
       return () => {
         cancelled = true;
+        GESTURES.forEach((type) => window.removeEventListener(type, arm, hard));
+        release?.();
         if (cta) cta.tabIndex = 0;
       };
     },

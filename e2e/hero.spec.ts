@@ -145,6 +145,50 @@ test.describe('hero', () => {
     });
     expect(duration).toBeLessThanOrEqual(4.35);
   });
+
+  /**
+   * Two visitors who give the page two different first gestures should not be left looking
+   * at two different compositions. A single wheel notch and a hard flick both have to run
+   * the opening out to the headline (Hero.tsx, `open`), so the assertion is the exact end
+   * of the pin — not "far enough along" — rather than wherever the scrub carried them.
+   */
+  test('any first scroll plays the whole opening', async ({ page }) => {
+    const openWith = async (delta: number) => {
+      await page.goto('/');
+      await heroPinned(page);
+      const pin = await heroPinLength(page);
+      await page.mouse.wheel(0, delta);
+      await expect
+        .poll(() => page.evaluate(() => Math.round(window.scrollY)),
+          { timeout: 8_000, message: `a wheel of ${delta} never finished the opening` })
+        .toBe(Math.round(pin));
+      // Read as a number, not as the string "1": under a loaded machine these entrance
+      // tweens sit at 0.9999 for a while, and the claim here is that the copy is up.
+      await expect
+        .poll(() => page.evaluate(() => Number(getComputedStyle(document.querySelector('[data-copy]')!).opacity)),
+          { timeout: 5_000, message: 'the opening finished but the copy never came up' })
+        .toBeGreaterThan(0.99);
+    };
+    await openWith(60);
+    await openWith(600);
+  });
+
+  /**
+   * The opening plays for a hand, not for a link. `Support.tsx` scrolls a route into view
+   * and the header's `/#stott-oss` jumps the page; both cross this pin on their way past,
+   * and neither is asking to watch the film. The other half of the same guard is every
+   * test above that parks mid-pin and reads what is on screen there.
+   */
+  test('a scroll nobody asked for is left where it lands', async ({ page }) => {
+    await page.goto('/');
+    await heroPinned(page);
+    const pin = await heroPinLength(page);
+    await page.evaluate((y) => window.scrollTo(0, y), pin * 0.4);
+    await page.waitForTimeout(1500); // longer than OPENING, so a wrong answer has time to show
+    const at = await page.evaluate(() => window.scrollY);
+    expect(at, `a programmatic scroll to ${Math.round(pin * 0.4)} was carried to ${Math.round(at)}`)
+      .toBeLessThan(pin * 0.5);
+  });
 });
 
 /**
@@ -197,6 +241,7 @@ test.describe('the page does not move when the fonts land', () => {
       `the document grew from ${before.height} to ${after.height} when the fonts landed`)
       .toBeLessThanOrEqual(10);
   });
+
 });
 
 test.describe('reduced motion', () => {
