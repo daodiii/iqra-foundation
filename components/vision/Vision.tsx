@@ -1,8 +1,11 @@
 'use client';
 
 import { useRef } from 'react';
+import wash from '@/components/wash.module.css';
 import { site } from '@/content/site.no';
+import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
+import { createInk, type InkHandle } from '@/lib/ink';
 import { setWordmarkOnDark } from '@/lib/wordmark';
 import { createVisionTree, GROW, type TreeHandle } from './tree';
 // TreeFigure, not Tree: on a case-insensitive filesystem './Tree' resolves to tree.ts.
@@ -38,9 +41,22 @@ export function Vision() {
           rootLabel: box.querySelector<HTMLElement>('[data-root]'),
         });
       }
+
+      /*
+       * The cave before sunrise, in ink. The host is the section rather than the canvas, so
+       * a hand moving across the copy stirs the colour behind it too — the card is paper
+       * lying on the water, not a lid on it. `createInk` returns null wherever WebGL2 or a
+       * float colour buffer is missing, and the box keeps the still gradient underneath.
+       */
+      const inkCanvas = section.querySelector<HTMLCanvasElement>('[data-ink]');
+      const ink: InkHandle | null = inkCanvas
+        ? createInk(inkCanvas, { reduced, palette: film.vision, host: section })
+        : null;
+      const stop = () => { tree?.destroy(); ink?.destroy(); };
+
       if (reduced) {
         tree?.setT(99);
-        return () => tree?.destroy();
+        return stop;
       }
       // The section is a full viewport tall, so its copy is readable long before the
       // trigger fires. Hide the lines here — in JS, so a failed script leaves the copy
@@ -99,15 +115,18 @@ export function Vision() {
         onRefresh: (self) => { if (self.isActive) setWordmarkOnDark(false); },
       });
 
-      return () => tree?.destroy();
+      return stop;
     },
     { scope: root },
   );
 
   return (
     <section ref={root} id="visjon" className={styles.vision} aria-labelledby="visjon-label">
+      <div className={`${wash.box} ${wash.cave}`} aria-hidden="true">
+        <canvas className={wash.ink} data-ink />
+      </div>
       <div className={styles.inner}>
-        <div className={styles.text}>
+        <div className={`${wash.card} ${styles.text}`}>
           <span id="visjon-label" className={styles.label}>{site.vision.label}</span>
           <div className={styles.lines}>
             {site.vision.lines.map((line, i) => (
@@ -116,7 +135,9 @@ export function Vision() {
           </div>
           <p className={styles.sub}>{site.vision.sub}</p>
         </div>
-        <Tree />
+        <div className={`${wash.card} ${styles.treeCard}`}>
+          <Tree />
+        </div>
       </div>
     </section>
   );

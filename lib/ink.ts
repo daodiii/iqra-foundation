@@ -65,6 +65,27 @@ const hexToRgb = (hex: string): RGB => [
 ];
 
 /**
+ * How much of a pigment's common absorbance to take out, 0 to 1.
+ *
+ * A colour sampled from a photograph absorbs nearly as much red as it does blue — that is
+ * what makes it a mid-tone rather than a hue — and a filter that absorbs everything equally
+ * is a neutral density filter: it darkens without colouring. Mixed straight, these pigments
+ * gave a box of grey smoke that happened to be very slightly blue.
+ *
+ * A real dye is selective. Taking out the part of the absorbance common to all three
+ * channels leaves the part that actually is a colour, so the ink can be light AND blue
+ * rather than having to choose. The hue is untouched: the same amount comes off each
+ * channel, so the differences that make the hue survive intact.
+ */
+const PURITY = 0.55;
+
+/** The selective part of a pigment's absorbance. See `PURITY`. */
+export function purify(absorbance: RGB): RGB {
+  const common = Math.min(...absorbance) * PURITY;
+  return absorbance.map((v) => Math.max(0, v - common)) as RGB;
+}
+
+/**
  * Expand the weighted pigments into the order they will actually be laid down in.
  *
  * Not `[a,a,a,b]` — three drops of the same colour in a row read as one big blot, and the
@@ -147,8 +168,16 @@ const SIM_BASE_SMALL = 112;
 const NARROW = 500;
 /** Seconds between ambient drops, plus a random part of the same size. */
 const DROP_EVERY = 0.9;
-/** Steps run before the first paint, so the section is never a blank ground. */
-const SETTLE_STEPS = 26;
+/**
+ * Steps run before the first paint.
+ *
+ * This is the number that decides what the section looks like when you arrive at it, which
+ * is the only view most people get: the simulation is paused until the box is on screen, so
+ * it cannot rely on having run for a while. Too few and the seeding drops are still
+ * separate blobs of neat pigment — dark, round, and obviously not a fluid. These are enough
+ * for them to meet, fold into each other and thin out.
+ */
+const SETTLE_STEPS = 84;
 
 export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandle | null {
   const context = canvas.getContext('webgl2', {
@@ -315,10 +344,15 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
   const additive = !!opts.palette.additive;
   const strength = opts.palette.strength ?? 1;
   const ground = hexToRgb(opts.palette.ground).map((v) => v / 255) as RGB;
-  /* Absorbance, not colour: subtractive pigment is what the paper LOSES, so it is stored
-     inverted here and the show pass exponentiates it back. Additive ink is the light itself. */
+  /*
+   * Absorbance, not colour: subtractive pigment is what the paper LOSES, so it is stored
+   * inverted here and the show pass exponentiates it back. Additive ink is the light itself
+   * and needs neither inversion nor purifying — a lamp is already only the colour it emits.
+   */
   const pigments = pigmentCycle(opts.palette).map((c) =>
-    c.map((v) => (additive ? v / 255 : 1 - v / 255)) as RGB,
+    additive
+      ? (c.map((v) => v / 255) as RGB)
+      : purify(c.map((v) => 1 - v / 255) as RGB),
   );
   /* Light adds up much faster than pigment subtracts, so the night card takes about half
      the load or the lamps blow out to white. */
@@ -400,26 +434,33 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
     blit(null);
   }
 
-  /** `still` drops pigment without pushing the water, which is what a seeding drop is. */
-  function drop(still: boolean) {
+  /**
+   * A drop of pigment and the push it gives the water.
+   *
+   * A seeding drop is wide and gentle where a live one is small and fast, but neither is
+   * still: a drop with no velocity stays exactly where it lands, and eight of those are
+   * eight dark discs rather than a fluid. It is the push that makes the pigment spread,
+   * fold and thin, which is the whole difference between ink in water and a blurred circle.
+   */
+  function drop(seeding: boolean) {
     const x = 0.12 + Math.random() * 0.76;
     const y = 0.15 + Math.random() * 0.7;
     const angle = Math.random() * Math.PI * 2;
-    const force = still ? 0 : 90 + Math.random() * 160;
+    const force = seeding ? 45 + Math.random() * 85 : 90 + Math.random() * 160;
     splat(x, y, Math.cos(angle) * force, Math.sin(angle) * force, nextPigment(),
-      still ? 0.06 : 0.022, load(still ? 1 : 0.75));
+      seeding ? 0.055 : 0.022, load(seeding ? 0.62 : 0.8));
   }
 
   /**
-   * The opening state: ten drops and enough steps for them to bloom, rendered once. Under
-   * reduced motion this is the whole of it — a still picture of ink in water, which says the
-   * same thing as the motion does and asks nothing of anyone who has said they do not want
-   * it. The frame loop below never starts in that case.
+   * The opening state: six drops, and enough steps for them to meet and mix, rendered
+   * once. Under reduced motion this is the whole of it — a still picture of ink in water,
+   * which says what the motion says and asks nothing of anyone who has turned motion off.
+   * The frame loop below never starts in that case.
    */
   function settle() {
     if (seeded) return;
     seeded = true;
-    for (let i = 0; i < 10; i++) drop(true);
+    for (let i = 0; i < 6; i++) drop(true);
     for (let i = 0; i < SETTLE_STEPS; i++) step(1 / 60);
   }
 

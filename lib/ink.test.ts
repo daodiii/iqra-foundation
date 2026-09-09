@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { createInk, pigmentCycle, type InkPalette } from './ink';
+import { createInk, pigmentCycle, purify, type InkPalette, type RGB } from './ink';
 
 const hex = (c: [number, number, number]) =>
   '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
@@ -38,6 +38,37 @@ test('the cycle is deterministic', () => {
 
 test('a weight below one still yields the pigment once, rather than dropping it', () => {
   expect(pigmentCycle(palette([['#ff0000', 0], ['#00ff00', 1]]))).toHaveLength(2);
+});
+
+/**
+ * The hue has to survive, because the palette's whole claim is that these are the film's
+ * colours. The same amount comes off every channel, so the differences between them — which
+ * are what the hue is — are untouched.
+ */
+test('purifying a pigment keeps the differences between its channels', () => {
+  const before: RGB = [0.8, 0.5, 0.3];
+  const after = purify(before);
+  expect(after[0] - after[1]).toBeCloseTo(before[0] - before[1], 10);
+  expect(after[1] - after[2]).toBeCloseTo(before[1] - before[2], 10);
+});
+
+/** The point of it: less absorbed overall, so the ink can be light and coloured at once. */
+test('purifying a pigment absorbs strictly less', () => {
+  const before: RGB = [0.8, 0.5, 0.3];
+  purify(before).forEach((v, i) => expect(v).toBeLessThan(before[i]));
+});
+
+/** A pigment that absorbs equally in all three channels is a grey filter and nothing else,
+ *  so almost all of it is common absorbance and there is very little colour to keep. */
+test('a neutral pigment is mostly common absorbance', () => {
+  const [r, g, b] = purify([0.6, 0.6, 0.6]);
+  expect(r).toBeCloseTo(g, 10);
+  expect(g).toBeCloseTo(b, 10);
+  expect(r).toBeLessThan(0.3);
+});
+
+test('purifying never drives a channel below zero', () => {
+  purify([0, 0.4, 0.9]).forEach((v) => expect(v).toBeGreaterThanOrEqual(0));
 });
 
 /**
