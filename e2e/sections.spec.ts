@@ -89,6 +89,27 @@ async function boxIsPainted(page: Page, id: string, ground: string) {
  *  file, so renaming a limb there does not leave a test asserting a name nothing renders. */
 const TREE_NAMES = [...site.vision.tree.limbs, site.vision.tree.root];
 
+/**
+ * How far the timeline's hairline is drawn from the centre of its pegs, in pixels.
+ *
+ * The line is a pseudo-element on the list and the pegs are in the stops, so the two are
+ * positioned by different rules and only agree by arithmetic. Read from the computed style
+ * because a pseudo-element has no box to measure: it is placed from the top on a desktop,
+ * where the rows either side of it are equal, and from the bottom on a phone, where they
+ * are not.
+ */
+const lineAgainstPegs = (page: Page) => page.evaluate(() => {
+  const rail = document.querySelector('#arrangementer [role="region"]')!;
+  const axis = rail.querySelector('ol')!;
+  const box = axis.getBoundingClientRect();
+  const peg = rail.querySelector('[data-today] [class*="peg"]')!.getBoundingClientRect();
+  const style = getComputedStyle(axis, '::before');
+  const drawn = style.top === 'auto'
+    ? box.bottom - parseFloat(style.bottom)
+    : box.top + parseFloat(style.top);
+  return Math.abs(drawn - (peg.top + peg.height / 2));
+});
+
 /** `data-on-dark` is the whole wordmark contract. Nothing after the hero is dark any more,
  *  so below the film it must read false everywhere — including over Støtt oss, which used
  *  to be the one night section and is the assertion most likely to rot silently. */
@@ -400,6 +421,7 @@ test('the timeline opens on today, with what was behind it and what is coming ah
 
   expect(axis.todayOnScreen, 'today is off the left of the rail').toBeGreaterThanOrEqual(0);
   expect(axis.todayOnScreen, 'today is off the right of the rail').toBeLessThan(axis.width);
+  expect(await lineAgainstPegs(page), 'the hairline drifted off the pegs').toBeLessThanOrEqual(2);
   for (const stop of axis.lefts) {
     if (stop.kind === 'news') expect(stop.x, 'a news stop sat ahead of today').toBeLessThan(axis.todayAt);
     if (stop.kind === 'event') expect(stop.x, 'an event sat behind today').toBeGreaterThan(axis.todayAt);
@@ -499,6 +521,16 @@ test('phone: the cards stack, the axis stays an axis, and nothing pushes the pag
   for (const stop of sides) {
     expect(stop.bottom, 'a stop hangs below the line on a phone').toBeLessThanOrEqual(stop.line + 2);
   }
+
+  /*
+   * And the drawn line is where the pegs are.
+   *
+   * The hairline is a pseudo-element on the list; the pegs are in the stops. Nothing in CSS
+   * keeps them in step, and when the phone's rows stopped being symmetric the line was drawn
+   * 138px above the dots — through a screenshot that looked fine, because a 1px hairline over
+   * white is invisible until you look for it. Measuring the pegs alone could not see it.
+   */
+  expect(await lineAgainstPegs(page), 'the hairline drifted off the pegs').toBeLessThanOrEqual(2);
 
   // The rail is wider than the screen by design; the PAGE still must not be. A 246px stop
   // and a fixed-width frame are exactly the kind of thing that escapes its container.

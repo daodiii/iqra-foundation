@@ -13,6 +13,14 @@
   position: relative;
   background: transparent;
   padding: clamp(64px, 8vh, 104px) 0;
+  /*
+   * The two rows the line's position is made of. Held as properties because the hairline is
+   * drawn on the list and the pegs are drawn in the stops, and nothing in CSS keeps those
+   * two in step — on the phone they came apart by 138px and neither a screenshot nor a test
+   * of the pegs alone could see it.
+   */
+  --line-row: 26px;
+  --below-row: 1fr;
 }
 
 .head {
@@ -136,7 +144,7 @@
   width: 246px;
   display: grid;
   /* Three rows: everything above the line, the line, everything below it. */
-  grid-template-rows: 1fr 26px 1fr;
+  grid-template-rows: 1fr var(--line-row) var(--below-row);
   scroll-snap-align: center;
 }
 
@@ -377,13 +385,22 @@
    * and centred items of different heights put their middles — and so their pegs — at
    * different y. On the desktop the symmetric `1fr 26px 1fr` hides this; here it does not.
    */
-  .stop,
-  .now {
-    grid-template-rows: 1fr 26px 34px;
+  .happenings {
+    --below-row: 34px;
   }
 
   .axis {
     align-items: stretch;
+  }
+
+  /*
+   * And the line moves with them. It is drawn on the list at `top: 50%`, which is only the
+   * peg row while the rows above and below it are equal — and down here they are not. Same
+   * two properties as the grid, so the hairline and the pegs cannot come apart again.
+   */
+  .axis::before {
+    top: auto;
+    bottom: calc(var(--below-row) + var(--line-row) / 2);
   }
 
   .news .body {
