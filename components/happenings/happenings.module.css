@@ -1,89 +1,258 @@
 /*
- * The two lists, on the page's own white. No box, no card, no shadow: this section is the
- * gap between the ink and the water, and everything here is set with a hairline and a date
- * column instead of with colour. See the note in `Happenings.tsx` for why that is the point
- * rather than an omission.
+ * Arrangementer · Nyheter, as one time axis.
+ *
+ * On the page's own white — no box, no ground, nothing but a hairline — because this section
+ * is the breath between the ink above it and the water below, and that is the whole argument
+ * for it being here. See the note in `Happenings.tsx`.
+ *
+ * The shape is a corridor: the line runs across the middle, the pictures sit against it from
+ * both sides, and the words run outward. Everything that is coming is above the line and
+ * everything that has been is below it, so the direction never has to be spelled out.
  */
 .happenings {
   position: relative;
   background: transparent;
-  padding: clamp(84px, 11vh, 140px) var(--margin);
+  padding: clamp(64px, 8vh, 104px) 0;
 }
 
-.inner {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(40px, 5vw, 84px);
-  align-items: start;
-}
-
-.column {
+.head {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 var(--margin);
+  margin-bottom: clamp(18px, 2.4vh, 30px);
 }
 
 .label {
-  margin: 0 0 14px;
+  margin: 0 0 12px;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
   color: var(--color-ink-soft);
 }
 
-/* The sentence over each column. Sized to sit under the section headings above it, not
-   beside them: this is a list's title, and the page's voice is already established. */
 .line {
-  margin: 0 0 clamp(18px, 2.4vh, 28px);
+  margin: 0;
   font-size: clamp(24px, 2.3vw, 34px);
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.15;
   color: var(--color-navy);
+  text-wrap: balance;
 }
 
-.list {
-  width: 100%;
-  margin: 0 0 22px;
+.arrows {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.arrow {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-navy);
+  cursor: pointer;
+  transition: border-color 160ms var(--ease-out-expo), color 160ms var(--ease-out-expo);
+}
+
+.arrow:hover:not(:disabled) {
+  border-color: var(--color-navy);
+}
+
+.arrow:disabled {
+  color: #c6ccd4;
+  cursor: default;
+}
+
+.arrow svg {
+  width: 15px;
+  height: 15px;
+}
+
+/*
+ * The rail is a native scroll container, so a trackpad, a touch screen, the arrow keys and
+ * the pointer drag in the component all move one thing. `scroll-padding` is what keeps the
+ * margin: a snap aligns to the scroll port's edge, which ignores padding, and without it the
+ * axis lands with its first stop flush against the window while the heading is indented.
+ */
+.rail {
+  display: flex;
+  overflow-x: auto;
+  padding: 0 var(--margin);
+  scroll-padding-inline: var(--margin);
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  cursor: grab;
+  /* Nothing here is taller than the viewport, so a stray vertical scrollbar would be the
+     rail's own doing rather than the content's. */
+  overscroll-behavior-x: contain;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+}
+
+/* The line itself. Drawn on the list rather than on the section, so it runs the full length
+   of the axis and off both edges of the screen — time does not start at the margin. */
+.axis {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 500px;
+  /* At least as wide as the rail, so the line runs off both edges of the screen even when
+     there are only a few stops on it. Without this a short axis ends in mid-air, and a time
+     axis that stops is a chart of nothing. */
+  min-width: 100%;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/*
- * A hairline above every row and one under the last, so the list is closed at both ends.
- * On the row rather than between rows: a border-bottom on every item would leave the first
- * one hanging off the headline with nothing to sit under.
- */
-.event,
-.news {
-  padding: 18px 0;
-  border-top: 1px solid var(--color-hairline);
+.axis::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--color-hairline);
 }
 
-.list > li:last-child {
-  border-bottom: 1px solid var(--color-hairline);
-}
-
-/* The date column is a fixed 64px so every title in the list starts on the same line,
-   whether the day is one digit or two. */
-.event {
+.stop,
+.now {
+  position: relative;
+  flex: none;
+  width: 246px;
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 18px;
+  /* Three rows: everything above the line, the line, everything below it. */
+  grid-template-rows: 1fr 26px 1fr;
+  scroll-snap-align: center;
 }
 
-.date {
+.now {
+  width: 128px;
+}
+
+.peg {
+  grid-row: 2;
+  position: relative;
+}
+
+.peg::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3px;
+  border-radius: 999px;
+  background: var(--color-navy);
+}
+
+/* Today is the one fixed point on the page, so it is the one mark that is not navy. */
+.now .peg::before {
+  left: -1px;
+  width: 13px;
+  height: 13px;
+  margin-top: -6px;
+  background: var(--color-crimson);
+  box-shadow: 0 0 0 5px #ffffff;
+}
+
+.flag {
+  grid-row: 3;
   margin: 0;
+  padding-top: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-crimson);
+}
+
+.body {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  padding-right: 26px;
+}
+
+/* Above the line, the words end at the line and the picture sits against it; below, the
+   picture comes first for the same reason. The frames make the corridor. */
+.event .body {
+  grid-row: 1;
+  justify-content: flex-end;
+  padding-bottom: 14px;
+}
+
+.news .body {
+  grid-row: 3;
+  padding-top: 14px;
+}
+
+.event .frame {
+  order: 2;
+  margin-top: 16px;
+}
+
+.news .frame {
+  order: -1;
+  margin-bottom: 16px;
+}
+
+/* The month, written where it turns over. On the empty side of the line for that stop:
+   under it where the words are above, over it where they are below. */
+.mark {
+  position: absolute;
+  top: 50%;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.event .mark {
+  margin-top: 14px;
+}
+
+.news .mark {
+  margin-top: -32px;
+}
+
+.kind {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.when {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin: 0 0 7px;
 }
 
 .day {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.03em;
-  /* Tabular, so a 9 and an 18 leave the month in the same place under them. */
+  /* Tabular, so a 9 and an 18 leave the month in the same place beside them. */
   font-variant-numeric: tabular-nums;
   color: var(--color-navy);
 }
@@ -98,32 +267,57 @@
 
 .title {
   margin: 0;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--color-navy);
+  text-wrap: balance;
 }
 
 .meta {
   margin: 4px 0 0;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-ink-soft);
 }
 
 .note {
-  margin: 8px 0 0;
-  font-size: 15px;
+  margin: 7px 0 0;
+  font-size: 14px;
   line-height: 1.5;
-  max-width: 420px;
   color: var(--color-ink-soft);
 }
 
-.newsDate {
-  margin: 0 0 6px;
-  font-size: 12px;
+/*
+ * The picture, or the room one would take. An empty frame rather than a stock photograph —
+ * the reasoning is in `Happenings.tsx`, and it is the same reasoning as the team list's
+ * empty circles. `--color-paper` is the warm ground Om oss uses, one step off white so the
+ * frame reads as a held place rather than as a hole.
+ */
+.frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #edeff2;
+  box-shadow: inset 0 0 0 1px rgba(28, 38, 50, 0.07);
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.04em;
-  color: var(--color-muted);
+  letter-spacing: 0.06em;
+  color: rgba(42, 57, 75, 0.42);
+}
+
+.photo {
+  object-fit: cover;
+}
+
+.links {
+  display: flex;
+  gap: 26px;
+  margin: 26px 0 0;
+  padding: 0 var(--margin);
 }
 
 .more {
@@ -138,12 +332,49 @@
 }
 
 /*
- * Two columns need two columns' worth of room. Below this the lists stack, and a stacked
- * pair still reads as two lists because each keeps its own label and headline.
+ * A phone gets a narrower stop and a shorter axis, but the same shape — this is the one
+ * layout on the site that does not have to stack, because sideways is what it already is.
  */
-@media (max-width: 900px) {
-  .inner {
-    grid-template-columns: minmax(0, 1fr);
-    gap: clamp(36px, 6vh, 56px);
+@media (max-width: 767px) {
+  .head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .arrows {
+    display: none;
+  }
+
+  /*
+   * Narrow enough that the next stop is always showing at the edge. A stop as wide as the
+   * screen reads as a card you page through, and then the line between them is doing no
+   * work — the whole point is that you can see it continue.
+   */
+  .stop {
+    width: 62vw;
+    max-width: 250px;
+  }
+
+  /*
+   * Much wider than it is tall down here. The axis gives each stop half the height it has,
+   * and the other half belongs to the other direction in time — so on a phone every pixel a
+   * frame takes is a pixel of empty sky or empty ground opposite it. A 4:3 frame at this
+   * width costs about 250px twice over.
+   */
+  .frame {
+    aspect-ratio: 2 / 1;
+  }
+
+  .axis {
+    min-height: 340px;
+  }
+
+  .body {
+    padding-right: 18px;
+  }
+
+  .title {
+    font-size: 16px;
   }
 }

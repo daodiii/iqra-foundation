@@ -52,25 +52,37 @@ const supportRoutes = [
  * Arrangementer and Nyheter, which have no content yet.
  *
  * Every row here is a bracketed placeholder, and that is deliberate rather than lazy: the
- * mockup these sections come from was filled with invented events — an open evening in the
- * mosque, a stand on Karl Johan — and an invented event is the one kind of placeholder a
- * visitor cannot tell from the real thing. They would have walked into a mosque on a
- * Thursday. Brackets are caught by `scripts/check-content.mjs` before a production build,
- * plausible sentences are not, which is the whole argument.
+ * mockup these came from was filled with invented events — an open evening in the mosque, a
+ * stand on Karl Johan — and an invented event is the one kind of placeholder a visitor
+ * cannot tell from the real thing. They would have walked into a mosque on a Thursday.
+ * Brackets are caught by `scripts/check-content.mjs` before a production build, plausible
+ * sentences are not, which is the whole argument.
  *
- * Two rows rather than three: enough for the list to show its rhythm — the hairlines, the
- * date column, the note under each title — and few enough that two identical rows read as a
- * template waiting to be filled rather than as a rendering fault. Both sections disappear
- * entirely when their array is emptied, so deleting these is also a valid way to ship.
+ * Two rows each: enough for the axis to show its rhythm, few enough that two identical rows
+ * read as a template waiting to be filled rather than as a rendering fault. The section
+ * disappears entirely when both arrays are emptied, so deleting these is also a way to ship.
+ *
+ * Both lists carry a day and a MONTH rather than a written-out date, because they are read
+ * as one time axis and the axis needs the same two parts from every entry: a number to set
+ * large, and a month to group by.
+ *
+ * `image` is `{ src, alt }` or null. One field rather than two, so a photograph cannot
+ * arrive without the words that describe it — and so there is no empty `alt` sitting in the
+ * content for the gate to trip over, which is exactly what it did when they were separate.
+ *
+ * They are in TIME ORDER, oldest first, and nothing sorts them. A real date on a placeholder
+ * would be an invented date — the one bracket a visitor could not see — and an ISO field
+ * nobody can fill in yet would be a sort key that lies. The order is the author's, the same
+ * way the entries in any calendar are.
  */
 const eventItems = [
-  { day: '[00]', month: '[mnd]', title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]' },
-  { day: '[00]', month: '[mnd]', title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]' },
+  { day: '[00]', month: '[mnd]', title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]', image: null },
+  { day: '[00]', month: '[mnd]', title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]', image: null },
 ] as const;
 
 const newsItems = [
-  { date: '[0. måned]', title: '[Tittel]', note: '[Én setning om hva som skjedde.]' },
-  { date: '[0. måned]', title: '[Tittel]', note: '[Én setning om hva som skjedde.]' },
+  { day: '[00]', month: '[mnd]', title: '[Tittel]', note: '[Én setning om hva som skjedde.]', image: null },
+  { day: '[00]', month: '[mnd]', title: '[Tittel]', note: '[Én setning om hva som skjedde.]', image: null },
 ] as const;
 
 /**
@@ -123,17 +135,37 @@ export const site = {
     stanzas: missionStanzas,
     text: missionStanzas.flat().join(' '),
   },
+  /**
+   * The two lists are one time axis: news behind «i dag», events ahead of it. That is not a
+   * layout, it is what they are — the same line read each way — and it is why they share a
+   * heading now instead of holding a column each.
+   */
+  happenings: {
+    label: 'Arrangementer · Nyheter',
+    line: 'Det som kommer, og det som var.',
+    today: 'I dag',
+    /** What each stop is, said once above its date. */
+    kinds: { event: 'Arrangement', news: 'Nyhet' },
+    /** The label in an empty picture frame. Bracketed, like every other thing we lack. */
+    imageLabel: '[Bilde]',
+    /** Read on the phone by a screen reader, which cannot see that the axis runs sideways. */
+    railLabel: 'Tidslinje. Bla sidelengs for det som kommer og det som var.',
+    back: 'Bakover i tid',
+    forward: 'Framover i tid',
+    /** Short month to the word above the line. Whatever is not here is shown as written. */
+    months: {
+      jan: 'Januar', feb: 'Februar', mar: 'Mars', apr: 'April', mai: 'Mai', jun: 'Juni',
+      jul: 'Juli', aug: 'August', sep: 'September', okt: 'Oktober', nov: 'November', des: 'Desember',
+    },
+  },
   events: {
     label: 'Arrangementer',
-    /** The headline over the column. A sentence, not a heading: the page speaks. */
-    line: 'Kom og møt oss.',
     more: 'Alle arrangementer',
     href: eventsHref,
     items: eventItems,
   },
   news: {
     label: 'Nyheter',
-    line: 'Siste nytt fra oss.',
     more: 'Alle nyheter',
     href: newsHref,
     items: newsItems,
