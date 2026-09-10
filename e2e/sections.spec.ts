@@ -348,26 +348,62 @@ test('desktop: om oss · teamet is water over Arafat, with the story and the tea
  * the only thing on the site that answers a click by doing nothing, and no build step would
  * ever catch it.
  */
-test('desktop: the lists sit on the page’s own white and link to nothing that is not there', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'the phone layout stacks the columns');
+test('desktop: the axis sits on the page’s own white and links to nothing that is not there', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the phone has its own test for the rail');
   await pastHero(page);
   const top = await docTop(page, '#arrangementer');
   await page.evaluate((y) => window.scrollTo(0, y - 80), top);
   await page.waitForTimeout(900);
 
   const section = page.locator('#arrangementer');
-  await expect(section.getByText(site.events.line)).toBeVisible();
-  await expect(section.getByText(site.news.line)).toBeVisible();
-  await expect(section.getByRole('list', { name: site.events.label }).locator('li'))
-    .toHaveCount(site.events.items.length);
-  await expect(section.getByRole('list', { name: site.news.label }).locator('li'))
-    .toHaveCount(site.news.items.length);
+  await expect(section.getByRole('heading', { level: 2 })).toHaveText(site.happenings.line);
+  await expect(section.locator('li')).toHaveCount(
+    site.events.items.length + site.news.items.length + 1, // the stops, and today
+  );
 
   expect(await section.evaluate((el) => getComputedStyle(el).backgroundColor))
     .toBe('rgba(0, 0, 0, 0)');
   expect(await section.locator('canvas').count(), 'the breath grew a simulation').toBe(0);
   const hrefs = await section.locator('a').evaluateAll((els) => els.map((a) => a.getAttribute('href')));
   expect(hrefs.filter((h) => !h || h === '#'), 'a link that goes nowhere').toEqual([]);
+});
+
+/**
+ * The axis's own claim: news behind today, events ahead of it, and you arrive at today
+ * rather than at the start of history. Read off the rendered geometry rather than the
+ * markup, because the ordering is the point and a stylesheet could undo it.
+ */
+test('the timeline opens on today, with what was behind it and what is coming ahead', async ({ page }) => {
+  await pastHero(page);
+  const top = await docTop(page, '#arrangementer');
+  await page.evaluate((y) => window.scrollTo(0, y - 80), top);
+  await page.waitForTimeout(900);
+
+  const axis = await page.evaluate((kinds) => {
+    const rail = document.querySelector('#arrangementer [role="region"]') as HTMLElement;
+    const today = rail.querySelector('[data-today]') as HTMLElement;
+    const lefts = Array.from(rail.querySelectorAll('li')).map((li) => ({
+      x: li.offsetLeft,
+      kind: li.textContent?.includes(kinds.news) ? 'news' : li.textContent?.includes(kinds.event) ? 'event' : 'today',
+    }));
+    return {
+      /* Where today sits in the rail's own viewport, which is the claim being made: you
+         arrive at today. Asserted this way rather than as a scroll offset because with only
+         the placeholder stops on it the axis is shorter than a desktop window and there is
+         nothing to scroll — and «already on screen» is the same promise kept. */
+      todayOnScreen: today.offsetLeft - rail.scrollLeft,
+      width: rail.clientWidth,
+      todayAt: today.offsetLeft,
+      lefts,
+    };
+  }, site.happenings.kinds);
+
+  expect(axis.todayOnScreen, 'today is off the left of the rail').toBeGreaterThanOrEqual(0);
+  expect(axis.todayOnScreen, 'today is off the right of the rail').toBeLessThan(axis.width);
+  for (const stop of axis.lefts) {
+    if (stop.kind === 'news') expect(stop.x, 'a news stop sat ahead of today').toBeLessThan(axis.todayAt);
+    if (stop.kind === 'event') expect(stop.x, 'an event sat behind today').toBeGreaterThan(axis.todayAt);
+  }
 });
 
 /**
@@ -411,30 +447,39 @@ test('phone: no pins after the hero; the tree grows and every section stays legi
 });
 
 /**
- * Both new sections are two columns on a desktop, and there is no room for two columns on a
+ * The people's two cards are side by side on a desktop and there is no room for that on a
  * phone. Asserted as geometry rather than as a media query: what matters is that the second
- * column ends up UNDER the first rather than beside it, whatever the breakpoint says.
+ * card ends up UNDER the first rather than beside it, whatever the breakpoint says.
+ *
+ * The timeline is the one layout on the site that does NOT stack, because sideways is what
+ * it already is — so it is checked the other way round: it must still scroll, and it must
+ * not take the page with it.
  */
-test('phone: the lists and the two cards stack into one column', async ({ page, isMobile }) => {
+test('phone: the cards stack, the axis stays an axis, and nothing pushes the page sideways', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'stacked layout is the phone layout');
   await pastHero(page);
 
-  for (const [what, selector] of [
-    ['the lists', '#arrangementer ul'],
-    ['the people cards', '#om-oss-teamet [class*="card"]'],
-  ] as const) {
-    const top = await docTop(page, selector.split(' ')[0]);
-    await page.evaluate((y) => window.scrollTo(0, y - 40), top);
-    await page.waitForTimeout(500);
-    const boxes = await page.locator(selector).evaluateAll((els) =>
-      els.map((el) => { const r = el.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y) }; }));
-    expect(boxes.length, what).toBe(2);
-    expect(boxes[0].x, `${what} did not stack`).toBe(boxes[1].x);
-    expect(boxes[1].y, `${what} did not stack`).toBeGreaterThan(boxes[0].y);
-  }
+  const peopleTop = await docTop(page, '#om-oss-teamet');
+  await page.evaluate((y) => window.scrollTo(0, y - 40), peopleTop);
+  await page.waitForTimeout(500);
+  const cards = await page.locator('#om-oss-teamet [class*="card"]').evaluateAll((els) =>
+    els.map((el) => { const r = el.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y) }; }));
+  expect(cards.length, 'the people cards').toBe(2);
+  expect(cards[0].x, 'the people cards did not stack').toBe(cards[1].x);
+  expect(cards[1].y, 'the people cards did not stack').toBeGreaterThan(cards[0].y);
 
-  // Nothing on a phone may push the page sideways; a 64px date column and a 40px circle are
-  // exactly the kind of fixed width that does.
+  const axisTop = await docTop(page, '#arrangementer');
+  await page.evaluate((y) => window.scrollTo(0, y - 40), axisTop);
+  await page.waitForTimeout(500);
+  const rail = await page.evaluate(() => {
+    const el = document.querySelector('#arrangementer [role="region"]') as HTMLElement;
+    return { scrollable: el.scrollWidth > el.clientWidth, wider: el.scrollWidth > window.innerWidth };
+  });
+  expect(rail.scrollable, 'the axis stopped scrolling on a phone').toBe(true);
+  expect(rail.wider, 'the axis is not actually longer than the screen').toBe(true);
+
+  // The rail is wider than the screen by design; the PAGE still must not be. A 246px stop
+  // and a fixed-width frame are exactly the kind of thing that escapes its container.
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow, 'the page scrolls sideways on a phone').toBeLessThanOrEqual(1);
 });
