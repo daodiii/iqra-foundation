@@ -48,6 +48,42 @@ const supportRoutes = [
   },
 ] as const;
 
+/**
+ * Arrangementer and Nyheter, which have no content yet.
+ *
+ * Every row here is a bracketed placeholder, and that is deliberate rather than lazy: the
+ * mockup these sections come from was filled with invented events — an open evening in the
+ * mosque, a stand on Karl Johan — and an invented event is the one kind of placeholder a
+ * visitor cannot tell from the real thing. They would have walked into a mosque on a
+ * Thursday. Brackets are caught by `scripts/check-content.mjs` before a production build,
+ * plausible sentences are not, which is the whole argument.
+ *
+ * Two rows rather than three: enough for the list to show its rhythm — the hairlines, the
+ * date column, the note under each title — and few enough that two identical rows read as a
+ * template waiting to be filled rather than as a rendering fault. Both sections disappear
+ * entirely when their array is emptied, so deleting these is also a valid way to ship.
+ */
+const eventItems = [
+  { day: '[00]', month: '[mnd]', title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]' },
+  { day: '[00]', month: '[mnd]', title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]' },
+] as const;
+
+const newsItems = [
+  { date: '[0. måned]', title: '[Tittel]', note: '[Én setning om hva som skjedde.]' },
+  { date: '[0. måned]', title: '[Tittel]', note: '[Én setning om hva som skjedde.]' },
+] as const;
+
+/**
+ * Where «Alle arrangementer →» and «Alle nyheter →» would go.
+ *
+ * Null until those pages exist, and the link is not rendered while it is null. A link to `#`
+ * would be the one thing on this page that answers a click by doing nothing, and unlike a
+ * bracket nothing in the build would ever catch it. The day the route exists this is a
+ * one-line change and the link appears.
+ */
+const eventsHref: string | null = null;
+const newsHref: string | null = null;
+
 export const site = {
   lang: 'nb',
   name: 'Iqra Foundation',
@@ -86,6 +122,32 @@ export const site = {
     label: 'Misjon',
     stanzas: missionStanzas,
     text: missionStanzas.flat().join(' '),
+  },
+  events: {
+    label: 'Arrangementer',
+    /** The headline over the column. A sentence, not a heading: the page speaks. */
+    line: 'Kom og møt oss.',
+    more: 'Alle arrangementer',
+    href: eventsHref,
+    items: eventItems,
+  },
+  news: {
+    label: 'Nyheter',
+    line: 'Siste nytt fra oss.',
+    more: 'Alle nyheter',
+    href: newsHref,
+    items: newsItems,
+  },
+  /**
+   * Om oss · Teamet on the landing page. The words themselves come from `about.chapters` —
+   * chapter I for the story, chapter II for the people — so they are written once and the
+   * landing page and `/om-oss` cannot drift. Only what the landing page adds is here.
+   */
+  people: {
+    /** Chapter II is «Menneskene» inside the book; on the landing page it is the team. */
+    teamLabel: 'Teamet',
+    more: 'Les hele historien',
+    sectionLabel: 'Om oss og teamet',
   },
   about: {
     label: 'Om oss',

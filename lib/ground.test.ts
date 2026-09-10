@@ -26,12 +26,13 @@ function groundOf(className: string): string | null {
 const SCENES = [
   ['cave', film.vision],
   ['mosque', film.mission],
-  ['quran', film.support],
+  ['arafat', film.people],
+  ['green', film.supportWater],
   ['night', film.supportCard],
 ] as const;
 
-test.each(SCENES)('the %s ground in the stylesheet matches the palette', (name, palette) => {
-  expect(groundOf(name)).toBe(palette.ground);
+test.each(SCENES)('the %s ground in the stylesheet matches the palette', (name, scene) => {
+  expect(groundOf(name)).toBe(scene.ground);
 });
 
 /** If a class is ever renamed, the lookup above would quietly return null for every scene
@@ -45,6 +46,21 @@ test('the lookup finds a ground at all', () => {
  *  flat rectangle where the page promises weather. */
 test.each(SCENES.map(([n]) => n))('the %s box has a still gradient behind the canvas', (name) => {
   const block = css.match(new RegExp(`\\.${name}\\s*\\{([^}]*)\\}`))?.[1] ?? '';
-  expect(block).toContain('--ink-still:');
+  expect(block).toContain('--still:');
   expect(block).toContain('radial-gradient');
 });
+
+/**
+ * The water's stills are its pools, so the pools' own colours have to appear in them — a
+ * still built from the ground colour alone would be a flat rectangle wearing a gradient,
+ * and the box would visibly gain its scene the moment the canvas painted.
+ */
+test.each([['arafat', film.people], ['green', film.supportWater]] as const)(
+  'the %s still is built from that floor’s own pools',
+  (name, floor) => {
+    const block = css.match(new RegExp(`\\.${name}\\s*\\{([^}]*)\\}`))?.[1] ?? '';
+    const stops = [...block.matchAll(/rgba\((\d+), (\d+), (\d+)/g)]
+      .map((m) => '#' + m.slice(1, 4).map((v) => Number(v).toString(16).padStart(2, '0')).join(''));
+    expect(stops.sort()).toEqual(floor.pools.map(([hex]) => hex).sort());
+  },
+);

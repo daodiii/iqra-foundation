@@ -76,7 +76,7 @@ export function Mission() {
   return (
     <section ref={root} id="misjon" className={styles.mission} aria-labelledby="misjon-label">
       <div className={`${wash.box} ${wash.mosque}`} aria-hidden="true">
-        <canvas className={wash.ink} data-ink />
+        <canvas className={wash.paint} data-ink />
       </div>
       <div className={styles.inner}>
         <div className={`${wash.card} ${styles.text}`} data-mission-text>

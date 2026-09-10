@@ -1,0 +1,149 @@
+/*
+ * The two lists, on the page's own white. No box, no card, no shadow: this section is the
+ * gap between the ink and the water, and everything here is set with a hairline and a date
+ * column instead of with colour. See the note in `Happenings.tsx` for why that is the point
+ * rather than an omission.
+ */
+.happenings {
+  position: relative;
+  background: transparent;
+  padding: clamp(84px, 11vh, 140px) var(--margin);
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(40px, 5vw, 84px);
+  align-items: start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.label {
+  margin: 0 0 14px;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
+  color: var(--color-ink-soft);
+}
+
+/* The sentence over each column. Sized to sit under the section headings above it, not
+   beside them: this is a list's title, and the page's voice is already established. */
+.line {
+  margin: 0 0 clamp(18px, 2.4vh, 28px);
+  font-size: clamp(24px, 2.3vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--color-navy);
+}
+
+.list {
+  width: 100%;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * A hairline above every row and one under the last, so the list is closed at both ends.
+ * On the row rather than between rows: a border-bottom on every item would leave the first
+ * one hanging off the headline with nothing to sit under.
+ */
+.event,
+.news {
+  padding: 18px 0;
+  border-top: 1px solid var(--color-hairline);
+}
+
+.list > li:last-child {
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+/* The date column is a fixed 64px so every title in the list starts on the same line,
+   whether the day is one digit or two. */
+.event {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.date {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.day {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  /* Tabular, so a 9 and an 18 leave the month in the same place under them. */
+  font-variant-numeric: tabular-nums;
+  color: var(--color-navy);
+}
+
+.month {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
+}
+
+.meta {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--color-ink-soft);
+}
+
+.note {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 420px;
+  color: var(--color-ink-soft);
+}
+
+.newsDate {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.more {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-crimson);
+  text-decoration: none;
+}
+
+.more:hover {
+  text-decoration: underline;
+}
+
+/*
+ * Two columns need two columns' worth of room. Below this the lists stack, and a stacked
+ * pair still reads as two lists because each keeps its own label and headline.
+ */
+@media (max-width: 900px) {
+  .inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(36px, 6vh, 56px);
+  }
+}
