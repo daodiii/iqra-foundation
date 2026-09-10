@@ -49,12 +49,13 @@
    * turning this turns the whole pane while keeping its direction — light at the corner
    * the light comes from, thinnest at the far one.
    *
-   * 0.66 is the second setting. It started at 0.48, which read as a genuine window and
-   * showed a lot of the ink; this is frosted rather than clear. There is no right answer
-   * here, only how much of the film you want to keep — at 0.85 the ink is a rumour, at
-   * 0.40 it is nearly a photograph behind the words.
+   * 0.75 is the third setting, asked for by eye. It started at 0.48, which read as a
+   * genuine window and showed a lot of the ink; 0.66 was frosted; this is closer to
+   * translucent stone — the film survives as a tint and a soft edge rather than as
+   * anything you could read a shape out of. There is no right answer here, only how much
+   * of the film you want to keep.
    */
-  --glass-fill: 0.66;
+  --glass-fill: 0.75;
 
   background:
     linear-gradient(
