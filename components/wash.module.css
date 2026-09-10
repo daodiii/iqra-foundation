@@ -1,13 +1,17 @@
 /*
- * The middle of the page. Visjon, Misjon and Støtt oss each sit in a box, and the colour
- * lives INSIDE the boxes — the page around them stays #ffffff, so the ink reads as
- * something the sections hold rather than something spilled behind them.
+ * The middle of the page. Visjon, Misjon, Om oss · Teamet and Støtt oss each sit in a box,
+ * and the colour lives INSIDE the boxes — the page around them stays #ffffff, so what is in
+ * them reads as something the sections hold rather than something spilled behind them.
+ * Arrangementer · Nyheter, between the ink and the water, has no box at all: it is the
+ * page's own white, and the breath that makes the change of material read as a change.
  *
- * The colour is no longer a gradient. Each box carries a WebGL2 fluid simulation
- * (`lib/ink.ts`) painting one scene of the hero film in pigment (`lib/film.ts`). The
- * gradients below are what is seen before that starts, and what is left if it never can:
- * a device without WebGL2 keeps them and loses only the motion. They are mixed to sit where
- * each palette's ink settles, so the swap from one to the other is not a jump.
+ * The colour is not a gradient. Each box carries a WebGL2 simulation painting one scene of
+ * the hero film — pigment spreading through water in the top two (`lib/ink.ts`), and clear
+ * water over a coloured floor in the two below (`lib/water.ts`), which is the page's whole
+ * idea: the ink clears as you go down it. The gradients here are what is seen before that
+ * starts, and what is left if it never can: a device without WebGL2 keeps them and loses
+ * only the motion. They are mixed to sit where each scene settles, so the swap from one to
+ * the other is not a jump.
  *
  * The box geometry is unchanged from the wash this replaces — 88.3% of the section wide and
  * 86.3% tall, chosen by eye and then asked for by number. It survives because the box is
@@ -40,19 +44,19 @@
   inset: var(--box-inset-y) var(--box-inset-x);
   z-index: 0;
   border-radius: var(--box-radius);
-  /* The ink fills the box opaquely, so it has to be clipped back to the rounded corners. */
+  /* The simulation fills the box opaquely, so it has to be clipped to the rounded corners. */
   overflow: hidden;
   background-color: var(--ground);
-  background-image: var(--ink-still);
+  background-image: var(--still);
 }
 
 /*
  * Transparent until the simulation has a first frame on it, so what shows until then is the
- * still gradient underneath rather than an empty black rectangle. `lib/ink.ts` fades it in
- * once it has painted; on a device that declines, it simply never appears and the gradient
- * is the whole answer.
+ * still gradient underneath rather than an empty black rectangle. `lib/ink.ts` and
+ * `lib/water.ts` each fade it in once they have painted; on a device that declines, it
+ * simply never appears and the gradient is the whole answer.
  */
-.ink {
+.paint {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -66,15 +70,20 @@
 }
 
 /*
- * The four scenes. `--ground` is the paper the ink is mixed on and matches
- * `film.<section>.ground` exactly; `--ink-still` is the resting picture. A change to one
- * has to be made in both, which `sections.spec.ts` asserts.
+ * The scenes. `--ground` is what the material is painted on — the paper for the ink, the
+ * floor of the pool for the water — and it matches `film.<scene>.ground` exactly;
+ * `--still` is the resting picture. A change to one has to be made in both, which
+ * `lib/ground.test.ts` and `sections.spec.ts` each assert from a different side.
+ *
+ * The water's stills are its pools, drawn as gradients: same colours, same places, same
+ * sizes, listed in REVERSE — the shader mixes each pool over the ones before it, and a CSS
+ * background list paints the first one on top.
  */
 
 /** The cave before sunrise: slate and mist, one thread of the coming light. */
 .cave {
   --ground: #e6eaea;
-  --ink-still:
+  --still:
     radial-gradient(58% 40% at 14% 12%, rgba(95, 125, 153, 0.5) 0%, transparent 68%),
     radial-gradient(62% 44% at 82% 30%, rgba(138, 163, 179, 0.46) 0%, transparent 70%),
     radial-gradient(52% 38% at 34% 74%, rgba(63, 86, 112, 0.34) 0%, transparent 68%),
@@ -84,29 +93,48 @@
 /** The mosque: amber and cream, the light through the arches. */
 .mosque {
   --ground: #f1eadb;
-  --ink-still:
+  --still:
     radial-gradient(60% 42% at 78% 18%, rgba(209, 168, 106, 0.52) 0%, transparent 70%),
     radial-gradient(56% 40% at 26% 40%, rgba(227, 196, 143, 0.44) 0%, transparent 68%),
     radial-gradient(52% 38% at 70% 78%, rgba(184, 137, 74, 0.38) 0%, transparent 70%);
 }
 
-/** The Quran under a candle: gold and bronze on parchment. */
-.quran {
-  --ground: #ebe2cf;
-  --ink-still:
-    radial-gradient(58% 40% at 18% 16%, rgba(168, 122, 69, 0.46) 0%, transparent 70%),
-    radial-gradient(62% 42% at 84% 40%, rgba(201, 164, 107, 0.44) 0%, transparent 70%),
-    radial-gradient(46% 34% at 44% 86%, rgba(122, 82, 39, 0.34) 0%, transparent 68%);
+/**
+ * Arafat under clear water: the white plain, the crowd as shadow, sand. The first box on the
+ * page where the material is water rather than ink, and the people are on it.
+ */
+.arafat {
+  --ground: #aea79f;
+  --still:
+    radial-gradient(32% 36% at 10% 84%, rgba(138, 135, 144, 0.29) 0%, transparent 70%),
+    radial-gradient(48% 53% at 58% 38%, rgba(216, 204, 184, 0.47) 0%, transparent 70%),
+    radial-gradient(40% 44% at 80% 78%, rgba(101, 99, 110, 0.39) 0%, transparent 70%),
+    radial-gradient(48% 53% at 20% 18%, rgba(237, 233, 224, 0.64) 0%, transparent 70%);
 }
 
 /**
- * The Haram at night, and the one ink that is light in dark water rather than pigment on
- * paper. It is a card inside Støtt oss rather than a section's backdrop, so it takes the
- * ground and the still picture from here but is positioned by that section.
+ * The ask, in green water. The one departure from the film on this page, and the user's:
+ * «make the last one a green color that looks like green water».
+ */
+.green {
+  --ground: #559583;
+  --still:
+    radial-gradient(29% 32% at 4% 70%, rgba(59, 143, 124, 0.24) 0%, transparent 70%),
+    radial-gradient(32% 36% at 44% 90%, rgba(226, 230, 204, 0.27) 0%, transparent 70%),
+    radial-gradient(34% 38% at 60% 50%, rgba(127, 196, 177, 0.34) 0%, transparent 70%),
+    radial-gradient(48% 53% at 18% 16%, rgba(31, 92, 77, 0.41) 0%, transparent 70%),
+    radial-gradient(52% 58% at 84% 40%, rgba(207, 232, 220, 0.54) 0%, transparent 70%);
+}
+
+/**
+ * The Haram at night, and the one floor whose colours are lamps: they add light to the
+ * ground rather than staining it. It is a card inside Støtt oss rather than a section's
+ * backdrop, so it takes the ground and the still picture from here but is positioned by
+ * that section.
  */
 .night {
   --ground: #0c131d;
-  --ink-still:
+  --still:
     radial-gradient(56% 46% at 30% 34%, rgba(217, 183, 131, 0.34) 0%, transparent 70%),
     radial-gradient(50% 42% at 76% 62%, rgba(111, 138, 166, 0.32) 0%, transparent 70%),
     radial-gradient(38% 32% at 58% 20%, rgba(58, 138, 102, 0.2) 0%, transparent 72%);
@@ -115,7 +143,7 @@
 /*
  * The white cards the copy sits on. This is the shape of the whole page now: colour in the
  * box, words on paper laid over it. A real drop shadow, not a hairline — it is what makes
- * the card sit ON the ink rather than read as a hole cut out of it.
+ * the card sit ON the material rather than read as a hole cut out of it.
  */
 .card {
   position: relative;
@@ -126,6 +154,22 @@
     0 24px 50px -30px rgba(28, 38, 50, 0.45),
     0 2px 6px -2px rgba(28, 38, 50, 0.14),
     0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+/**
+ * The same card, over water.
+ *
+ * The water floors are two to three times darker than the ink's paper, and a shadow tuned
+ * for paper disappears against them — the card then reads as a rectangle someone pasted on
+ * rather than as something lying on the surface. This is the same shadow thrown further and
+ * darker, and a brighter rim: on water the rim is the only edge the card has.
+ */
+.cardOnWater {
+  composes: card;
+  box-shadow:
+    0 34px 60px -28px rgba(20, 30, 42, 0.5),
+    0 2px 6px -2px rgba(20, 30, 42, 0.16),
+    0 0 0 1px rgba(255, 255, 255, 0.7);
 }
 
 /*

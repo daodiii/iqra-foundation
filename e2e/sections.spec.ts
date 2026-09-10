@@ -63,7 +63,7 @@ const treeHasInk = (page: Page) => page.evaluate(() => {
  */
 async function boxIsPainted(page: Page, id: string, ground: string) {
   const box = await page.evaluate((sel) => {
-    const canvas = document.querySelector(`${sel} canvas[data-ink]`) as HTMLCanvasElement | null;
+    const canvas = document.querySelector(`${sel} canvas[data-ink], ${sel} canvas[data-water]`) as HTMLCanvasElement | null;
     if (!canvas) return null;
     const el = canvas.parentElement!;
     const cs = getComputedStyle(el);
@@ -240,7 +240,7 @@ test('desktop: støtt oss shows all three routes and the amount follows the tier
 
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
   await expect(page.locator('.pin-spacer')).toHaveCount(1); // still just the hero
-  await boxIsPainted(page, 'stott-oss', film.support.ground);
+  await boxIsPainted(page, 'stott-oss', film.supportWater.ground);
 
   const section = page.locator('#stott-oss');
   const s = site.support;
@@ -257,10 +257,10 @@ test('desktop: støtt oss shows all three routes and the amount follows the tier
   await expect(section.locator('[data-amount]')).toHaveText(/1\s*000/);
   await expect(tiers.last()).toHaveAttribute('aria-pressed', 'true');
 
-  // The card is the film's last scene and the only additive ink on the site. It is a
+  // The card is the film's last scene and the only night water on the site. It is a
   // separate simulation from the box, so it gets its own check.
   const card = await page.evaluate(() => {
-    const c = document.querySelector('#stott-oss canvas[data-ink-card]') as HTMLCanvasElement;
+    const c = document.querySelector('#stott-oss canvas[data-water-card]') as HTMLCanvasElement;
     const cs = getComputedStyle(c.parentElement!);
     return { background: cs.backgroundColor, bitmap: [c.width, c.height] };
   });
@@ -296,6 +296,78 @@ test('desktop: the støtt oss heading fills its measure without overflowing', as
   // It is meant to LAND on the measure, not merely fit inside it — a heading sized to half
   // the column would pass an overflow check and fail the design.
   expect(fit.widest).toBeGreaterThan(fit.measure * 0.75);
+});
+
+/**
+ * The order IS the argument.
+ *
+ * The page walks the film's scenes and thins its material as it goes: ink for the cave and
+ * the mosque, then the page's own white, then clear water over Arafat and green water under
+ * the ask. Arrangementer · Nyheter has to stay between the ink and the water — it is the
+ * breath that makes the change of material read as the ink clearing rather than as one more
+ * coloured rectangle — and Teamet has to stay directly above Støtt oss, whose headline is
+ * «Tjue stykker gjør arbeidet». A reordering would leave every section working and the page
+ * saying something else.
+ */
+test('the page walks from ink through white into water, in that order', async ({ page }) => {
+  await page.goto('/');
+  const order = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('main section')).map((s) => s.id));
+  expect(order).toEqual(['hero', 'visjon', 'misjon', 'arrangementer', 'om-oss-teamet', 'stott-oss']);
+});
+
+test('desktop: om oss · teamet is water over Arafat, with the story and the team on it', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the phone layout has its own test');
+  await pastHero(page);
+  const top = await docTop(page, '#om-oss-teamet');
+  await page.evaluate((y) => window.scrollTo(0, y + 10), top);
+  await page.waitForTimeout(1200);
+
+  await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
+  await boxIsPainted(page, 'om-oss-teamet', film.people.ground);
+
+  const section = page.locator('#om-oss-teamet');
+  const [story, menneskene] = site.about.chapters;
+  // Both cards are the book's own chapters, so this is also the check that the landing page
+  // and /om-oss cannot drift: the words are read from the same place the book reads them.
+  await expect(section.getByText(story.lede)).toBeVisible();
+  await expect(section.getByText(menneskene.lede)).toBeVisible();
+  await expect(section.getByText(menneskene.paras[0])).toBeVisible();
+  // Held back on purpose: the link below is only an offer if something was not said here.
+  await expect(section.getByText(story.paras[2])).toHaveCount(0);
+  await expect(section.getByRole('link', { name: new RegExp(site.people.more) }))
+    .toHaveAttribute('href', '/om-oss');
+  await expect(section.getByRole('list', { name: site.people.teamLabel }).locator('li'))
+    .toHaveCount(menneskene.team.length);
+});
+
+/**
+ * The one section with no box: no ground, no canvas, no card. What it must not do is
+ * promise a page that does not exist — «Alle arrangementer →» is rendered from an href in
+ * the content file, and there is none yet, so there is no link. A dead link here would be
+ * the only thing on the site that answers a click by doing nothing, and no build step would
+ * ever catch it.
+ */
+test('desktop: the lists sit on the page’s own white and link to nothing that is not there', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the phone layout stacks the columns');
+  await pastHero(page);
+  const top = await docTop(page, '#arrangementer');
+  await page.evaluate((y) => window.scrollTo(0, y - 80), top);
+  await page.waitForTimeout(900);
+
+  const section = page.locator('#arrangementer');
+  await expect(section.getByText(site.events.line)).toBeVisible();
+  await expect(section.getByText(site.news.line)).toBeVisible();
+  await expect(section.getByRole('list', { name: site.events.label }).locator('li'))
+    .toHaveCount(site.events.items.length);
+  await expect(section.getByRole('list', { name: site.news.label }).locator('li'))
+    .toHaveCount(site.news.items.length);
+
+  expect(await section.evaluate((el) => getComputedStyle(el).backgroundColor))
+    .toBe('rgba(0, 0, 0, 0)');
+  expect(await section.locator('canvas').count(), 'the breath grew a simulation').toBe(0);
+  const hrefs = await section.locator('a').evaluateAll((els) => els.map((a) => a.getAttribute('href')));
+  expect(hrefs.filter((h) => !h || h === '#'), 'a link that goes nowhere').toEqual([]);
 });
 
 /**
@@ -336,6 +408,35 @@ test('phone: no pins after the hero; the tree grows and every section stays legi
   for (const route of site.support.routes) {
     await expect(page.locator('#stott-oss').getByText(route.value, { exact: true })).toBeVisible();
   }
+});
+
+/**
+ * Both new sections are two columns on a desktop, and there is no room for two columns on a
+ * phone. Asserted as geometry rather than as a media query: what matters is that the second
+ * column ends up UNDER the first rather than beside it, whatever the breakpoint says.
+ */
+test('phone: the lists and the two cards stack into one column', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'stacked layout is the phone layout');
+  await pastHero(page);
+
+  for (const [what, selector] of [
+    ['the lists', '#arrangementer ul'],
+    ['the people cards', '#om-oss-teamet [class*="card"]'],
+  ] as const) {
+    const top = await docTop(page, selector.split(' ')[0]);
+    await page.evaluate((y) => window.scrollTo(0, y - 40), top);
+    await page.waitForTimeout(500);
+    const boxes = await page.locator(selector).evaluateAll((els) =>
+      els.map((el) => { const r = el.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y) }; }));
+    expect(boxes.length, what).toBe(2);
+    expect(boxes[0].x, `${what} did not stack`).toBe(boxes[1].x);
+    expect(boxes[1].y, `${what} did not stack`).toBeGreaterThan(boxes[0].y);
+  }
+
+  // Nothing on a phone may push the page sideways; a 64px date column and a 40px circle are
+  // exactly the kind of fixed width that does.
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow, 'the page scrolls sideways on a phone').toBeLessThanOrEqual(1);
 });
 
 /** The hand-set lines shrink faster than the desktop clamp on a phone, or they run out of

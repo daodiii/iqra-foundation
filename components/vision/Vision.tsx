@@ -123,7 +123,7 @@ export function Vision() {
   return (
     <section ref={root} id="visjon" className={styles.vision} aria-labelledby="visjon-label">
       <div className={`${wash.box} ${wash.cave}`} aria-hidden="true">
-        <canvas className={wash.ink} data-ink />
+        <canvas className={wash.paint} data-ink />
       </div>
       <div className={styles.inner}>
         <div className={`${wash.card} ${styles.text}`}>
