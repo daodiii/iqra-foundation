@@ -36,6 +36,23 @@
    * `offsetTop`, and caught exactly that: Visjon's read 0 instead of 2700.
    */
   background: #ffffff;
+
+  /*
+   * ONE KNOB for the whole page: how milky the glass cards are. The four stops in `.card`
+   * are fixed ratios of it, so turning this turns every card while each keeps its direction
+   * — brightest at the corner the light comes from, thinnest at the far one.
+   *
+   * 0.48 read as a genuine window and showed a lot of the film. 0.66 was frosted. 0.77 is
+   * translucent stone: the film survives inside the card as a tint and a soft edge rather
+   * than as anything you could read a shape out of. There is no right answer, only how much
+   * of the film you want to keep — and the closer this gets to 1, the more the case for
+   * glass becomes a case for the white paper it replaced.
+   *
+   * `--glass-fill-base` exists so `.cardOnWater` can add to it without reading the variable
+   * it is setting, which would be a cycle and would resolve to nothing.
+   */
+  --glass-fill-base: 0.77;
+  --glass-fill: var(--glass-fill-base);
 }
 
 /** The colour layer: the box itself, behind everything, holding the canvas. */
@@ -141,35 +158,171 @@
 }
 
 /*
- * The white cards the copy sits on. This is the shape of the whole page now: colour in the
- * box, words on paper laid over it. A real drop shadow, not a hairline — it is what makes
- * the card sit ON the material rather than read as a hole cut out of it.
+ * The cards the copy sits on — GLASS, not paper.
+ *
+ * The shape of the page is unchanged: colour in the box, words on a card laid over it. What
+ * changed is the card's material. It used to be #ffffff, which hides whatever it covers; it
+ * is a pane now, so the film keeps running underneath the words instead of stopping at their
+ * edge. Everything else — the box, the inset, the simulations, the shadow's job of saying
+ * the card is ABOVE the material — is what it was.
+ *
+ * Four things make glass read as glass rather than as white at some opacity:
+ *
+ * 1. `saturate()` in the backdrop filter. Blur alone desaturates — it averages neighbouring
+ *    pixels towards grey — so a pane over the slate ink turns the colour behind it to haze.
+ *    Pushing saturation back up is what keeps the film visible THROUGH the card, which is
+ *    the entire argument for glass over paper.
+ * 2. A rim, not a border. A uniform 1px white outline reads as a stroke someone drew. The
+ *    rim is a gradient: bright where the light comes from, almost gone at the far corner,
+ *    lifting again at the bottom edge where a real pane catches the ground. Drawn as a
+ *    masked ring so it is a true gradient stroke rather than a fifth box-shadow layer.
+ * 3. One light source, stated twice — in the fill and in the rim — and never contradicted.
+ *    Every card on the page is lit from the same corner, which is what stops four of them
+ *    in a row from looking like four separate objects.
+ * 4. Grain. A gradient this wide and this pale bands on an 8-bit display, and that banding
+ *    is what makes cheap glass look like plastic. Three per cent of noise removes it.
  */
 .card {
   position: relative;
   z-index: 1;
-  background: #ffffff;
   border-radius: 22px;
+  /*
+   * Required, not decorative: it makes the card a stacking context, which is what keeps the
+   * `z-index: -1` pseudo-elements below the copy and above the card's own background rather
+   * than letting them fall behind the section.
+   */
+  isolation: isolate;
+
+  /*
+   * The soft ink, darkened for glass — and it redefines the token rather than introducing a
+   * new one, so every section's body copy picks it up without a single edit to its
+   * stylesheet. Custom properties inherit, and every use of `--color-ink-soft` in the
+   * codebase is a `color` and never a background, so shadowing it here can only affect type.
+   *
+   * The number is measured. At the fill this was first built at, the deepest place the cave
+   * palette reaches measured rgb(176,191,204), which puts #4b586a at **3.85:1** against a
+   * floor of 4.5. Raising the card's own opacity to fix it only reached 4.28 and spent the
+   * transparency the glass is for, so the type went four steps down the same hue instead.
+   * It is kept now that the fill is higher and would clear on its own, because it is what
+   * stops `--glass-fill` from being a contrast decision as well as a look decision.
+   */
+  --color-ink-soft: #3f4b5c;
+
+  background:
+    linear-gradient(
+      148deg,
+      rgb(255 255 255 / calc(var(--glass-fill) * 1.22)) 0%,
+      rgb(255 255 255 / var(--glass-fill)) 38%,
+      rgb(255 255 255 / calc(var(--glass-fill) * 0.86)) 68%,
+      rgb(255 255 255 / calc(var(--glass-fill) * 0.96)) 100%
+    );
+
+  /*
+   * 26px is chosen against the simulations' own scale, not picked from a list. The palettes
+   * spread in blobs a few hundred pixels across; blur much below this and the blobs stay
+   * legible as shapes through the card, which reads as a dirty window. Much above it and
+   * everything behind goes to one flat colour and the card may as well be opaque.
+   */
+  /*
+   * ⚠ Write the UNPREFIXED property only, and let the build add prefixes.
+   *
+   * Declaring `backdrop-filter` and `-webkit-backdrop-filter` together — the usual belt and
+   * braces — made Lightning CSS treat them as one property declared twice, keep the last,
+   * and emit `-webkit-backdrop-filter` ALONE. Blink does not implement the prefixed form
+   * (it shipped unprefixed), so Chrome silently ignored it and every card was a translucent
+   * white rectangle with no blur and no saturate in it. Nothing failed; it just quietly
+   * stopped being glass.
+   *
+   * The `@supports` fallback at the foot of this file cannot catch that either: Chrome
+   * supports `backdrop-filter`, so the condition is true, so the opaque fallback is skipped
+   * while the declaration that would have done the work is one the browser drops.
+   */
+  backdrop-filter: blur(26px) saturate(1.6);
+
+  /*
+   * The shadow says the card is ABOVE the material. Same job as the paper version's, thrown
+   * a little further and softer because glass weighs less than paper, and with the white
+   * hairline layer dropped — that is the rim's work now.
+   */
   box-shadow:
-    0 24px 50px -30px rgba(28, 38, 50, 0.45),
-    0 2px 6px -2px rgba(28, 38, 50, 0.14),
-    0 0 0 1px rgba(255, 255, 255, 0.5);
+    0 34px 64px -34px rgba(20, 30, 42, 0.5),
+    0 3px 10px -5px rgba(20, 30, 42, 0.16);
+}
+
+/** The rim. A gradient stroke, masked to a 1px ring so the fill shows through the middle. */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    148deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.42) 30%,
+    rgba(255, 255, 255, 0.1) 58%,
+    rgba(255, 255, 255, 0.62) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/**
+ * The sheen and the grain, in one layer.
+ *
+ * The sheen is a single soft light off the top-left corner — the same corner the fill and
+ * the rim are lit from. The grain is fractal noise at 3%, below the threshold you can see as
+ * texture and above the one that kills gradient banding.
+ *
+ * `z-index: -1` on both of these, rather than a positive z-index plus a wrapper around the
+ * copy: positioned pseudo-elements paint above non-positioned text, so without it every
+ * section would need its words wrapped in an extra element just to climb back over a sheen.
+ */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-image:
+    radial-gradient(118% 78% at 6% -12%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 58%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: auto, 140px 140px;
+  pointer-events: none;
 }
 
 /**
  * The same card, over water.
  *
- * The water floors are two to three times darker than the ink's paper, and a shadow tuned
- * for paper disappears against them — the card then reads as a rectangle someone pasted on
- * rather than as something lying on the surface. This is the same shadow thrown further and
- * darker, and a brighter rim: on water the rim is the only edge the card has.
+ * The water floors are two to three times darker than the ink's paper, so the same fill
+ * lands darker and the same shadow disappears. The shadow goes further and darker — on water
+ * it is the only thing saying the card is above the surface — and the fill comes up a step.
  */
 .cardOnWater {
   composes: card;
+  --glass-fill: calc(var(--glass-fill-base) + 0.05);
   box-shadow:
-    0 34px 60px -28px rgba(20, 30, 42, 0.5),
-    0 2px 6px -2px rgba(20, 30, 42, 0.16),
-    0 0 0 1px rgba(255, 255, 255, 0.7);
+    0 38px 70px -30px rgba(20, 30, 42, 0.55),
+    0 3px 10px -5px rgba(20, 30, 42, 0.2);
+}
+
+/*
+ * A device without backdrop-filter gets an opaque card rather than a transparent one. The
+ * failure mode being avoided is not «it looks less good» — it is navy text sitting directly
+ * on a moving simulation at whatever contrast it happens to be at.
+ */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .card {
+    background: rgba(255, 255, 255, 0.95);
+  }
 }
 
 /*

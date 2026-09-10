@@ -2,7 +2,6 @@
   position: relative;
   background: transparent;
   overflow: hidden;
-  --glass-radius: 24px;
 }
 
 /*
@@ -53,7 +52,7 @@
 .label {
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
-  color: var(--glass-ink, var(--color-ink-soft));
+  color: var(--color-ink-soft);
 }
 
 .lines {
@@ -83,7 +82,7 @@
   margin: 0;
   font-size: clamp(15px, 1.15vw, 18px);
   line-height: 1.5;
-  color: var(--glass-ink, var(--color-ink-soft));
+  color: var(--color-ink-soft);
 }
 
 /**
@@ -105,7 +104,7 @@
   margin: 0;
   font-size: clamp(14px, 1.08vw, 17px);
   line-height: 1.6;
-  color: var(--glass-ink, var(--color-ink-soft));
+  color: var(--color-ink-soft);
 }
 
 /** The tree's pane. Its canvas is transparent, so the figure sits in the glass. */
@@ -180,7 +179,7 @@
   min-width: 0;
   font-size: clamp(14px, 1.15vw, 18px);
   line-height: 1.45;
-  color: var(--glass-ink, var(--color-ink-soft));
+  color: var(--color-ink-soft);
 }
 
 .stripMark {
@@ -238,12 +237,6 @@
 
   .rootName {
     font-size: 16px;
-  }
-}
-
-@media (max-width: 767px) {
-  .vision {
-    --glass-radius: 18px;
   }
 }
 

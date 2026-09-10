@@ -7,7 +7,6 @@ import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { createInkWhenNear, type InkHandle } from '@/lib/ink';
 import { setWordmarkOnDark } from '@/lib/wordmark';
-import glass from './glass.module.css';
 import { createVisionTree, GROW, type TreeHandle } from './tree';
 // TreeFigure, not Tree: on a case-insensitive filesystem './Tree' resolves to tree.ts.
 import { Tree } from './TreeFigure';
@@ -155,41 +154,33 @@ export function Vision() {
       </div>
       <div className={styles.inner}>
         {/* One. The section's real copy — the hand-set headline, on glass. */}
-        <div className={glass.pane} data-pane>
-          <div className={`${glass.paneBody} ${styles.textBody} ${styles.pad}`}>
-            <span id="visjon-label" className={styles.label}>{site.vision.label}</span>
-            <div className={styles.lines}>
-              {site.vision.lines.map((line, i) => (
-                <div key={line} className={styles.line} data-line data-dir={i % 2 === 0 ? -1 : 1}>{line}</div>
-              ))}
-            </div>
-            <p className={styles.sub}>{site.vision.sub}</p>
+        <div className={`${wash.card} ${styles.textBody} ${styles.pad}`} data-pane>
+          <span id="visjon-label" className={styles.label}>{site.vision.label}</span>
+          <div className={styles.lines}>
+            {site.vision.lines.map((line, i) => (
+              <div key={line} className={styles.line} data-line data-dir={i % 2 === 0 ? -1 : 1}>{line}</div>
+            ))}
           </div>
+          <p className={styles.sub}>{site.vision.sub}</p>
         </div>
 
         {/* Two, the middle one: the tree. */}
-        <div className={`${glass.pane} ${styles.treePanel}`} data-pane>
-          <div className={`${glass.paneBody} ${styles.treeBody}`}>
-            <Tree />
-          </div>
+        <div className={`${wash.card} ${styles.treePanel} ${styles.treeBody}`} data-pane>
+          <Tree />
         </div>
 
         {/* Three. Filler, set as ordinary prose. */}
-        <div className={glass.pane} data-pane>
-          <div className={`${glass.paneBody} ${styles.textBody} ${styles.pad}`}>
-            <span className={styles.label}>Tekst</span>
-            <h3 className={styles.fillHead}>{filler.head}</h3>
-            <p className={styles.fillBody}>{filler.body}</p>
-          </div>
+        <div className={`${wash.card} ${styles.textBody} ${styles.pad}`} data-pane>
+          <span className={styles.label}>Tekst</span>
+          <h3 className={styles.fillHead}>{filler.head}</h3>
+          <p className={styles.fillBody}>{filler.body}</p>
         </div>
 
         {/* Four. Full width, and short. */}
-        <div className={`${glass.pane} ${styles.strip}`} data-pane>
-          <div className={`${glass.paneBody} ${styles.stripBody}`}>
-            <span className={styles.label}>{filler.stripLabel}</span>
-            <p className={styles.stripLine}>{filler.stripLine}</p>
-            <span className={styles.stripMark}>{filler.stripMark}</span>
-          </div>
+        <div className={`${wash.card} ${styles.strip} ${styles.stripBody}`} data-pane>
+          <span className={styles.label}>{filler.stripLabel}</span>
+          <p className={styles.stripLine}>{filler.stripLine}</p>
+          <span className={styles.stripMark}>{filler.stripMark}</span>
         </div>
       </div>
     </section>
