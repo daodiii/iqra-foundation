@@ -478,6 +478,28 @@ test('phone: the cards stack, the axis stays an axis, and nothing pushes the pag
   expect(rail.scrollable, 'the axis stopped scrolling on a phone').toBe(true);
   expect(rail.wider, 'the axis is not actually longer than the screen').toBe(true);
 
+  /*
+   * On a phone every stop sits ABOVE the line, whichever direction in time it belongs to.
+   *
+   * The desktop puts what is coming above the line and what has been below it, and that is
+   * the section's whole visual claim — but the two are contiguous along the axis rather than
+   * interleaved, so on a screen showing one stop at a time it costs half the viewport with
+   * nothing in it. Down here the direction is carried by the label, by which side of «i dag»
+   * you are on, and by the peg: hollow for the past, filled for what is coming.
+   */
+  const sides = await page.evaluate(() => {
+    const el = document.querySelector('#arrangementer [role="region"]') as HTMLElement;
+    const line = (el.querySelector('[data-today] span') as HTMLElement).getBoundingClientRect();
+    return Array.from(el.querySelectorAll('li article')).map((body) => ({
+      bottom: Math.round(body.getBoundingClientRect().bottom),
+      line: Math.round(line.top),
+    }));
+  });
+  expect(sides.length, 'no stops to measure').toBeGreaterThan(0);
+  for (const stop of sides) {
+    expect(stop.bottom, 'a stop hangs below the line on a phone').toBeLessThanOrEqual(stop.line + 2);
+  }
+
   // The rail is wider than the screen by design; the PAGE still must not be. A 246px stop
   // and a fixed-width frame are exactly the kind of thing that escapes its container.
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
