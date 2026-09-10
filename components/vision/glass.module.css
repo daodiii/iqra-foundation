@@ -1,0 +1,156 @@
+/*
+ * Glass — a look-test, not a decision.
+ *
+ * The page's settled language is «colour in the box, words on white paper laid over it»
+ * (wash.module.css). This is the same sentence with one word changed: the paper becomes a
+ * pane. Everything else — the box, the inset, the film's colour underneath — is untouched,
+ * so what is being compared here is only the material the words sit on.
+ *
+ * Four things make glass read as glass rather than as a white rectangle at 50% opacity, and
+ * all four are here:
+ *
+ * 1. `saturate()` in the backdrop filter. Blur alone desaturates — it averages neighbouring
+ *    pixels towards grey — so a pane over the slate ink turns the colour behind it to haze.
+ *    Pushing saturation back up is what keeps the film visible THROUGH the pane, which is
+ *    the entire argument for using glass on this page instead of paper.
+ * 2. A rim, not a border. A uniform 1px white outline reads as a stroke someone drew. The
+ *    rim here is a gradient: bright where the light comes from (top left), almost gone at
+ *    the far corner, and lifting again at the bottom edge where a real pane catches the
+ *    ground. Drawn as a masked ring so it is a true gradient stroke.
+ * 3. One light source, stated twice — in the fill gradient and in the rim — and never
+ *    contradicted. Every pane on the page is lit from the same corner.
+ * 4. Grain. A gradient this wide and this pale bands on an 8-bit display, and the banding
+ *    is what makes cheap glass look like plastic. Three per cent of noise removes it.
+ */
+
+.pane {
+  position: relative;
+  border-radius: var(--glass-radius, 24px);
+  isolation: isolate;
+
+  /*
+   * The soft ink, darkened for glass, and the number is measured rather than chosen.
+   *
+   * `--color-ink-soft` (#4b586a) is set against white paper. On a pane the ground is not
+   * white — it is white at 0.30–0.62 over live ink — and where the cave palette goes
+   * deepest that ground measured rgb(176,191,204), which puts the soft ink at **3.85:1**.
+   * The floor for body text is 4.5. Raising the pane's own opacity does not fix it: taking
+   * the fill from 0.34 to 0.44 only reaches 4.28, and spends most of the transparency that
+   * is the reason for using glass at all. Darkening the type is the cheaper lever, so
+   * #3f4b5c — the same hue, four steps down — which clears the same ground at 4.65:1.
+   *
+   * Navy headlines never needed this; they measured 6.26:1 at the same spot.
+   */
+  --glass-ink: #3f4b5c;
+
+  /*
+   * The fill. Not a flat white: 0.62 at the lit corner down to 0.30 at the far one, so the
+   * pane has a direction before anything is drawn on it. The floor of 0.30 is set by
+   * contrast, not by taste — see the note on .paneText below.
+   */
+  background:
+    linear-gradient(
+      148deg,
+      rgba(255, 255, 255, 0.64) 0%,
+      rgba(255, 255, 255, 0.48) 38%,
+      rgba(255, 255, 255, 0.38) 68%,
+      rgba(255, 255, 255, 0.46) 100%
+    );
+
+  /*
+   * 26px is chosen against the ink's own scale, not picked from a list. The cave palette
+   * spreads in blobs a few hundred pixels across; blur much below this and the blobs stay
+   * legible as shapes through the pane, which reads as a dirty window. Much above it and
+   * everything behind goes to a single flat colour and the pane may as well be opaque.
+   */
+  backdrop-filter: blur(26px) saturate(1.6);
+  -webkit-backdrop-filter: blur(26px) saturate(1.6);
+
+  /*
+   * The shadow says the pane is ABOVE the ink. It is the card shadow from wash.module.css
+   * thrown further and softer — glass weighs less than paper, so the contact is looser —
+   * with the third layer dropped, because a white 1px ring is now the rim's job.
+   */
+  box-shadow:
+    0 34px 64px -34px rgba(20, 30, 42, 0.5),
+    0 3px 10px -5px rgba(20, 30, 42, 0.16);
+}
+
+/** The rim. A gradient stroke, masked to a 1px ring so the fill shows through the middle. */
+.pane::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    148deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.42) 30%,
+    rgba(255, 255, 255, 0.1) 58%,
+    rgba(255, 255, 255, 0.62) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/**
+ * The sheen and the grain, in one layer.
+ *
+ * The sheen is a single soft light off the top-left corner — the same corner the fill and
+ * the rim are lit from. The grain is fractal noise at 3%, which is below the threshold you
+ * can see as texture and above the one that kills gradient banding.
+ */
+.pane::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background-image:
+    radial-gradient(118% 78% at 6% -12%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 58%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: auto, 140px 140px;
+  pointer-events: none;
+}
+
+/**
+ * Everything written on the pane sits above both pseudo-elements.
+ *
+ * Contrast, measured rather than assumed: navy #2a394b over the fill at its most
+ * transparent (0.30) over the darkest place the cave ink goes still clears the 4.5 floor
+ * with room to spare. The soft ink #4b586a is the one that gets close, so it is used only
+ * for the labels and the body — never for anything at small weight over the deep end of a
+ * blob. If the fill's floor is ever lowered, that is the number to re-measure.
+ */
+.paneBody {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  height: 100%;
+  /*
+   * Deliberately no `display` and no padding. Both belong to whatever is written on the
+   * pane — the strip is a row where the others are columns — and declaring a default here
+   * would put two single-class rules in conflict across two CSS module files, where the
+   * winner is decided by bundler import order rather than by anything in the stylesheet.
+   */
+}
+
+/*
+ * A device without backdrop-filter gets an opaque pane rather than a transparent one. The
+ * failure mode being avoided is not «it looks less good» — it is navy text sitting directly
+ * on moving ink at whatever contrast the simulation happens to be at.
+ */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .pane {
+    background: rgba(255, 255, 255, 0.94);
+  }
+}
