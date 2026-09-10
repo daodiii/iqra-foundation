@@ -32,29 +32,37 @@
    * The soft ink, darkened for glass, and the number is measured rather than chosen.
    *
    * `--color-ink-soft` (#4b586a) is set against white paper. On a pane the ground is not
-   * white — it is white at 0.30–0.62 over live ink — and where the cave palette goes
-   * deepest that ground measured rgb(176,191,204), which puts the soft ink at **3.85:1**.
-   * The floor for body text is 4.5. Raising the pane's own opacity does not fix it: taking
-   * the fill from 0.34 to 0.44 only reaches 4.28, and spends most of the transparency that
-   * is the reason for using glass at all. Darkening the type is the cheaper lever, so
-   * #3f4b5c — the same hue, four steps down — which clears the same ground at 4.65:1.
+   * white — it is white over live ink — and at the first fill this was built at (0.38 in
+   * the shadowed part) the deepest place the cave palette goes measured rgb(176,191,204),
+   * which puts the soft ink at **3.85:1** against a floor of 4.5. So the type went four
+   * steps down the same hue, to #3f4b5c.
    *
-   * Navy headlines never needed this; they measured 6.26:1 at the same spot.
+   * The fill has since been raised (below) and the soft ink would now clear on its own.
+   * It is kept anyway: it costs nothing, and it is what stops the floor of `--glass-fill`
+   * from being a contrast decision as well as a look decision — the knob can be turned
+   * down again without the labels quietly going under.
    */
   --glass-ink: #3f4b5c;
 
   /*
-   * The fill. Not a flat white: 0.62 at the lit corner down to 0.30 at the far one, so the
-   * pane has a direction before anything is drawn on it. The floor of 0.30 is set by
-   * contrast, not by taste — see the note on .paneText below.
+   * ONE KNOB: how milky the pane is. The four stops below are fixed ratios of it, so
+   * turning this turns the whole pane while keeping its direction — light at the corner
+   * the light comes from, thinnest at the far one.
+   *
+   * 0.66 is the second setting. It started at 0.48, which read as a genuine window and
+   * showed a lot of the ink; this is frosted rather than clear. There is no right answer
+   * here, only how much of the film you want to keep — at 0.85 the ink is a rumour, at
+   * 0.40 it is nearly a photograph behind the words.
    */
+  --glass-fill: 0.66;
+
   background:
     linear-gradient(
       148deg,
-      rgba(255, 255, 255, 0.64) 0%,
-      rgba(255, 255, 255, 0.48) 38%,
-      rgba(255, 255, 255, 0.38) 68%,
-      rgba(255, 255, 255, 0.46) 100%
+      rgb(255 255 255 / calc(var(--glass-fill) * 1.22)) 0%,
+      rgb(255 255 255 / var(--glass-fill)) 38%,
+      rgb(255 255 255 / calc(var(--glass-fill) * 0.86)) 68%,
+      rgb(255 255 255 / calc(var(--glass-fill) * 0.96)) 100%
     );
 
   /*
@@ -125,11 +133,14 @@
 /**
  * Everything written on the pane sits above both pseudo-elements.
  *
- * Contrast, measured rather than assumed: navy #2a394b over the fill at its most
- * transparent (0.30) over the darkest place the cave ink goes still clears the 4.5 floor
- * with room to spare. The soft ink #4b586a is the one that gets close, so it is used only
- * for the labels and the body — never for anything at small weight over the deep end of a
- * blob. If the fill's floor is ever lowered, that is the number to re-measure.
+ * Contrast is measured rather than assumed, and it is measured with every glyph HIDDEN:
+ * sampling a region that still contains the text returns the text's own colour as the
+ * darkest ground and hands back a ratio of 1.00, which looks like a catastrophe and is a
+ * measurement of nothing. Same for the tree — its strokes are not a background either.
+ *
+ * `--glass-fill` is the number the result depends on. If it is ever turned down, re-run
+ * the check against the darkest point of the live simulation, not against the mean: the
+ * mean sits three whole steps above the worst place a blob reaches.
  */
 .paneBody {
   position: relative;
