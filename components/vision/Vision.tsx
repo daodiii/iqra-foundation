@@ -22,6 +22,21 @@ const dir = (el: Element) => Number((el as HTMLElement).dataset.dir);
  */
 const OPEN = 3;
 
+/**
+ * Filler, and meant to look like it. The three panes that are not the tree need words in
+ * them to be judged at all, but this section's real copy is one hand-set headline — there
+ * is no second and third paragraph waiting to be poured in here. Inventing plausible ones
+ * would hide that: the arrangement would look finished when what it actually needs is
+ * content that does not exist yet.
+ */
+const filler = {
+  head: 'Her kan det stå en overskrift',
+  body: 'Og her en kort tekst under den. To eller tre setninger, omtrent så lange som disse, er nok til å se hvordan vanlig brødtekst oppfører seg oppå glasset.',
+  stripLabel: 'Notat',
+  stripLine: 'En smal hylle nederst, i full bredde. Plass til én setning, en dato, eller noe kort som ikke trenger en egen rute.',
+  stripMark: 'Kort tekst',
+};
+
 export function Vision() {
   const root = useRef<HTMLElement>(null);
 
@@ -32,6 +47,7 @@ export function Vision() {
       const box = section.querySelector<HTMLElement>('[data-tree]');
       const canvas = box?.querySelector('canvas');
       const lines = section.querySelectorAll<HTMLElement>('[data-line]');
+      const panes = section.querySelectorAll<HTMLElement>('[data-pane]');
       const reduced = reducedMotion();
       let tree: TreeHandle | null = null;
       if (box && canvas) {
@@ -44,7 +60,7 @@ export function Vision() {
 
       /*
        * The cave before sunrise, in ink. The host is the section rather than the canvas, so
-       * a hand moving across the copy stirs the colour behind it too — the card is paper
+       * a hand moving across the copy stirs the colour behind it too — the panes are glass
        * lying on the water, not a lid on it. `createInk` returns null wherever WebGL2 or a
        * float colour buffer is missing, and the box keeps the still gradient underneath.
        */
@@ -63,6 +79,7 @@ export function Vision() {
       // visible — or the fromTo below snaps them back out and replays them on screen.
       // Reduced motion returns above and keeps its CSS rest state (vision.module.css).
       gsap.set(lines, { opacity: 0 });
+      gsap.set(panes, { opacity: 0 });
 
       /*
        * The tree opens by itself, and there is no longer a desktop branch and a phone
@@ -79,9 +96,19 @@ export function Vision() {
       const arrive = () => {
         if (arrived) return;
         arrived = true;
+        /*
+         * The panes arrive first and the words after them, which is one move rather than
+         * two: glass sliding into place, then the copy settling onto it. The rise is small
+         * — four panels each travelling a visible distance would be the busiest thing on
+         * the page, and this section's whole job is to be calm enough that the tree is the
+         * thing that moves.
+         */
+        gsap.fromTo(panes,
+          { y: 16, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.9, ease: EASE.out, stagger: 0.08 });
         gsap.fromTo(lines,
           { x: (i, el) => 120 * dir(el), skewX: (i, el) => -8 * dir(el), opacity: 0 },
-          { x: 0, skewX: 0, opacity: 1, duration: 1.1, ease: EASE.out, stagger: 0.09 });
+          { x: 0, skewX: 0, opacity: 1, duration: 1.1, ease: EASE.out, stagger: 0.09, delay: 0.22 });
         gsap.to(growth, { T: GROW, duration: OPEN, ease: EASE.none, onUpdate: () => tree?.setT(growth.T) });
       };
 
@@ -126,7 +153,8 @@ export function Vision() {
         <canvas className={wash.paint} data-ink />
       </div>
       <div className={styles.inner}>
-        <div className={`${wash.card} ${styles.text}`}>
+        {/* One. The section's real copy — the hand-set headline, on glass. */}
+        <div className={`${wash.card} ${styles.textBody} ${styles.pad}`} data-pane>
           <span id="visjon-label" className={styles.label}>{site.vision.label}</span>
           <div className={styles.lines}>
             {site.vision.lines.map((line, i) => (
@@ -135,8 +163,24 @@ export function Vision() {
           </div>
           <p className={styles.sub}>{site.vision.sub}</p>
         </div>
-        <div className={`${wash.card} ${styles.treeCard}`}>
+
+        {/* Two, the middle one: the tree. */}
+        <div className={`${wash.card} ${styles.treePanel} ${styles.treeBody}`} data-pane>
           <Tree />
+        </div>
+
+        {/* Three. Filler, set as ordinary prose. */}
+        <div className={`${wash.card} ${styles.textBody} ${styles.pad}`} data-pane>
+          <span className={styles.label}>Tekst</span>
+          <p className={styles.fillHead}>{filler.head}</p>
+          <p className={styles.fillBody}>{filler.body}</p>
+        </div>
+
+        {/* Four. Full width, and short. */}
+        <div className={`${wash.card} ${styles.strip} ${styles.stripBody}`} data-pane>
+          <span className={styles.label}>{filler.stripLabel}</span>
+          <p className={styles.stripLine}>{filler.stripLine}</p>
+          <span className={styles.stripMark}>{filler.stripMark}</span>
         </div>
       </div>
     </section>
