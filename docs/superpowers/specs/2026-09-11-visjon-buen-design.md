@@ -141,10 +141,13 @@ two 350px cards leave the tree a column 60px wide, and 1100 is already the line 
 section's grid broke before the phone breakpoint did anything.
 
 - The section is `height: auto`, the figure is static, the box follows the section.
-- `.archArea` is `position: relative; height: 70svh` at the top, with the tree inside it
-  and the mark under the roots.
+- `.archArea` is `position: relative; height: max(70svh, 420px)` at the top, with the tree
+  inside it and the mark under the roots. The 420px floor is **not the mock's**: on a phone
+  held sideways 70svh is under 300px, and see the arch below.
 - The cards stack under it with 12px gaps and 12px side margins; padding `22px 22px 24px`;
-  the name 24px, the paragraph 14.5px.
+  the name 24px, the paragraph 14.5px. The section pads 14px at the top and sides and 26px at
+  the foot, so the last card has 12px of ink under it — the gap between cards. **Not the
+  mock's**, which left 4px.
 - The label at 52px / 100px, and 22px / 100px under 768px — under the header.
 
 ### The arch (`arch.ts`, pure)
@@ -159,7 +162,10 @@ Phone, where W and H are the arch area's size rather than the figure's: margin `
 `r = (W − 2m)/2`, `apex = 96`, `yc = apex + r`. The path is a line
 `(m, H) → (m, yc)`, an arc about `(W/2, yc)` of radius `r` from π to 2π, a line
 `(W − m, yc) → (W − m, H)`. `contains` is inside the circle, or `|x − W/2| ≤ r` and
-`y ≥ yc`.
+`y ≥ yc`, and `y ≤ H`. **Not the mock's:** `r` is also capped at `H − apex − 40`, so on an
+area too short for the full half circle — a phone held sideways — the arc's centre stays
+40px above the floor, the legs still exist, and they stand at `W/2 ± r` instead of at `m`.
+The mock's arc fell below the area there.
 
 Both: `pointAt(p)` walks the path by length, `trace(ctx, p)` strokes it up to `p`, and
 `region()` is the closed `Path2D` — the path plus the box's floor — for the scene to clip
