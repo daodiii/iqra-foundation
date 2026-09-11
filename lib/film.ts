@@ -16,38 +16,51 @@ import { DEPTH, floorAt, type WaterScene } from './water';
  * | 2.80 s | the Quran                  | `#b79165` `#8a6234` on `#372009`        |
  * | 3.80 s | Masjid al-Haram at night   | `#0c131d` `#958679` `#bab5af`           |
  *
- * The page walks that arc, and it walks it in two materials. Visjon and Misjon are the cave
- * and the mosque in INK — pigment spreading through water, `lib/ink.ts`. Below them the ink
- * clears: Om oss · Teamet is Arafat seen through clear WATER (`lib/water.ts`), and Støtt oss
- * is water too, with the night on the card at its foot. That is the whole shape of the page
- * — a material that thins as you go down it.
+ * The page walks that arc, and it walks it in two materials. Visjon and Misjon are INK —
+ * pigment spreading through water, `lib/ink.ts`. Below them the ink clears: Om oss · Teamet
+ * is Arafat seen through clear WATER (`lib/water.ts`), and Støtt oss is water too, with the
+ * night on the card at its foot. That is the whole shape of the page — a material that thins
+ * as you go down it.
  *
  * Arafat belongs to the people because it is the one scene the page had never used and it is
  * the gathering: a plain with everyone on it, under the section that says who «everyone» is.
  *
- * Støtt oss is the one departure from the film, and it is the user's: «make the last one a
- * green color that looks like green water» (2026-09-10). It replaces the Quran's gold, which
- * survives on the page as the middle route colour below.
+ * Three of the five are the user's departures from the film. Støtt oss: «make the last one a
+ * green color that looks like green water» (2026-09-10) — it replaces the Quran's gold, which
+ * survives on the page as the middle route colour below. And the two ink boxes (2026-09-12):
+ * «make the first one light blue like the sky, the other one make it like cream». They had
+ * been the cave and the mosque, slate on grey and amber on cream, sampled from the frames
+ * above; they are now the sky the cave opens onto and the mosque's light without its amber,
+ * and the hexes are chosen, not measured. The page still cools and then warms in the film's
+ * order, and `film.test.ts` holds it to that.
  *
- * The ink hexes carry a little more chroma than the sampled centroids. Ink thins as it
- * spreads, and a pigment mixed straight from the sample arrives on the page a good deal
- * paler than the frame it came from; these are the sampled hues with that loss paid back.
+ * A pigment is mixed a little stronger than the colour wanted on the page. Ink thins as it
+ * spreads, and a hex laid down as-is arrives a good deal paler than it reads in the list.
  * The `ground` values are the paper, and they are also written into `wash.module.css` as
  * each box's background so the section has its colour before any script has run.
  */
 
-/** The cave at dawn: slate and mist, with one thread of the sunrise in it. */
+/**
+ * The sky: light blue, pale at the horizon and deeper towards the zenith, with the one thread
+ * of warm light the cave used to carry kept as the sun in it. The deepest blue is the rarest
+ * so the box never drifts to navy, and the load is turned down from the cave's 1.2 so it
+ * stays LIGHT blue where drops overlap.
+ */
 const VISION: InkPalette = {
-  ink: [['#5f7d99', 3], ['#8aa3b3', 3], ['#3f5670', 2], ['#1f2c3c', 1], ['#e2cfa6', 1]],
-  ground: '#e6eaea',
-  strength: 1.2,
+  ink: [['#a5d4f1', 3], ['#c3e2f6', 3], ['#7ec0ea', 2], ['#4f9fd9', 1], ['#f3e5c6', 1]],
+  ground: '#eef5fb',
+  strength: 0.9,
 };
 
-/** The mosque: amber and cream, the light coming through the arches. */
+/**
+ * Cream: ivory to pale gold on warm paper, and nothing darker. The mosque's amber and its
+ * brown are gone — with the load down from 0.9, two drops on top of each other still read as
+ * cream rather than building back up to the tan they used to make.
+ */
 const MISSION: InkPalette = {
-  ink: [['#d1a86a', 3], ['#e3c48f', 3], ['#b8894a', 2], ['#8c6a3a', 1]],
-  ground: '#f1eadb',
-  strength: 0.9,
+  ink: [['#eddfbd', 3], ['#f2e7cc', 3], ['#e4d2a3', 2], ['#d6bd83', 1]],
+  ground: '#f8f2e4',
+  strength: 0.7,
 };
 
 /*

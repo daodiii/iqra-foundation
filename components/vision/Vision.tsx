@@ -74,7 +74,7 @@ export function Vision() {
       const tree = treeCanvas ? createVisionTree(stage, treeCanvas, { reduced, limbLabels: [], rootLabel: mark }) : null;
 
       /*
-       * The cave before sunrise, in ink. The host is the section rather than the canvas, so
+       * The sky, in ink (`film.vision`). The host is the section rather than the canvas, so
        * a hand moving across the copy stirs the colour behind it too — the cards are glass
        * lying on the water, not a lid on it. `createInk` returns null wherever WebGL2 or a
        * float colour buffer is missing, and the box keeps the still gradient underneath;

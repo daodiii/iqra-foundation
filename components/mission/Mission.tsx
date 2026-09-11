@@ -17,8 +17,8 @@ const lastStanza = stanzas.length - 1;
  * opens and a tree that grows, a third scroll-driven section reads as the page still
  * clearing its throat. The copy arrives once and then the section simply is.
  *
- * The ink behind it is the mosque — amber and cream, the light through the arches — and it
- * is the second of the film's four scenes as the page walks down them. It replaced the
+ * The ink behind it is cream (`film.mission`) — it was the mosque, amber and cream, and it
+ * is still the warm box after Visjon's cool one, as the film walks. It replaced the
  * folded drape that used to run down the right of this copy: the drape was a column beside
  * the words, and the box is now the whole weather behind them.
  */

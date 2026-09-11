@@ -139,13 +139,38 @@ test('the pigments carrying each paper palette sit in one hue family', () => {
   }
 });
 
-/** Visjon takes the cave before sunrise and Misjon the lamplit mosque, so the page cools
- *  and then warms exactly as the film does. A swap would read as the wrong scene. */
+/** Visjon is the cool box and Misjon the warm one, in that order, so the page cools and
+ *  then warms as the film does from the cave into the mosque. A swap would read as the
+ *  wrong scene. */
 test('the sections follow the film from the cold cave into the warm mosque', () => {
   const heaviest = (p: InkPalette) => [...p.ink].sort((a, b) => b[1] - a[1])[0][0];
   expect(hue(heaviest(film.vision))).toBeGreaterThan(180);
   expect(hue(heaviest(film.vision))).toBeLessThan(260);
   expect(hue(heaviest(film.mission))).toBeLessThan(60);
+});
+
+/*
+ * The user's call, 2026-09-12: «make the first one light blue like the sky, the other one
+ * make it like cream». Neither box is a scene lifted from the film any more — Visjon is the
+ * sky the cave opens onto and Misjon is the mosque's light without its amber — and what
+ * that takes is pigments that stay LIGHT. A single dark ink in either palette would drift
+ * the box straight back to the slate or the tan it used to be, so the floor is on every
+ * pigment, not on the average.
+ */
+test('Visjon is the sky: every pigment light, and the ones carrying the box plainly blue', () => {
+  for (const [hex] of film.vision.ink) expect(lum(hex), hex).toBeGreaterThan(140);
+  for (const [hex, w] of film.vision.ink) {
+    if (w < 2) continue;
+    expect(hue(hex), hex).toBeGreaterThan(185);
+    expect(hue(hex), hex).toBeLessThan(225);
+    // blue rather than a blue-grey haze: the sky has chroma in it
+    const [r, g, b] = rgb(hex);
+    expect(Math.max(r, g, b) - Math.min(r, g, b), hex).toBeGreaterThan(50);
+  }
+});
+
+test('Misjon is cream: no pigment as dark as the mosque’s amber', () => {
+  for (const [hex] of film.mission.ink) expect(lum(hex), hex).toBeGreaterThan(180);
 });
 
 test('there is one route colour for each of the three ways to pay', () => {
