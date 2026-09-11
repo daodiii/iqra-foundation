@@ -358,8 +358,18 @@ test('desktop: om oss · teamet is water over Arafat, with the story and the tea
   await expect(section.getByText(story.paras[2])).toHaveCount(0);
   await expect(section.getByRole('link', { name: new RegExp(site.people.more) }))
     .toHaveAttribute('href', '/om-oss');
-  await expect(section.getByRole('list', { name: site.people.teamLabel }).locator('li'))
-    .toHaveCount(menneskene.team.length);
+  const rows = section.getByRole('list', { name: site.people.teamLabel }).locator('li');
+  await expect(rows).toHaveCount(menneskene.team.length);
+  // One card per person, under the two: the first row is below the team card, and the
+  // portraits alternate sides — the first row's portrait is left of its name, the second's
+  // right of it.
+  const teamCard = section.getByText(menneskene.lede).locator('..');
+  expect((await rows.first().boundingBox())!.y).toBeGreaterThan(
+    (await teamCard.boundingBox())!.y + (await teamCard.boundingBox())!.height - 1);
+  const portrait = (i: number) => rows.nth(i).locator('[data-part="portrait"]');
+  const info = (i: number) => rows.nth(i).locator('[data-part="info"]');
+  expect((await portrait(0).boundingBox())!.x).toBeLessThan((await info(0).boundingBox())!.x);
+  expect((await portrait(1).boundingBox())!.x).toBeGreaterThan((await info(1).boundingBox())!.x);
 });
 
 /**
@@ -494,11 +504,24 @@ test('phone: the cards stack, the axis stays an axis, and nothing pushes the pag
   const peopleTop = await docTop(page, '#om-oss-teamet');
   await page.evaluate((y) => window.scrollTo(0, y - 40), peopleTop);
   await page.waitForTimeout(500);
-  const cards = await page.locator('#om-oss-teamet [class*="card"]').evaluateAll((els) =>
+  // The two chapter cards carry `data-rise`; the member rows below them are `data-row`.
+  const cards = await page.locator('#om-oss-teamet [data-rise]').evaluateAll((els) =>
     els.map((el) => { const r = el.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y) }; }));
   expect(cards.length, 'the people cards').toBe(2);
   expect(cards[0].x, 'the people cards did not stack').toBe(cards[1].x);
   expect(cards[1].y, 'the people cards did not stack').toBeGreaterThan(cards[0].y);
+  // A member row on a phone is portrait over name, not beside it, and never mirrored.
+  const row = page.locator('#om-oss-teamet [data-row]').nth(1);
+  await row.scrollIntoViewIfNeeded();
+  // Scrolling to it starts its entrance; measured mid-tween the portrait is still 5%
+  // small and 30px low, and the boxes overlap by a couple of pixels that are not layout.
+  await page.waitForTimeout(1200);
+  const [portrait, info] = await Promise.all([
+    row.locator('[data-part="portrait"]').boundingBox(),
+    row.locator('[data-part="info"]').boundingBox(),
+  ]);
+  expect(info!.y, 'the member row did not stack').toBeGreaterThanOrEqual(portrait!.y + portrait!.height);
+  expect(Math.round(info!.x), 'the second row is still mirrored on a phone').toBe(Math.round(portrait!.x));
 
   const axisTop = await docTop(page, '#arrangementer');
   await page.evaluate((y) => window.scrollTo(0, y - 40), axisTop);

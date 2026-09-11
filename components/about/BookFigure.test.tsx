@@ -2,6 +2,7 @@ import { render, within } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import { site } from '@/content/site.no';
 import { Book } from './BookFigure';
+import { fullName } from './pages';
 
 const mount = () => {
   const { container } = render(<Book />);
@@ -33,7 +34,7 @@ test('every team member is listed with their role', () => {
   const items = section.querySelectorAll('article ul li');
   expect(items.length).toBeGreaterThanOrEqual(chapter.team!.length);
   chapter.team!.forEach((m, i) => {
-    expect(items[i]).toHaveTextContent(m.name);
+    expect(items[i]).toHaveTextContent(fullName(m));
     expect(items[i]).toHaveTextContent(m.role);
   });
 });

@@ -42,12 +42,46 @@ test('the team card takes its lede and its count line from the book’s second c
   expect(within(section).getByText(menneskene.paras[0])).toBeInTheDocument();
 });
 
-test('every member of the team is listed, with their role', () => {
+test('every member of the team gets a card: role, both names, the line about them', () => {
   const section = mount();
   const list = within(section).getByRole('list', { name: site.people.teamLabel });
   expect(list.children).toHaveLength(menneskene.team.length);
-  for (const { role } of menneskene.team) {
-    expect(within(list).getAllByText(role).length).toBeGreaterThan(0);
+  menneskene.team.forEach((member, i) => {
+    const row = list.children[i] as HTMLElement;
+    expect(row).toHaveTextContent(member.role);
+    expect(row).toHaveTextContent(member.first);
+    expect(row).toHaveTextContent(member.last);
+    expect(row).toHaveTextContent(member.bio);
+  });
+});
+
+/**
+ * Portrait left, then right, then left: six identical rows would be a column, and the
+ * alternation is what makes them a sequence. The side is data rather than a class so the
+ * stylesheet and the entrance (which slides the parts in from the portrait's side) read
+ * the same value.
+ */
+test('the member cards alternate sides, starting on the left', () => {
+  const section = mount();
+  const list = within(section).getByRole('list', { name: site.people.teamLabel });
+  const sides = Array.from(list.children).map((row) => (row as HTMLElement).dataset.side);
+  expect(sides).toEqual(menneskene.team.map((_, i) => (i % 2 ? 'right' : 'left')));
+});
+
+/** The round arrow goes to the chapter about the people; a dead button would be the only one on the site. */
+test('every member card’s arrow links to /om-oss', () => {
+  const section = mount();
+  const arrows = within(section).getAllByRole('link', { name: site.people.memberMore });
+  expect(arrows).toHaveLength(menneskene.team.length);
+  for (const a of arrows) expect(a).toHaveAttribute('href', '/om-oss');
+});
+
+/** No name, no face, no sentence about anyone is invented until there is someone to name. */
+test('every slot on every member card is still a bracket', () => {
+  for (const m of menneskene.team) {
+    expect(m.first).toMatch(/^\[.+\]$/);
+    expect(m.last).toMatch(/^\[.+\]$/);
+    expect(m.bio).toMatch(/^\[.+\]$/);
   }
 });
 

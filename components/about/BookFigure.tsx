@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { site } from '@/content/site.no';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { createBook, type BookHandle } from './book';
+import { fullName } from './pages';
 import styles from './about.module.css';
 
 /** Cover, one per chapter, then the contact page: the same five states the book turns to. */
@@ -124,7 +125,7 @@ export function Book() {
             {'team' in ch && (
               <ul className={styles.team} data-team>
                 {ch.team.map((m, i) => (
-                  <li key={`${m.role}-${i}`}><span>{m.name}</span><span>{m.role}</span></li>
+                  <li key={`${m.role}-${i}`}><span>{fullName(m)}</span><span>{m.role}</span></li>
                 ))}
               </ul>
             )}
