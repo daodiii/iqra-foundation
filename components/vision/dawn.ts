@@ -45,6 +45,19 @@ const STARS = 620;
 const BLADES = 1600;
 /** The stage height the grass was drawn for; a smaller tree stands in shorter grass. */
 const GRASS_STAGE = 517;
+/**
+ * The grass is stroked in this many layers, one layer per frame, and every layer is drawn
+ * every frame. Stroking a curve costs the CPU whatever the canvas is — Skia builds the
+ * stroke's outline before anything is rasterised — and fifteen hundred of them a frame was
+ * what tipped the section from one vsync to two (measured 2026-09-11 at 1440×900, 2×: 37ms
+ * a frame with the grass, 18 without). A blade's sway is slow, a full sweep in eight
+ * seconds, so a blade re-stroked every third frame moves under half a pixel between its
+ * updates; the picture is the mock's, at a third of the work.
+ */
+const GRASS_LAYERS = 3;
+/** The band the layers cover, in CSS px above and below the ground line: the tallest blade is 37px, the deepest root 19px. */
+const BAND_ABOVE = 44;
+const BAND_BELOW = 24;
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const seeded = (seed: number) => {
@@ -151,11 +164,15 @@ export function createDawnScene(canvas: HTMLCanvasElement, opts: { reduced: bool
   let region: Path2D | null = null;
   let stars: Star[] = [];
   let blades: Blade[] = [];
+  let GY = 0;
   let pivot: [number, number] = [0, 0];
   let foot: [number, number] = [0, 0];
   let last: { p: number; pen: [number, number] } = { p: 0, pen: [0, 0] };
   let raf = 0;
   let visible = true;
+  /** The grass, in layers: each holds a third of the blades, stroked on its own turn. */
+  let layers: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; blades: Blade[] }[] = [];
+  let turn = 0;
 
   function layout(g: DawnGeometry) {
     geo = g;
@@ -168,6 +185,21 @@ export function createDawnScene(canvas: HTMLCanvasElement, opts: { reduced: bool
     const field = scatter(g);
     stars = field.stars;
     blades = field.blades;
+    GY = field.GY;
+    layers = [];
+    for (let i = 0; i < GRASS_LAYERS; i++) {
+      const canvas = document.createElement('canvas');
+      canvas.width = W * DPR;
+      canvas.height = (BAND_ABOVE + BAND_BELOW) * DPR;
+      const lc = canvas.getContext('2d');
+      if (!lc) continue;
+      // the layer's origin is the top of the band, so a blade is drawn at its own y
+      lc.setTransform(DPR, 0, 0, DPR, 0, -(GY - BAND_ABOVE) * DPR);
+      layers.push({ canvas, ctx: lc, blades: blades.filter((_, j) => j % GRASS_LAYERS === i) });
+    }
+    // every layer gets its first stroke now; from here one layer is re-stroked per frame
+    const now = performance.now() / 1000;
+    for (const layer of layers) strokeLayer(layer, now);
     still = document.createElement('canvas');
     still.width = W * DPR;
     still.height = H * DPR;
@@ -179,6 +211,23 @@ export function createDawnScene(canvas: HTMLCanvasElement, opts: { reduced: bool
     // the wipe pivots from well below the box, so its edge stands nearly upright and passes through the pen
     pivot = [arch.cx, H + arch.r * 0.6];
     foot = arch.path.pointAt(0);
+  }
+
+  /** The blades bend to the same wind the tree's twigs do. */
+  function strokeLayer(layer: { ctx: CanvasRenderingContext2D; blades: Blade[] }, t: number) {
+    const { ctx: lc } = layer;
+    lc.clearRect(0, GY - BAND_ABOVE, geo!.W, BAND_ABOVE + BAND_BELOW);
+    lc.lineCap = 'round';
+    for (const b of layer.blades) {
+      const wind = opts.reduced ? 0 : Math.sin(t * 0.75 + b.x * 0.004 + b.ph) * 0.35;
+      const lean = b.lean + wind;
+      lc.strokeStyle = `rgba(${b.deep ? GRASS_DEEP : GRASS},${b.a})`;
+      lc.lineWidth = b.w;
+      lc.beginPath();
+      lc.moveTo(b.x, b.y);
+      lc.quadraticCurveTo(b.x + lean * b.h * 0.25, b.y - b.h * 0.55, b.x + lean * b.h, b.y - b.h);
+      lc.stroke();
+    }
   }
 
   function paint(p: number, pen: [number, number], t: number) {
@@ -216,17 +265,13 @@ export function createDawnScene(canvas: HTMLCanvasElement, opts: { reduced: bool
       ctx!.arc(s.x, s.y, s.s, 0, TAU);
       ctx!.fill();
     }
-    // the blades bend to the same wind the tree's twigs do
-    ctx!.lineCap = 'round';
-    for (const b of blades) {
-      const wind = opts.reduced ? 0 : Math.sin(t * 0.75 + b.x * 0.004 + b.ph) * 0.35;
-      const lean = b.lean + wind;
-      ctx!.strokeStyle = `rgba(${b.deep ? GRASS_DEEP : GRASS},${b.a})`;
-      ctx!.lineWidth = b.w;
-      ctx!.beginPath();
-      ctx!.moveTo(b.x, b.y);
-      ctx!.quadraticCurveTo(b.x + lean * b.h * 0.25, b.y - b.h * 0.55, b.x + lean * b.h, b.y - b.h);
-      ctx!.stroke();
+    // one layer of grass takes its turn in the wind; all of them are drawn
+    if (!opts.reduced && layers.length) {
+      strokeLayer(layers[turn % layers.length], t);
+      turn++;
+    }
+    for (const layer of layers) {
+      ctx!.drawImage(layer.canvas, 0, GY - BAND_ABOVE, W, BAND_ABOVE + BAND_BELOW);
     }
     ctx!.restore();
   }

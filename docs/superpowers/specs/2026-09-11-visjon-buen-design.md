@@ -224,6 +224,15 @@ foot to the angle of the pen, so its edge stands nearly upright and passes throu
 then the still, the stars, the grass. The ink turns to sky in the pen's wake, and the whole
 opening is sky once the stroke closes.
 
+**Not the mock's:** the grass is stroked in three layers, one layer per frame, and all
+three are drawn every frame. Stroking a curve is CPU work before anything is rasterised,
+and fifteen hundred a frame tipped the section's frame from one vsync to two (measured
+2026-09-11 in headless Chrome on the GPU, 1440×900 at 2×: 37ms a frame with the mock's
+grass, 25 in layers, 17 with the scene off). A blade re-stroked every third frame moves
+under half a pixel at the tip between updates; the picture is the same. What is left of
+the cost is the scene's own raster — the still, the stars and the clip — and it is reported
+in the PR rather than hidden.
+
 Its own clock: once the stroke has closed, `settle()` starts a rAF loop that repaints at
 the last `p` and pen; `destroy()` stops it. **Not the mock's:** the loop skips frames while
 the arch is off screen (an IntersectionObserver on the arch area, last entry wins, as in
