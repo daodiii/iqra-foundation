@@ -1,15 +1,28 @@
 import { render, screen } from '@testing-library/react';
 import { expect, test } from 'vitest';
+import { site } from '@/content/site.no';
 import { Vision } from './Vision';
 
-test('one line per vision line, and the four names of the tree', () => {
+test('three cards carry the values, the name stands under the roots, the headline is gone', () => {
   render(<Vision />);
-  expect(document.querySelectorAll('[data-line]')).toHaveLength(4);
-  expect(screen.getByText('Vi vil ha et Norge')).toBeInTheDocument();
-  expect(screen.getByText('Der det er lett å spørre, og lett å få et ærlig svar.')).toBeInTheDocument();
-  const limbs = [...document.querySelectorAll('[data-limb]')].map((el) => el.textContent);
-  expect(limbs).toEqual(['Dialog', 'Brobygging', 'Kunnskap']);
-  expect(document.querySelector('[data-root]')?.textContent).toBe('Iqra');
-  expect(screen.getByRole('figure', { name: /roten er Iqra/ })).toBeInTheDocument();
+  const cards = [...document.querySelectorAll('[data-value]')];
+  expect(cards.map((c) => c.getAttribute('data-value'))).toEqual(['dialog', 'trygghet', 'inkludering']);
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Dialog', 'Trygghet', 'Inkludering']);
+  for (const v of site.vision.values) expect(screen.getByText(v.text)).toBeInTheDocument();
+  expect(document.querySelector('[data-root]')?.textContent).toBe('IQRAFOUNDATION');
+  expect(screen.getByRole('figure', { name: /Dialog, Trygghet og Inkludering/ })).toBeInTheDocument();
   expect(document.getElementById('visjon')).toHaveAttribute('aria-labelledby', 'visjon-label');
+  expect(document.getElementById('visjon-label')).toHaveTextContent('Visjon');
+  expect(document.querySelector('[data-line]')).toBeNull();
+  expect(screen.queryByText('Vi vil ha et Norge')).not.toBeInTheDocument();
+});
+
+test('the arch area holds the scene, the stroke and the tree, under the cards', () => {
+  render(<Vision />);
+  const arch = document.querySelector('#visjon [data-arch]')!;
+  expect(arch.querySelector('[data-scene]')).not.toBeNull();
+  expect(arch.querySelector('[data-stroke]')).not.toBeNull();
+  expect(arch.querySelector('[data-tree] canvas')).not.toBeNull();
+  const order = [...document.querySelectorAll('#visjon [data-arch], #visjon [data-value]')];
+  expect(order[0]).toBe(arch);
 });

@@ -1,125 +1,67 @@
+/*
+ * The arch before sunrise. One box of cave ink; over it, an arch drawn with the tree's pen
+ * as the tree grows, the sky opening inside it in the pen's wake, and three glass cards —
+ * Dialog on the left flank, Trygghet on the apex, Inkludering on the right — with the tree
+ * standing in the column between them and the name under its roots.
+ *
+ * The cards are placed here, in CSS. The arch, the tree's stage and the scene are placed in
+ * JS from where the cards landed (Vision.tsx, `layout`). The numbers are the mock's; the
+ * spec says which are not: docs/superpowers/specs/2026-09-11-visjon-buen-design.md.
+ */
 .vision {
   position: relative;
   background: transparent;
   overflow: hidden;
+  height: 100svh;
+  min-height: 640px;
 }
 
 /*
- * Four panes on the cave ink: three of exactly the same size across the top, the tree in the
- * middle one, and a wide short one under them.
- *
- * The three are `repeat(3, minmax(0, 1fr))` rather than three named tracks, so «exactly the
- * same size» is a property of the grid and not something kept true by hand. The row is
- * `minmax(0, 1fr)`: it takes whatever the section has left after the strip, and the `0`
- * floor is what lets the tree's canvas shrink instead of pushing the row taller than the
- * viewport — a `1fr` alone floors at min-content, and the tree's stage would set that.
+ * Everything the section holds, positioned against the box rather than the section: the
+ * same inset as `.box` in wash.module.css, so 16px from this edge is 16px inside the ink.
  */
-.inner {
-  position: relative;
+.figure {
+  position: absolute;
+  inset: var(--box-inset-y) var(--box-inset-x);
   z-index: 1;
-  min-height: 100svh;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: minmax(0, 1fr) auto;
-  align-content: stretch;
-  gap: 22px;
-  padding: 100px var(--margin) 60px;
-}
-
-/*
- * A container, so the headline is sized against its own pane rather than the viewport. The
- * lines are broken by hand in the content file — each one is a phrase — and a size in `vw`
- * stopped honouring that the moment the column stopped tracking the window. `cqi` measures
- * the content box, so the pane's padding is already excluded and 8.5cqi still means «the
- * longest hand-set line just fits», at a third of the width as much as at half of it.
- */
-.textBody {
-  container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 22px;
-}
-
-/*
- * The panes are a third of the page wide now rather than half, so the copy inset comes down
- * with them: at 1440 the old 52px would have left a 278px measure inside a 376px pane.
- */
-.pad {
-  padding: clamp(22px, 2.1vw, 34px);
 }
 
 .label {
+  position: absolute;
+  left: 52px;
+  top: 62px;
+  margin: 0;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
   color: var(--color-ink-soft);
 }
 
-.lines {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+/* The arch and what is inside it. On a desktop it is the whole figure. */
+.arch {
+  position: absolute;
+  inset: 0;
+}
+
+/* The scene and the stroke: two canvases the size of the arch area, under the tree. */
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
 }
 
 /*
- * `nowrap` and a size measured to fit are the same decision said twice: the longest
- * hand-set line, «der folk kjenner islam», lands just inside the pane at 8.5% of it.
- * Without the nowrap a rounding error at some width re-wraps that line and the hand-set
- * breaks stop meaning anything; with it, an oversized line would instead run out of the
- * pane. So the size is the conservative one, and `sections.spec.ts` checks it fits.
+ * The tree's stage. JS sizes and places it from the cards' measured positions; this is the
+ * rest it has before that runs, near where it ends up at 1440×900.
  */
-.line {
-  font-size: clamp(20px, 8.5cqi, 50px);
-  line-height: 1.05;
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  color: var(--color-navy);
-  white-space: nowrap;
-  will-change: transform;
-}
-
-.sub {
-  margin: 0;
-  font-size: clamp(15px, 1.15vw, 18px);
-  line-height: 1.5;
-  color: var(--color-ink-soft);
-}
-
-/**
- * The third pane's copy. It is filler, so it is set as ordinary prose — a heading that is
- * allowed to wrap and a paragraph under it — which is also the honest test: it shows what
- * an unremarkable block of text looks like on glass, where the hand-set headline next to it
- * shows the best case.
- */
-.fillHead {
-  margin: 0;
-  font-size: clamp(19px, 2.05cqi, 27px);
-  line-height: 1.15;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  color: var(--color-navy);
-}
-
-.fillBody {
-  margin: 0;
-  font-size: clamp(14px, 1.08vw, 17px);
-  line-height: 1.6;
-  color: var(--color-ink-soft);
-}
-
-/** The tree's pane. Its canvas is transparent, so the figure sits in the glass. */
-.treeBody {
-  display: flex;
-  flex-direction: column;
-  padding: 20px 18px 26px;
-}
-
-.tree {
-  position: relative;
-  flex: 1;
-  /* Floors at zero on purpose: the row height decides how tall the figure is, not the
-     figure. `fit()` re-reads clientWidth/clientHeight on every resize, so any box works. */
-  min-height: 0;
+.stage {
+  position: absolute;
+  left: calc(50% - 400px);
+  width: 800px;
+  top: 25%;
+  height: 70%;
 }
 
 .canvas {
@@ -130,119 +72,187 @@
   display: block;
 }
 
-.limbName {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  color: var(--color-navy);
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.rootName {
+/*
+ * The name under the roots: the hero's lockup, small. IQRA tight, FOUNDATION tracked out
+ * to its width by JS (`fitMark`). The renderer sets `top` and fades it in with the roots.
+ */
+.mark {
   position: absolute;
   left: 50%;
-  transform: translate(-50%, -100%);
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--color-navy);
+  transform: translateX(-50%);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
   opacity: 0;
   pointer-events: none;
+  white-space: nowrap;
 }
 
-/**
- * The wide short one. Full width of the grid and deliberately not tall enough to hold a
- * block of copy — it is a shelf, so it is laid out as a row and its height comes from its
- * padding rather than from a fixed figure.
- */
-.strip {
-  grid-column: 1 / -1;
+.markFirst {
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  margin-right: -0.05em;
+  color: var(--color-navy);
 }
 
-.stripBody {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: clamp(18px, 2.4vw, 44px);
-  padding: clamp(18px, 1.7vw, 26px) clamp(22px, 2.1vw, 34px);
-}
-
-.stripLine {
-  margin: 0;
-  flex: 1;
-  min-width: 0;
-  font-size: clamp(14px, 1.15vw, 18px);
-  line-height: 1.45;
+.markSecond {
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.42em;
+  margin-right: -0.42em;
   color: var(--color-ink-soft);
 }
 
-.stripMark {
-  flex: none;
-  font-size: clamp(15px, 1.25vw, 19px);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--color-navy);
-  white-space: nowrap;
+/*
+ * Where the cards go. Each card stands in a slot: the slot is positioned and centres the
+ * card with flex rather than a transform, because GSAP moves the card by its transform
+ * when it surfaces and would overwrite a `translateY(-50%)` set here.
+ *
+ * The side slots run from the top of the figure to 10% above its foot, so their middle —
+ * where the card is — is at 0.45H. The top slot is a row across the figure, 30px down:
+ * just under the header's haze when the section is at the top of the screen; any higher
+ * and the name goes under it.
+ */
+.slot {
+  position: absolute;
+  display: flex;
+  pointer-events: none;
+}
+
+.slotLeft,
+.slotRight {
+  top: 0;
+  height: 90%;
+  align-items: center;
+  width: clamp(300px, 27.5%, 350px);
+}
+
+.slotLeft {
+  left: 16px;
+}
+
+.slotRight {
+  right: 16px;
+}
+
+.slotTop {
+  left: 0;
+  right: 0;
+  top: 30px;
+  justify-content: center;
 }
 
 /*
- * Below 1100 the three panes are too narrow to set at all — the headline would be sized off
- * a 200px measure — so the row breaks before the phone breakpoint does anything else. The
- * tree keeps the full width above the copy, which is the arrangement the section already
- * used on a phone.
+ * The card: 350px on the flanks and 440px on the apex at 1440 — a lintel over two posts,
+ * wider and shorter so the crown keeps its room under it. Under 1273px of viewport both
+ * shrink toward 300 and 380, which the mock never showed, and the tree's stage is capped
+ * to the column they leave (arch.ts, `desktopStage`).
  */
-@media (max-width: 1100px) {
-  .inner {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto;
-    padding: 96px var(--margin) 48px;
-    gap: 16px;
+.value {
+  width: 100%;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 26px 28px 28px;
+}
+
+.slotTop .value {
+  width: clamp(380px, 34.6%, 440px);
+}
+
+.name {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--color-navy);
+}
+
+.text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+
+/*
+ * Under 1100px the section flows: the arch keeps the top of it with the tree inside, and
+ * the cards stack under it on the same ink. 1100 is where this section's grid already
+ * broke before the phone breakpoint did anything, and between there and the mock's 700
+ * two 350px cards would leave the tree a 60px column.
+ *
+ * The box's inset becomes fixed pixels here and the section pads by the same pixels: a
+ * percentage padding resolves against the width on all four sides, so it cannot match a
+ * percentage inset, and this is the one layout where the figure gives the section its
+ * height rather than filling it. The 26px at the foot is 12px of ink under the last card,
+ * the same as the gap between cards.
+ */
+@media (max-width: 1099px) {
+  .vision {
+    --box-inset-x: 10px;
+    --box-inset-y: 14px;
+    height: auto;
+    min-height: 0;
+    padding: 14px 10px 26px;
   }
 
-  .treePanel {
-    order: -1;
+  .figure {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
-  .tree {
-    height: 44vh;
-    min-height: 300px;
+  .label {
+    top: 100px;
   }
 
-  /*
-   * One column, so the pane is the full measure and 8.5% of it is far too large. The
-   * hand-set lines still may not wrap, so the ceiling comes down rather than the nowrap
-   * coming off — at 360px «der folk kjenner islam» fits at 26px.
-   */
-  .line {
-    font-size: clamp(20px, 6.4cqi, 34px);
+  .arch {
+    position: relative;
+    inset: auto;
+    /* 70svh, and never so short that the arch has no legs and the tree no room. */
+    height: max(70svh, 420px);
   }
 
-  .fillHead {
-    font-size: clamp(19px, 3.4cqi, 26px);
+  .slot {
+    position: static;
+    display: block;
+    height: auto;
+    width: auto;
+    padding: 0 12px;
   }
 
-  .stripBody {
-    flex-wrap: wrap;
+  .value,
+  .slotTop .value {
+    width: auto;
+    padding: 22px 22px 24px;
   }
 
-  .limbName {
-    font-size: 14px;
+  .name {
+    font-size: 24px;
   }
 
-  .rootName {
-    font-size: 16px;
+  .text {
+    font-size: 14.5px;
+  }
+}
+
+@media (max-width: 767px) {
+  .label {
+    left: 22px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .limbName,
-  .rootName {
+  .mark {
     opacity: 1;
   }
 }
