@@ -295,7 +295,8 @@ of a frame, that is reported, not hidden.
 ## What this is not
 
 - Not Misjon. The headline's move is a later decision; its lines stay in the content file.
-- Not the tree. `tree.ts` gains two exported constants and nothing else.
+- Not the tree. `tree.ts` gains two exported constants and a `refit()` on its handle — the
+  section sizes the stage and has to say so — and nothing else.
 - Not the ink. It is unchanged and still declines where WebGL2 is missing; the scene is 2D
   and always draws, so the arch opens onto the sky on every device.
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { fit, generate } from './tree';
+import { fit, generate, GROUND, TOP } from './tree';
 
 describe('generate', () => {
   const model = generate();
@@ -58,5 +58,10 @@ describe('fit', () => {
   test('names arrive before growth is complete', () => {
     fitted.limbs.forEach((l) => expect(l.birth).toBeLessThan(3.0));
     expect(fitted.rootBirth).toBe(1.0);
+  });
+
+  test('the ground line and the crown top are the exported fractions', () => {
+    expect(fitted.GY).toBeCloseTo(box.H * GROUND, 5);
+    expect(fitted.TOPY).toBeCloseTo(box.H * TOP, 5);
   });
 });
