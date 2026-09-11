@@ -172,7 +172,7 @@ export function Vision() {
         {/* Three. Filler, set as ordinary prose. */}
         <div className={`${wash.card} ${styles.textBody} ${styles.pad}`} data-pane>
           <span className={styles.label}>Tekst</span>
-          <h3 className={styles.fillHead}>{filler.head}</h3>
+          <p className={styles.fillHead}>{filler.head}</p>
           <p className={styles.fillBody}>{filler.body}</p>
         </div>
 
