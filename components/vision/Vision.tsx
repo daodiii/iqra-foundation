@@ -7,35 +7,50 @@ import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { createInkWhenNear, type InkHandle } from '@/lib/ink';
 import { setWordmarkOnDark } from '@/lib/wordmark';
-import { createVisionTree, GROW, type TreeHandle } from './tree';
+import { desktopArch, desktopStage, drawStroke, phoneArch, phoneStage, type Arch, type Rect } from './arch';
+import { createDawnScene } from './dawn';
+import { createVisionTree, GROW } from './tree';
 // TreeFigure, not Tree: on a case-insensitive filesystem './Tree' resolves to tree.ts.
 import { Tree } from './TreeFigure';
 import styles from './vision.module.css';
-
-const dir = (el: Element) => Number((el as HTMLElement).dataset.dir);
 
 /**
  * How long the tree takes to open, in seconds. Nothing holds the reader here now that the
  * pin is gone, so it has to be shorter than a pass down the section rather than longer: at
  * five — the figure the phone branch used to run — a normal scroll left a half-grown tree
- * behind it.
+ * behind it. The arch is drawn on the same clock, and the sky opens in its wake.
  */
 const OPEN = 3;
 
 /**
- * Filler, and meant to look like it. The three panes that are not the tree need words in
- * them to be judged at all, but this section's real copy is one hand-set headline — there
- * is no second and third paragraph waiting to be poured in here. Inventing plausible ones
- * would hide that: the arrangement would look finished when what it actually needs is
- * content that does not exist yet.
+ * Below this the section flows — the arch keeps the top of it with the tree inside, and
+ * the cards stack under it. The same line vision.module.css draws: the CSS decides the
+ * layout, and this only asks which one it chose.
  */
-const filler = {
-  head: 'Her kan det stå en overskrift',
-  body: 'Og her en kort tekst under den. To eller tre setninger, omtrent så lange som disse, er nok til å se hvordan vanlig brødtekst oppfører seg oppå glasset.',
-  stripLabel: 'Notat',
-  stripLine: 'En smal hylle nederst, i full bredde. Plass til én setning, en dato, eller noe kort som ikke trenger en egen rute.',
-  stripMark: 'Kort tekst',
-};
+const FLOW = '(max-width: 1099px)';
+
+/** The slots the three cards stand in: left, top, right. */
+const SLOTS = [styles.slotLeft, styles.slotTop, styles.slotRight];
+
+/**
+ * FOUNDATION tracked out to IQRA's width, as the hero's lockup is: the tracking is what
+ * makes the two lines one mark. Measured rather than set, because it depends on which font
+ * has landed.
+ */
+function fitMark(mark: HTMLElement | null) {
+  const first = mark?.querySelector<HTMLElement>('[data-mark-first]');
+  const second = mark?.querySelector<HTMLElement>('[data-mark-second]');
+  if (!first || !second) return;
+  second.style.letterSpacing = '0';
+  second.style.marginRight = '0';
+  const target = first.getBoundingClientRect().width;
+  const natural = second.getBoundingClientRect().width;
+  const letters = (second.textContent ?? '').length || 1;
+  const spacing = Math.max(0, (target - natural) / letters);
+  second.style.letterSpacing = `${spacing}px`;
+  // Letter-spacing lands after the last letter too; take that back so the line centres.
+  second.style.marginRight = `${-spacing}px`;
+}
 
 export function Vision() {
   const root = useRef<HTMLElement>(null);
@@ -44,72 +59,142 @@ export function Vision() {
     () => {
       const section = root.current;
       if (!section) return;
-      const box = section.querySelector<HTMLElement>('[data-tree]');
-      const canvas = box?.querySelector('canvas');
-      const lines = section.querySelectorAll<HTMLElement>('[data-line]');
-      const panes = section.querySelectorAll<HTMLElement>('[data-pane]');
+      const figure = section.querySelector<HTMLElement>('[data-figure]');
+      const area = section.querySelector<HTMLElement>('[data-arch]');
+      const stage = section.querySelector<HTMLElement>('[data-tree]');
+      const sceneCanvas = section.querySelector<HTMLCanvasElement>('[data-scene]');
+      const strokeCanvas = section.querySelector<HTMLCanvasElement>('[data-stroke]');
+      const cards = Array.from(section.querySelectorAll<HTMLElement>('[data-value]'));
+      if (!figure || !area || !stage || !sceneCanvas || !strokeCanvas || cards.length !== 3) return;
+      const treeCanvas = stage.querySelector('canvas');
+      const mark = stage.querySelector<HTMLElement>('[data-root]');
       const reduced = reducedMotion();
-      let tree: TreeHandle | null = null;
-      if (box && canvas) {
-        tree = createVisionTree(box, canvas, {
-          reduced,
-          limbLabels: Array.from(box.querySelectorAll<HTMLElement>('[data-limb]')),
-          rootLabel: box.querySelector<HTMLElement>('[data-root]'),
-        });
-      }
+      const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+      const tree = treeCanvas ? createVisionTree(stage, treeCanvas, { reduced, limbLabels: [], rootLabel: mark }) : null;
 
       /*
        * The cave before sunrise, in ink. The host is the section rather than the canvas, so
-       * a hand moving across the copy stirs the colour behind it too — the panes are glass
+       * a hand moving across the copy stirs the colour behind it too — the cards are glass
        * lying on the water, not a lid on it. `createInk` returns null wherever WebGL2 or a
-       * float colour buffer is missing, and the box keeps the still gradient underneath.
+       * float colour buffer is missing, and the box keeps the still gradient underneath;
+       * the scene inside the arch is 2D and draws either way.
        */
       const inkCanvas = section.querySelector<HTMLCanvasElement>('[data-ink]');
       const ink: InkHandle | null = inkCanvas
         ? createInkWhenNear(inkCanvas, { reduced, palette: film.vision, host: section })
         : null;
-      const stop = () => { tree?.destroy(); ink?.destroy(); };
+      const scene = createDawnScene(sceneCanvas, { reduced });
+      const strokeCtx = strokeCanvas.getContext('2d');
 
-      if (reduced) {
-        tree?.setT(99);
-        return stop;
-      }
-      // The section is a full viewport tall, so its copy is readable long before the
-      // trigger fires. Hide the lines here — in JS, so a failed script leaves the copy
-      // visible — or the fromTo below snaps them back out and replays them on screen.
-      // Reduced motion returns above and keeps its CSS rest state (vision.module.css).
-      gsap.set(lines, { opacity: 0 });
-      gsap.set(panes, { opacity: 0 });
+      /* The geometry, remade on every layout. */
+      let arch: Arch | null = null;
+      let surfaces: [number, number, number] = [0.3, 0.55, 0.8];
+      let W = 0;
+      let H = 0;
+      /** The tree's growth time; the stroke and the scene are drawn from it. */
+      let T = reduced ? 99 : 0;
+      let settled = reduced;
+      let dead = false;
+      const shown = [false, false, false];
+
+      const draw = () => {
+        if (!arch) return;
+        const p = Math.min(1, T / GROW);
+        if (strokeCtx) {
+          strokeCtx.clearRect(0, 0, W, H);
+          drawStroke(strokeCtx, arch.path, p);
+        }
+        scene?.frame(p, arch.path.pointAt(p), performance.now() / 1000);
+      };
 
       /*
-       * The tree opens by itself, and there is no longer a desktop branch and a phone
-       * branch — the phone's shape of it, a clock rather than a pin, everywhere.
-       *
-       * It used to be scrubbed by a pin: a screen and a bit of scrolling whose only
-       * content was the tree opening, so the section held you still while you turned a
-       * crank to be shown the thing you had already arrived at. Growing it on a clock
-       * says the same thing and gives the scroll back; it also removes the last pin
-       * after the hero, so nothing below the film sticks.
+       * Everything that depends on a measurement. The cards are placed by CSS; this reads
+       * where they landed and puts the arch, the stage and the scene around them. In flow
+       * the arch area is the space; on a desktop it is the whole figure.
+       */
+      const layout = () => {
+        W = area.clientWidth;
+        H = area.clientHeight;
+        if (W < 1 || H < 1) return; // not laid out: display none, or jsdom
+        if (strokeCtx) {
+          strokeCanvas.width = W * DPR;
+          strokeCanvas.height = H * DPR;
+          strokeCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        }
+        let rect: Rect;
+        if (window.matchMedia(FLOW).matches) {
+          arch = phoneArch(W, H);
+          rect = phoneStage(arch, W, H);
+          surfaces = arch.surfaces(0);
+        } else {
+          arch = desktopArch(W, H);
+          const fig = figure.getBoundingClientRect();
+          const [left, top, right] = cards.map((c) => c.getBoundingClientRect());
+          rect = desktopStage(W, H, top.bottom - fig.top, right.left - left.right);
+          surfaces = arch.surfaces((left.top + left.bottom) / 2 - fig.top);
+        }
+        const size = [rect.left, rect.top, rect.width, rect.height].map((v) => `${Math.round(v)}px`);
+        const changed = stage.style.width !== size[2] || stage.style.height !== size[3];
+        [stage.style.left, stage.style.top, stage.style.width, stage.style.height] = size;
+        // The renderer fitted the tree to whatever size the stage had before; tell it.
+        if (changed) tree?.refit();
+        scene?.layout({ W, H, arch, stage: rect });
+        draw();
+        if (settled) scene?.settle();
+      };
+
+      let rt = 0;
+      const onResize = () => {
+        window.clearTimeout(rt);
+        rt = window.setTimeout(() => { fitMark(mark); layout(); }, 300);
+      };
+      window.addEventListener('resize', onResize);
+      const stop = () => {
+        dead = true;
+        window.removeEventListener('resize', onResize);
+        window.clearTimeout(rt);
+        tree?.destroy();
+        ink?.destroy();
+        scene?.destroy();
+      };
+
+      if (reduced) tree?.setT(99);
+      // Hide the cards here — in JS, so a failed script leaves the copy visible — never in CSS.
+      else gsap.set(cards, { opacity: 0, y: 16 });
+      fitMark(mark);
+      layout();
+      // The cards are measured, and the web font changes their height: again when it lands.
+      document.fonts.ready.then(() => { if (!dead) { fitMark(mark); layout(); } });
+
+      if (reduced) return stop;
+
+      /*
+       * The tree opens by itself on a clock, and the arch is drawn on the same clock with
+       * the tree's pen: `p` is how far the pen has come, and the scene shows the sky
+       * where it has passed. Each card surfaces as the pen reaches its flank, once —
+       * glass sliding into place in the stroke's wake, not a stagger.
        */
       const growth = { T: 0 };
       let arrived = false;
       const arrive = () => {
         if (arrived) return;
         arrived = true;
-        /*
-         * The panes arrive first and the words after them, which is one move rather than
-         * two: glass sliding into place, then the copy settling onto it. The rise is small
-         * — four panels each travelling a visible distance would be the busiest thing on
-         * the page, and this section's whole job is to be calm enough that the tree is the
-         * thing that moves.
-         */
-        gsap.fromTo(panes,
-          { y: 16, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.9, ease: EASE.out, stagger: 0.08 });
-        gsap.fromTo(lines,
-          { x: (i, el) => 120 * dir(el), skewX: (i, el) => -8 * dir(el), opacity: 0 },
-          { x: 0, skewX: 0, opacity: 1, duration: 1.1, ease: EASE.out, stagger: 0.09, delay: 0.22 });
-        gsap.to(growth, { T: GROW, duration: OPEN, ease: EASE.none, onUpdate: () => tree?.setT(growth.T) });
+        gsap.to(growth, {
+          T: GROW, duration: OPEN, ease: EASE.none,
+          onUpdate: () => {
+            T = growth.T;
+            tree?.setT(T);
+            draw();
+            const p = T / GROW;
+            cards.forEach((card, i) => {
+              if (shown[i] || p < surfaces[i] + 0.004) return;
+              shown[i] = true;
+              gsap.to(card, { y: 0, opacity: 1, duration: 0.9, ease: EASE.out });
+            });
+          },
+          onComplete: () => { settled = true; scene?.settle(); },
+        });
       };
 
       ScrollTrigger.create({
@@ -118,7 +203,7 @@ export function Vision() {
         /*
          * Landing here from a reload rather than scrolling in: the browser restores the
          * scroll position, the start is already behind us, and `onEnter` has nothing left
-         * to fire on — so the lines would keep the opacity 0 set above, invisible and
+         * to fire on — so the cards would keep the opacity 0 set above, invisible and
          * permanently so. Hidden on purpose and hidden by accident look identical.
          *
          * Measured on refresh, never at creation. The hero builds its pin inside
@@ -152,36 +237,24 @@ export function Vision() {
       <div className={`${wash.box} ${wash.cave}`} aria-hidden="true">
         <canvas className={wash.paint} data-ink />
       </div>
-      <div className={styles.inner}>
-        {/* One. The section's real copy — the hand-set headline, on glass. */}
-        <div className={`${wash.card} ${styles.textBody} ${styles.pad}`} data-pane>
-          <span id="visjon-label" className={styles.label}>{site.vision.label}</span>
-          <div className={styles.lines}>
-            {site.vision.lines.map((line, i) => (
-              <div key={line} className={styles.line} data-line data-dir={i % 2 === 0 ? -1 : 1}>{line}</div>
-            ))}
-          </div>
-          <p className={styles.sub}>{site.vision.sub}</p>
-        </div>
-
-        {/* Two, the middle one: the tree. */}
-        <div className={`${wash.card} ${styles.treePanel} ${styles.treeBody}`} data-pane>
+      {/* Inset exactly as the box is, so 16px from this edge is 16px inside the ink. */}
+      <div className={styles.figure} data-figure>
+        <p id="visjon-label" className={styles.label}>{site.vision.label}</p>
+        {/* The arch and what is inside it: the sky, the stroke, the tree with the name under its roots. */}
+        <div className={styles.arch} data-arch>
+          <canvas className={styles.layer} data-scene aria-hidden="true" />
+          <canvas className={styles.layer} data-stroke aria-hidden="true" />
           <Tree />
         </div>
-
-        {/* Three. Filler, set as ordinary prose. */}
-        <div className={`${wash.card} ${styles.textBody} ${styles.pad}`} data-pane>
-          <span className={styles.label}>Tekst</span>
-          <p className={styles.fillHead}>{filler.head}</p>
-          <p className={styles.fillBody}>{filler.body}</p>
-        </div>
-
-        {/* Four. Full width, and short. */}
-        <div className={`${wash.card} ${styles.strip} ${styles.stripBody}`} data-pane>
-          <span className={styles.label}>{filler.stripLabel}</span>
-          <p className={styles.stripLine}>{filler.stripLine}</p>
-          <span className={styles.stripMark}>{filler.stripMark}</span>
-        </div>
+        {/* The three values, on glass: Dialog on the left flank, Trygghet on the apex, Inkludering on the right. */}
+        {site.vision.values.map((v, i) => (
+          <div key={v.key} className={`${styles.slot} ${SLOTS[i]}`}>
+            <div className={`${wash.card} ${styles.value}`} data-value={v.key}>
+              <h2 className={styles.name}>{v.name}</h2>
+              <p className={styles.text}>{v.text}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );

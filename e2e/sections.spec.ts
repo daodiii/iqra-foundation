@@ -34,22 +34,22 @@ const docTop = (page: Page, sel: string) => page.evaluate((s) => {
 }, sel);
 
 /**
- * Anything drawn at all on the TREE's canvas, sampled across the whole of it rather than
- * down one column: the tree is a line drawing and a single column of pixels can miss it
- * honestly.
+ * Anything drawn at all on a canvas, sampled across the whole of it rather than down one
+ * column: the tree is a line drawing and a single column of pixels can miss it honestly.
  *
- * Scoped to `[data-tree]` and not to `#visjon canvas`, which now matches the ink first. The
- * ink is WebGL and `getContext('2d')` on it returns null — the query would not fail, it
- * would throw somewhere that reads like the tree being broken.
+ * Scoped by the caller — `#visjon canvas` alone matches the ink first, which is WebGL:
+ * `getContext('2d')` on it returns null, and the query would not fail, it would throw
+ * somewhere that reads like the tree being broken.
  */
-const treeHasInk = (page: Page) => page.evaluate(() => {
-  const c = document.querySelector('#visjon [data-tree] canvas') as HTMLCanvasElement;
+const canvasHasPaint = (page: Page, selector: string) => page.evaluate((sel) => {
+  const c = document.querySelector(sel) as HTMLCanvasElement;
   const data = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
   for (let y = 0; y < c.height; y += 3) {
     for (let x = 0; x < c.width; x += 3) if (data[(y * c.width + x) * 4 + 3] > 40) return true;
   }
   return false;
-});
+}, selector);
+const treeHasInk = (page: Page) => canvasHasPaint(page, '#visjon [data-tree] canvas');
 
 /**
  * What every box has to be true of, whether or not the simulation runs.
@@ -85,9 +85,9 @@ async function boxIsPainted(page: Page, id: string, ground: string) {
   if (started) expect(box!.bitmap[0]).toBeGreaterThan(box!.css * 0.3);
 }
 
-/** The three limb names then the root, in the order the tree paints them. From the content
- *  file, so renaming a limb there does not leave a test asserting a name nothing renders. */
-const TREE_NAMES = [...site.vision.tree.limbs, site.vision.tree.root];
+/** The three cards around the tree, from the content file, so renaming a value there does
+ *  not leave a test asserting a name nothing renders. */
+const VALUE_CARDS = site.vision.values.map((v) => `#visjon [data-value="${v.key}"]`);
 
 /**
  * How far the timeline's hairline is drawn from the centre of its pegs, in pixels.
@@ -153,37 +153,26 @@ test('desktop: the hero is the only pin, and it pins where its spacer sits', asy
 /**
  * The tree used to be scrubbed by a pin here, and this test scrolled through the pin to
  * open it. It runs on a clock now, so arriving IS the interaction — nothing below scrolls
- * a pixel after the first line, and what follows is what arriving has to be worth.
+ * a pixel after the first line, and what follows is what arriving has to be worth: the
+ * arch drawn, the sky inside it, the three cards surfaced in its wake, the name under the
+ * roots.
  */
-test('desktop: visjon does not pin; the lines arrive, the tree opens, the box holds ink', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'the two-column layout is desktop only');
+test('desktop: visjon does not pin; the cards surface, the tree opens, the sky is painted, the box holds ink', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the arch with the cards on its flanks is the desktop layout');
   await pastHero(page);
   const top = await docTop(page, '#visjon');
   await page.evaluate((y) => window.scrollTo(0, y + 10), top);
-  await expect(page.locator('#visjon [data-line]').first()).toHaveCSS('opacity', '1', { timeout: 5_000 });
   // Generous, because this is a 3s tween finishing on its own and not a scroll we drive.
-  for (const name of TREE_NAMES) {
-    await expect(page.locator('#visjon [data-limb], #visjon [data-root]').filter({ hasText: name })).toHaveCSS('opacity', '1', { timeout: 12_000 });
+  for (const card of VALUE_CARDS) {
+    await expect(page.locator(card)).toHaveCSS('opacity', '1', { timeout: 12_000 });
   }
+  await expect(page.locator('#visjon [data-root]')).toHaveCSS('opacity', '1', { timeout: 12_000 });
   expect(await treeHasInk(page)).toBe(true);
+  expect(await canvasHasPaint(page, '#visjon [data-scene]'), 'the sky never opened inside the arch').toBe(true);
+  expect(await canvasHasPaint(page, '#visjon [data-stroke]'), 'the arch was never drawn').toBe(true);
   await boxIsPainted(page, 'visjon', film.vision.ground);
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
   await expect(page.locator('.pin-spacer')).toHaveCount(1); // the section holds nothing
-});
-
-/**
- * The hand-set lines are the whole reason the headline is sized against its card. They are
- * `nowrap`, so a size that stops fitting shows as an overflow rather than as a silent
- * re-wrap — and this is the only level that can see it, since jsdom has no layout.
- */
-test('desktop: visjon’s hand-set lines each fit on one line', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'the phone layout has its own type scale');
-  await pastHero(page);
-  const overflow = await page.evaluate(() =>
-    Array.from(document.querySelectorAll<HTMLElement>('#visjon [data-line]'))
-      .filter((el) => el.scrollWidth > el.clientWidth + 1)
-      .map((el) => el.textContent));
-  expect(overflow, 'a hand-set line ran out of its card').toEqual([]);
 });
 
 /**
@@ -217,6 +206,17 @@ test('desktop: a resize on Visjon keeps the wordmark navy and the tree on screen
   // white. tree.ts repaints synchronously at the end of size() rather than trusting the
   // frame loop, whose visibility gate can be stale for a batch of observer entries.
   expect(await treeHasInk(page), 'the tree went blank after the resize').toBe(true);
+
+  // The cards are placed by CSS and the stage by JS from where they landed; after a resize
+  // both have to agree — every card inside the figure, and the stage inside the column.
+  const inside = await page.evaluate(() => {
+    const fig = document.querySelector('#visjon [data-figure]')!.getBoundingClientRect();
+    const cards = Array.from(document.querySelectorAll('#visjon [data-value]')).map((c) => c.getBoundingClientRect());
+    const stage = document.querySelector('#visjon [data-tree]')!.getBoundingClientRect();
+    return cards.every((r) => r.left >= fig.left - 1 && r.right <= fig.right + 1)
+      && stage.bottom <= fig.bottom + 1 && stage.top >= cards[1].bottom;
+  });
+  expect(inside, 'a card left the box, or the stage overlaps the top card').toBe(true);
 });
 
 /**
@@ -446,9 +446,19 @@ test('phone: no pins after the hero; the tree grows and every section stays legi
   // Navy on Visjon's light box. The hero pins on phones too and leaves data-on-dark="true"
   // behind, so this is a real handoff, not the initial attribute never having changed.
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
-  for (const name of TREE_NAMES) {
-    await expect(page.locator('#visjon [data-limb], #visjon [data-root]').filter({ hasText: name })).toHaveCSS('opacity', '1', { timeout: 8_000 });
+  for (const card of VALUE_CARDS) {
+    await expect(page.locator(card)).toHaveCSS('opacity', '1', { timeout: 8_000 });
   }
+  await expect(page.locator('#visjon [data-root]')).toHaveCSS('opacity', '1', { timeout: 8_000 });
+  // In flow the arch keeps the top of the section and the cards stack under it, on the
+  // same ink: every card starts below the arch area, and the box reaches the last one.
+  const stacked = await page.evaluate(() => {
+    const arch = document.querySelector('#visjon [data-arch]')!.getBoundingClientRect();
+    const box = document.querySelector('#visjon canvas[data-ink]')!.parentElement!.getBoundingClientRect();
+    const cards = Array.from(document.querySelectorAll('#visjon [data-value]')).map((c) => c.getBoundingClientRect());
+    return cards.every((r) => r.top >= arch.bottom - 1 && r.bottom <= box.bottom + 1);
+  });
+  expect(stacked, 'a card overlaps the arch or hangs out of the box').toBe(true);
 
   const mtop = await docTop(page, '#misjon');
   await page.evaluate((y) => window.scrollTo(0, y + 10), mtop);
@@ -538,13 +548,14 @@ test('phone: the cards stack, the axis stays an axis, and nothing pushes the pag
   expect(overflow, 'the page scrolls sideways on a phone').toBeLessThanOrEqual(1);
 });
 
-/** The hand-set lines shrink faster than the desktop clamp on a phone, or they run out of
- *  the card. Same contract as the desktop test, at the width that actually breaks it. */
+/** Misjon's hand-set lines shrink faster than the desktop clamp on a phone, or they run
+ *  out of the card — this is the width that actually breaks it. Visjon has no hand-set
+ *  lines since the arch. */
 test('phone: no hand-set line runs out of its card', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'the phone type scale');
   await pastHero(page);
   const overflow = await page.evaluate(() =>
-    Array.from(document.querySelectorAll<HTMLElement>('#visjon [data-line], #misjon [class*="line"]'))
+    Array.from(document.querySelectorAll<HTMLElement>('#misjon [class*="line"]'))
       .filter((el) => el.scrollWidth > el.clientWidth + 1)
       .map((el) => el.textContent));
   expect(overflow, 'a hand-set line ran out of its card').toEqual([]);

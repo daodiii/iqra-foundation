@@ -122,12 +122,33 @@ export const site = {
   },
   vision: {
     label: 'Visjon',
+    /*
+     * The hand-set headline. Off the section since the arch (2026-09-11) and used by
+     * nothing; kept because whether it moves to Misjon is not decided, and deleting it
+     * would hide that there is a decision to make.
+     */
     lines: ['Vi vil ha et Norge', 'der folk kjenner islam', 'fra ekte møter,', 'ikke fra overskrifter.'],
     sub: 'Der det er lett å spørre, og lett å få et ærlig svar.',
+    /** The three values, in the order they stand around the tree: left, top, right. */
+    values: [
+      {
+        key: 'dialog',
+        name: 'Dialog',
+        text: 'Vi liker å snakke med folk. Om islam, om tro, og om det som er vanskelig å spørre om. Du kan komme med det du lurer på, og vi svarer så ærlig vi kan. Vi lærer like mye av samtalen som du gjør.',
+      },
+      {
+        key: 'trygghet',
+        name: 'Trygghet',
+        text: 'Det skal være trygt å lure på ting. Ingen spørsmål er dumme, og ingen blir dømt for å stille dem. Det du sier holder vi for oss selv, og du bestemmer selv hvor langt samtalen skal gå.',
+      },
+      {
+        key: 'inkludering',
+        name: 'Inkludering',
+        text: 'Alle er velkomne hos oss. Du trenger ikke være muslim, og du trenger ikke kunne noe fra før. Vi møter folk der de er, med den bakgrunnen de har. Det er sånn vi selv vil bli møtt.',
+      },
+    ],
     tree: {
-      root: 'Iqra',
-      limbs: ['Dialog', 'Brobygging', 'Kunnskap'],
-      label: 'Et tre: roten er Iqra, greinene er Dialog, Brobygging og Kunnskap',
+      label: 'Et tre under en bue. Greinene er Dialog, Trygghet og Inkludering, og under røttene står Iqra Foundation.',
     },
   },
   mission: {

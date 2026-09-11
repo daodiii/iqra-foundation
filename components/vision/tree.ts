@@ -3,6 +3,15 @@ import { ramp, sample } from '@/lib/ramp';
 /** Growth time when the tree is fully open; the figure is complete around 3.3. */
 export const GROW = 3.8;
 
+/**
+ * Where the ground line sits in the stage and where the crown's top does, as fractions of
+ * the stage's height. Exported because the section builds around them: the scene paints
+ * its horizon on the first, and the stage is placed so the second lands under the top
+ * card. Typed here once, so neither can drift from the figure.
+ */
+export const GROUND = 0.74;
+export const TOP = 0.06;
+
 const MAXD = 4;
 const NAVY = '42,57,75';
 const ROOT = 'rgb(74,90,110)';
@@ -47,7 +56,7 @@ export type FittedTree = {
   segs: FittedSeg[]; rootSegs: FittedSeg[]; lights: Light[];
   limbs: { x: number; y: number; birth: number }[]; rootBirth: number;
 };
-export type TreeHandle = { setT(v: number): void; destroy(): void };
+export type TreeHandle = { setT(v: number): void; refit(): void; destroy(): void };
 export type TreeOptions = { reduced: boolean; limbLabels: HTMLElement[]; rootLabel: HTMLElement | null };
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -108,7 +117,7 @@ export function generate(): TreeModel {
 export function fit(model: TreeModel, box: { W: number; H: number }): FittedTree {
   const { W, H } = box;
   const K = clamp(H / 640, 0.5, 1.4);
-  const GY = H * 0.74, TOPY = H * 0.06;
+  const GY = H * GROUND, TOPY = H * TOP;
   let minY = 0, minX = 0, maxX = 0;
   model.segs.forEach((s) => { minY = Math.min(minY, s.y1); minX = Math.min(minX, s.x1); maxX = Math.max(maxX, s.x1); });
   const ky = (GY - TOPY) / (-minY || 1);
@@ -351,6 +360,9 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
     // A new growth time invalidates the canvas; under reduced motion this is the only
     // thing that ever asks the frame loop to paint again.
     setT: (v) => { if (v !== T) { T = v; painted = false; } },
+    // The section sizes the stage from where its cards landed, which the renderer cannot
+    // see; this is how it says the stage changed without a synthetic resize event.
+    refit: size,
     destroy() {
       cancelAnimationFrame(raf);
       io.disconnect();
