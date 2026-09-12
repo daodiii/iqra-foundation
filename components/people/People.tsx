@@ -46,6 +46,27 @@ function arrive(row: HTMLElement) {
     .to(info, { opacity: 1, x: 0, duration: 0.6, ease: EASE.out }, 0.2);
 }
 
+/** One arrow, drawn pointing right; the back ring turns it round in the stylesheet. */
+function Arrow() {
+  return (
+    <svg
+      className={styles.arrow}
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M5 12h14" />
+      <path d="m13 6 6 6-6 6" />
+    </svg>
+  );
+}
+
 /**
  * Om oss · Teamet, on Arafat.
  *
@@ -61,9 +82,10 @@ function arrive(row: HTMLElement) {
  *
  * Under the two, one card for one person at a time: a portrait, the name set at display
  * size across its edge, the role above with a count beside it, and a line about them next
- * to a round arrow. The arrow is how you meet the next one — six cards in a row were a
- * screen and a half of the same shape, and a list of people is not what a team is. The
- * count is there so the arrow says what it does before anyone presses it.
+ * to two round arrows. The large one is how you meet the next person and the small one
+ * takes you back — six cards in a row were a screen and a half of the same shape, and a
+ * list of people is not what a team is. The count is there so the arrows say what they
+ * do before anyone presses them.
  */
 export function People() {
   const root = useRef<HTMLElement>(null);
@@ -195,27 +217,23 @@ export function People() {
                 <span className={styles.last}>{member.last}</span>
               </p>
               <div className={styles.details}>
+                {/* Back is the smaller ring, and first: the eye lands on the large one,
+                    which is the way the card was designed to be read — on. */}
+                <button
+                  type="button"
+                  className={`${styles.go} ${styles.back}`}
+                  aria-label={site.people.prev}
+                  onClick={() => setIndex((i) => (i + count - 1) % count)}
+                >
+                  <Arrow />
+                </button>
                 <button
                   type="button"
                   className={styles.go}
                   aria-label={site.people.next}
                   onClick={() => setIndex((i) => (i + 1) % count)}
                 >
-                  <svg
-                    className={styles.arrow}
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M5 12h14" />
-                    <path d="m13 6 6 6-6 6" />
-                  </svg>
+                  <Arrow />
                 </button>
                 <p className={styles.bio}>{member.bio}</p>
               </div>

@@ -381,7 +381,10 @@ test('desktop: om oss · teamet is water over Arafat, with the story and the tea
     await expect(card).toHaveAttribute('data-index', String(at));
     await expect(card).toContainText(`${at + 1} / ${menneskene.team.length}`);
   }
-  // After the last press the parts have arrived again, not been left half-hidden.
+  // Back from the first is the last. After the last press the parts have arrived again,
+  // not been left half-hidden.
+  await card.getByRole('button', { name: site.people.prev }).click();
+  await expect(card).toHaveAttribute('data-index', String(menneskene.team.length - 1));
   await page.waitForTimeout(1200);
   const shown = await card.locator('[data-part="info"]').evaluate((el) => getComputedStyle(el).opacity);
   expect(Number(shown)).toBe(1);

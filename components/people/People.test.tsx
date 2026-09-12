@@ -73,6 +73,21 @@ test('the arrow steps through every member and wraps to the first', () => {
   expect(card).toHaveTextContent(menneskene.team[0].role);
 });
 
+/** The small ring goes the other way, and from the first person it goes to the last. */
+test('the back arrow steps to the previous member and wraps to the last', () => {
+  const section = mount();
+  const back = within(section).getByRole('button', { name: site.people.prev });
+  const card = section.querySelector('[data-row]') as HTMLElement;
+  const last = menneskene.team.length - 1;
+  fireEvent.click(back);
+  expect(card).toHaveAttribute('data-index', String(last));
+  expect(card).toHaveTextContent(menneskene.team[last].role);
+  fireEvent.click(back);
+  expect(card).toHaveAttribute('data-index', String(last - 1));
+  fireEvent.click(within(section).getByRole('button', { name: site.people.next }));
+  expect(card).toHaveAttribute('data-index', String(last));
+});
+
 /** What changed on a step is the name and the line; a screen reader hears them. */
 test('the name and the line about the person are a live region', () => {
   const section = mount();
