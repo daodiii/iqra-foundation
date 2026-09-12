@@ -4,7 +4,7 @@ import { ramp, sample } from '@/lib/ramp';
 export const GROW = 3.8;
 
 /**
- * Where the ground line sits in the stage and where the crown's top does, as fractions of
+ * Where the ground level sits in the stage and where the crown's top does, as fractions of
  * the stage's height. Exported because the section builds around them: the stage is
  * placed so the second lands under the top card, and the tests hold the figure to the
  * first. Typed here once, so neither can drift from the figure.
@@ -274,9 +274,8 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
   function draw(t: number) {
     const { W, H, GY, K, lights } = tree;
     ctx!.clearRect(0, 0, W, H);
-    const gl = ctx!.createLinearGradient(0, 0, W, 0);
-    gl.addColorStop(0, `rgba(${NAVY},0)`); gl.addColorStop(0.5, `rgba(${NAVY},0.35)`); gl.addColorStop(1, `rgba(${NAVY},0)`);
-    ctx!.strokeStyle = gl; ctx!.lineWidth = 1; ctx!.beginPath(); ctx!.moveTo(0, GY); ctx!.lineTo(W, GY); ctx!.stroke();
+    // No ground line. `GY` still says where the surface is — the seed lands on it, the
+    // roots start under it — but nothing draws it (the user, 2026-09-12: just the tree).
     /* Every stroke of the figure carries the bloom's own rose, softly. It is what keeps a
        one-pixel twig from reading as a scratch on the panel, and it is the difference
        between a diagram of a tree and a lit one. */
