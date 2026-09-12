@@ -94,3 +94,39 @@ export function drawStroke(ctx: CanvasRenderingContext2D, path: ArchPath, p: num
   ctx.arc(x, y, 2.6, 0, TAU);
   ctx.fill();
 }
+
+/** Where the pen leaves the top line open for a legend: this much either side of its box. */
+export const LEGEND_ROOM = 6;
+
+export type Gap = { from: number; to: number };
+
+/** The legend's box in the card's own coordinates, with the room either side. */
+export function legendGap(card: DOMRect, legend: DOMRect): Gap {
+  return { from: legend.left - card.left - LEGEND_ROOM, to: legend.right - card.left + LEGEND_ROOM };
+}
+
+/**
+ * The frame round a box, as one path the pen walks: a rounded rectangle of `W` × `H` with
+ * corners of radius `r`, drawn clockwise. With a `gap` the top line is left open for the
+ * legend — the pen starts at the gap's right end and ends at its left end, so the line
+ * opens and closes at the word. The bottom edge is always whole: a button sits over it,
+ * the line running on beneath. Without a gap the path is closed and starts where the
+ * top-left arc ends.
+ */
+export function framePath(W: number, H: number, r: number, gap?: Gap): ArchPath {
+  const line = (x0: number, y0: number, x1: number, y1: number): Seg => ({ type: 'line', x0, y0, x1, y1 });
+  const arc = (cx: number, cy: number, a0: number, a1: number): Seg => ({ type: 'arc', cx, cy, r, a0, a1 });
+  const start = gap ? gap.to : r;
+  const end = gap ? gap.from : r;
+  return makePath([
+    line(start, 0, W - r, 0),
+    arc(W - r, r, -Math.PI / 2, 0),
+    line(W, r, W, H - r),
+    arc(W - r, H - r, 0, Math.PI / 2),
+    line(W - r, H, r, H),
+    arc(r, H - r, Math.PI / 2, Math.PI),
+    line(0, H - r, 0, r),
+    arc(r, r, Math.PI, 1.5 * Math.PI),
+    line(r, 0, end, 0),
+  ]);
+}
