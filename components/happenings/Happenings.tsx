@@ -6,7 +6,6 @@ import wash from '@/components/wash.module.css';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
-import { createInkWhenNear, type InkHandle } from '@/lib/ink';
 import { createFrame, type FrameHandle, keepFramesFitted } from '@/lib/pen';
 import { createWaterWhenNear, type WaterHandle } from '@/lib/water';
 import styles from './happenings.module.css';
@@ -86,11 +85,11 @@ function dateParts(date: string | null): { day: string; month: string } {
  * to it when it appears. Nothing else on the page has a fixed point in it, which is what
  * makes this the one section you arrive at somewhere other than the start.
  *
- * Behind the row, the bridge between the ink boxes above and the water boxes below: the
- * page's own water (`lib/water.ts`, `film.bridge`) with the page's own inks dropped into it
- * (`lib/ink.ts` in its `over` mode, `film.drops`) — threads that fall in from the top,
- * unfurl, sink and thin out over the lit floor. Two canvases in one box; both are deferred
- * until the section is near and paused while it is off screen, like every other box.
+ * Behind the row, still water: the page's own water (`lib/water.ts`, `film.bridge`), sage,
+ * the shallowest box on the page. It used to have the page's inks raining into it — two
+ * simulations in one box — and was the loudest thing below the film for it; the ink went on
+ * 2026-09-12, «something much calmer». One canvas, deferred until the section is near and
+ * paused while it is off screen, like every other box.
  *
  * There is no content for either list yet, so every row is a bracketed placeholder held by
  * the production gate, and every picture is an empty frame; see `content/site.no.ts`. The
@@ -131,15 +130,11 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
       if (!section || !track) return;
       const reduced = reducedMotion();
 
-      // The water under and the ink over it: two simulations, one box. Each declines on
-      // its own where WebGL2 is missing and leaves the CSS still showing underneath.
+      // The water: one simulation, one box. It declines where WebGL2 is missing and leaves
+      // the CSS still showing underneath.
       const waterCanvas = section.querySelector<HTMLCanvasElement>('[data-water]');
-      const inkCanvas = section.querySelector<HTMLCanvasElement>('[data-ink]');
       const water: WaterHandle | null = waterCanvas
         ? createWaterWhenNear(waterCanvas, { reduced, floor: film.bridge, host: section })
-        : null;
-      const ink: InkHandle | null = inkCanvas
-        ? createInkWhenNear(inkCanvas, { reduced, palette: film.drops, host: section })
         : null;
 
       // The frame round every stop, drawn with the tree's pen — the ones scrolled out of
@@ -200,7 +195,6 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
         fitted();
         frames.forEach((f) => f.destroy());
         water?.destroy();
-        ink?.destroy();
       };
 
       if (reduced) {
@@ -274,10 +268,9 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
       </div>
 
       <div className={styles.pool}>
-        {/* The box spans the row, not the heading: the water under, the ink over. */}
+        {/* The box spans the row, not the heading. */}
         <div className={`${wash.box} ${wash.bridge} ${styles.box}`} data-box aria-hidden="true">
           <canvas className={wash.paint} data-water />
-          <canvas className={wash.paint} data-ink />
         </div>
 
         <div

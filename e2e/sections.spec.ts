@@ -317,7 +317,7 @@ test('desktop: støtt oss is one screen, one frame and one number', async ({ pag
  * The page walks the film's scenes and thins its material as it goes: ink on paper for the
  * sky and the cream, then ink dropped into clear water, then clear water over Arafat and
  * green water under the ask. Arrangementer · Nyheter has to stay between the ink boxes and
- * the water boxes — it is the bridge, the one box that is both — and Teamet has to stay
+ * the water boxes — the shallowest of them, the bridge — and Teamet has to stay
  * directly above Støtt oss, so the ask comes after the people who do the work. A reordering
  * would leave every section working and the page saying something else.
  */
@@ -381,15 +381,14 @@ test('desktop: om oss · teamet is water over Arafat, with the story and the tea
 });
 
 /**
- * The bridge: a box of the page's own water with the page's own ink dropped into it, the
- * row on glass over both. Two canvases, the water under and the ink over, and the box
- * carries the water's ground so a device without WebGL2 still sees lit water. What it must
- * not do is promise a page that does not exist — «Alle arrangementer →» is rendered from an
- * href in the content file, and there is none yet, so there is no link. A dead link here
- * would be the only thing on the site that answers a click by doing nothing, and no build
- * step would ever catch it.
+ * The row on still water: one canvas, the box carrying the water's ground so a device
+ * without WebGL2 still sees the sage. The ink that used to fall into it is gone, and a second
+ * layer here would be it coming back. What the section must not do is promise a page that
+ * does not exist — «Alle arrangementer →» is rendered from an href in the content file, and
+ * there is none yet, so there is no link. A dead link here would be the only thing on the
+ * site that answers a click by doing nothing, and no build step would ever catch it.
  */
-test('desktop: the row sits on ink in lit water and links to nothing that is not there', async ({ page, isMobile }) => {
+test('desktop: the row sits on still water and links to nothing that is not there', async ({ page, isMobile }) => {
   test.skip(isMobile, 'the phone has its own test for the rail');
   await pastHero(page);
   const top = await docTop(page, '#arrangementer');
@@ -408,7 +407,7 @@ test('desktop: the row sits on ink in lit water and links to nothing that is not
   await boxIsPainted(page, 'arrangementer', film.bridge.ground);
   const layers = await section.locator('[data-box] canvas').evaluateAll((els) =>
     els.map((c) => (c.hasAttribute('data-water') ? 'water' : c.hasAttribute('data-ink') ? 'ink' : '?')));
-  expect(layers, 'the water under, the ink over').toEqual(['water', 'ink']);
+  expect(layers, 'the water alone, no ink over it').toEqual(['water']);
   const hrefs = await section.locator('a').evaluateAll((els) => els.map((a) => a.getAttribute('href')));
   expect(hrefs.filter((h) => !h || h === '#'), 'a link that goes nowhere').toEqual([]);
 });

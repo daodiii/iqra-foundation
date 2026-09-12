@@ -1,11 +1,10 @@
 /*
- * Arrangementer · Nyheter, as one row on ink in lit water.
+ * Arrangementer · Nyheter, as one row on still water.
  *
  * The heading sits on the page's white; under it a box like every other section's holds
- * the row. The box is the bridge between the ink above and the water below — the page's
- * own water with the page's own inks dropped into it — and each card is a frame drawn on
- * it with the tree's pen, as every box on the page is. Nothing here draws a peg on a stop
- * any more: the row is the order, and «i dag» is the one thing standing in it.
+ * the row: sage water, the shallowest on the page, and each card is a frame drawn on it
+ * with the tree's pen, as every box on the page is. Nothing here draws a peg on a stop any
+ * more: the row is the order, and «i dag» is the one thing standing in it.
  */
 .happenings {
   position: relative;
@@ -156,9 +155,10 @@
 }
 
 /*
- * The row is on water — the bridge's floor — so the inside is milkier than on the ink
- * boxes above. Measured against the still with glyphs and canvases hidden (2026-09-12):
- * 0.5 gives the soft ink 5.4:1 and navy 7.2:1 at the darkest point under the copy.
+ * The row is on water, so the inside is milkier than on the ink boxes above. Measured
+ * against the old grey-blue still with glyphs and canvases hidden (2026-09-12): 0.5 gave
+ * the soft ink 5.4:1 and navy 7.2:1 at the darkest point under the copy. The sage floor
+ * that replaced it is lighter at every point, so the same fill clears by more.
  */
 .card {
   --frame-fill: 0.5;

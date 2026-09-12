@@ -2,12 +2,12 @@
  * The middle of the page. Visjon, Misjon, Om oss · Teamet and Støtt oss each sit in a box,
  * and the colour lives INSIDE the boxes — the page around them stays #ffffff, so what is in
  * them reads as something the sections hold rather than something spilled behind them.
- * Arrangementer · Nyheter, between the ink and the water, has no box at all: it is the
- * page's own white, and the breath that makes the change of material read as a change.
+ * Arrangementer · Nyheter keeps its heading on the page's own white and its row on the
+ * shallowest of the water boxes, the breath between the ink and the deeper water below.
  *
  * The colour is not a gradient. Each box carries a WebGL2 simulation painting one scene of
  * the hero film — pigment spreading through water in the top two (`lib/ink.ts`), and clear
- * water over a coloured floor in the two below (`lib/water.ts`), which is the page's whole
+ * water over a coloured floor in the three below (`lib/water.ts`), which is the page's whole
  * idea: the ink clears as you go down it. The gradients here are what is seen before that
  * starts, and what is left if it never can: a device without WebGL2 keeps them and loses
  * only the motion. They are mixed to sit where each scene settles, so the swap from one to
@@ -108,17 +108,17 @@
 }
 
 /**
- * The bridge: Arrangementer · Nyheter, ink dropped into lit water. The still is the water's
- * pools; the ink is only ever drawn live, so a device that declines sees lit water with no
- * ink in it, which is a complete answer.
+ * Arrangementer · Nyheter: still sage water, the shallowest box on the page (`film.bridge`,
+ * resolved at 0.3 rather than the page's 0.7 — the user's call, see `lib/film.ts`). The
+ * still is the water's pools at that depth's gain, in reverse.
  */
 .bridge {
-  --ground: #b5c6cf;
+  --ground: #c8d4ca;
   --still:
-    radial-gradient(35% 38% at 12% 80%, rgba(191, 208, 216, 0.29) 0%, transparent 70%),
-    radial-gradient(44% 49% at 56% 40%, rgba(232, 226, 210, 0.39) 0%, transparent 70%),
-    radial-gradient(40% 44% at 78% 74%, rgba(142, 166, 179, 0.41) 0%, transparent 70%),
-    radial-gradient(48% 53% at 22% 22%, rgba(244, 248, 250, 0.58) 0%, transparent 70%);
+    radial-gradient(33% 36% at 10% 84%, rgba(168, 188, 173, 0.26) 0%, transparent 70%),
+    radial-gradient(48% 53% at 58% 38%, rgba(205, 218, 207, 0.39) 0%, transparent 70%),
+    radial-gradient(40% 44% at 80% 78%, rgba(127, 151, 134, 0.35) 0%, transparent 70%),
+    radial-gradient(48% 53% at 20% 18%, rgba(236, 241, 236, 0.52) 0%, transparent 70%);
 }
 
 /**

@@ -83,15 +83,19 @@ test('every stop says whether it is something coming or something that was', () 
   expect(within(section).getAllByText(site.happenings.kinds.event)).toHaveLength(EVENTS.length);
 });
 
-/** The two canvases the material is drawn on: the water under, the ink over. Both inside
- *  the box, which is hidden from assistive tech; the row is what a screen reader gets. */
-test('the box holds the water and the ink, in that order, hidden from assistive tech', () => {
+/**
+ * One canvas in the box: the water. The ink that used to fall into it is gone — «something
+ * much calmer» (2026-09-12) — and this is the assertion that keeps it gone: a second canvas
+ * here would be the drops coming back. The box is hidden from assistive tech; the row is
+ * what a screen reader gets.
+ */
+test('the box holds the water alone, hidden from assistive tech', () => {
   const section = mount();
   const box = section.querySelector('[data-box]') as HTMLElement;
   expect(box).toHaveAttribute('aria-hidden', 'true');
   const canvases = Array.from(box.querySelectorAll('canvas'));
   expect(canvases.map((c) => (c.hasAttribute('data-water') ? 'water' : c.hasAttribute('data-ink') ? 'ink' : '?')))
-    .toEqual(['water', 'ink']);
+    .toEqual(['water']);
 });
 
 /**
