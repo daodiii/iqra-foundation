@@ -287,6 +287,19 @@ test('desktop: støtt oss is one screen, one frame and one number', async ({ pag
   await expect(section.getByRole('button')).toHaveCount(0);
 
   await expect(section.locator('[data-card]')).toHaveAttribute('data-frame-drawn', 'true', { timeout: 8_000 });
+  await expect(section.locator('[data-card-square]')).toHaveAttribute('data-frame-drawn', 'true', { timeout: 8_000 });
+  // The second square: as tall as it is wide, beside the first, its button sitting over its
+  // bottom edge the way Misjon's does.
+  const square = await page.evaluate(() => {
+    const first = document.querySelector('#stott-oss [data-card]')!.getBoundingClientRect();
+    const sq = document.querySelector('#stott-oss [data-card-square]') as HTMLElement;
+    const r = sq.getBoundingClientRect();
+    const btn = sq.querySelector('[data-pay]')!.getBoundingClientRect();
+    return { ratio: r.width / r.height, beside: r.left >= first.right, seat: btn.top + btn.height / 2 - r.bottom };
+  });
+  expect(Math.abs(square.ratio - 1), 'the card frame is not square').toBeLessThan(0.02);
+  expect(square.beside, 'the card frame is not beside the number').toBe(true);
+  expect(Math.abs(square.seat), 'the button is not on the bottom edge').toBeLessThan(2);
   const geometry = await page.evaluate(() => {
     const section = document.getElementById('stott-oss')!;
     const card = section.querySelector('[data-card]') as HTMLElement;
@@ -498,15 +511,19 @@ test('phone: no pins after the hero; the tree grows and every section stays legi
   await page.evaluate((y) => window.scrollTo(0, y + 10), stop);
   await page.waitForTimeout(800);
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
-  // One screen on the phone as well, and the number — the placeholder, wider than the
-  // digits — still inside its frame at this width.
+  // The two squares stack on the phone, the card under the number, so the section may run a
+  // little past one screen here — but not two — and the number, the placeholder wider than
+  // the digits, stays inside its frame at this width.
   await expect(page.locator('#stott-oss').getByText(site.support.vipps.value, { exact: true })).toBeVisible();
   const ask = await page.evaluate(() => {
     const section = document.getElementById('stott-oss')!;
     const number = section.querySelector('[data-number]') as HTMLElement;
-    return { screens: section.getBoundingClientRect().height / window.innerHeight, overflow: number.scrollWidth - number.clientWidth };
+    const first = section.querySelector('[data-card]')!.getBoundingClientRect();
+    const second = section.querySelector('[data-card-square]')!.getBoundingClientRect();
+    return { screens: section.getBoundingClientRect().height / window.innerHeight, overflow: number.scrollWidth - number.clientWidth, stacked: second.top >= first.bottom };
   });
-  expect(ask.screens, 'støtt oss is taller than the phone screen').toBeLessThanOrEqual(1.01);
+  expect(ask.screens, 'støtt oss runs far past the phone screen').toBeLessThanOrEqual(1.4);
+  expect(ask.stacked, 'the card square is not under the number').toBe(true);
   expect(ask.overflow, 'the number is wider than its line').toBeLessThanOrEqual(1);
 });
 

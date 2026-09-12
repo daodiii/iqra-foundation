@@ -251,6 +251,33 @@ export const site = {
      * it there: a bracket anywhere in this string holds a production build.
      */
     also: 'Du kan også overføre til kontonummer [KONTO], eller opprette fast trekk i nettbanken. Merk betalingen med navnet ditt.',
+    /**
+     * The second square: a card form, «just for the visuals» (2026-09-12). Nothing here is
+     * wired and nothing here is a control — every field is a drawn box with its placeholder
+     * written in it, the pay button is a span — and the drawing is hidden from assistive
+     * tech, which gets `notice` instead: the one honest line, that card payment is not
+     * connected yet. The placeholders are format hints, not missing content, so they are
+     * not bracketed; the production gate does not need to hold on them.
+     */
+    card: {
+      label: 'Kort',
+      amount: 'Beløp',
+      tiers: [200, 300, 500] as const,
+      /** The amount drawn as chosen, as an index into `tiers`; the button repeats it. */
+      preselect: 1,
+      other: 'Annet',
+      unit: 'kr',
+      number: 'Kortnummer',
+      numberPlaceholder: '1234 5678 9012 3456',
+      expiry: 'Utløpsdato',
+      expiryPlaceholder: 'MM / ÅÅ',
+      cvc: 'CVC',
+      cvcPlaceholder: '123',
+      name: 'Navn på kortet',
+      namePlaceholder: 'Som det står på kortet',
+      pay: 'Gi',
+      notice: 'Kortbetaling er ikke koblet til ennå. Bruk Vipps eller kontonummeret så lenge.',
+    },
     fields: {
       orgnr: 'Organisasjonsnummer',
     },
