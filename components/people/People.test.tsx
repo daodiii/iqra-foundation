@@ -1,4 +1,4 @@
-import { render, within } from '@testing-library/react';
+import { fireEvent, render, within } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import { site } from '@/content/site.no';
 import { People } from './People';
@@ -42,38 +42,44 @@ test('the team card takes its lede and its count line from the book’s second c
   expect(within(section).getByText(menneskene.paras[0])).toBeInTheDocument();
 });
 
-test('every member of the team gets a card: role, both names, the line about them', () => {
+/** One person at a time: the first, with everything the card says about them. */
+test('the member card opens on the first person: role, both names, the line, and the count', () => {
   const section = mount();
-  const list = within(section).getByRole('list', { name: site.people.teamLabel });
-  expect(list.children).toHaveLength(menneskene.team.length);
-  menneskene.team.forEach((member, i) => {
-    const row = list.children[i] as HTMLElement;
-    expect(row).toHaveTextContent(member.role);
-    expect(row).toHaveTextContent(member.first);
-    expect(row).toHaveTextContent(member.last);
-    expect(row).toHaveTextContent(member.bio);
-  });
+  const card = section.querySelector('[data-row]') as HTMLElement;
+  const [first] = menneskene.team;
+  expect(section.querySelectorAll('[data-row]')).toHaveLength(1);
+  expect(card).toHaveTextContent(first.role);
+  expect(card).toHaveTextContent(first.first);
+  expect(card).toHaveTextContent(first.last);
+  expect(card).toHaveTextContent(first.bio);
+  expect(card).toHaveTextContent(`1 / ${menneskene.team.length}`);
 });
 
 /**
- * Portrait left, then right, then left: six identical rows would be a column, and the
- * alternation is what makes them a sequence. The side is data rather than a class so the
- * stylesheet and the entrance (which slides the parts in from the portrait's side) read
- * the same value.
+ * The arrow is how you meet the next one, and after the last it comes round to the first:
+ * a button that stopped working on the sixth press would look broken, not finished.
  */
-test('the member cards alternate sides, starting on the left', () => {
+test('the arrow steps through every member and wraps to the first', () => {
   const section = mount();
-  const list = within(section).getByRole('list', { name: site.people.teamLabel });
-  const sides = Array.from(list.children).map((row) => (row as HTMLElement).dataset.side);
-  expect(sides).toEqual(menneskene.team.map((_, i) => (i % 2 ? 'right' : 'left')));
+  const next = within(section).getByRole('button', { name: site.people.next });
+  const card = section.querySelector('[data-row]') as HTMLElement;
+  menneskene.team.forEach((member, i) => {
+    expect(card).toHaveAttribute('data-index', String(i));
+    expect(card).toHaveTextContent(member.role);
+    expect(card).toHaveTextContent(`${i + 1} / ${menneskene.team.length}`);
+    fireEvent.click(next);
+  });
+  expect(card).toHaveAttribute('data-index', '0');
+  expect(card).toHaveTextContent(menneskene.team[0].role);
 });
 
-/** The round arrow goes to the chapter about the people; a dead button would be the only one on the site. */
-test('every member card’s arrow links to /om-oss', () => {
+/** What changed on a step is the name and the line; a screen reader hears them. */
+test('the name and the line about the person are a live region', () => {
   const section = mount();
-  const arrows = within(section).getAllByRole('link', { name: site.people.memberMore });
-  expect(arrows).toHaveLength(menneskene.team.length);
-  for (const a of arrows) expect(a).toHaveAttribute('href', '/om-oss');
+  const info = section.querySelector('[data-part="info"]');
+  expect(info).toHaveAttribute('aria-live', 'polite');
+  expect(info).toHaveTextContent(menneskene.team[0].first);
+  expect(info).toHaveTextContent(menneskene.team[0].bio);
 });
 
 /** No name, no face, no sentence about anyone is invented until there is someone to name. */

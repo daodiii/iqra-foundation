@@ -88,58 +88,42 @@
 }
 
 /*
- * The members. One card per person under the two above, spanning both grid columns, so
- * the section is the two cards and then a run of rows. The list is what carries the
- * spacing; the rows are cards of their own on the same water.
- */
-.members {
-  grid-column: 1 / -1;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 28px;
-}
-
-/*
- * Set from an editorial team card: the role above in small tracked caps, then the
- * portrait with the name block overlapping its inner edge. `--side` is 1 on a left row
- * and -1 on a right one, and everything mirrored below is mirrored by reading it.
+ * The member card. One person at a time, spanning both grid columns under the two cards,
+ * so the section is the two cards and then the one. Set from an editorial team card: the
+ * role above in small tracked caps with the count beside it, then the portrait with the
+ * name block overlapping its inner edge.
  */
 .row {
-  --side: 1;
   --portrait-w: clamp(220px, 27vw, 360px);
   --overlap: 32px;
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   gap: 18px;
   padding: clamp(32px, 3.4vw, 52px);
 }
 
-.row[data-side='right'] {
-  --side: -1;
-}
-
 .eyebrow {
   margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
-.row[data-side='right'] .eyebrow {
-  text-align: right;
+/* «1 / 6» — what the arrow does, said before it is pressed. Tabular so it does not
+   shuffle as the digit changes. */
+.counter {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
 }
 
 .body {
   display: flex;
   align-items: center;
-}
-
-.row[data-side='right'] .body {
-  flex-direction: row-reverse;
 }
 
 /* 360 × 500 in the original, at the width this section has; the ratio is kept. */
@@ -164,12 +148,6 @@
   margin-left: calc(var(--overlap) * -1);
 }
 
-.row[data-side='right'] .info {
-  align-items: flex-end;
-  margin-left: 0;
-  margin-right: calc(var(--overlap) * -1);
-}
-
 .display {
   margin: 0;
   display: flex;
@@ -179,10 +157,6 @@
   letter-spacing: -0.02em;
   color: var(--color-navy);
   text-wrap: balance;
-}
-
-.row[data-side='right'] .display {
-  text-align: right;
 }
 
 .first {
@@ -199,14 +173,10 @@
   gap: clamp(20px, 2.4vw, 32px);
 }
 
-.row[data-side='right'] .details {
-  flex-direction: row-reverse;
-}
-
 /*
- * The round arrow. Grows a little under the pointer and fills navy, the arrow turning up
- * towards the corner as in the original; `:active` is the press. Transforms only, so the
- * hover costs nothing but a composite.
+ * The round arrow: the next person. Grows a little under the pointer and fills navy, the
+ * arrow turning up towards the corner as in the original; `:active` is the press.
+ * Transforms only, so the hover costs nothing but a composite.
  */
 .go {
   flex: none;
@@ -215,6 +185,7 @@
   justify-content: center;
   width: 80px;
   height: 80px;
+  padding: 0;
   border-radius: 50%;
   /* Muted rather than hairline, and filled white: on the original the ring sits on a
      photograph and the picture draws it; here it sits half on a grey rectangle, and a
@@ -222,14 +193,21 @@
   border: 1px solid var(--color-muted);
   color: var(--color-ink-soft);
   background: #fff;
+  cursor: pointer;
   transition: transform 300ms var(--ease-out-expo), background-color 300ms, border-color 300ms, color 300ms;
 }
 
-.go:hover {
+.go:hover,
+.go:focus-visible {
   transform: scale(1.1);
   background: var(--color-navy);
   border-color: var(--color-navy);
   color: #fff;
+}
+
+.go:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 3px;
 }
 
 .go:active {
@@ -240,7 +218,8 @@
   transition: transform 300ms var(--ease-out-expo);
 }
 
-.go:hover .arrow {
+.go:hover .arrow,
+.go:focus-visible .arrow {
   transform: rotate(-45deg);
 }
 
@@ -253,10 +232,6 @@
   color: var(--color-ink-soft);
 }
 
-.row[data-side='right'] .bio {
-  text-align: right;
-}
-
 /*
  * The cards stack before the type gets too narrow to set. The story card keeps its measure
  * and the team goes under it, which is the reading order anyway.
@@ -267,31 +242,15 @@
     gap: 20px;
     padding: 80px var(--margin) 64px;
   }
-
-  .members {
-    gap: 20px;
-  }
 }
 
 /*
  * On a phone there is no room beside a portrait for a name at display size. The portrait
  * goes full width and shorter — a landscape crop, not a tall one — and the name and the
- * line stack under it. No overlap and no mirroring: every row reads the same way down.
+ * line stack under it, no overlap.
  */
 @media (max-width: 767px) {
-  .row,
-  .row[data-side='right'] {
-    --side: 1;
-  }
-
-  .row[data-side='right'] .eyebrow,
-  .row[data-side='right'] .display,
-  .row[data-side='right'] .bio {
-    text-align: left;
-  }
-
-  .body,
-  .row[data-side='right'] .body {
+  .body {
     flex-direction: column;
     align-items: stretch;
     gap: 22px;
@@ -302,10 +261,8 @@
     aspect-ratio: 4 / 3;
   }
 
-  .info,
-  .row[data-side='right'] .info {
+  .info {
     margin: 0;
-    align-items: flex-start;
     gap: 24px;
   }
 
@@ -313,9 +270,7 @@
     font-size: clamp(32px, 9vw, 40px);
   }
 
-  .details,
-  .row[data-side='right'] .details {
-    flex-direction: row;
+  .details {
     gap: 18px;
   }
 

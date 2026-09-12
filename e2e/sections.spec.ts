@@ -358,18 +358,32 @@ test('desktop: om oss · teamet is water over Arafat, with the story and the tea
   await expect(section.getByText(story.paras[2])).toHaveCount(0);
   await expect(section.getByRole('link', { name: new RegExp(site.people.more) }))
     .toHaveAttribute('href', '/om-oss');
-  const rows = section.getByRole('list', { name: site.people.teamLabel }).locator('li');
-  await expect(rows).toHaveCount(menneskene.team.length);
-  // One card per person, under the two: the first row is below the team card, and the
-  // portraits alternate sides — the first row's portrait is left of its name, the second's
-  // right of it.
+  // One card for one person at a time, under the two: it opens on the first member, sits
+  // below the team card with the portrait left of the name, and the arrow steps to the
+  // next — wrapping to the first after the last, so it never stops working.
+  const card = section.locator('[data-row]');
+  await expect(card).toHaveCount(1);
+  await expect(card).toContainText(menneskene.team[0].role);
+  await expect(card).toContainText(`1 / ${menneskene.team.length}`);
   const teamCard = section.getByText(menneskene.lede).locator('..');
-  expect((await rows.first().boundingBox())!.y).toBeGreaterThan(
+  expect((await card.boundingBox())!.y).toBeGreaterThan(
     (await teamCard.boundingBox())!.y + (await teamCard.boundingBox())!.height - 1);
-  const portrait = (i: number) => rows.nth(i).locator('[data-part="portrait"]');
-  const info = (i: number) => rows.nth(i).locator('[data-part="info"]');
-  expect((await portrait(0).boundingBox())!.x).toBeLessThan((await info(0).boundingBox())!.x);
-  expect((await portrait(1).boundingBox())!.x).toBeGreaterThan((await info(1).boundingBox())!.x);
+  expect((await card.locator('[data-part="portrait"]').boundingBox())!.x)
+    .toBeLessThan((await card.locator('[data-part="info"]').boundingBox())!.x);
+
+  await card.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1200);
+  const next = card.getByRole('button', { name: site.people.next });
+  for (let i = 1; i <= menneskene.team.length; i++) {
+    await next.click();
+    const at = i % menneskene.team.length;
+    await expect(card).toHaveAttribute('data-index', String(at));
+    await expect(card).toContainText(`${at + 1} / ${menneskene.team.length}`);
+  }
+  // After the last press the parts have arrived again, not been left half-hidden.
+  await page.waitForTimeout(1200);
+  const shown = await card.locator('[data-part="info"]').evaluate((el) => getComputedStyle(el).opacity);
+  expect(Number(shown)).toBe(1);
 });
 
 /**
@@ -510,8 +524,8 @@ test('phone: the cards stack, the axis stays an axis, and nothing pushes the pag
   expect(cards.length, 'the people cards').toBe(2);
   expect(cards[0].x, 'the people cards did not stack').toBe(cards[1].x);
   expect(cards[1].y, 'the people cards did not stack').toBeGreaterThan(cards[0].y);
-  // A member row on a phone is portrait over name, not beside it, and never mirrored.
-  const row = page.locator('#om-oss-teamet [data-row]').nth(1);
+  // The member card on a phone is portrait over name, not beside it.
+  const row = page.locator('#om-oss-teamet [data-row]');
   await row.scrollIntoViewIfNeeded();
   // Scrolling to it starts its entrance; measured mid-tween the portrait is still 5%
   // small and 30px low, and the boxes overlap by a couple of pixels that are not layout.
@@ -520,8 +534,8 @@ test('phone: the cards stack, the axis stays an axis, and nothing pushes the pag
     row.locator('[data-part="portrait"]').boundingBox(),
     row.locator('[data-part="info"]').boundingBox(),
   ]);
-  expect(info!.y, 'the member row did not stack').toBeGreaterThanOrEqual(portrait!.y + portrait!.height);
-  expect(Math.round(info!.x), 'the second row is still mirrored on a phone').toBe(Math.round(portrait!.x));
+  expect(info!.y, 'the member card did not stack').toBeGreaterThanOrEqual(portrait!.y + portrait!.height);
+  expect(Math.round(info!.x), 'the name is not under the portrait').toBe(Math.round(portrait!.x));
 
   const axisTop = await docTop(page, '#arrangementer');
   await page.evaluate((y) => window.scrollTo(0, y - 40), axisTop);
