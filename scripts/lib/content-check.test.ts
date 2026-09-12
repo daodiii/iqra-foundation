@@ -116,8 +116,12 @@ describe('contentPlaceholders', () => {
   test('the whole roster and both figures are found in the real content', () => {
     const paths = contentPlaceholders(site).map((p) => p.path);
     const team = site.about.chapters.find((c) => 'team' in c)!.team!;
+    // Three brackets per person — both names and the line about them — so the gate
+    // cannot pass with a name filled in and an invented sentence left under it.
     team.forEach((_, i) => {
-      expect(paths).toContain(`about.chapters[1].team[${i}].name`);
+      for (const slot of ['first', 'last', 'bio']) {
+        expect(paths).toContain(`about.chapters[1].team[${i}].${slot}`);
+      }
     });
     const figures = site.about.chapters.find((c) => 'figures' in c)!.figures!;
     figures.forEach((_, i) => {

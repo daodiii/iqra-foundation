@@ -87,53 +87,149 @@
   text-decoration: underline;
 }
 
-.team {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 22px;
-}
-
-.member {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 0;
-  border-top: 1px solid var(--color-hairline);
-}
-
-/* The first row of each column sits directly under the count line, so it keeps its rule;
-   the grid means «first row» is the first two items rather than the first one. */
-.team > li:nth-child(-n + 2) {
-  border-top: 1px solid var(--color-hairline);
-}
-
-.photo {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--color-hairline);
-}
-
-.who {
+/*
+ * The member card. One person at a time, spanning both grid columns under the two cards,
+ * so the section is the two cards and then the one. Set from an editorial team card: the
+ * role above in small tracked caps with the count beside it, then the portrait with the
+ * name block overlapping its inner edge.
+ */
+.row {
+  --portrait-w: clamp(220px, 27vw, 360px);
+  --overlap: 32px;
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  gap: 18px;
+  padding: clamp(32px, 3.4vw, 52px);
 }
 
-.name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-navy);
-}
-
-.role {
-  font-size: 13px;
+.eyebrow {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
   color: var(--color-muted);
+}
+
+/* «1 / 6» — what the arrow does, said before it is pressed. Tabular so it does not
+   shuffle as the digit changes. */
+.counter {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+}
+
+.body {
+  display: flex;
+  align-items: center;
+}
+
+/* 360 × 500 in the original, at the width this section has; the ratio is kept. */
+.portrait {
+  flex: none;
+  width: var(--portrait-w);
+  aspect-ratio: 360 / 500;
+  background: var(--color-hairline);
+  /* The original's grain: a little weight at the foot of the photograph. */
+  background-image: linear-gradient(to top, rgba(20, 30, 42, 0.12), transparent 40%);
+}
+
+/* The name block sits ON the portrait's inner edge, by exactly the overlap. */
+.info {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 4vw, 56px);
+  margin-left: calc(var(--overlap) * -1);
+}
+
+.display {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(36px, 3.8vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
+  text-wrap: balance;
+}
+
+.first {
+  font-weight: 200;
+}
+
+.last {
+  font-weight: 400;
+}
+
+.details {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(20px, 2.4vw, 32px);
+}
+
+/*
+ * The round arrow: the next person. Grows a little under the pointer and fills navy, the
+ * arrow turning up towards the corner as in the original; `:active` is the press.
+ * Transforms only, so the hover costs nothing but a composite.
+ */
+.go {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  border-radius: 50%;
+  /* Muted rather than hairline, and filled white: on the original the ring sits on a
+     photograph and the picture draws it; here it sits half on a grey rectangle, and a
+     hairline over that was a circle nobody could see. */
+  border: 1px solid var(--color-muted);
+  color: var(--color-ink-soft);
+  background: #fff;
+  cursor: pointer;
+  transition: transform 300ms var(--ease-out-expo), background-color 300ms, border-color 300ms, color 300ms;
+}
+
+.go:hover,
+.go:focus-visible {
+  transform: scale(1.1);
+  background: var(--color-navy);
+  border-color: var(--color-navy);
+  color: #fff;
+}
+
+.go:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 3px;
+}
+
+.go:active {
+  transform: scale(0.95);
+}
+
+.arrow {
+  transition: transform 300ms var(--ease-out-expo);
+}
+
+.go:hover .arrow,
+.go:focus-visible .arrow {
+  transform: rotate(-45deg);
+}
+
+/* The line about the person: a short measure beside the arrow, as in the original. */
+.bio {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-ink-soft);
 }
 
 /*
@@ -148,13 +244,42 @@
   }
 }
 
-/* A 40px circle, a name and a role do not fit in half a phone. */
+/*
+ * On a phone there is no room beside a portrait for a name at display size. The portrait
+ * goes full width and shorter — a landscape crop, not a tall one — and the name and the
+ * line stack under it, no overlap.
+ */
 @media (max-width: 767px) {
-  .team {
-    grid-template-columns: minmax(0, 1fr);
+  .body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 22px;
   }
 
-  .team > li:nth-child(2) {
-    border-top: 1px solid var(--color-hairline);
+  .portrait {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+  }
+
+  .info {
+    margin: 0;
+    gap: 24px;
+  }
+
+  .display {
+    font-size: clamp(32px, 9vw, 40px);
+  }
+
+  .details {
+    gap: 18px;
+  }
+
+  .go {
+    width: 60px;
+    height: 60px;
+  }
+
+  .bio {
+    max-width: none;
   }
 }

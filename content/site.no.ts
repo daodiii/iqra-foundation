@@ -200,6 +200,8 @@ export const site = {
     /** Chapter II is «Menneskene» inside the book; on the landing page it is the team. */
     teamLabel: 'Teamet',
     more: 'Les hele historien',
+    /** The round arrow on the member card: it steps to the next person. */
+    next: 'Neste',
     sectionLabel: 'Om oss og teamet',
   },
   about: {
@@ -230,13 +232,18 @@ export const site = {
         title: 'Menneskene',
         lede: 'Ingen av oss gjør dette på heltid. Vi gjør det fordi vi liker samtalene.',
         paras: ['Rundt tjue stykker. Studenter, lærere, en snekker, to sykepleiere.'],
+        /*
+         * Every slot is still a bracket: no name, no face, no sentence about anyone has been
+         * invented. The landing page sets these as one card per person, which is why the name
+         * is in two parts and why each has a line for who they are.
+         */
         team: [
-          { name: '[Navn]', role: 'Leder' },
-          { name: '[Navn]', role: 'Nestleder' },
-          { name: '[Navn]', role: 'Styremedlem' },
-          { name: '[Navn]', role: 'Frivillig' },
-          { name: '[Navn]', role: 'Frivillig' },
-          { name: '[Navn]', role: 'Frivillig' },
+          { first: '[Fornavn]', last: '[Etternavn]', role: 'Leder', bio: '[Et par setninger om hvem dette er]' },
+          { first: '[Fornavn]', last: '[Etternavn]', role: 'Nestleder', bio: '[Et par setninger om hvem dette er]' },
+          { first: '[Fornavn]', last: '[Etternavn]', role: 'Styremedlem', bio: '[Et par setninger om hvem dette er]' },
+          { first: '[Fornavn]', last: '[Etternavn]', role: 'Frivillig', bio: '[Et par setninger om hvem dette er]' },
+          { first: '[Fornavn]', last: '[Etternavn]', role: 'Frivillig', bio: '[Et par setninger om hvem dette er]' },
+          { first: '[Fornavn]', last: '[Etternavn]', role: 'Frivillig', bio: '[Et par setninger om hvem dette er]' },
         ],
       },
       {

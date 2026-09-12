@@ -1,4 +1,4 @@
-import { render, within } from '@testing-library/react';
+import { fireEvent, render, within } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import { site } from '@/content/site.no';
 import { People } from './People';
@@ -42,12 +42,52 @@ test('the team card takes its lede and its count line from the book’s second c
   expect(within(section).getByText(menneskene.paras[0])).toBeInTheDocument();
 });
 
-test('every member of the team is listed, with their role', () => {
+/** One person at a time: the first, with everything the card says about them. */
+test('the member card opens on the first person: role, both names, the line, and the count', () => {
   const section = mount();
-  const list = within(section).getByRole('list', { name: site.people.teamLabel });
-  expect(list.children).toHaveLength(menneskene.team.length);
-  for (const { role } of menneskene.team) {
-    expect(within(list).getAllByText(role).length).toBeGreaterThan(0);
+  const card = section.querySelector('[data-row]') as HTMLElement;
+  const [first] = menneskene.team;
+  expect(section.querySelectorAll('[data-row]')).toHaveLength(1);
+  expect(card).toHaveTextContent(first.role);
+  expect(card).toHaveTextContent(first.first);
+  expect(card).toHaveTextContent(first.last);
+  expect(card).toHaveTextContent(first.bio);
+  expect(card).toHaveTextContent(`1 / ${menneskene.team.length}`);
+});
+
+/**
+ * The arrow is how you meet the next one, and after the last it comes round to the first:
+ * a button that stopped working on the sixth press would look broken, not finished.
+ */
+test('the arrow steps through every member and wraps to the first', () => {
+  const section = mount();
+  const next = within(section).getByRole('button', { name: site.people.next });
+  const card = section.querySelector('[data-row]') as HTMLElement;
+  menneskene.team.forEach((member, i) => {
+    expect(card).toHaveAttribute('data-index', String(i));
+    expect(card).toHaveTextContent(member.role);
+    expect(card).toHaveTextContent(`${i + 1} / ${menneskene.team.length}`);
+    fireEvent.click(next);
+  });
+  expect(card).toHaveAttribute('data-index', '0');
+  expect(card).toHaveTextContent(menneskene.team[0].role);
+});
+
+/** What changed on a step is the name and the line; a screen reader hears them. */
+test('the name and the line about the person are a live region', () => {
+  const section = mount();
+  const info = section.querySelector('[data-part="info"]');
+  expect(info).toHaveAttribute('aria-live', 'polite');
+  expect(info).toHaveTextContent(menneskene.team[0].first);
+  expect(info).toHaveTextContent(menneskene.team[0].bio);
+});
+
+/** No name, no face, no sentence about anyone is invented until there is someone to name. */
+test('every slot on every member card is still a bracket', () => {
+  for (const m of menneskene.team) {
+    expect(m.first).toMatch(/^\[.+\]$/);
+    expect(m.last).toMatch(/^\[.+\]$/);
+    expect(m.bio).toMatch(/^\[.+\]$/);
   }
 });
 

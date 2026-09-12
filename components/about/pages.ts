@@ -17,7 +17,10 @@ const HAIRLINE = '#e3e7ec';
 const STOCK = '#f7f2e7';
 
 export type Figure = { value: string; label: string };
-export type Member = { name: string; role: string };
+export type Member = { first: string; last: string; role: string; bio: string };
+
+/** The book sets a member on one line; the landing page sets the two names on two. */
+export const fullName = (m: Member) => `${m.first} ${m.last}`;
 
 export type Face =
   | { kind: 'cover'; mark: string; title: string; sub: string }
@@ -133,7 +136,7 @@ export function drawFace(face: Face, W: number, H: number): HTMLCanvasElement {
       for (const m of face.team) {
         c.fillStyle = NAVY;
         c.font = '500 30px Geist, sans-serif';
-        c.fillText(m.name, M, y);
+        c.fillText(fullName(m), M, y);
         c.fillStyle = MUTED;
         c.font = '500 19px Geist, sans-serif';
         c.fillText(m.role, W - M - c.measureText(m.role).width, y - 2);

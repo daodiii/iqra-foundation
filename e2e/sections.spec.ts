@@ -359,8 +359,32 @@ test('desktop: om oss · teamet is water over Arafat, with the story and the tea
   await expect(section.getByText(story.paras[2])).toHaveCount(0);
   await expect(section.getByRole('link', { name: new RegExp(site.people.more) }))
     .toHaveAttribute('href', '/om-oss');
-  await expect(section.getByRole('list', { name: site.people.teamLabel }).locator('li'))
-    .toHaveCount(menneskene.team.length);
+  // One card for one person at a time, under the two: it opens on the first member, sits
+  // below the team card with the portrait left of the name, and the arrow steps to the
+  // next — wrapping to the first after the last, so it never stops working.
+  const card = section.locator('[data-row]');
+  await expect(card).toHaveCount(1);
+  await expect(card).toContainText(menneskene.team[0].role);
+  await expect(card).toContainText(`1 / ${menneskene.team.length}`);
+  const teamCard = section.getByText(menneskene.lede).locator('..');
+  expect((await card.boundingBox())!.y).toBeGreaterThan(
+    (await teamCard.boundingBox())!.y + (await teamCard.boundingBox())!.height - 1);
+  expect((await card.locator('[data-part="portrait"]').boundingBox())!.x)
+    .toBeLessThan((await card.locator('[data-part="info"]').boundingBox())!.x);
+
+  await card.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1200);
+  const next = card.getByRole('button', { name: site.people.next });
+  for (let i = 1; i <= menneskene.team.length; i++) {
+    await next.click();
+    const at = i % menneskene.team.length;
+    await expect(card).toHaveAttribute('data-index', String(at));
+    await expect(card).toContainText(`${at + 1} / ${menneskene.team.length}`);
+  }
+  // After the last press the parts have arrived again, not been left half-hidden.
+  await page.waitForTimeout(1200);
+  const shown = await card.locator('[data-part="info"]').evaluate((el) => getComputedStyle(el).opacity);
+  expect(Number(shown)).toBe(1);
 });
 
 /**
@@ -495,11 +519,24 @@ test('phone: the cards stack, the axis stays an axis, and nothing pushes the pag
   const peopleTop = await docTop(page, '#om-oss-teamet');
   await page.evaluate((y) => window.scrollTo(0, y - 40), peopleTop);
   await page.waitForTimeout(500);
-  const cards = await page.locator('#om-oss-teamet [class*="card"]').evaluateAll((els) =>
+  // The two chapter cards carry `data-rise`; the member rows below them are `data-row`.
+  const cards = await page.locator('#om-oss-teamet [data-rise]').evaluateAll((els) =>
     els.map((el) => { const r = el.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y) }; }));
   expect(cards.length, 'the people cards').toBe(2);
   expect(cards[0].x, 'the people cards did not stack').toBe(cards[1].x);
   expect(cards[1].y, 'the people cards did not stack').toBeGreaterThan(cards[0].y);
+  // The member card on a phone is portrait over name, not beside it.
+  const row = page.locator('#om-oss-teamet [data-row]');
+  await row.scrollIntoViewIfNeeded();
+  // Scrolling to it starts its entrance; measured mid-tween the portrait is still 5%
+  // small and 30px low, and the boxes overlap by a couple of pixels that are not layout.
+  await page.waitForTimeout(1200);
+  const [portrait, info] = await Promise.all([
+    row.locator('[data-part="portrait"]').boundingBox(),
+    row.locator('[data-part="info"]').boundingBox(),
+  ]);
+  expect(info!.y, 'the member card did not stack').toBeGreaterThanOrEqual(portrait!.y + portrait!.height);
+  expect(Math.round(info!.x), 'the name is not under the portrait').toBe(Math.round(portrait!.x));
 
   const axisTop = await docTop(page, '#arrangementer');
   await page.evaluate((y) => window.scrollTo(0, y - 40), axisTop);
