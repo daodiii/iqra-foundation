@@ -23,7 +23,9 @@
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 1.8vh, 22px);
-  padding: clamp(88px, 12vh, 140px) var(--margin);
+  /* 112 at least on top: the head's legend stands on its edge and has to clear the header's
+     haze, which runs out at 104px. */
+  padding: clamp(112px, 12vh, 140px) var(--margin) clamp(88px, 12vh, 140px);
 }
 
 /* A query container, so the heading below can be sized against this card's own width. The
