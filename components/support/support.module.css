@@ -36,7 +36,7 @@
 .card {
   --frame-fill: 0.68;
   container-type: inline-size;
-  width: min(100%, 820px);
+  width: min(100%, 720px);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -76,8 +76,10 @@
 }
 
 /*
- * The number. As large as the screen allows — a width term, a height term, a ceiling — and
- * then one more: it may never run out of the frame. The last term is the fit, and it is
+ * The number. Large, but not the billboard it was first built as: 168px at the top end
+ * read as too much of the screen («make it smaller», 2026-09-12), so the ceiling is 124px
+ * and five digits run to about 350px. A width term, a height term, the ceiling — and then
+ * one more: it may never run out of the frame. The last term is the fit, and it is
  * arithmetic rather than measurement: `--chars` is the string's length, set inline from
  * the content, and 0.62em is a safe width per character for this face at this weight and
  * tracking (digits are narrower, «[NUMMER]» is not). Five digits never reach that term at
@@ -89,7 +91,7 @@
  */
 .number {
   display: block;
-  font-size: min(11.5vw, 19vh, 168px, calc(100cqi / (var(--chars) * 0.62)));
+  font-size: min(8.5vw, 14vh, 124px, calc(100cqi / (var(--chars) * 0.62)));
   font-weight: 600;
   letter-spacing: -0.05em;
   line-height: 0.92;
@@ -127,6 +129,6 @@
   }
 
   .number {
-    font-size: min(21vw, calc(100cqi / (var(--chars) * 0.62)));
+    font-size: min(16vw, calc(100cqi / (var(--chars) * 0.62)));
   }
 }
