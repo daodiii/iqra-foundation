@@ -416,7 +416,11 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) return null;
     gl.viewport(0, 0, w, h);
-    gl.clearColor(0, 0, 0, 1);
+    // Empty, in every channel. The dye's fourth channel is the density the `over` show pass
+    // reads, and a texture cleared to alpha 1 is a box full of ink before anything is dropped
+    // in — which is exactly what it was, and it drew the whole box dark. Nothing else reads
+    // the alpha, and the one- and two-channel fields have none to clear.
+    gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     const t: Target = {
       tex, fb, w, h, texel: [1 / w, 1 / h],
