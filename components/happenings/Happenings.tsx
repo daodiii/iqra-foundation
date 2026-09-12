@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import wash from '@/components/wash.module.css';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
@@ -55,6 +55,15 @@ function isoToday(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+/*
+ * Today is the client's: null on the server and through hydration, the visitor's date after.
+ * An external store with nothing to subscribe to is how React is told that — the server
+ * snapshot and the client snapshot differ on purpose, and React re-renders with the client's
+ * once the page is live, without a state set inside an effect.
+ */
+const never = () => () => {};
+const useToday = () => useSyncExternalStore(never, isoToday, () => null);
+
 /** The day set large and the month beside it, both from the date — or the brackets. */
 function dateParts(date: string | null): { day: string; month: string } {
   if (!date) return happenings.undated;
@@ -88,8 +97,7 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
   const rail = useRef<HTMLDivElement>(null);
   const back = useRef<HTMLButtonElement>(null);
   const forward = useRef<HTMLButtonElement>(null);
-  const [today, setToday] = useState<string | null>(null);
-  useEffect(() => { setToday(isoToday()); }, []);
+  const today = useToday();
 
   /*
    * Arrive at today, not at the start of history — once it is on the row. Set on the rail's
