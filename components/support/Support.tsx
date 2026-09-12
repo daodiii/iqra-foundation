@@ -5,26 +5,31 @@ import wash from '@/components/wash.module.css';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
-import { createFrame, keepFramesFitted } from '@/lib/pen';
+import { createFrame, type FrameHandle, keepFramesFitted } from '@/lib/pen';
 import { createWaterWhenNear } from '@/lib/water';
 import { setWordmarkOnDark } from '@/lib/wordmark';
 import styles from './support.module.css';
 
 const support = site.support;
+const card = support.card;
 
 /**
- * Støtt oss: one screen, one number.
+ * Støtt oss: one screen, two squares.
  *
  * It was a checkout — the head, three route frames, a night card with an amount picker and
  * a QR, a tax note — a screen and a half of boxes, and the one control in it led nowhere,
- * because nothing is wired to a payment. The user's call (2026-09-12): «way too big», and
- * then, of three grounds shown, the green water. So the section says one thing now. The
- * green water is the box, and inside it one frame drawn with the tree's pen holds the
- * question, the Vipps number set large, and one sentence about the other ways to give.
+ * because nothing is wired to a payment. The user's call (2026-09-12): «way too big», then
+ * the green water of three grounds shown, then, once that was live, «make it more like a
+ * square and have another square in the same section with card payment, just for the
+ * visuals». So: the green water is the box, and on it two squares drawn with the tree's
+ * pen. The first holds the question, the Vipps number set large and one sentence about the
+ * other ways to give. The second is a card form that is a picture of one.
  *
  * Nothing here is a control. The number is text — the one kind of giving that needs nothing
  * built is a number you copy into your own app — and it stays bracketed until the real one
- * arrives, which is what holds the production build (`scripts/check-content.mjs`).
+ * arrives, which is what holds the production build (`scripts/check-content.mjs`). The form's
+ * fields are drawn boxes and its button is a span; the drawing is hidden from assistive
+ * tech, which is handed the one honest line under it instead.
  */
 export function Support() {
   const root = useRef<HTMLElement>(null);
@@ -53,19 +58,21 @@ export function Support() {
         onRefresh: (self) => { if (self.isActive) setWordmarkOnDark(false); },
       });
 
-      const card = section.querySelector<HTMLElement>('[data-card]');
-      const frame = card ? createFrame(card) : null;
-      const fitted = keepFramesFitted(frame ? [frame] : []);
-      frame?.layout();
+      // The two squares, drawn with the tree's pen.
+      const frames = Array.from(section.querySelectorAll<HTMLCanvasElement>('[data-frame-canvas]'))
+        .map((c) => (c.parentElement ? createFrame(c.parentElement) : null))
+        .filter((f): f is FrameHandle => f !== null);
+      const fitted = keepFramesFitted(frames);
+      frames.forEach((f) => f.layout());
 
       const stop = () => {
         watcher.kill();
         fitted();
-        frame?.destroy();
+        frames.forEach((f) => f.destroy());
         water?.destroy();
       };
       if (reduced) {
-        if (frame) { frame.p = 1; frame.draw(); }
+        frames.forEach((f) => { f.p = 1; f.draw(); });
         return stop;
       }
 
@@ -78,8 +85,10 @@ export function Support() {
 
       const tl = gsap.timeline({ paused: true });
       tl.to(rise, { opacity: 1, y: 0, duration: 0.95, ease: EASE.out, stagger: 0.09 });
-      // The pen draws the frame as the first line rises.
-      if (frame) tl.to(frame, { p: 1, duration: 1.1, ease: EASE.none, onUpdate: () => frame.draw() }, 0);
+      // The pen draws the first square as the first line rises, the second a beat later.
+      frames.forEach((f, i) => {
+        tl.to(f, { p: 1, duration: 1.1, ease: EASE.none, onUpdate: () => f.draw() }, i * 0.18);
+      });
       const entrance = ScrollTrigger.create({
         trigger: section, start: 'top 72%', once: true, onEnter: () => tl.play(),
       });
@@ -113,6 +122,55 @@ export function Support() {
             <span className={styles.numberLabel}>{support.vipps.label}</span>
           </p>
           <p className={styles.also} data-rise>{support.also}</p>
+        </div>
+
+        <div className={`${wash.frameOnWater} ${styles.card} ${styles.cardSquare}`} data-card-square>
+          <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
+          <p className={`${wash.legend} ${styles.label}`} data-legend>{card.label}</p>
+          {/* A drawing of a form: boxes with their placeholders written in, chips with one
+              pressed, and a button that is a span. Hidden from assistive tech as a whole,
+              because a screen reader offered these as fields would be offered a form that
+              goes nowhere; what it gets is the notice below. */}
+          <div className={styles.form} data-card-form aria-hidden="true" data-rise>
+            <div className={styles.field}>
+              <span className={styles.fieldLabel}>{card.amount}</span>
+              <div className={styles.chips}>
+                {card.tiers.map((kr, i) => (
+                  <span key={kr} className={styles.chip} data-pressed={i === card.preselect}>{kr} {card.unit}</span>
+                ))}
+                <span className={styles.chip}>{card.other}</span>
+              </div>
+            </div>
+            <div className={styles.field}>
+              <span className={styles.fieldLabel}>{card.number}</span>
+              <div className={`${styles.input} ${styles.placeholder}`}>
+                {card.numberPlaceholder}
+                <svg className={styles.cardIcon} viewBox="0 0 22 16" aria-hidden="true">
+                  <rect x="0.5" y="0.5" width="21" height="15" rx="2.5" fill="none" stroke="currentColor" />
+                  <rect x="1" y="4" width="20" height="3" fill="currentColor" />
+                </svg>
+              </div>
+            </div>
+            <div className={styles.two}>
+              <div className={styles.field}>
+                <span className={styles.fieldLabel}>{card.expiry}</span>
+                <div className={`${styles.input} ${styles.placeholder}`}>{card.expiryPlaceholder}</div>
+              </div>
+              <div className={styles.field}>
+                <span className={styles.fieldLabel}>{card.cvc}</span>
+                <div className={`${styles.input} ${styles.placeholder}`}>{card.cvcPlaceholder}</div>
+              </div>
+            </div>
+            <div className={styles.field}>
+              <span className={styles.fieldLabel}>{card.name}</span>
+              <div className={`${styles.input} ${styles.placeholder}`}>{card.namePlaceholder}</div>
+            </div>
+          </div>
+          <p className={styles.notice} data-rise>{card.notice}</p>
+          {/* The rise is on the button, never on the seat: the seat is placed by a transform, and a tween on it would overwrite that. */}
+          <span className={`${wash.seat} ${styles.seat}`} data-seat>
+            <span className={styles.pay} data-pay data-rise aria-hidden="true">{card.pay} {card.tiers[card.preselect]} {card.unit}</span>
+          </span>
         </div>
       </div>
     </section>

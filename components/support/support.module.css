@@ -1,10 +1,12 @@
 /*
- * The ask, at the foot of the page: one screen, one number.
+ * The ask, at the foot of the page: one screen, two squares.
  *
- * The green water is the box and one frame sits in it, left, with water to its right —
- * the same frame every box on the site is drawn with, holding the question, the Vipps
- * number and one sentence. The section is as tall as the screen and no taller, which is
- * the whole brief: what stood here before ran to a screen and a half.
+ * The green water is the box and two squares sit on it — the same frame every box on the
+ * site is drawn with, as tall as they are wide. The first holds the question, the Vipps
+ * number and one sentence; the second a card form that is a picture of one. The section is
+ * as tall as the screen and no taller on a desktop, which is the whole brief: what stood
+ * here before ran to a screen and a half. On a phone the squares stack and it runs a
+ * little past one.
  */
 .support {
   position: relative;
@@ -19,6 +21,10 @@
   position: relative;
   z-index: 1;
   width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(18px, 2vw, 28px);
+  align-items: start;
   /* 112 at least on top: the legend stands on the frame's edge and has to clear the
      header's haze, which runs out at 104px. */
   padding: clamp(112px, 12vh, 140px) var(--margin) clamp(88px, 12vh, 140px);
@@ -36,16 +42,24 @@
 .card {
   --frame-fill: 0.68;
   container-type: inline-size;
-  width: min(100%, 720px);
+  /* A square: as wide as half the measure allows, and as tall as it is wide. */
+  width: min(100%, 480px);
+  aspect-ratio: 1;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: clamp(40px, 4.2vw, 56px) clamp(30px, 3.6vw, 52px) clamp(30px, 3.2vw, 44px);
+  padding: clamp(32px, 3.4vw, 44px) clamp(26px, 2.8vw, 40px) clamp(26px, 2.6vw, 36px);
 }
 
-/* Everything the frame holds sits above the pen's canvas — but not the legend, which `wash.legend` positions. */
-.card > :not(canvas, [data-legend]) {
+/* The second square sits at the right edge of the measure, the water between the two. */
+.cardSquare {
+  justify-self: end;
+}
+
+/* Everything the frame holds sits above the pen's canvas — but not the legend or the seat,
+   which `wash.legend` and `wash.seat` position on the frame's edges. */
+.card > :not(canvas, [data-legend], [data-seat]) {
   position: relative;
   z-index: 1;
 }
@@ -57,10 +71,10 @@
   color: var(--color-ink-soft);
 }
 
-/* The question, set like Misjon's lines: the same weight and scale, one line of it. */
+/* The question, set like Misjon's lines: the same weight, a step down in scale for the square. */
 .title {
-  margin: 0 0 clamp(28px, 4.4vh, 44px);
-  font-size: clamp(22px, 2.3vw, 34px);
+  margin: 0 0 clamp(20px, 3vh, 30px);
+  font-size: clamp(20px, 1.9vw, 28px);
   font-weight: 500;
   letter-spacing: -0.028em;
   line-height: 1.2;
@@ -68,18 +82,18 @@
 }
 
 .vipps {
-  margin: 0 0 clamp(28px, 4.4vh, 40px);
+  margin: 0 0 clamp(20px, 3vh, 28px);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
 }
 
 /*
  * The number. Large, but not the billboard it was first built as: 168px at the top end
- * read as too much of the screen («make it smaller», 2026-09-12), so the ceiling is 124px
- * and five digits run to about 350px. A width term, a height term, the ceiling — and then
- * one more: it may never run out of the frame. The last term is the fit, and it is
+ * read as too much of the screen («make it smaller», 2026-09-12), so the ceiling is 128px —
+ * what the square was approved with — and five digits run to about 365px. A width term, a
+ * height term, the ceiling — and then one more: it may never run out of the frame. The last term is the fit, and it is
  * arithmetic rather than measurement: `--chars` is the string's length, set inline from
  * the content, and 0.62em is a safe width per character for this face at this weight and
  * tracking (digits are narrower, «[NUMMER]» is not). Five digits never reach that term at
@@ -91,7 +105,7 @@
  */
 .number {
   display: block;
-  font-size: min(8.5vw, 14vh, 124px, calc(100cqi / (var(--chars) * 0.62)));
+  font-size: min(8.5vw, 14vh, 128px, calc(100cqi / (var(--chars) * 0.62)));
   font-weight: 600;
   letter-spacing: -0.05em;
   line-height: 0.92;
@@ -107,17 +121,146 @@
 }
 
 .also {
-  margin: 0;
+  /* At the foot of the square, whatever the number's height leaves above it. */
+  margin: auto 0 0;
   /* px, not ch: a `ch` measure moves when the face swaps. */
-  max-width: 540px;
-  font-size: 14px;
+  max-width: 420px;
+  font-size: 13.5px;
   line-height: 1.5;
   color: var(--color-ink-soft);
 }
 
+/*
+ * The card square's form: a picture of one. Boxes with their placeholders written in, the
+ * amount chips with one pressed, a button in a seat over the bottom edge. Nothing here is
+ * an element a browser would let a visitor operate, which is the point.
+ */
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fieldLabel {
+  font: 500 11px/1 var(--font-sans);
+  letter-spacing: 0.03em;
+  color: var(--color-ink-soft);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  font: 500 13px/1 var(--font-sans);
+  padding: 9px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(42, 57, 75, 0.22);
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--color-navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip[data-pressed='true'] {
+  background: var(--color-navy);
+  border-color: var(--color-navy);
+  color: #ffffff;
+}
+
+.input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(42, 57, 75, 0.22);
+  background: rgba(255, 255, 255, 0.55);
+  font: 400 14px/1 var(--font-sans);
+  color: var(--color-navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.placeholder {
+  color: var(--color-muted);
+}
+
+.cardIcon {
+  width: 22px;
+  height: 16px;
+  flex: none;
+  margin-left: auto;
+  color: var(--color-muted);
+}
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* The honest line, and the only part of the form a screen reader is given. */
+.notice {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-ink-soft);
+}
+
+/* The seat is placed by `wash.seat`; the button's distance from the square's left edge is its padding. */
+.seat {
+  left: clamp(26px, 2.8vw, 40px);
+}
+
+.pay {
+  display: inline-flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  background: var(--color-crimson);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 10px 24px -14px rgba(171, 82, 99, 0.7);
+}
+
+/* Narrower than two squares side by side: they stack, and stop being square. */
+@media (max-width: 900px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .card {
+    width: 100%;
+    aspect-ratio: auto;
+  }
+
+  .cardSquare {
+    justify-self: stretch;
+    /* Room under it for the button sitting over its edge. */
+    margin-bottom: 26px;
+  }
+
+  .number {
+    font-size: min(16vw, calc(100cqi / (var(--chars) * 0.62)));
+  }
+}
+
 @media (max-width: 767px) {
   .inner {
-    padding: 116px var(--margin) 56px;
+    padding: 116px var(--margin) 72px;
   }
 
   .card {
@@ -125,10 +268,10 @@
   }
 
   .title {
-    font-size: clamp(21px, 5.6vw, 24px);
+    font-size: clamp(20px, 5.4vw, 24px);
   }
 
-  .number {
-    font-size: min(16vw, calc(100cqi / (var(--chars) * 0.62)));
+  .seat {
+    left: 22px;
   }
 }

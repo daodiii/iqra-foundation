@@ -55,15 +55,39 @@ test('nothing in the section is a control', () => {
 });
 
 /**
- * One box, one frame. The green water is the box; inside it one line drawn with the tree's
- * pen carries everything, with «Støtt oss» on the line.
+ * One box, two frames. The green water is the box; on it two squares drawn with the tree's
+ * pen, «Støtt oss» on the first line and «Kort» on the second.
  */
-test('the section is the green water and one frame, its label on the line', () => {
+test('the section is the green water and two frames, their labels on the line', () => {
   const section = mount();
   expect(section.querySelectorAll('canvas[data-water]')).toHaveLength(1);
-  expect(section.querySelectorAll('canvas[data-frame-canvas]')).toHaveLength(1);
+  expect(section.querySelectorAll('canvas[data-frame-canvas]')).toHaveLength(2);
   const legends = [...section.querySelectorAll('[data-legend]')].map((l) => l.textContent);
-  expect(legends).toEqual([s.label]);
+  expect(legends).toEqual([s.label, s.card.label]);
+});
+
+/**
+ * The card square is a picture of a form — «just for the visuals» (2026-09-12). Every field
+ * is a drawn box and the pay button is a span, so a screen reader is not offered a form that
+ * goes nowhere: the drawing is hidden from it, and what it gets instead is the one honest
+ * line under the form, which says card payment is not connected yet.
+ */
+test('the card square shows the fields and the amount, and none of it is a control', () => {
+  const section = mount();
+  const c = s.card;
+  for (const text of [c.amount, c.number, c.expiry, c.cvc, c.name]) {
+    expect(within(section).getByText(text)).toBeInTheDocument();
+  }
+  expect(within(section).getByText(`${c.pay} ${c.tiers[c.preselect]} ${c.unit}`)).toBeInTheDocument();
+  expect(section.querySelectorAll('input, button, select, textarea, a')).toHaveLength(0);
+});
+
+test('the drawn form is hidden from assistive tech; the notice is not', () => {
+  const section = mount();
+  const drawing = section.querySelector('[data-card-form]') as HTMLElement;
+  expect(drawing).toHaveAttribute('aria-hidden', 'true');
+  const notice = within(section).getByText(s.card.notice);
+  expect(notice.closest('[aria-hidden="true"]')).toBeNull();
 });
 
 /**
