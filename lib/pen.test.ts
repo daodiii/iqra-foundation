@@ -36,10 +36,8 @@ describe('framePath', () => {
 });
 
 describe('legendGap', () => {
-  test('is the legend’s box in the card’s coordinates with room either side', () => {
-    const card = { left: 100, top: 50, right: 450, bottom: 250, width: 350, height: 200, x: 100, y: 50, toJSON() {} } as DOMRect;
-    const legend = { left: 130, top: 37, right: 210, bottom: 63, width: 80, height: 26, x: 130, y: 37, toJSON() {} } as DOMRect;
-    expect(legendGap(card, legend)).toEqual({ from: 30 - LEGEND_ROOM, to: 110 + LEGEND_ROOM });
+  test('is the legend’s box in the card’s coordinates with room either side, read off its offsets', () => {
+    expect(legendGap({ offsetLeft: 30, offsetWidth: 80 })).toEqual({ from: 30 - LEGEND_ROOM, to: 110 + LEGEND_ROOM });
   });
 });
 
@@ -78,7 +76,6 @@ describe('createFrame', () => {
   test('says when the line has closed, and takes it back when the pen is drawn back', () => {
     const el = card();
     el.getBoundingClientRect = () => rect(100, 50, 350, 200);
-    el.querySelector<HTMLElement>('[data-legend]')!.getBoundingClientRect = () => rect(130, 37, 80, 26);
     const frame = createFrame(el)!;
     frame.layout();
     expect(el.hasAttribute('data-frame-drawn')).toBe(false);

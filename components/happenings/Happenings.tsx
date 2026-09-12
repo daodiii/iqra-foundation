@@ -289,7 +289,14 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
         >
           {/* Ordered, because it is an order: the row is time and the list is what is on it. */}
           <ol className={styles.row} data-rise>
-            {row.map((stop, i) => {
+            {/*
+              One FLAT list of keyed children, `flatMap` rather than `map` returning `[marker,
+              card]` at today's index. Today arrives after hydration, and a nested array is a
+              child of its own: the stop it wrapped would be unmounted and mounted afresh at
+              a new position — under a frame handle that still pointed at the old canvas, so
+              that one card never got its line. Keyed siblings in a flat list only move.
+            */}
+            {row.flatMap((stop, i) => {
               const { item, kind } = stop;
               const { day, month } = dateParts(item.date);
               const card = (
@@ -309,7 +316,7 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
                   </article>
                 </li>
               );
-              return i === todayAt ? [marker, card] : card;
+              return i === todayAt ? [marker, card] : [card];
             })}
             {todayAt === row.length && marker}
           </ol>

@@ -40,9 +40,10 @@
   padding: clamp(40px, 4vw, 60px) clamp(32px, 3.4vw, 52px) clamp(32px, 3.4vw, 52px);
 }
 
-/* Everything the cards hold sits above the pen's canvas. */
-.card > :not(canvas),
-.row > :not(canvas) {
+/* Everything the cards hold sits above the pen's canvas — but not the legends, which
+   `wash.legend` positions, and not the count, which sits in the corner on its own. */
+.card > :not(canvas, [data-legend]),
+.row > :not(canvas, [data-legend], [data-counter]) {
   position: relative;
   z-index: 1;
 }
@@ -127,6 +128,7 @@
    right. Tabular so it does not shuffle as the digit changes. */
 .counter {
   position: absolute;
+  z-index: 1;
   top: 18px;
   right: clamp(32px, 3.4vw, 52px);
   font-variant-numeric: tabular-nums;

@@ -149,8 +149,8 @@
   padding: 30px 22px 20px;
 }
 
-/* Everything the card holds sits above the pen's canvas. */
-.card > :not(canvas) {
+/* Everything the card holds sits above the pen's canvas — but not the legend, which `wash.legend` positions. */
+.card > :not(canvas, [data-legend]) {
   position: relative;
   z-index: 1;
 }

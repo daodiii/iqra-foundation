@@ -100,9 +100,14 @@ export const LEGEND_ROOM = 6;
 
 export type Gap = { from: number; to: number };
 
-/** The legend's box in the card's own coordinates, with the room either side. */
-export function legendGap(card: DOMRect, legend: DOMRect): Gap {
-  return { from: legend.left - card.left - LEGEND_ROOM, to: legend.right - card.left + LEGEND_ROOM };
+/**
+ * The legend's box in the card's own coordinates, with the room either side. Read off the
+ * legend's offsets, not its client rect: offsets ignore transforms, and the member card's
+ * arrival slides its role 20px along the line by transform — a rect measured mid-slide put
+ * the gap 20px to the left of the word and the line through its last letter.
+ */
+export function legendGap(legend: { offsetLeft: number; offsetWidth: number }): Gap {
+  return { from: legend.offsetLeft - LEGEND_ROOM, to: legend.offsetLeft + legend.offsetWidth + LEGEND_ROOM };
 }
 
 /**
@@ -177,7 +182,8 @@ export function createFrame(card: HTMLElement): FrameHandle | null {
       canvas.height = (H + 2 * FRAME_PAD) * DPR;
       // The box's top-left corner is the origin; the pad is what lies outside it.
       ctx.setTransform(DPR, 0, 0, DPR, FRAME_PAD * DPR, FRAME_PAD * DPR);
-      const gap = legend ? legendGap(rect, legend.getBoundingClientRect()) : undefined;
+      // The legend's offsets are against the card: `.frame` is positioned, so it is the offset parent.
+      const gap = legend ? legendGap(legend) : undefined;
       path = framePath(W, H, r, gap);
       frame.draw();
     },

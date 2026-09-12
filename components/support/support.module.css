@@ -44,9 +44,9 @@
   --frame-fill: 0.68;
 }
 
-/* Everything the cards hold sits above the pen's canvas. */
-.head > :not(canvas),
-.route > :not(canvas) {
+/* Everything the cards hold sits above the pen's canvas — but not the legends, which `wash.legend` positions. */
+.head > :not(canvas, [data-legend]),
+.route > :not(canvas, [data-legend]) {
   position: relative;
   z-index: 1;
 }
