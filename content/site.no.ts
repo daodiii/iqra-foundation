@@ -200,7 +200,8 @@ export const site = {
     /** Chapter II is «Menneskene» inside the book; on the landing page it is the team. */
     teamLabel: 'Teamet',
     more: 'Les hele historien',
-    /** The round arrow on the member card: it steps to the next person. */
+    /** The two round arrows on the member card: the small one steps back, the large one on. */
+    prev: 'Forrige',
     next: 'Neste',
     sectionLabel: 'Om oss og teamet',
   },

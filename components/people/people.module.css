@@ -169,8 +169,10 @@
 
 .details {
   display: flex;
-  align-items: flex-start;
-  gap: clamp(20px, 2.4vw, 32px);
+  /* Centred, not top-aligned as in the original: a one-line sentence against an 80px
+     ring reads as fallen off it otherwise. */
+  align-items: center;
+  gap: clamp(16px, 2vw, 24px);
 }
 
 /*
@@ -221,6 +223,23 @@
 .go:hover .arrow,
 .go:focus-visible .arrow {
   transform: rotate(-45deg);
+}
+
+/* Back: the same ring smaller and lighter, its arrow turned round, turning down-and-back
+   under the pointer as the other turns up-and-on. */
+.back {
+  width: 56px;
+  height: 56px;
+  border-color: var(--color-hairline);
+}
+
+.back .arrow {
+  transform: rotate(180deg);
+}
+
+.back:hover .arrow,
+.back:focus-visible .arrow {
+  transform: rotate(135deg);
 }
 
 /* The line about the person: a short measure beside the arrow, as in the original. */
@@ -277,6 +296,11 @@
   .go {
     width: 60px;
     height: 60px;
+  }
+
+  .back {
+    width: 44px;
+    height: 44px;
   }
 
   .bio {
