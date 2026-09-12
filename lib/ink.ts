@@ -40,6 +40,14 @@ export type InkPalette = {
   additive?: boolean;
   /** Overall pigment load. Below 1 the ink is thinner, above 1 it stains harder. */
   strength?: number;
+  /**
+   * The most pigment a spot can hold, in absorbance — a soft ceiling the display pass puts
+   * on the dye, see `ceiling`. Pigment adds up without limit in the field, and Beer-Lambert
+   * takes any amount of it to black; a slow finger laying splat on splat made a sky-blue
+   * box draw in navy. With a peak, `deepest` is the darkest tone the box can ever show.
+   * Subtractive palettes only; left unset, nothing stops the ink short of black.
+   */
+  peak?: number;
 };
 
 export type InkHandle = {
@@ -83,6 +91,53 @@ const PURITY = 0.55;
 export function purify(absorbance: RGB): RGB {
   const common = Math.min(...absorbance) * PURITY;
   return absorbance.map((v) => Math.max(0, v - common)) as RGB;
+}
+
+/**
+ * Beer-Lambert's constant: how hard a unit of absorbance darkens the paper. The same number
+ * is written into the `show` shader.
+ */
+const DENSITY = 1.85;
+/** The fraction of the peak below which the ceiling does nothing. */
+const KNEE = 0.5;
+
+/**
+ * The ceiling on the dye at one pixel: what the `show` shader does before it turns dye
+ * into colour, written once more here so it can be tested without a GPU.
+ *
+ * Linear up to the knee, so the ink the box lays down by itself is shown exactly as it
+ * is; above it the amount is compressed towards `peak` and never reaches it. The vector is
+ * SCALED, not clamped channel by channel: clamping the strongest channel alone would pull
+ * a thickening blue towards grey, and the ratios between the channels are the hue. Without
+ * a peak the dye passes through untouched.
+ */
+export function ceiling(dye: RGB, peak: number | undefined): RGB {
+  const m = Math.max(...dye);
+  const knee = (peak ?? 0) * KNEE;
+  if (!peak || m <= knee) return dye;
+  const soft = knee + (peak - knee) * (1 - Math.exp(-(m - knee) / (peak - knee)));
+  return dye.map((v) => (v * soft) / m) as RGB;
+}
+
+/**
+ * The darkest tone a subtractive palette can show anywhere on its box: its deepest pigment
+ * with the ceiling on it, on its own paper, as 0–255 RGB. Black when there is no ceiling,
+ * because then nothing stops the ink short of it. This is the number the palette's «light
+ * blue» or «cream» is actually a claim about, and `film.test.ts` holds each one to it.
+ */
+export function deepest(palette: InkPalette): RGB {
+  if (!palette.peak) return [0, 0, 0];
+  const ground = hexToRgb(palette.ground).map((v) => v / 255) as RGB;
+  const lum = (c: RGB) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  let darkest: RGB = [255, 255, 255];
+  for (const [hex] of palette.ink) {
+    const a = purify(hexToRgb(hex).map((v) => 1 - v / 255) as RGB);
+    // as much of this pigment as the ceiling admits: far past the knee, so at the limit
+    const at = ceiling(a.map((v) => v * 1e6) as RGB, palette.peak);
+    const shown = ground.map((g, i) => g * Math.exp(-at[i] * DENSITY) * 255) as RGB;
+    if (lum(shown) < lum(darkest)) darkest = shown;
+  }
+  return darkest;
 }
 
 /**
@@ -144,14 +199,19 @@ const FRAG = {
     void main(){ float L = texture(uP, vL).x, R = texture(uP, vR).x, T = texture(uP, vT).x, B = texture(uP, vB).x; vec2 v = texture(uVel, vUv).xy - vec2(R - L, T - B); o = vec4(v, 0., 1.); }`,
   clear: `${H}uniform sampler2D uTex; uniform float value; void main(){ o = value * texture(uTex, vUv); }`,
   /**
-   * Dye to picture. Subtractive by default — Beer-Lambert, so thick ink darkens towards
-   * black the way a real wash does instead of clipping to a flat colour — and additive for
-   * the night card. The dither is not decoration: at these gradients an 8-bit framebuffer
-   * bands visibly, and a half-LSB of noise costs nothing and removes it.
+   * Dye to picture. Subtractive by default — Beer-Lambert, so thick ink darkens the way a
+   * real wash does instead of clipping to a flat colour, but only as far as the palette's
+   * `peak` lets it: the ceiling here is `ceiling()` above, line for line, and it is what
+   * keeps a finger dragged slowly across a sky-blue box from drawing in navy. Additive for
+   * the night card, which has no ceiling (its dye is light, and it saturates at white).
+   * The dither is not decoration: at these gradients an 8-bit framebuffer bands visibly,
+   * and a half-LSB of noise costs nothing and removes it.
    */
-  show: `${H}uniform sampler2D uDye; uniform vec3 ground; uniform float t; uniform float additive;
+  show: `${H}uniform sampler2D uDye; uniform vec3 ground; uniform float t; uniform float additive; uniform float peak;
     float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
     void main(){ vec3 d = texture(uDye, vUv).rgb;
+      float m = max(d.r, max(d.g, d.b)); float knee = peak * .5;
+      if (peak > 0. && m > knee) d *= (knee + (peak - knee) * (1. - exp(-(m - knee) / (peak - knee)))) / m;
       vec3 col = additive > .5 ? min(ground + d, vec3(1.)) : ground * exp(-d * 1.85);
       col += (hash(gl_FragCoord.xy + fract(t)) - .5) * (2. / 255.); o = vec4(col, 1.); }`,
 } as const;
@@ -482,6 +542,7 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
     gl.uniform3f(uniform('show', 'ground'), ground[0], ground[1], ground[2]);
     gl.uniform1f(uniform('show', 't'), t);
     gl.uniform1f(uniform('show', 'additive'), additive ? 1 : 0);
+    gl.uniform1f(uniform('show', 'peak'), additive ? 0 : (opts.palette.peak ?? 0));
     blit(null);
   }
 
@@ -623,9 +684,11 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
       const dx = (x - px) * 5200;
       const dy = (y - py) * 5200;
       // The colour is changed on a clock rather than per move, so one sweep of the hand
-      // draws one ribbon instead of a rainbow.
+      // draws one ribbon instead of a rainbow. A quarter load per move: pointer events
+      // come sixty to a hundred and twenty times a second and a slow hand stacks them,
+      // so the ribbon has to build gradually or it is at the palette's ceiling at once.
       if (Math.abs(dx) + Math.abs(dy) > 2) {
-        splat(x, y, dx, dy, pigments[Math.floor(pigmentClock / 900) % pigments.length], 0.0032, load(0.5));
+        splat(x, y, dx, dy, pigments[Math.floor(pigmentClock / 900) % pigments.length], 0.0032, load(0.25));
       }
     }
     px = x; py = y; pigmentClock = performance.now();

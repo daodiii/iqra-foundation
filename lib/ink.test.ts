@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { createInk, pigmentCycle, purify, type InkPalette, type RGB } from './ink';
+import { ceiling, createInk, deepest, pigmentCycle, purify, type InkPalette, type RGB } from './ink';
 
 const hex = (c: [number, number, number]) =>
   '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
@@ -69,6 +69,58 @@ test('a neutral pigment is mostly common absorbance', () => {
 
 test('purifying never drives a channel below zero', () => {
   purify([0, 0.4, 0.9]).forEach((v) => expect(v).toBeGreaterThanOrEqual(0));
+});
+
+/*
+ * The ceiling. Pigment adds up without limit in the dye field, and the display pass is
+ * Beer-Lambert, so a slow finger laying splat on splat used to run any palette to navy or
+ * brown — «when you touch the screen the color that comes out is waaay too dark»
+ * (2026-09-12). `ceiling` is the curve the shader applies before showing a pixel; it is
+ * written once more here so it can be held to its promises without a GPU.
+ */
+test('below the knee the ceiling changes nothing', () => {
+  const dye: RGB = [0.1, 0.05, 0.01];
+  expect(ceiling(dye, 0.3)).toEqual(dye);
+});
+
+test('no amount of dye gets past the peak', () => {
+  for (const m of [0.3, 1, 3, 30, 3000]) {
+    const capped = ceiling([m, m * 0.5, m * 0.1], 0.3);
+    expect(Math.max(...capped)).toBeLessThanOrEqual(0.3);
+  }
+});
+
+/** Scaled, not clamped per channel: clamping the strongest channel alone would turn a
+ *  blue towards grey as it thickened. The ratios are the hue, and they survive. */
+test('the ceiling keeps the ratios between channels', () => {
+  const [r, g, b] = ceiling([3, 1.5, 0.3], 0.3);
+  expect(r / g).toBeCloseTo(2, 10);
+  expect(g / b).toBeCloseTo(5, 10);
+});
+
+/** More ink must never show lighter, or a stroke would flicker where it crosses itself. */
+test('the ceiling is monotonic', () => {
+  let last = -1;
+  for (let m = 0; m < 5; m += 0.05) {
+    const v = Math.max(...ceiling([m, m * 0.4, m * 0.1], 0.3));
+    expect(v).toBeGreaterThanOrEqual(last);
+    last = v;
+  }
+});
+
+test('without a peak the ceiling is off', () => {
+  expect(ceiling([5, 2, 1], 0)).toEqual([5, 2, 1]);
+  expect(ceiling([5, 2, 1], undefined)).toEqual([5, 2, 1]);
+});
+
+/** The darkest tone a box can show is its deepest pigment at the ceiling; with no ceiling,
+ *  nothing stops the ink short of black. */
+test('deepest is the deepest pigment at the ceiling, and black without one', () => {
+  const p: InkPalette = { ink: [['#a5d4f1', 3], ['#4f9fd9', 1]], ground: '#ffffff', peak: 0.3 };
+  const [r, , b] = deepest(p);
+  expect(b).toBeGreaterThan(r); // still blue
+  expect(r).toBeGreaterThan(60); // and nowhere near navy
+  expect(deepest({ ...p, peak: undefined })).toEqual([0, 0, 0]);
 });
 
 /**
