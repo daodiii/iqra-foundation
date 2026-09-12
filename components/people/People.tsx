@@ -6,6 +6,7 @@ import wash from '@/components/wash.module.css';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
+import { createFrame, type FrameHandle, keepFramesFitted } from '@/lib/pen';
 import { createWaterWhenNear } from '@/lib/water';
 import { setWordmarkOnDark } from '@/lib/wordmark';
 import styles from './people.module.css';
@@ -38,9 +39,12 @@ function hide(row: HTMLElement) {
   gsap.set(info, { opacity: 0, x: 40 });
 }
 
-function arrive(row: HTMLElement) {
+function arrive(row: HTMLElement, frame: FrameHandle | null) {
   const { role, portrait, info } = parts(row);
-  return gsap.timeline()
+  const tl = gsap.timeline();
+  // The first arrival draws the frame with the tree's pen; a step has the line already.
+  if (frame) tl.to(frame, { p: 1, duration: 1.1, ease: EASE.none, onUpdate: () => frame.draw() }, 0);
+  return tl
     .to(role, { opacity: 1, x: 0, duration: 0.5, ease: EASE.out }, 0)
     .to(portrait, { opacity: 1, scale: 1, y: 0, duration: 0.7, ease: EASE.out }, 0.05)
     .to(info, { opacity: 1, x: 0, duration: 0.6, ease: EASE.out }, 0.2);
@@ -75,7 +79,7 @@ function Arrow() {
  * it is the gathering — a plain with everyone standing on it — so it belongs under the
  * section that says who «we» are, and the people are on it rather than beside it.
  *
- * Two white cards on the water, story left and team right, because they are two different
+ * Two cards drawn on the water, story left and team right, because they are two different
  * kinds of reading: a paragraph you follow and a list you scan. The story stops one
  * paragraph short of the chapter it quotes, which is what makes «Les hele historien» an
  * offer rather than a label.
@@ -90,6 +94,8 @@ function Arrow() {
 export function People() {
   const root = useRef<HTMLElement>(null);
   const row = useRef<HTMLDivElement>(null);
+  /** The member card's frame, shared with the step effect below: a step re-measures it. */
+  const frame = useRef<FrameHandle | null>(null);
   const [index, setIndex] = useState(0);
   const member = menneskene.team[index];
   const count = menneskene.team.length;
@@ -105,8 +111,18 @@ export function People() {
         ? createWaterWhenNear(canvas, { reduced, floor: film.people, host: section })
         : null;
 
+      // The frames, drawn with the tree's pen: one round each of the two cards, one round the
+      // member card. Measured at rest, before anything is hidden.
+      const cards = Array.from(section.querySelectorAll<HTMLElement>('[data-rise]'));
+      const cardFrames = cards.map((c) => createFrame(c));
+      const card = row.current;
+      frame.current = card ? createFrame(card) : null;
+      const all = [...cardFrames, frame.current].filter((f): f is FrameHandle => f !== null);
+      const fitted = keepFramesFitted(all);
+      all.forEach((f) => f.layout());
+
       /*
-       * White cards on a mid-tone floor, so the wordmark stays navy across this section as
+       * Light frames on a mid-tone floor, so the wordmark stays navy across this section as
        * it does over the ink above. Said rather than assumed, for the reason the other
        * sections carry: on a refresh the hero's scrubbed onUpdate re-fires at progress 1
        * and paints the wordmark white, which over this box is nearly invisible.
@@ -119,8 +135,17 @@ export function People() {
         onRefresh: (self) => { if (self.isActive) setWordmarkOnDark(false); },
       });
 
-      const stop = () => { watcher.kill(); water?.destroy(); };
-      if (reduced) return stop;
+      const stop = () => {
+        watcher.kill();
+        fitted();
+        all.forEach((f) => f.destroy());
+        frame.current = null;
+        water?.destroy();
+      };
+      if (reduced) {
+        all.forEach((f) => { f.p = 1; f.draw(); });
+        return stop;
+      }
 
       const rise = section.querySelectorAll<HTMLElement>('[data-rise]');
       // Set here rather than in the stylesheet, so a script that never runs leaves both
@@ -129,6 +154,10 @@ export function People() {
 
       const tl = gsap.timeline({ paused: true });
       tl.to(rise, { opacity: 1, y: 0, duration: 0.95, ease: EASE.out, stagger: 0.12 });
+      // Each card's frame is drawn as the card rises, in the same stagger.
+      cardFrames.forEach((f, i) => {
+        if (f) tl.to(f, { p: 1, duration: 1.1, ease: EASE.none, onUpdate: () => f.draw() }, i * 0.12);
+      });
       const entrance = ScrollTrigger.create({
         trigger: section, start: 'top 72%', once: true, onEnter: () => tl.play(),
       });
@@ -136,11 +165,10 @@ export function People() {
       // The member card arrives on its own, when it is reached — it is a screen below the
       // two cards, and a card that had faded in before it was scrolled to would be one the
       // reader never saw arrive.
-      const card = row.current;
       if (card) hide(card);
       const arrival = card
         ? ScrollTrigger.create({
-            trigger: card, start: 'top 85%', once: true, onEnter: () => { arrive(card); },
+            trigger: card, start: 'top 85%', once: true, onEnter: () => { arrive(card, frame.current); },
           })
         : null;
 
@@ -159,8 +187,11 @@ export function People() {
       const card = row.current;
       if (!card || reducedMotion()) return;
       if (!stepped.current) { stepped.current = true; return; }
+      // The role is the legend on the line, and the new one is another width: the frame is
+      // measured again and redrawn closed round it before the parts replay.
+      frame.current?.layout();
       hide(card);
-      arrive(card);
+      arrive(card, null);
     },
     { scope: root, dependencies: [index] },
   );
@@ -177,8 +208,9 @@ export function People() {
       </div>
 
       <div className={styles.inner}>
-        <div className={`${wash.cardOnWater} ${styles.card}`} data-rise>
-          <p className={styles.label}>{site.about.label}</p>
+        <div className={`${wash.frameOnWater} ${styles.card}`} data-rise>
+          <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
+          <p className={`${wash.legend} ${styles.label}`} data-legend>{site.about.label}</p>
           <p className={styles.lede}>{story.lede}</p>
           {story.paras.slice(0, 2).map((para) => (
             <p key={para} className={styles.para}>{para}</p>
@@ -188,23 +220,24 @@ export function People() {
           </Link>
         </div>
 
-        <div className={`${wash.cardOnWater} ${styles.card}`} data-rise>
-          <p className={styles.label}>{site.people.teamLabel}</p>
+        <div className={`${wash.frameOnWater} ${styles.card}`} data-rise>
+          <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
+          <p className={`${wash.legend} ${styles.label}`} data-legend>{site.people.teamLabel}</p>
           <p className={styles.lede}>{menneskene.lede}</p>
           <p className={styles.count}>{menneskene.paras[0]}</p>
         </div>
 
         <div
           ref={row}
-          className={`${wash.cardOnWater} ${styles.row}`}
+          className={`${wash.frameOnWater} ${styles.row}`}
           data-row
           data-index={index}
           aria-label={site.people.teamLabel}
         >
-          <p className={styles.eyebrow}>
-            <span data-part="role">{member.role}</span>
-            <span className={styles.counter}>{index + 1} / {count}</span>
-          </p>
+          <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
+          {/* The role is the legend on the line; the count stays inside, at the top right. */}
+          <p className={`${wash.legend} ${styles.eyebrow}`} data-legend data-part="role">{member.role}</p>
+          <p className={`${styles.eyebrow} ${styles.counter}`} data-counter>{index + 1} / {count}</p>
           <div className={styles.body}>
             {/* An empty rectangle where a photograph would go. Drawn rather than left out,
                 because the card's shape is what it will be when it has a face in it — and

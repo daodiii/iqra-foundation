@@ -35,11 +35,20 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 18px;
-  padding: clamp(32px, 3.4vw, 52px);
+  border-radius: 12px;
+  /* The top leaves room under the line for the legend's lower half. */
+  padding: clamp(40px, 4vw, 60px) clamp(32px, 3.4vw, 52px) clamp(32px, 3.4vw, 52px);
 }
 
+/* Everything the cards hold sits above the pen's canvas. */
+.card > :not(canvas),
+.row > :not(canvas) {
+  position: relative;
+  z-index: 1;
+}
+
+/* The label is the legend on the line — placed by `wash.legend`; this is only its type. */
 .label {
-  margin: 0;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
   color: var(--color-ink-soft);
@@ -100,23 +109,26 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: clamp(32px, 3.4vw, 52px);
+  border-radius: 12px;
+  /* The top leaves room under the line for the role's lower half. */
+  padding: clamp(40px, 4vw, 60px) clamp(32px, 3.4vw, 52px) clamp(32px, 3.4vw, 52px);
 }
 
+/* The role, on the line as the legend — placed by `wash.legend` — and the count in the same voice. */
 .eyebrow {
   margin: 0;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
-/* «1 / 6» — what the arrow does, said before it is pressed. Tabular so it does not
-   shuffle as the digit changes. */
+/* «1 / 6» — what the arrow does, said before it is pressed, inside the card at the top
+   right. Tabular so it does not shuffle as the digit changes. */
 .counter {
+  position: absolute;
+  top: 18px;
+  right: clamp(32px, 3.4vw, 52px);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.12em;
 }
