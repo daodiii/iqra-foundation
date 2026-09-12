@@ -241,6 +241,17 @@ const NARROW = 500;
 /** Seconds between ambient drops, plus a random part of the same size. */
 const DROP_EVERY = 0.9;
 /**
+ * How much pigment one pointer move lays down, as a fraction of a full load.
+ *
+ * Pointer events come sixty to a hundred and twenty times a second and a slow hand stacks
+ * them on one spot, so this decides whether a stroke builds up or arrives at the palette's
+ * ceiling at once and fills in flat. Chosen from four variants shown side by side on
+ * 2026-09-12 (0.25 and 0.15, each with the knee at 0.5 and at 0.25): the user took 0.15
+ * with the knee left alone — thinner strokes with the swirls still visible inside them,
+ * and the box's own ink exactly as it was.
+ */
+const POINTER_LOAD = 0.15;
+/**
  * Steps run before the first paint.
  *
  * This is the number that decides what the section looks like when you arrive at it, which
@@ -684,11 +695,9 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
       const dx = (x - px) * 5200;
       const dy = (y - py) * 5200;
       // The colour is changed on a clock rather than per move, so one sweep of the hand
-      // draws one ribbon instead of a rainbow. A quarter load per move: pointer events
-      // come sixty to a hundred and twenty times a second and a slow hand stacks them,
-      // so the ribbon has to build gradually or it is at the palette's ceiling at once.
+      // draws one ribbon instead of a rainbow.
       if (Math.abs(dx) + Math.abs(dy) > 2) {
-        splat(x, y, dx, dy, pigments[Math.floor(pigmentClock / 900) % pigments.length], 0.0032, load(0.25));
+        splat(x, y, dx, dy, pigments[Math.floor(pigmentClock / 900) % pigments.length], 0.0032, load(POINTER_LOAD));
       }
     }
     px = x; py = y; pigmentClock = performance.now();
