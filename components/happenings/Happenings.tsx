@@ -7,6 +7,7 @@ import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { createInkWhenNear, type InkHandle } from '@/lib/ink';
+import { createFrame, type FrameHandle, keepFramesFitted } from '@/lib/pen';
 import { createWaterWhenNear, type WaterHandle } from '@/lib/water';
 import styles from './happenings.module.css';
 
@@ -141,6 +142,14 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
         ? createInkWhenNear(inkCanvas, { reduced, palette: film.drops, host: section })
         : null;
 
+      // The frame round every stop, drawn with the tree's pen — the ones scrolled out of
+      // view too, so the row is whole wherever the visitor arrives on it.
+      const frames = Array.from(section.querySelectorAll<HTMLCanvasElement>('[data-frame-canvas]'))
+        .map((c) => (c.parentElement ? createFrame(c.parentElement) : null))
+        .filter((f): f is FrameHandle => f !== null);
+      const fitted = keepFramesFitted(frames);
+      frames.forEach((f) => f.layout());
+
       const ends = () => {
         const max = track.scrollWidth - track.clientWidth;
         if (back.current) back.current.disabled = track.scrollLeft < 4;
@@ -188,11 +197,16 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
         track.removeEventListener('pointermove', onMove);
         track.removeEventListener('pointerup', onUp);
         track.removeEventListener('pointercancel', onUp);
+        fitted();
+        frames.forEach((f) => f.destroy());
         water?.destroy();
         ink?.destroy();
       };
 
-      if (reduced) return stop;
+      if (reduced) {
+        frames.forEach((f) => { f.p = 1; f.draw(); });
+        return stop;
+      }
 
       const rise = section.querySelectorAll<HTMLElement>('[data-rise]');
       // Set here rather than in the stylesheet, so a script that never runs leaves the row
@@ -202,6 +216,10 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
 
       const tl = gsap.timeline({ paused: true });
       tl.to(rise, { opacity: 1, y: 0, duration: 0.8, ease: EASE.out, stagger: 0.08 });
+      // The frames draw one after another along the row as it rises.
+      frames.forEach((frame, i) => {
+        tl.to(frame, { p: 1, duration: 0.9, ease: EASE.none, onUpdate: () => frame.draw() }, 0.1 + i * 0.08);
+      });
       const entrance = ScrollTrigger.create({
         trigger: section, start: 'top 78%', once: true, onEnter: () => tl.play(),
       });
@@ -276,8 +294,10 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
               const { day, month } = dateParts(item.date);
               const card = (
                 <li key={`${stop.key}-${i}`} className={`${styles.stop} ${kind === 'news' ? styles.past : ''}`}>
-                  <article className={`${wash.card} ${styles.card}`}>
-                    <p className={styles.kind}>{kind === 'event' ? happenings.kinds.event : happenings.kinds.news}</p>
+                  <article className={`${wash.frame} ${styles.card}`}>
+                    <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
+                    {/* The kind is the legend, on the frame's top line. */}
+                    <p className={`${wash.legend} ${styles.kind}`} data-legend>{kind === 'event' ? happenings.kinds.event : happenings.kinds.news}</p>
                     <p className={styles.when}>
                       <span className={styles.day}>{day}</span>
                       <span className={styles.month}>{month}</span>

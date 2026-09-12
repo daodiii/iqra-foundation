@@ -3,9 +3,9 @@
  *
  * The heading sits on the page's white; under it a box like every other section's holds
  * the row. The box is the bridge between the ink above and the water below — the page's
- * own water with the page's own inks dropped into it — and the cards are glass on it, as
- * they are everywhere else. Nothing here draws a line or a peg on a stop any more: the
- * row is the order, and «i dag» is the one thing standing in it.
+ * own water with the page's own inks dropped into it — and each card is a frame drawn on
+ * it with the tree's pen, as every box on the page is. Nothing here draws a peg on a stop
+ * any more: the row is the order, and «i dag» is the one thing standing in it.
  */
 .happenings {
   position: relative;
@@ -103,7 +103,9 @@
   position: relative;
   z-index: 1;
   margin: 0 var(--box-inset-x);
-  padding: 56px var(--gutter) 22px;
+  /* 34px at the foot, not 22: the pen's tip has a 26px glow and each frame's canvas reaches
+     32px below its card; the rail clips at its padding. */
+  padding: 56px var(--gutter) 34px;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-padding-inline: var(--gutter);
@@ -138,17 +140,24 @@
   scroll-snap-align: start;
 }
 
-/* The card is `wash.card`; this is only what it holds and how. */
+/* The card is `wash.frame`; this is only what it holds and how. The top leaves room under
+   the line for the legend's lower half. */
 .card {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 22px 22px 20px;
+  padding: 30px 22px 20px;
+}
+
+/* Everything the card holds sits above the pen's canvas. */
+.card > :not(canvas) {
+  position: relative;
+  z-index: 1;
 }
 
 /* What has been sits a touch deeper in the water than what is coming. */
 .past .card {
-  --glass-fill: 0.7;
+  --frame-fill: 0.42;
 }
 
 /*
@@ -191,8 +200,8 @@
   color: var(--color-crimson);
 }
 
+/* The legend on the line — placed by `wash.legend`; this is only its type. */
 .kind {
-  margin: 0 0 12px;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -247,8 +256,8 @@
 
 /*
  * The picture, or the room one would take. A window rather than a filled frame: the water
- * shows through it until there is a photograph to put in it, which is what a held place on
- * glass looks like. The reasoning for an empty frame over a stock photograph is in
+ * shows through it until there is a photograph to put in it, which is what a held place
+ * looks like. The reasoning for an empty frame over a stock photograph is in
  * `Happenings.tsx`.
  */
 .frame {
