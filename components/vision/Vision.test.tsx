@@ -46,6 +46,6 @@ test('each card carries a frame canvas, its name as the legend, and its paragrap
   for (const card of cards) {
     expect(card.querySelector('canvas[data-frame-canvas]')).toHaveAttribute('aria-hidden', 'true');
     expect(card.querySelector('h2[data-legend]')).not.toBeNull();
-    expect(card.querySelector('p[data-copy]')).not.toBeNull();
+    expect(card.querySelector('p[data-words]')).not.toBeNull();
   }
 });

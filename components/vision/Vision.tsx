@@ -97,7 +97,7 @@ export function Vision() {
        */
       const frames: (FrameHandle | null)[] = cards.map((card) => createFrame(card));
       const legends = cards.map((c) => c.querySelector<HTMLElement>('[data-legend]'));
-      const copies = cards.map((c) => c.querySelector<HTMLElement>('[data-copy]'));
+      const copies = cards.map((c) => c.querySelector<HTMLElement>('[data-words]'));
 
       /* The geometry, remade on every layout. */
       let arch: Arch | null = null;
@@ -276,7 +276,7 @@ export function Vision() {
             <div className={`${wash.frame} ${styles.value}`} data-value={v.key}>
               <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
               <h2 className={`${wash.legend} ${styles.name}`} data-legend>{v.name}</h2>
-              <p className={styles.text} data-copy>{v.text}</p>
+              <p className={styles.text} data-words>{v.text}</p>
             </div>
           </div>
         ))}

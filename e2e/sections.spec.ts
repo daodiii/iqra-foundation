@@ -152,10 +152,24 @@ test('desktop: visjon does not pin; the cards surface, the tree opens, the arch 
   const top = await docTop(page, '#visjon');
   await page.evaluate((y) => window.scrollTo(0, y + 10), top);
   // Generous, because this is a 3s tween finishing on its own and not a scroll we drive.
+  // The pen closes each card's frame in the arch's wake; the name and the words fade in with it.
   for (const card of VALUE_CARDS) {
-    await expect(page.locator(card)).toHaveCSS('opacity', '1', { timeout: 12_000 });
+    await expect(page.locator(card)).toHaveAttribute('data-frame-drawn', 'true', { timeout: 12_000 });
+    await expect(page.locator(`${card} [data-legend]`)).toHaveCSS('opacity', '1', { timeout: 12_000 });
+    await expect(page.locator(`${card} [data-words]`)).toHaveCSS('opacity', '1', { timeout: 12_000 });
   }
   await expect(page.locator('#visjon [data-root]')).toHaveCSS('opacity', '1', { timeout: 12_000 });
+  // Each name sits ON its frame's top line, and Inkludering's at the right end of it, so the
+  // arch's right flank crosses the unbroken part of the line — as it does for Dialog.
+  const legends = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('#visjon [data-value]')).map((c) => {
+      const r = c.getBoundingClientRect();
+      const l = c.querySelector('[data-legend]')!.getBoundingClientRect();
+      return { left: l.left - r.left, right: r.right - l.right, mid: l.top + l.height / 2 - r.top };
+    }));
+  expect(legends[0].left).toBeLessThan(legends[0].right);
+  expect(legends[2].right).toBeLessThan(legends[2].left);
+  for (const l of legends) expect(Math.abs(l.mid), 'a name is not on its line').toBeLessThan(2);
   expect(await treeHasInk(page)).toBe(true);
   await expect(page.locator('#visjon [data-arch] canvas')).toHaveCount(2); // the stroke and the tree, no scene
   expect(await canvasHasPaint(page, '#visjon [data-stroke]'), 'the arch was never drawn').toBe(true);
@@ -224,6 +238,18 @@ test('desktop: misjon does not pin, the copy arrives and the wordmark stays navy
   await expect(stanza).toHaveCSS('opacity', '1', { timeout: 5_000 });
   const mission = page.locator('[data-mission-text]');
   await expect(mission).toContainText('bygger vi broer');
+  // The frame closes, the label sits on its top line, and the button sits over the bottom
+  // edge — its middle on the card's bottom line, the line running on beneath; no rule.
+  await expect(mission).toHaveAttribute('data-frame-drawn', 'true', { timeout: 5_000 });
+  const seat = await page.evaluate(() => {
+    const card = document.querySelector('[data-mission-text]')!.getBoundingClientRect();
+    const legend = document.querySelector('[data-mission-text] [data-legend]')!.getBoundingClientRect();
+    const btn = document.querySelector('[data-mission-text] [data-seat] a')!.getBoundingClientRect();
+    return { mid: btn.top + btn.height / 2 - card.bottom, legendMid: legend.top + legend.height / 2 - card.top, rule: !!document.querySelector('[data-mission-text] [data-rule]') };
+  });
+  expect(Math.abs(seat.mid), 'the button is not on the bottom line').toBeLessThan(2);
+  expect(Math.abs(seat.legendMid), 'the label is not on the top line').toBeLessThan(2);
+  expect(seat.rule).toBe(false);
   await expect(mission.getByRole('link', { name: site.hero.cta }))
     .toHaveAttribute('href', `mailto:${site.contact.email}`);
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
@@ -471,7 +497,8 @@ test('phone: no pins after the hero; the tree grows and every section stays legi
   // behind, so this is a real handoff, not the initial attribute never having changed.
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
   for (const card of VALUE_CARDS) {
-    await expect(page.locator(card)).toHaveCSS('opacity', '1', { timeout: 8_000 });
+    await expect(page.locator(card)).toHaveAttribute('data-frame-drawn', 'true', { timeout: 8_000 });
+    await expect(page.locator(`${card} [data-legend]`)).toHaveCSS('opacity', '1', { timeout: 8_000 });
   }
   await expect(page.locator('#visjon [data-root]')).toHaveCSS('opacity', '1', { timeout: 8_000 });
   // In flow the arch keeps the top of the section and the cards stack under it, on the
@@ -577,4 +604,19 @@ test('phone: no hand-set line runs out of its card', async ({ page, isMobile }) 
       .filter((el) => el.scrollWidth > el.clientWidth + 1)
       .map((el) => el.textContent));
   expect(overflow, 'a hand-set line ran out of its card').toEqual([]);
+});
+
+/**
+ * The trap: hand-pairing `backdrop-filter` with its prefixed form in the source made
+ * Lightning CSS emit only the prefixed one, which Blink ignores, and every box was a flat
+ * white rectangle that nothing failed on. The source is held to the unprefixed form by
+ * `lib/wash.test.ts`; this reads what is actually served and expects both.
+ */
+test('the served CSS carries both forms of backdrop-filter for the frames', async ({ page }) => {
+  await page.goto('/');
+  const hrefs = await page.$$eval('link[rel="stylesheet"]', (ls) => ls.map((l) => (l as HTMLLinkElement).href));
+  let css = '';
+  for (const href of hrefs) css += await (await page.request.get(href)).text();
+  expect(css).toMatch(/[^-]backdrop-filter:\s*blur\(12px\)/);
+  expect(css).toMatch(/-webkit-backdrop-filter:\s*blur\(12px\)/);
 });
