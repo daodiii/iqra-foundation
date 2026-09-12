@@ -39,28 +39,40 @@ test('no ink is additive and no water is night', () => {
 });
 
 /*
- * Arrangementer · Nyheter: still water, sage, between the ink boxes and the water boxes. Its
- * floor has to sit between them in weight — lighter than Arafat's, darker than the paper —
- * or the page stops thinning as it goes down, which is its whole idea.
+ * The order the user chose — «To løp», 2026-09-13: after the sky, the warm run (cream, then the
+ * stone shallow) and the green run (sage, then the green) — with a depth per box set on a
+ * slider: 0.55 · 0.55 · 0.15 · 0.55 · 0.35. The page still thins as it goes down: the bridge
+ * is the palest water, the ask the deepest.
  */
-test('the bridge floor sits between the paper and Arafat in weight', () => {
+test('the water gets deeper down the page: the bridge palest, the ask deepest', () => {
   expect(lum(film.bridge.ground)).toBeLessThan(Math.min(lum(film.vision.ground), lum(film.mission.ground)));
   expect(lum(film.bridge.ground)).toBeGreaterThan(lum(film.people.ground));
+  expect(lum(film.people.ground)).toBeGreaterThan(lum(film.supportWater.ground));
 });
 
 /**
- * The user's pick, pinned: «C Salvie, 0.3» (2026-09-12) — the sage scene resolved at a depth
- * of 0.3 while every other water box keeps the page's 0.7, and the ground that comes out is
- * this one. A shallower box on purpose, so a refactor that quietly puts it back on the
- * shared depth would darken it to #a7b9aa and fail here.
+ * The user's picks, pinned — a scene AND a depth each, and the ground that comes out. These
+ * exact hexes are also written into `wash.module.css`, because a box has to carry its colour
+ * before any script runs; `ground.test.ts` holds the two together. A refactor that put the
+ * boxes back on one shared depth would move all three and fail here.
  */
-test('the bridge is sage, resolved shallower than the other water by the user’s call', () => {
-  expect(film.bridge.ground).toBe('#c8d4ca');
-  expect(hue(film.bridge.ground)).toBeGreaterThan(110);
-  expect(hue(film.bridge.ground)).toBeLessThan(150);
+test('the bridge is the stone, shallow: Arafat at 0.15', () => {
+  expect(film.bridge.ground).toBe('#cfc9bf');
+  const [r, g, b] = rgb(film.bridge.ground);
+  expect(Math.max(r, g, b) - Math.min(r, g, b), 'the stone has to stay nearly neutral').toBeLessThan(30);
 });
 
-/** The drops that used to fall into it are gone, palette and all; nothing on the page rains ink now. */
+test('the people are on sage: the sage scene at 0.55', () => {
+  expect(film.people.ground).toBe('#b3c3b7');
+  expect(hue(film.people.ground)).toBeGreaterThan(110);
+  expect(hue(film.people.ground)).toBeLessThan(150);
+});
+
+test('the ask is the green, lighter than it was: the green scene at 0.35', () => {
+  expect(film.supportWater.ground).toBe('#84b8a8');
+});
+
+/** The drops that used to fall into the bridge are gone, palette and all; nothing on the page rains ink now. */
 test('there is no drops ink any more', () => {
   expect('drops' in film).toBe(false);
 });
@@ -107,22 +119,6 @@ test('every pool sits inside its box', () => {
 });
 
 /**
- * The floor the user chose, at the depth the user chose.
- *
- * This exact hex is also written into `wash.module.css`, because the box has to carry its
- * colour before any script runs — so the two can drift, and `sections.spec.ts` compares
- * them on the live page. This test is the cheaper half of that: it fails in a second if the
- * scene or the depth moves, and names the number the stylesheet then needs.
- */
-test('the green floor at the settled depth is the hex the stylesheet holds', () => {
-  expect(film.supportWater.ground).toBe('#559583');
-});
-
-test('the people floor at the settled depth is the hex the stylesheet holds', () => {
-  expect(film.people.ground).toBe('#aea79f');
-});
-
-/**
  * Støtt oss departs from the film here, and it is the user's departure: «make the last one
  * a green color that looks like green water». Everything else on the page walks the film's
  * own scenes in order, so this one is worth a test that says out loud that it is meant.
@@ -133,11 +129,16 @@ test('the ask is green water rather than the film’s gold', () => {
   expect(h).toBeLessThan(190);
 });
 
-/** Arafat is a white plain in glare. Any hue that reads as a colour would make it a scene
- *  from some other film — it is the one floor that has to stay nearly neutral. */
-test('the people’s floor is a near-neutral stone', () => {
-  const [r, g, b] = rgb(film.people.ground);
-  expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThan(30);
+/**
+ * The two ink boxes were set to 0.55 on the same slider — a little paler than the stills
+ * they were tuned as — and on the ink that is the load and the ceiling scaled by 0.55/0.7.
+ * Pinned so the number is not lost: the stills in `wash.module.css` carry the same factor.
+ */
+test('the ink boxes are lighter by the slider: load and ceiling scaled by 0.55/0.7', () => {
+  expect(film.vision.strength).toBeCloseTo(0.9 * (0.55 / 0.7), 2);
+  expect(film.vision.peak).toBeCloseTo(0.3 * (0.55 / 0.7), 2);
+  expect(film.mission.strength).toBeCloseTo(0.7 * (0.55 / 0.7), 2);
+  expect(film.mission.peak).toBeCloseTo(0.12 * (0.55 / 0.7), 2);
 });
 
 /**

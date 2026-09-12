@@ -203,7 +203,7 @@ export function People() {
       className={styles.people}
       aria-label={site.people.sectionLabel}
     >
-      <div className={`${wash.box} ${wash.arafat}`} aria-hidden="true">
+      <div className={`${wash.box} ${wash.people}`} aria-hidden="true">
         <canvas className={wash.paint} data-water />
       </div>
 

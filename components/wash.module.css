@@ -85,67 +85,72 @@
  * mosque — because the tests and the page know them by those names; the colours in them are
  * the user's (2026-09-12, «light blue like the sky» and «like cream»), see `lib/film.ts`.
  * The pigments are pale and the paper is paler, so these stills carry more alpha than the
- * old scenes did or they would read as a flat white rectangle.
+ * old scenes did or they would read as a flat white rectangle. The water boxes below are
+ * named by their sections instead.
  */
 
-/** Visjon: the sky. Light blue, deeper towards the top, one warm thread of sun low down. */
+/**
+ * Visjon: the sky. Light blue, deeper towards the top, one warm thread of sun low down. The
+ * pigment at 0.55/0.7 of what it was tuned as — the user's slider (2026-09-13), the same
+ * factor `film.ts` puts on the ink's load and ceiling.
+ */
 .cave {
   --ground: #eef5fb;
   --still:
-    radial-gradient(58% 40% at 14% 12%, rgba(165, 212, 241, 0.62) 0%, transparent 68%),
-    radial-gradient(62% 44% at 82% 30%, rgba(195, 226, 246, 0.56) 0%, transparent 70%),
-    radial-gradient(52% 38% at 34% 74%, rgba(126, 192, 234, 0.42) 0%, transparent 68%),
-    radial-gradient(40% 30% at 88% 84%, rgba(243, 229, 198, 0.34) 0%, transparent 70%);
+    radial-gradient(58% 40% at 14% 12%, rgba(165, 212, 241, 0.49) 0%, transparent 68%),
+    radial-gradient(62% 44% at 82% 30%, rgba(195, 226, 246, 0.44) 0%, transparent 70%),
+    radial-gradient(52% 38% at 34% 74%, rgba(126, 192, 234, 0.33) 0%, transparent 68%),
+    radial-gradient(40% 30% at 88% 84%, rgba(243, 229, 198, 0.27) 0%, transparent 70%);
 }
 
-/** Misjon: cream. Ivory to pale gold on warm paper, nothing darker. */
+/** Misjon: cream. Ivory to pale gold on warm paper, nothing darker; the same 0.55/0.7 on the pigment. */
 .mosque {
   --ground: #f8f2e4;
   --still:
-    radial-gradient(60% 42% at 78% 18%, rgba(237, 223, 189, 0.6) 0%, transparent 70%),
-    radial-gradient(56% 40% at 26% 40%, rgba(242, 231, 204, 0.5) 0%, transparent 68%),
-    radial-gradient(52% 38% at 70% 78%, rgba(228, 210, 163, 0.42) 0%, transparent 70%);
+    radial-gradient(60% 42% at 78% 18%, rgba(237, 223, 189, 0.47) 0%, transparent 70%),
+    radial-gradient(56% 40% at 26% 40%, rgba(242, 231, 204, 0.39) 0%, transparent 68%),
+    radial-gradient(52% 38% at 70% 78%, rgba(228, 210, 163, 0.33) 0%, transparent 70%);
 }
 
 /**
- * Arrangementer · Nyheter: still sage water, the shallowest box on the page (`film.bridge`,
- * resolved at 0.3 rather than the page's 0.7 — the user's call, see `lib/film.ts`). The
- * still is the water's pools at that depth's gain, in reverse.
+ * The three water boxes, each at the depth the user gave it (2026-09-13, «To løp»): the
+ * stills are the floors' pools at that depth's gain, in reverse. The class names are the
+ * SECTIONS', not the scenes' — the colours moved between the boxes once and may again, and
+ * a class called by the scene it used to hold would be a trap.
  */
+
+/** Arrangementer · Nyheter: Arafat's stone barely under water (`film.bridge`, 0.15) — the palest water on the page. */
 .bridge {
-  --ground: #c8d4ca;
+  --ground: #cfc9bf;
   --still:
-    radial-gradient(33% 36% at 10% 84%, rgba(168, 188, 173, 0.26) 0%, transparent 70%),
-    radial-gradient(48% 53% at 58% 38%, rgba(205, 218, 207, 0.39) 0%, transparent 70%),
-    radial-gradient(40% 44% at 80% 78%, rgba(127, 151, 134, 0.35) 0%, transparent 70%),
-    radial-gradient(48% 53% at 20% 18%, rgba(236, 241, 236, 0.52) 0%, transparent 70%);
+    radial-gradient(33% 36% at 10% 84%, rgba(138, 135, 144, 0.25) 0%, transparent 70%),
+    radial-gradient(48% 53% at 58% 38%, rgba(216, 204, 184, 0.4) 0%, transparent 70%),
+    radial-gradient(40% 45% at 80% 78%, rgba(101, 99, 110, 0.34) 0%, transparent 70%),
+    radial-gradient(48% 53% at 20% 18%, rgba(237, 233, 224, 0.55) 0%, transparent 70%);
+}
+
+/** Om oss · Teamet: sage water (`film.people`, 0.55), the first of the green run. */
+.people {
+  --ground: #b3c3b7;
+  --still:
+    radial-gradient(33% 36% at 10% 84%, rgba(168, 188, 173, 0.28) 0%, transparent 70%),
+    radial-gradient(48% 53% at 58% 38%, rgba(205, 218, 207, 0.42) 0%, transparent 70%),
+    radial-gradient(40% 45% at 80% 78%, rgba(127, 151, 134, 0.38) 0%, transparent 70%),
+    radial-gradient(48% 53% at 20% 18%, rgba(236, 241, 236, 0.56) 0%, transparent 70%);
 }
 
 /**
- * Arafat under clear water: the white plain, the crowd as shadow, sand. The first box on the
- * page where the material is water rather than ink, and the people are on it.
+ * Støtt oss: the green (`film.supportWater`, 0.35) — the user's departure from the film,
+ * «make the last one a green color that looks like green water», lighter now than it was.
  */
-.arafat {
-  --ground: #aea79f;
+.support {
+  --ground: #84b8a8;
   --still:
-    radial-gradient(32% 36% at 10% 84%, rgba(138, 135, 144, 0.29) 0%, transparent 70%),
-    radial-gradient(48% 53% at 58% 38%, rgba(216, 204, 184, 0.47) 0%, transparent 70%),
-    radial-gradient(40% 44% at 80% 78%, rgba(101, 99, 110, 0.39) 0%, transparent 70%),
-    radial-gradient(48% 53% at 20% 18%, rgba(237, 233, 224, 0.64) 0%, transparent 70%);
-}
-
-/**
- * The ask, in green water. The one departure from the film on this page, and the user's:
- * «make the last one a green color that looks like green water».
- */
-.green {
-  --ground: #559583;
-  --still:
-    radial-gradient(29% 32% at 4% 70%, rgba(59, 143, 124, 0.24) 0%, transparent 70%),
-    radial-gradient(32% 36% at 44% 90%, rgba(226, 230, 204, 0.27) 0%, transparent 70%),
-    radial-gradient(34% 38% at 60% 50%, rgba(127, 196, 177, 0.34) 0%, transparent 70%),
-    radial-gradient(48% 53% at 18% 16%, rgba(31, 92, 77, 0.41) 0%, transparent 70%),
-    radial-gradient(52% 58% at 84% 40%, rgba(207, 232, 220, 0.54) 0%, transparent 70%);
+    radial-gradient(29% 32% at 4% 70%, rgba(59, 143, 124, 0.22) 0%, transparent 70%),
+    radial-gradient(33% 36% at 44% 90%, rgba(226, 230, 204, 0.25) 0%, transparent 70%),
+    radial-gradient(35% 38% at 60% 50%, rgba(127, 196, 177, 0.31) 0%, transparent 70%),
+    radial-gradient(48% 53% at 18% 16%, rgba(31, 92, 77, 0.37) 0%, transparent 70%),
+    radial-gradient(53% 58% at 84% 40%, rgba(207, 232, 220, 0.49) 0%, transparent 70%);
 }
 
 /*

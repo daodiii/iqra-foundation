@@ -100,7 +100,7 @@ export function Support() {
 
   return (
     <section ref={root} id="stott-oss" className={styles.support} aria-labelledby="stott-label">
-      <div className={`${wash.box} ${wash.green}`} aria-hidden="true">
+      <div className={`${wash.box} ${wash.support}`} aria-hidden="true">
         <canvas className={wash.paint} data-water />
       </div>
 

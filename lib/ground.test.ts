@@ -27,8 +27,8 @@ const SCENES = [
   ['cave', film.vision],
   ['mosque', film.mission],
   ['bridge', film.bridge],
-  ['arafat', film.people],
-  ['green', film.supportWater],
+  ['people', film.people],
+  ['support', film.supportWater],
 ] as const;
 
 test.each(SCENES)('the %s ground in the stylesheet matches the palette', (name, scene) => {
@@ -55,7 +55,7 @@ test.each(SCENES.map(([n]) => n))('the %s box has a still gradient behind the ca
  * still built from the ground colour alone would be a flat rectangle wearing a gradient,
  * and the box would visibly gain its scene the moment the canvas painted.
  */
-test.each([['bridge', film.bridge], ['arafat', film.people], ['green', film.supportWater]] as const)(
+test.each([['bridge', film.bridge], ['people', film.people], ['support', film.supportWater]] as const)(
   'the %s still is built from that floor’s own pools',
   (name, floor) => {
     const block = css.match(new RegExp(`\\.${name}\\s*\\{([^}]*)\\}`))?.[1] ?? '';
