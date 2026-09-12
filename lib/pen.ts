@@ -130,3 +130,95 @@ export function framePath(W: number, H: number, r: number, gap?: Gap): ArchPath 
     line(r, 0, end, 0),
   ]);
 }
+
+/** Room round a box for the pen's glow and its tip, on every side. */
+export const FRAME_PAD = 32;
+
+export type FrameHandle = {
+  /** How far the pen has come, 0..1. A plain property, so a tween can drive it. */
+  p: number;
+  /** Measure the box and its legend, size the canvas, rebuild the path, redraw. */
+  layout(): void;
+  /** Clear and stroke up to `p`. Marks the card `data-frame-drawn` when the line closes. */
+  draw(): void;
+  destroy(): void;
+};
+
+/**
+ * The frame round one box. Finds the box's canvas (`[data-frame-canvas]`) and its legend
+ * (`[data-legend]`, optional) and draws the frame with the tree's pen: `p` is how far the
+ * pen has come, and the section's own timeline moves it —
+ *
+ *   gsap.to(frame, { p: 1, duration: 1.1, ease: EASE.none, onUpdate: frame.draw })
+ *
+ * — so the pen is in step with everything else the section moves, and no frame ever reads
+ * the clock or schedules a frame of its own. Null where there is no canvas or no 2D
+ * context: the box is then a frosted rectangle with no line, which is a complete answer.
+ */
+export function createFrame(card: HTMLElement): FrameHandle | null {
+  const canvas = card.querySelector<HTMLCanvasElement>('[data-frame-canvas]');
+  const ctx = canvas?.getContext('2d') ?? null;
+  if (!canvas || !ctx) return null;
+  const legend = card.querySelector<HTMLElement>('[data-legend]');
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let path: ArchPath | null = null;
+  let W = 0;
+  let H = 0;
+  let closed = false;
+  const frame: FrameHandle = {
+    p: 0,
+    layout() {
+      const rect = card.getBoundingClientRect();
+      W = Math.round(rect.width);
+      H = Math.round(rect.height);
+      if (W < 1 || H < 1) { path = null; return; } // not laid out: display none
+      const r = parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0;
+      canvas.width = (W + 2 * FRAME_PAD) * DPR;
+      canvas.height = (H + 2 * FRAME_PAD) * DPR;
+      // The box's top-left corner is the origin; the pad is what lies outside it.
+      ctx.setTransform(DPR, 0, 0, DPR, FRAME_PAD * DPR, FRAME_PAD * DPR);
+      const gap = legend ? legendGap(rect, legend.getBoundingClientRect()) : undefined;
+      path = framePath(W, H, r, gap);
+      frame.draw();
+    },
+    draw() {
+      if (!path) return;
+      ctx.clearRect(-FRAME_PAD, -FRAME_PAD, W + 2 * FRAME_PAD, H + 2 * FRAME_PAD);
+      drawStroke(ctx, path, frame.p);
+      const now = frame.p >= 1;
+      if (now !== closed) {
+        closed = now;
+        if (now) card.setAttribute('data-frame-drawn', 'true');
+        else card.removeAttribute('data-frame-drawn');
+      }
+    },
+    destroy() {
+      path = null;
+      canvas.width = 0;
+      canvas.height = 0;
+    },
+  };
+  return frame;
+}
+
+/**
+ * Frames are measured, and a measurement goes stale: on a resize, and when the web font
+ * lands and every legend changes width. Lays each frame out again 300ms after the last
+ * resize (the tree's own debounce) and once when the fonts are ready. Returns the release.
+ */
+export function keepFramesFitted(frames: FrameHandle[]): () => void {
+  let timer = 0;
+  let live = true;
+  const fit = () => frames.forEach((f) => f.layout());
+  const onResize = () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(fit, 300);
+  };
+  window.addEventListener('resize', onResize);
+  document.fonts?.ready.then(() => { if (live) fit(); });
+  return () => {
+    live = false;
+    window.removeEventListener('resize', onResize);
+    window.clearTimeout(timer);
+  };
+}
