@@ -81,3 +81,18 @@ test('the copy renders even though the ink cannot start', () => {
   expect(within(section).getByText(/bygger vi broer/)).toBeInTheDocument();
   expect(within(section).getByRole('link', { name: site.hero.cta })).toBeInTheDocument();
 });
+
+/**
+ * The box is a line drawn with the tree's pen: «Misjon» is the legend on the line, the
+ * button sits in a seat over the bottom edge, and the hairline rule that used to sit
+ * between the stanzas and the button is gone — the frame is the line now.
+ */
+test('the label is the legend, the button sits in a seat, and there is no rule', () => {
+  const section = mount();
+  const card = section.querySelector('[data-mission-text]') as HTMLElement;
+  expect(card.querySelector('canvas[data-frame-canvas]')).toHaveAttribute('aria-hidden', 'true');
+  expect(card.querySelector('[data-legend]')).toHaveAttribute('id', 'misjon-label');
+  expect(card.querySelector('[data-rule]')).toBeNull();
+  const link = within(card).getByRole('link', { name: site.hero.cta });
+  expect(link.parentElement).toHaveAttribute('data-seat');
+});

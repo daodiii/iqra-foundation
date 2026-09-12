@@ -21,7 +21,9 @@
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   gap: 28px;
   align-items: center;
-  padding: 100px var(--margin) 80px;
+  /* 112 on top, not 100: the first legend stands on its card's top edge and has to clear
+     the header's haze, which runs out at 104px. */
+  padding: 112px var(--margin) 80px;
 }
 
 /*
@@ -35,11 +37,21 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 18px;
-  padding: clamp(32px, 3.4vw, 52px);
+  border-radius: 12px;
+  /* The top leaves room under the line for the legend's lower half. */
+  padding: clamp(40px, 4vw, 60px) clamp(32px, 3.4vw, 52px) clamp(32px, 3.4vw, 52px);
 }
 
+/* Everything the cards hold sits above the pen's canvas — but not the legends, which
+   `wash.legend` positions, and not the count, which sits in the corner on its own. */
+.card > :not(canvas, [data-legend]),
+.row > :not(canvas, [data-legend], [data-counter]) {
+  position: relative;
+  z-index: 1;
+}
+
+/* The label is the legend on the line — placed by `wash.legend`; this is only its type. */
 .label {
-  margin: 0;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
   color: var(--color-ink-soft);
@@ -100,23 +112,27 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: clamp(32px, 3.4vw, 52px);
+  border-radius: 12px;
+  /* The top leaves room under the line for the role's lower half. */
+  padding: clamp(40px, 4vw, 60px) clamp(32px, 3.4vw, 52px) clamp(32px, 3.4vw, 52px);
 }
 
+/* The role, on the line as the legend — placed by `wash.legend` — and the count in the same voice. */
 .eyebrow {
   margin: 0;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
-/* «1 / 6» — what the arrow does, said before it is pressed. Tabular so it does not
-   shuffle as the digit changes. */
+/* «1 / 6» — what the arrow does, said before it is pressed, inside the card at the top
+   right. Tabular so it does not shuffle as the digit changes. */
 .counter {
+  position: absolute;
+  z-index: 1;
+  top: 18px;
+  right: clamp(32px, 3.4vw, 52px);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.12em;
 }
@@ -259,7 +275,7 @@
   .inner {
     grid-template-columns: minmax(0, 1fr);
     gap: 20px;
-    padding: 80px var(--margin) 64px;
+    padding: 116px var(--margin) 64px;
   }
 }
 

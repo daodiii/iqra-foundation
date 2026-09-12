@@ -5,6 +5,7 @@ import wash from '@/components/wash.module.css';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
+import { createFrame, type FrameHandle, keepFramesFitted } from '@/lib/pen';
 import { createWaterWhenNear, type WaterHandle } from '@/lib/water';
 import { setWordmarkOnDark } from '@/lib/wordmark';
 import styles from './support.module.css';
@@ -81,13 +82,26 @@ export function Support() {
         onRefresh: (self) => { if (self.isActive) setWordmarkOnDark(false); },
       });
 
+      // The frames, drawn with the tree's pen: round the head and the three routes. The
+      // night card is a box in its own right and has none.
+      const frames = Array.from(section.querySelectorAll<HTMLCanvasElement>('[data-frame-canvas]'))
+        .map((c) => (c.parentElement ? createFrame(c.parentElement) : null))
+        .filter((f): f is FrameHandle => f !== null);
+      const fitted = keepFramesFitted(frames);
+      frames.forEach((f) => f.layout());
+
       const stop = () => {
         watcher.kill();
+        fitted();
+        frames.forEach((f) => f.destroy());
         water?.destroy();
         cardWater.current?.destroy();
         cardWater.current = null;
       };
-      if (reduced) return stop;
+      if (reduced) {
+        frames.forEach((f) => { f.p = 1; f.draw(); });
+        return stop;
+      }
 
       const rise = section.querySelectorAll<HTMLElement>('[data-rise]');
       // `opacity`, never `autoAlpha`: autoAlpha adds visibility:hidden, which would take
@@ -98,6 +112,11 @@ export function Support() {
 
       const tl = gsap.timeline({ paused: true });
       tl.to(rise, { opacity: 1, y: 0, duration: 0.95, ease: EASE.out, stagger: 0.09 });
+      // Each frame draws as its card rises: the head first, then the three routes in the
+      // stagger — the frames are the first four things that rise, in that order.
+      frames.forEach((f, i) => {
+        tl.to(f, { p: 1, duration: 1.1, ease: EASE.none, onUpdate: () => f.draw() }, i * 0.09);
+      });
       const entrance = ScrollTrigger.create({
         trigger: section, start: 'top 72%', once: true, onEnter: () => tl.play(),
       });
@@ -116,8 +135,9 @@ export function Support() {
       </div>
 
       <div className={styles.inner}>
-        <div className={`${wash.cardOnWater} ${styles.head}`} data-rise>
-          <p id="stott-label" className={styles.label}>{support.label}</p>
+        <div className={`${wash.frameOnWater} ${styles.head}`} data-rise>
+          <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
+          <p id="stott-label" className={`${wash.legend} ${styles.label}`} data-legend>{support.label}</p>
           {/* Two spans, because the break is chosen rather than found — and because the
               stylesheet sizes the heading to the longer LINE, which needs each to be a box
               of its own rather than two clauses in one flowing paragraph. */}
@@ -128,8 +148,9 @@ export function Support() {
 
         <ul className={styles.routes} aria-label={support.routesLabel}>
           {support.routes.map((route, i) => (
-            <li key={route.label} className={`${wash.cardOnWater} ${styles.route}`} data-rise>
-              <p className={styles.routeLabel}>{route.label}</p>
+            <li key={route.label} className={`${wash.frameOnWater} ${styles.route}`} data-rise>
+              <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
+              <p className={`${wash.legend} ${styles.routeLabel}`} data-legend>{route.label}</p>
               {/* One stop of the film's own run of colour, in the order the page walks it:
                   the cave's slate, the Quran's gold, the night. */}
               <p className={styles.routeValue} style={{ color: film.routes[i] }}>{route.value}</p>

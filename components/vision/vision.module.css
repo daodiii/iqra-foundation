@@ -1,8 +1,9 @@
 /*
  * The arch before sunrise. One box of cave ink; over it, an arch drawn with the tree's pen
- * as the tree grows, the sky opening inside it in the pen's wake, and three glass cards —
- * Dialog on the left flank, Trygghet on the apex, Inkludering on the right — with the tree
- * standing in the column between them and the name under its roots.
+ * as the tree grows, the sky opening inside it in the pen's wake, and three cards drawn
+ * with the same pen — Dialog on the left flank, Trygghet on the apex, Inkludering on the
+ * right, each name sitting on its frame's top line — with the tree standing in the column
+ * between them and the name under its roots.
  *
  * The cards are placed here, in CSS. The arch, the tree's stage and the scene are placed in
  * JS from where the cards landed (Vision.tsx, `layout`). The numbers are the mock's; the
@@ -140,11 +141,26 @@
   right: 16px;
 }
 
+/*
+ * 52px, not the 30 the glass sat at: the name now stands on the card's top edge, half
+ * above it, and 52 − 13 puts its top at 101px on a 900px screen — just under where the
+ * header's haze runs out (104px) when the section is at the top of the screen.
+ */
 .slotTop {
   left: 0;
   right: 0;
-  top: 30px;
+  top: 52px;
   justify-content: center;
+}
+
+/*
+ * The arch's right flank crosses the right card's top edge where its name sat, so the name
+ * moves to the right end of the line and the arch crosses the unbroken part — as it does
+ * for Dialog on the left. Desktop only: in flow every legend is at the left.
+ */
+.slotRight .name {
+  left: auto;
+  right: 22px;
 }
 
 /*
@@ -158,27 +174,28 @@
   pointer-events: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 26px 28px 28px;
+  /* Room under the line for the name's lower half (13px) plus the gap the card had. */
+  padding: 34px 30px 30px;
 }
 
 .slotTop .value {
   width: clamp(380px, 34.6%, 440px);
 }
 
+/* The name is the legend on the line — placed by `wash.legend`; this is only its type. */
 .name {
-  margin: 0;
-  font-size: 28px;
-  line-height: 1;
+  font-size: 26px;
   font-weight: 600;
   letter-spacing: -0.03em;
   color: var(--color-navy);
 }
 
 .text {
+  position: relative;
+  z-index: 1;
   margin: 0;
   font-size: 15px;
-  line-height: 1.55;
+  line-height: 1.58;
   color: var(--color-ink-soft);
 }
 
@@ -208,7 +225,8 @@
     inset: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    /* Each card's name stands half above it, so the cards keep more air between them. */
+    gap: 26px;
   }
 
   .label {
@@ -230,14 +248,22 @@
     padding: 0 12px;
   }
 
+  /* The first name stands half above its card: a little more room under the arch's feet. */
+  .slotLeft {
+    margin-top: 12px;
+  }
+
   .value,
   .slotTop .value {
     width: auto;
-    padding: 22px 22px 24px;
+    padding: 30px 22px 24px;
   }
 
-  .name {
-    font-size: 24px;
+  .name,
+  .slotRight .name {
+    font-size: 22px;
+    left: 14px;
+    right: auto;
   }
 
   .text {

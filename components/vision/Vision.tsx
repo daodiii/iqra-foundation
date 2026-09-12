@@ -6,6 +6,7 @@ import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { createInkWhenNear, type InkHandle } from '@/lib/ink';
+import { createFrame, type FrameHandle } from '@/lib/pen';
 import { setWordmarkOnDark } from '@/lib/wordmark';
 import { desktopArch, desktopStage, drawStroke, phoneArch, phoneStage, type Arch, type Rect } from './arch';
 import { createVisionTree, GROW } from './tree';
@@ -78,8 +79,8 @@ export function Vision() {
 
       /*
        * The sky, in ink (`film.vision`). The host is the section rather than the canvas, so
-       * a hand moving across the copy stirs the colour behind it too — the cards are glass
-       * lying on the water, not a lid on it. `createInk` returns null wherever WebGL2 or a
+       * a hand moving across the copy stirs the colour behind it too — the cards are lines
+       * drawn on the water, not a lid on it. `createInk` returns null wherever WebGL2 or a
        * float colour buffer is missing, and the box keeps the still gradient underneath;
        * the stroke and the tree are 2D and draw either way.
        */
@@ -88,6 +89,15 @@ export function Vision() {
         ? createInkWhenNear(inkCanvas, { reduced, palette: film.vision, host: section })
         : null;
       const strokeCtx = strokeCanvas.getContext('2d');
+
+      /*
+       * Each card's own frame, drawn with the same pen as the arch. Null where the canvas
+       * declines; the card is then a frosted box with no line, and the arrival below still
+       * brings its parts in.
+       */
+      const frames: (FrameHandle | null)[] = cards.map((card) => createFrame(card));
+      const legends = cards.map((c) => c.querySelector<HTMLElement>('[data-legend]'));
+      const copies = cards.map((c) => c.querySelector<HTMLElement>('[data-words]'));
 
       /* The geometry, remade on every layout. */
       let arch: Arch | null = null;
@@ -137,6 +147,8 @@ export function Vision() {
         // The renderer fitted the tree to whatever size the stage had before; tell it.
         if (changed) tree?.refit();
         draw();
+        // Measured after the cards have landed, on the same passes: mount, the fonts, a resize.
+        frames.forEach((f) => f?.layout());
       };
 
       let rt = 0;
@@ -150,12 +162,22 @@ export function Vision() {
         window.removeEventListener('resize', onResize);
         window.clearTimeout(rt);
         tree?.destroy();
+        frames.forEach((f) => f?.destroy());
         ink?.destroy();
       };
 
-      if (reduced) tree?.setT(99);
-      // Hide the cards here — in JS, so a failed script leaves the copy visible — never in CSS.
-      else gsap.set(cards, { opacity: 0, y: 16 });
+      if (reduced) {
+        tree?.setT(99);
+        // The frames close on their first layout, below.
+        frames.forEach((f) => { if (f) f.p = 1; });
+      } else {
+        // Hide the parts here — in JS, so a failed script leaves the copy visible — never in
+        // CSS. The card itself stays: its frame is drawn and its inside fades in as the pen
+        // passes, so there is nothing to hide but the words.
+        gsap.set(legends, { opacity: 0 });
+        gsap.set(copies, { opacity: 0, y: 10 });
+        gsap.set(cards, { '--frame-in': 0 });
+      }
       fitMark(mark);
       layout();
       // The cards are measured, and the web font changes their height: again when it lands.
@@ -165,9 +187,8 @@ export function Vision() {
 
       /*
        * The tree opens by itself on a clock, and the arch is drawn on the same clock with
-       * the tree's pen: `p` is how far the pen has come. Each card surfaces as the pen
-       * reaches its flank, once — glass sliding into place in the stroke's wake, not a
-       * stagger.
+       * the tree's pen: `p` is how far the pen has come. Each card is drawn as the pen
+       * reaches its flank, once — a frame in the stroke's wake, not a stagger.
        */
       const growth = { T: 0 };
       let arrived = false;
@@ -184,7 +205,18 @@ export function Vision() {
             cards.forEach((card, i) => {
               if (shown[i] || p < surfaces[i] + 0.004) return;
               shown[i] = true;
-              gsap.to(card, { y: 0, opacity: 1, duration: 0.9, ease: EASE.out });
+              /*
+               * The pen has reached this card's flank: the card's own pen draws its frame
+               * at the arch's speed, the inside comes up with the line, the name on the
+               * line first and the paragraph a beat after. Glass no longer slides in; a box
+               * is drawn.
+               */
+              const frame = frames[i];
+              const tl = gsap.timeline();
+              if (frame) tl.to(frame, { p: 1, duration: 1.1, ease: EASE.none, onUpdate: () => frame.draw() }, 0);
+              tl.to(card, { '--frame-in': 1, duration: 1.1, ease: EASE.none }, 0)
+                .to(legends[i], { opacity: 1, duration: 0.6, ease: EASE.out }, 0)
+                .to(copies[i], { opacity: 1, y: 0, duration: 0.8, ease: EASE.out }, 0.45);
             });
           },
         });
@@ -238,12 +270,13 @@ export function Vision() {
           <canvas className={styles.layer} data-stroke aria-hidden="true" />
           <Tree />
         </div>
-        {/* The three values, on glass: Dialog on the left flank, Trygghet on the apex, Inkludering on the right. */}
+        {/* The three values, each a frame drawn with the tree's pen: Dialog on the left flank, Trygghet on the apex, Inkludering on the right with its name at the right end of the line. */}
         {site.vision.values.map((v, i) => (
           <div key={v.key} className={`${styles.slot} ${SLOTS[i]}`}>
-            <div className={`${wash.card} ${styles.value}`} data-value={v.key}>
-              <h2 className={styles.name}>{v.name}</h2>
-              <p className={styles.text}>{v.text}</p>
+            <div className={`${wash.frame} ${styles.value}`} data-value={v.key}>
+              <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
+              <h2 className={`${wash.legend} ${styles.name}`} data-legend>{v.name}</h2>
+              <p className={styles.text} data-words>{v.text}</p>
             </div>
           </div>
         ))}

@@ -117,3 +117,18 @@ test('the box is the arafat floor, with a canvas for the water to paint on', () 
   expect(canvas).not.toBeNull();
   expect(canvas?.parentElement?.className).toMatch(/arafat/);
 });
+
+/**
+ * The box is a line drawn with the tree's pen: the two cards and the member card each carry
+ * the canvas the pen draws on and a legend on the line — the two labels, and on the member
+ * card the role, with the count kept inside at the top right.
+ */
+test('the two cards and the member card are frames; the role is the member card’s legend and the count stays inside', () => {
+  const section = mount();
+  expect(section.querySelectorAll('canvas[data-frame-canvas]')).toHaveLength(3);
+  const legends = [...section.querySelectorAll('[data-legend]')].map((l) => l.textContent);
+  expect(legends).toEqual([site.about.label, site.people.teamLabel, menneskene.team[0].role]);
+  const card = section.querySelector('[data-row]') as HTMLElement;
+  expect(card.querySelector('[data-legend]')).toHaveAttribute('data-part', 'role');
+  expect(card.querySelector('[data-counter]')).toHaveTextContent(`1 / ${menneskene.team.length}`);
+});

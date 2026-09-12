@@ -23,17 +23,39 @@
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 1.8vh, 22px);
-  padding: clamp(88px, 12vh, 140px) var(--margin);
+  /* 112 at least on top: the head's legend stands on its edge and has to clear the header's
+     haze, which runs out at 104px. */
+  padding: clamp(112px, 12vh, 140px) var(--margin) clamp(88px, 12vh, 140px);
 }
 
-/* A query container, so the heading below can be sized against this card's own width. */
+/* A query container, so the heading below can be sized against this card's own width. The
+   top leaves room under the line for the legend's lower half. */
 .head {
   container-type: inline-size;
-  padding: clamp(30px, 3.4vw, 48px) clamp(32px, 3.8vw, 56px);
+  border-radius: 12px;
+  padding: clamp(40px, 4vw, 58px) clamp(32px, 3.8vw, 56px) clamp(30px, 3.4vw, 48px);
 }
 
+/*
+ * The green's darkest pool is #1f5c4d, so the inside stays milkier here than on the other
+ * water. Measured against the still with glyphs and canvases hidden (2026-09-12): 0.68
+ * gives the soft ink 5.8:1 and navy 7.7:1 at the darkest point under the head's copy, the
+ * routes a little more. At the material's 0.6 navy read 6.9:1, under the 7:1 floor.
+ */
+.head,
+.route {
+  --frame-fill: 0.68;
+}
+
+/* Everything the cards hold sits above the pen's canvas — but not the legends, which `wash.legend` positions. */
+.head > :not(canvas, [data-legend]),
+.route > :not(canvas, [data-legend]) {
+  position: relative;
+  z-index: 1;
+}
+
+/* The label is the legend on the line — placed by `wash.legend`; this is only its type. */
 .label {
-  margin: 0 0 clamp(16px, 2vh, 22px);
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
   color: var(--color-ink-soft);
@@ -92,11 +114,11 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: clamp(22px, 2vw, 28px) clamp(24px, 2.2vw, 30px) clamp(24px, 2.2vw, 30px);
+  padding: clamp(32px, 3vw, 38px) clamp(24px, 2.2vw, 30px) clamp(24px, 2.2vw, 30px);
 }
 
+/* The route's label is its legend on the line — placed by `wash.legend`; this is only its type. */
 .routeLabel {
-  margin: 0;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
   color: var(--color-ink-soft);

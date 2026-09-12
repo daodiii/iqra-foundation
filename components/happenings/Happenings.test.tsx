@@ -150,3 +150,19 @@ test('one empty list leaves the other one and today still standing', () => {
   expect(text[0]).toContain(site.happenings.today);
   expect(text).toHaveLength(EVENTS.length + 1);
 });
+
+/**
+ * The box is a line drawn with the tree's pen: every stop carries the canvas the pen draws
+ * on, and its kind — «Nyhet» or «Arrangement» — is the legend that sits on the line.
+ */
+test('every stop is a frame with its kind as the legend on the line', () => {
+  const { container } = both();
+  const section = container.querySelector('#arrangementer') as HTMLElement;
+  const cards = section.querySelectorAll('article');
+  expect(cards.length).toBe(NEWS.length + EVENTS.length);
+  cards.forEach((card) => {
+    expect(card.querySelector('canvas[data-frame-canvas]')).toHaveAttribute('aria-hidden', 'true');
+    const legend = card.querySelector('[data-legend]')!;
+    expect([site.happenings.kinds.news, site.happenings.kinds.event]).toContain(legend.textContent);
+  });
+});
