@@ -1,11 +1,10 @@
 /*
- * The ask, at the foot of the page. It was a checkout on a full-bleed night ground; it is
- * now the third of the film's boxes — the Quran's gold and bronze in ink — and it reads top
- * to bottom rather than out from a giant number.
+ * The ask, at the foot of the page: one screen, one number.
  *
- * The night has not gone, it has become an object: the card at the bottom is the film's
- * last scene, the Haram after dark, and the one place on the page where the ink is light in
- * water rather than pigment on paper.
+ * The green water is the box and one frame sits in it, left, with water to its right —
+ * the same frame every box on the site is drawn with, holding the question, the Vipps
+ * number and one sentence. The section is as tall as the screen and no taller, which is
+ * the whole brief: what stood here before ran to a screen and a half.
  */
 .support {
   position: relative;
@@ -20,36 +19,33 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(16px, 1.8vh, 22px);
-  /* 112 at least on top: the head's legend stands on its edge and has to clear the header's
-     haze, which runs out at 104px. */
+  /* 112 at least on top: the legend stands on the frame's edge and has to clear the
+     header's haze, which runs out at 104px. */
   padding: clamp(112px, 12vh, 140px) var(--margin) clamp(88px, 12vh, 140px);
 }
 
-/* A query container, so the heading below can be sized against this card's own width. The
-   top leaves room under the line for the legend's lower half. */
-.head {
-  container-type: inline-size;
-  border-radius: 12px;
-  padding: clamp(40px, 4vw, 58px) clamp(32px, 3.8vw, 56px) clamp(30px, 3.4vw, 48px);
-}
-
 /*
- * The green's darkest pool is #1f5c4d, so the inside stays milkier here than on the other
- * water. Measured against the still with glyphs and canvases hidden (2026-09-12): 0.68
- * gives the soft ink 5.8:1 and navy 7.7:1 at the darkest point under the head's copy, the
- * routes a little more. At the material's 0.6 navy read 6.9:1, under the 7:1 floor.
+ * A query container, so the number below can be sized against the frame's own width. The
+ * top leaves room under the line for the legend's lower half.
+ *
+ * The inside is milkier than the material's 0.6: the green's darkest pool is #1f5c4d, and
+ * measured against the still with glyphs and canvases hidden (2026-09-12), 0.68 gives the
+ * soft ink 5.8:1 and navy 7.7:1 at the darkest point under the copy; at 0.6 navy read
+ * 6.9:1, under the 7:1 floor.
  */
-.head,
-.route {
+.card {
   --frame-fill: 0.68;
+  container-type: inline-size;
+  width: min(100%, 820px);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: clamp(40px, 4.2vw, 56px) clamp(30px, 3.6vw, 52px) clamp(30px, 3.2vw, 44px);
 }
 
-/* Everything the cards hold sits above the pen's canvas — but not the legends, which `wash.legend` positions. */
-.head > :not(canvas, [data-legend]),
-.route > :not(canvas, [data-legend]) {
+/* Everything the frame holds sits above the pen's canvas — but not the legend, which `wash.legend` positions. */
+.card > :not(canvas, [data-legend]) {
   position: relative;
   z-index: 1;
 }
@@ -61,305 +57,76 @@
   color: var(--color-ink-soft);
 }
 
-/*
- * The heading lands ON the measure rather than merely inside it, and it does that in CSS.
- *
- * `6.63cqi` is not a guess. Set at 100px in Geist 600, the longer of the two hand-set lines
- * — «Faste givere gjør at det fortsetter.» — measures 1470px, so it fills a card of width W
- * at a size of W × 0.975 / 14.70, and 0.975 is the 2.5% of slack that stops rounding from
- * deciding. `cqi` is a percentage of the container's content box, which is exactly the
- * measure, so the whole fit is that one number.
- *
- * This was JavaScript first: measure the line, scale the type, re-measure when the font
- * arrives. It worked and it shifted the document 27px the moment Geist landed, because the
- * heading resized under content that had already been laid out. A number in the stylesheet
- * cannot shift, needs no re-measure, and costs nothing.
- *
- * The cost is that the number belongs to THIS sentence in THIS face. Rewrite the title in
- * the content file and it has to be re-measured — which is not left to anyone's memory:
- * `sections.spec.ts` asserts the longer line both fits the card and fills at least three
- * quarters of it, so a rewrite that outgrows or under-fills this fails loudly.
- */
+/* The question, set like Misjon's lines: the same weight and scale, one line of it. */
 .title {
-  margin: 0;
-  font-size: min(78px, 6.63cqi);
-  font-weight: 600;
-  letter-spacing: -0.04em;
-  line-height: 1;
-}
-
-.title span {
-  display: block;
-  /* The size is chosen to fit the line exactly, so a wrap would mean the size is wrong.
-     `nowrap` makes that show as an overflow the e2e catches, rather than as a quiet
-     re-break that looks deliberate. */
-  white-space: nowrap;
-}
-
-/* The second line is the turn in the sentence, so it is set back rather than shouted. */
-.title span + span {
-  color: var(--color-ink-soft);
-}
-
-.routes {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(14px, 1.4vw, 20px);
-}
-
-.route {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: clamp(32px, 3vw, 38px) clamp(24px, 2.2vw, 30px) clamp(24px, 2.2vw, 30px);
-}
-
-/* The route's label is its legend on the line — placed by `wash.legend`; this is only its type. */
-.routeLabel {
-  font: 500 12px/1 var(--font-sans);
-  letter-spacing: 0.03em;
-  color: var(--color-ink-soft);
-}
-
-/*
- * The number, in its own stop of the film's colour. `color` is set inline from
- * `film.routes` so the three sections cannot drift apart — the palette is imported, never
- * copied. Tabular figures because these are account numbers, and a real one will be long.
- */
-.routeValue {
-  margin: 4px 0 2px;
-  font-size: clamp(20px, 2vw, 28px);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-
-.routeHow {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--color-ink-soft);
-}
-
-/*
- * The card. It is the one object on the page that is not paper, so it carries no white
- * card class — the night ground and its water come from `wash.night`, and this positions it.
- */
-.giver {
-  position: relative;
-  z-index: 1;
-  border-radius: 22px;
-  overflow: hidden;
-  isolation: isolate;
-  background-color: var(--ground);
-  background-image: var(--still);
-  color: #ffffff;
-}
-
-/*
- * White type sits on this card, and the ink under it is light rather than pigment — the one
- * place on the page where the decoration can get BRIGHTER than the words. The scrim sinks
- * it back under them: heaviest where the amount and the code are, lightest at the edges, so
- * the card still reads as weather rather than as a panel with a photograph behind it.
- */
-.giverScrim {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(8, 13, 21, 0.42) 0%, rgba(8, 13, 21, 0.2) 40%, rgba(8, 13, 21, 0.5) 100%),
-    radial-gradient(78% 86% at 50% 52%, rgba(8, 13, 21, 0.62), rgba(8, 13, 21, 0.34) 72%, transparent);
-}
-
-.giverInner {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  gap: clamp(24px, 3vw, 48px);
-  align-items: center;
-  padding: clamp(30px, 3.4vw, 48px) clamp(32px, 3.8vw, 56px);
-}
-
-/* Crimson on this ground is too close to it to find. */
-.giverInner :focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 3px;
-}
-
-.choose {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(10px, 1.4vh, 16px);
-  align-items: flex-start;
-}
-
-.giverLabel {
-  margin: 0;
-  font: 500 12px/1 var(--font-sans);
-  letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.66);
-}
-
-/*
- * One line, always. The amount cannot break — `kroner()` groups with a non-breaking space —
- * but the unit beside it can, and did: «kr i måneden» came away and sat on a line of its
- * own under the number.
- */
-.amount {
-  margin: 0;
-  font-size: clamp(44px, 5.4vw, 76px);
-  font-weight: 700;
-  letter-spacing: -0.05em;
-  line-height: 0.95;
-  white-space: nowrap;
-  /* Four amounts of two different widths swap in and out of this one line. */
-  font-variant-numeric: tabular-nums;
-}
-
-.unit {
-  font-size: 0.3em;
+  margin: 0 0 clamp(28px, 4.4vh, 44px);
+  font-size: clamp(22px, 2.3vw, 34px);
   font-weight: 500;
-  letter-spacing: -0.01em;
-  /* The space before this is a real one in the markup, not a margin: the figure sits in a
-     live region, and «300kr i måneden» is what a screen reader would otherwise be handed. */
-  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: -0.028em;
+  line-height: 1.2;
+  text-wrap: balance;
 }
 
-.tiers {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.tier {
-  font: 500 14px/1 var(--font-sans);
-  padding: 12px 18px;
-  border-radius: 999px;
-  background: transparent;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  cursor: pointer;
-  font-variant-numeric: tabular-nums;
-  transition:
-    background 180ms var(--ease-out-expo),
-    border-color 180ms var(--ease-out-expo),
-    color 180ms var(--ease-out-expo);
-}
-
-.tier:hover {
-  border-color: rgba(255, 255, 255, 0.68);
-}
-
-.tier[aria-pressed='true'] {
-  background: #ffffff;
-  border-color: #ffffff;
-  /* The card's own ground, inherited rather than repeated: it is set by `wash.night` on
-     the card and is the palette's value, so the two cannot drift. */
-  color: var(--ground);
-}
-
-.pay {
+.vipps {
+  margin: 0 0 clamp(28px, 4.4vh, 40px);
   display: flex;
   flex-direction: column;
-  gap: 10px;
   align-items: flex-start;
-}
-
-.payTitle {
-  margin: 0;
-  font: 500 12px/1 var(--font-sans);
-  letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.66);
+  gap: 12px;
 }
 
 /*
- * The placeholder for a code Vipps has to issue. Deliberately the shape of the thing and
- * plainly not the thing: a drawn square would be the one placeholder on this site a visitor
- * could actually try, and it would fail in their bank app rather than on the page.
+ * The number. As large as the screen allows — a width term, a height term, a ceiling — and
+ * then one more: it may never run out of the frame. The last term is the fit, and it is
+ * arithmetic rather than measurement: `--chars` is the string's length, set inline from
+ * the content, and 0.62em is a safe width per character for this face at this weight and
+ * tracking (digits are narrower, «[NUMMER]» is not). Five digits never reach that term at
+ * any screen size; the eight-character placeholder that stands in for them today does, and
+ * fits. Measuring would have re-measured when the font arrived and moved the page.
+ *
+ * Weight 600, the site's display weight, not 700: at this size the heavier cut read as a
+ * black block rather than the site's navy.
  */
-.qr {
-  display: grid;
-  place-items: center;
-  width: clamp(120px, 12vw, 150px);
-  aspect-ratio: 1;
-  border: 1px dashed rgba(255, 255, 255, 0.4);
-  border-radius: 14px;
+.number {
+  display: block;
+  font-size: min(11.5vw, 19vh, 168px, calc(100cqi / (var(--chars) * 0.62)));
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 0.92;
+  margin-left: -0.04em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.numberLabel {
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.72);
-  text-align: center;
+  color: var(--color-ink-soft);
 }
 
-.payHow {
+.also {
   margin: 0;
-  /* px, not ch. `ch` is the width of a zero in the CURRENT face, so the measure itself
-     changes when Geist replaces the fallback — the paragraph re-wraps, gains or loses a
-     line, and the document height moves under a reader who has not scrolled. The hero's
-     own "nothing shifts when the fonts arrive" test caught exactly that. */
-  max-width: 280px;
+  /* px, not ch: a `ch` measure moves when the face swaps. */
+  max-width: 540px;
   font-size: 14px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.tax {
-  margin: 0;
-  /* px for the same reason as `.payHow`: a `ch` measure moves when the face swaps. */
-  max-width: 460px;
-  font-size: 13px;
-  line-height: 1.55;
   color: var(--color-ink-soft);
-  /* It sits on the ink rather than on a card, so it needs a ground of its own to stay
-     readable wherever the pigment happens to be dark that second. */
-  background: rgba(255, 255, 255, 0.72);
-  padding: 12px 16px;
-  border-radius: 12px;
 }
 
-@media (max-width: 900px) {
-  .routes {
-    grid-template-columns: 1fr;
-  }
-
-  .giverInner {
-    grid-template-columns: 1fr;
-    gap: clamp(22px, 4vw, 32px);
-  }
-
+@media (max-width: 767px) {
   .inner {
-    padding: clamp(72px, 10vh, 110px) var(--margin);
+    padding: 116px var(--margin) 56px;
   }
 
-  /*
-   * Stacked, the QR and its line read as a row rather than a column: the code is small and
-   * a caption under it leaves the card looking bottom-heavy on a narrow screen.
-   */
-  .pay {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px;
+  .card {
+    padding: 30px 22px 26px;
   }
 
-  .payTitle {
-    width: 100%;
+  .title {
+    font-size: clamp(21px, 5.6vw, 24px);
   }
 
-  .payHow {
-    flex: 1;
-    min-width: 180px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tier {
-    transition: none;
+  .number {
+    font-size: min(21vw, calc(100cqi / (var(--chars) * 0.62)));
   }
 }

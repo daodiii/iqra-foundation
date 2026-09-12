@@ -29,7 +29,6 @@ const SCENES = [
   ['bridge', film.bridge],
   ['arafat', film.people],
   ['green', film.supportWater],
-  ['night', film.supportCard],
 ] as const;
 
 test.each(SCENES)('the %s ground in the stylesheet matches the palette', (name, scene) => {

@@ -11,44 +11,6 @@ const missionStanzas = [
 ] as const;
 
 /**
- * Støtt oss asks for a standing gift, so these are monthly amounts and there is no
- * one-off/monthly toggle to set them against. They start at 200 because the site's own
- * skattefradrag sentence puts the floor for a deductible year at 500 kroner, and the
- * smallest of these clears it two and a half times over.
- *
- * What each amount BUYS is deliberately not here. Naming outcomes was considered and
- * rejected: every figure would have been mine rather than anyone's, and a page that tells
- * you what your money turns into has to be able to show that it did.
- */
-const supportTiers = [200, 300, 500, 1000] as const;
-
-/**
- * The three ways to give, in the order the film's colours run — slate, gold, night.
- *
- * They are inert text, which is the whole reason they lead: every number on this page is
- * still a placeholder, and a route you copy into your own bank is the one kind of payment
- * that needs nothing built. Vipps sits in the middle because it is how people here
- * actually pay, and AvtaleGiro last because it is the only one that repeats by itself.
- */
-const supportRoutes = [
-  {
-    label: 'Kontonummer',
-    value: '[KONTO]',
-    how: 'Overfør beløpet selv, og merk betalingen med navnet ditt.',
-  },
-  {
-    label: 'Vipps',
-    value: '[NUMMER]',
-    how: 'Åpne Vipps, velg Betal, og søk opp nummeret.',
-  },
-  {
-    label: 'AvtaleGiro',
-    value: '[KID]',
-    how: 'Fast trekk hver måned. Du oppretter den i nettbanken din.',
-  },
-] as const;
-
-/**
  * Arrangementer and Nyheter, which have no content yet.
  *
  * Every row here is a bracketed placeholder, and that is deliberate rather than lazy: the
@@ -273,44 +235,26 @@ export const site = {
   support: {
     label: 'Støtt oss',
     /**
-     * Two hand-set lines, sized at runtime so the longer of them lands on the measure.
-     * They are written from what Om oss already says — «Rundt tjue stykker» and «Ingen av
-     * oss gjør dette på heltid» — and claim nothing about the foundation's finances.
-     * Changing them is a one-line edit: the heading measures whatever it is given.
+     * The section says one thing: here is the Vipps number. The question is the user's own
+     * words (2026-09-12), and the number under it is the whole answer — there is no amount
+     * to choose and no card to fill in, because nothing is wired to a payment yet, and a
+     * control that leads nowhere is worse than none.
      */
-    title: ['Tjue stykker gjør arbeidet.', 'Faste givere gjør at det fortsetter.'],
-    routes: supportRoutes,
-    routesLabel: 'Slik gir du',
-    giver: {
-      label: 'Fast giver',
-      unit: 'kr i måneden',
-      amountLabel: 'Velg beløp',
-      /** The amount preselected on arrival, as an index into `tiers`. */
-      preselect: 1,
+    title: 'Vil du støtte Iqra Foundation?',
+    vipps: {
+      label: 'Vippsnummer',
+      value: '[NUMMER]',
     },
-    tiers: supportTiers,
     /**
-     * The QR is bracketed like every other number on this page, and for the same reason:
-     * a real one has to be issued by Vipps against a real number. Drawing a plausible
-     * square here would be worse than leaving it out — it would be the one placeholder on
-     * the site that a visitor could try, and it would fail silently in their bank app.
+     * The other two ways to give, as one sentence rather than two boxes. The account
+     * number is bracketed INSIDE the sentence, and `scripts/lib/content-check.mjs` reads
+     * it there: a bracket anywhere in this string holds a production build.
      */
-    qr: {
-      value: '[QR-KODE]',
-      title: 'Vipps',
-      how: 'Skann koden, eller søk opp nummeret i appen. Du velger beløpet selv.',
-    },
+    also: 'Du kan også overføre til kontonummer [KONTO], eller opprette fast trekk i nettbanken. Merk betalingen med navnet ditt.',
     fields: {
       orgnr: 'Organisasjonsnummer',
     },
     orgnr: '[ORG.NR]',
-    /**
-     * True only if the foundation is on Skatteetaten's list of approved recipients
-     * (skatteloven § 6-50) — approval is per organisation and has to be applied for.
-     * The bracket is load-bearing: it holds the production build until whoever fills in
-     * the organisation number has confirmed the approval that makes this sentence true.
-     */
-    tax: 'Gaver mellom 500 og 25 000 kroner i året gir skattefradrag. Vi rapporterer gaven på organisasjonsnummer [ORG.NR], og trenger fødselsnummeret ditt for å gjøre det.',
   },
   contact: { email: '[EPOST]' },
 } as const;
