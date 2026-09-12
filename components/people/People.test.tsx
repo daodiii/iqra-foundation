@@ -107,15 +107,16 @@ test('every slot on every member card is still a bracket', () => {
 });
 
 /**
- * The box is Arafat in clear water — the one scene of the film the page had never used, and
- * the gathering, which is why it belongs under the section about who «we» are. The canvas
- * is what the simulation paints on; the class is what carries the floor colour before it.
+ * The box is water — sage since the reorder of 2026-09-13, Arafat's stone before that — and
+ * the class is the section's, not the scene's, so the colour can move without the markup
+ * lying about it. The canvas is what the simulation paints on; the class is what carries
+ * the floor colour before it.
  */
-test('the box is the arafat floor, with a canvas for the water to paint on', () => {
+test('the box is the people’s floor, with a canvas for the water to paint on', () => {
   const section = mount();
   const canvas = section.querySelector('canvas[data-water]');
   expect(canvas).not.toBeNull();
-  expect(canvas?.parentElement?.className).toMatch(/arafat/);
+  expect(canvas?.parentElement?.className).toMatch(/people/);
 });
 
 /**

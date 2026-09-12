@@ -1,5 +1,5 @@
 import type { InkPalette } from './ink';
-import { DEPTH, floorAt, type WaterScene } from './water';
+import { floorAt, type WaterScene } from './water';
 
 /**
  * The hero film's own colours.
@@ -17,9 +17,11 @@ import { DEPTH, floorAt, type WaterScene } from './water';
  * | 3.80 s | Masjid al-Haram at night   | `#0c131d` `#958679` `#bab5af`           |
  *
  * The page walks that arc, and it walks it in two materials. Visjon and Misjon are INK —
- * pigment spreading through water, `lib/ink.ts`. Below them the ink is gone: Arrangementer ·
- * Nyheter is still sage WATER (`lib/water.ts`, the shallowest box on the page), Om oss ·
- * Teamet is Arafat seen through clear water, and Støtt oss is water too.
+ * pigment spreading through water, `lib/ink.ts`. Below them the ink is gone and the boxes
+ * are WATER (`lib/water.ts`): the stone of Arafat under Arrangementer · Nyheter, sage under
+ * Om oss · Teamet, the green under Støtt oss. That order is the user's — «To løp»,
+ * 2026-09-13: after the sky, a warm run (cream, then the stone) and a green run (sage, then
+ * the green) — and so is the depth of each box, set one at a time on a slider.
  * That is the whole shape of the page — a material that thins as you go down it. The Haram
  * at night, the film's last scene, is not on the page any more: it was the card at the foot
  * of Støtt oss until 2026-09-12, when the section became one number and the card went.
@@ -43,6 +45,13 @@ import { DEPTH, floorAt, type WaterScene } from './water';
  */
 
 /**
+ * The user's slider, on the ink boxes. Every box on the page was given a depth on the same
+ * slider (2026-09-13), 0.7 being what each had been tuned as; the ink boxes were set to 0.55,
+ * which on pigment means this much of the load and the ceiling.
+ */
+const INK_LOAD = 0.55 / 0.7;
+
+/**
  * The sky: light blue, pale at the horizon and deeper towards the zenith, with the one thread
  * of warm light the cave used to carry kept as the sun in it. The deepest blue is the rarest
  * so the box never drifts to navy, and the load is turned down from the cave's 1.2 so it
@@ -51,14 +60,20 @@ import { DEPTH, floorAt, type WaterScene } from './water';
 const VISION: InkPalette = {
   ink: [['#a5d4f1', 3], ['#c3e2f6', 3], ['#7ec0ea', 2], ['#4f9fd9', 1], ['#f3e5c6', 1]],
   ground: '#eef5fb',
-  strength: 0.9,
   /*
-   * The ceiling, so that a hand on the box draws in sky blue and never in navy: at this
-   * peak the deepest pigment shows as about #89bbec, and nothing can get darker. Set
-   * against «when you touch the screen the color that comes out is waaay too dark. want
-   * it to be sky blue» (2026-09-12); `film.test.ts` holds the darkest tone to a floor.
+   * The load, and below it the ceiling, both at 0.55/0.7 of what they were tuned as: the
+   * user set this box to 0.55 on the same slider as the water boxes («To løp», 2026-09-13),
+   * and on ink the slider is how much pigment lands and how dark it may get. The stills in
+   * `wash.module.css` carry the same factor.
    */
-  peak: 0.3,
+  strength: 0.9 * INK_LOAD,
+  /*
+   * The ceiling, so that a hand on the box draws in sky blue and never in navy: at 0.3 the
+   * deepest pigment showed as about #89bbec, and nothing could get darker. Set against
+   * «when you touch the screen the color that comes out is waaay too dark. want it to be
+   * sky blue» (2026-09-12); `film.test.ts` holds the darkest tone to a floor.
+   */
+  peak: 0.3 * INK_LOAD,
 };
 
 /**
@@ -69,10 +84,10 @@ const VISION: InkPalette = {
 const MISSION: InkPalette = {
   ink: [['#eddfbd', 3], ['#f2e7cc', 3], ['#e4d2a3', 2], ['#d6bd83', 1]],
   ground: '#f8f2e4',
-  strength: 0.7,
+  strength: 0.7 * INK_LOAD,
   /* Lower than the sky's: cream has less room before it is tan. The deepest tone a hand
-     can leave here is about #eedcb7 — «white cream», the same call. */
-  peak: 0.12,
+     could leave here was about #eedcb7 — «white cream», the same call. */
+  peak: 0.12 * INK_LOAD,
 };
 
 /*
@@ -85,12 +100,11 @@ const MISSION: InkPalette = {
  */
 
 /**
- * Arrangementer · Nyheter: still water, sage. It used to be lit grey-blue water with the
- * page's inks raining into it — the one box on the page that kept moving in colour, and
- * the loud one: «something much calmer, and a new color» (2026-09-12). Of four floors shown
- * in the page's run the user chose this, «C Salvie», a grey-green that is the first hint of
- * the green the page ends on. The pools follow Arafat's pattern: light low left, shade high
- * right, a mid-tone and a small dark one.
+ * Sage: grey-green, still water. Chosen for Arrangementer · Nyheter first («C Salvie»,
+ * 2026-09-12, to replace the drops that used to rain into that box) and moved down one
+ * box the next day, when the user reordered the page: it is the first of the green run,
+ * under Om oss · Teamet, with the green itself below it. The pools follow Arafat's pattern:
+ * light low left, shade high right, a mid-tone and a small dark one.
  */
 const SAGE: WaterScene = {
   pale: '#e1e9e2',
@@ -104,15 +118,9 @@ const SAGE: WaterScene = {
 };
 
 /**
- * This one box is shallower than the rest. The page's water is resolved at one depth
- * (`DEPTH`, 0.7) so its boxes read as one body of water — and this box breaks that on
- * purpose: the user set every box's depth on a slider and asked to keep the others as they
- * are, «only news», at 0.3. The ground that comes out is #c8d4ca; `film.test.ts` pins it.
- */
-const SAGE_DEPTH = 0.3;
-
-/**
- * Arafat: white plain, glare, and the crowd as shadow.
+ * Arafat: white plain, glare, and the crowd as shadow. Under Arrangementer · Nyheter since
+ * the reorder of 2026-09-13, and barely under water there (0.15): the stone in a film of
+ * light, the second step of the warm run down from the cream.
  *
  * The pale end is the plain's own stone; the deep end is that stone with the light taken
  * out of it rather than a different colour, which is what keeps it reading as one place at
@@ -150,17 +158,21 @@ const GREEN: WaterScene = {
   ],
 };
 
+/**
+ * Each water box's depth, the user's (2026-09-13, on a slider per box). The page's water
+ * used to be resolved at one depth so the boxes would read as one body of water; they are
+ * three now, and the page reads as water getting deeper: the bridge barely covers its stone,
+ * the ask is the deepest. Nothing downstream is given a scene and a knob — it is given the
+ * floor, resolved here. `film.test.ts` pins the ground each one comes out as.
+ */
+const DEPTHS = { bridge: 0.15, people: 0.55, support: 0.35 } as const;
+
 export const film = {
   vision: VISION,
   mission: MISSION,
-  /*
-   * Resolved here, once, at the page's one depth. Two boxes of water at different depths
-   * read as two bodies of water rather than as one idea, so nothing downstream is given a
-   * scene and a knob — it is given the floor.
-   */
-  bridge: floorAt(SAGE, SAGE_DEPTH),
-  people: floorAt(ARAFAT, DEPTH),
-  supportWater: floorAt(GREEN, DEPTH),
+  bridge: floorAt(ARAFAT, DEPTHS.bridge),
+  people: floorAt(SAGE, DEPTHS.people),
+  supportWater: floorAt(GREEN, DEPTHS.support),
 } as const;
 
 /** The sections painted in pigment, and the ones painted in water. */
