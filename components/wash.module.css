@@ -188,12 +188,18 @@
    */
   --color-ink-soft: #3f4b5c;
   /*
-   * ONE KNOB: how milky the inside is. 0.30 on the ink boxes — the sky and the cream are
-   * pale, and their ceilings (`film.ts`, `peak`) mean a hand cannot darken them past
-   * #89bbec / #eedcb7, where navy and the soft ink both clear 5:1. The water boxes are
-   * darker and set their own, below.
+   * ONE KNOB: how milky the inside is, `--frame-fill`. It is deliberately NOT declared
+   * here — the material only carries a default, `--frame-base`, and reads
+   * `var(--frame-fill, var(--frame-base))` — so a section can set `--frame-fill` on a card
+   * or on anything above it and win by inheritance, rather than by out-specifying a
+   * declaration on the card itself (which a plain class in a section's stylesheet cannot
+   * do reliably; the bundle's order decided it once, and the override silently lost).
+   *
+   * 0.30 on the ink boxes: the sky and the cream are pale, and their ceilings (`film.ts`,
+   * `peak`) mean a hand cannot darken them past #89bbec / #eedcb7, where navy and the soft
+   * ink both clear 5:1 — measured 7.7:1 and 10.3:1 at the darkest point of the stills.
    */
-  --frame-fill: 0.3;
+  --frame-base: 0.3;
 }
 
 /* The inside: barely frosted, so the material stays visible and the words stay readable. */
@@ -203,7 +209,7 @@
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background: rgb(255 255 255 / var(--frame-fill));
+  background: rgb(255 255 255 / var(--frame-fill, var(--frame-base)));
   /*
    * ⚠ The UNPREFIXED property only — the build adds the prefix. Declaring the prefixed
    * form beside it makes Lightning CSS keep the prefixed one alone, which Blink does not
@@ -219,12 +225,13 @@
 /*
  * The same box on water. The floors are darker than the ink's paper — Arafat's stone and
  * the green — so the inside stays milkier or the type falls under 4.5:1 at the darkest
- * pool. Set by measurement, not by eye; each water section overrides with its own number
- * and the ratio it measured.
+ * pool. Set by measurement, not by eye: at 0.6 on Arafat's still the darkest point under
+ * the copy gives the soft ink 6.5:1 and navy 8.6:1 (2026-09-12, glyphs and canvases
+ * hidden). The green needs more and sets its own; the bridge, paler, sets less.
  */
 .frameOnWater {
   composes: frame;
-  --frame-fill: 0.6;
+  --frame-base: 0.6;
 }
 
 /* The line: a canvas 32px larger than the box on every side, room for the pen's glow and its tip. */
@@ -267,7 +274,7 @@
   inset: 0 0 50% 0;
   z-index: -1;
   border-radius: 6px 6px 0 0;
-  background: rgb(255 255 255 / var(--frame-fill));
+  background: rgb(255 255 255 / var(--frame-fill, var(--frame-base)));
   backdrop-filter: blur(12px) saturate(1.4);
   pointer-events: none;
 }

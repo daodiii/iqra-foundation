@@ -38,8 +38,9 @@
 
 /*
  * The green's darkest pool is #1f5c4d, so the inside stays milkier here than on the other
- * water. 0.68 to begin with; measured against the still with glyphs and canvases hidden and
- * written beside the number once it is.
+ * water. Measured against the still with glyphs and canvases hidden (2026-09-12): 0.68
+ * gives the soft ink 5.8:1 and navy 7.7:1 at the darkest point under the head's copy, the
+ * routes a little more. At the material's 0.6 navy read 6.9:1, under the 7:1 floor.
  */
 .head,
 .route {

@@ -22,8 +22,12 @@ test('the frame replaces the glass', () => {
   expect(css).not.toMatch(/\.cardOnWater\s*\{/);
 });
 
-test('the inside is one knob, and the arrival fades it through a custom property', () => {
-  expect(css).toMatch(/--frame-fill:\s*0\.3\b/);
+test('the inside is one knob a section can set from above, with a default per material', () => {
+  expect(css).toMatch(/--frame-base:\s*0\.3\b/);
+  expect(css).toMatch(/--frame-base:\s*0\.6\b/);
+  expect(css).toMatch(/var\(--frame-fill,\s*var\(--frame-base\)\)/);
+  // never declared on the material itself, or no section could win by inheritance
+  expect(css).not.toMatch(/--frame-fill:\s*[\d.]/);
   expect(css).toMatch(/opacity:\s*var\(--frame-in,\s*1\)/);
 });
 

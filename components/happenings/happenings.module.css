@@ -155,7 +155,16 @@
   z-index: 1;
 }
 
-/* What has been sits a touch deeper in the water than what is coming. */
+/*
+ * The row is on water — the bridge's floor — so the inside is milkier than on the ink
+ * boxes above. Measured against the still with glyphs and canvases hidden (2026-09-12):
+ * 0.5 gives the soft ink 5.4:1 and navy 7.2:1 at the darkest point under the copy.
+ */
+.card {
+  --frame-fill: 0.5;
+}
+
+/* What has been sits a touch deeper in the water than what is coming: 5.35:1 / 7.1:1. */
 .past .card {
   --frame-fill: 0.42;
 }
