@@ -26,14 +26,33 @@
   padding: clamp(88px, 12vh, 140px) var(--margin);
 }
 
-/* A query container, so the heading below can be sized against this card's own width. */
+/* A query container, so the heading below can be sized against this card's own width. The
+   top leaves room under the line for the legend's lower half. */
 .head {
   container-type: inline-size;
-  padding: clamp(30px, 3.4vw, 48px) clamp(32px, 3.8vw, 56px);
+  border-radius: 12px;
+  padding: clamp(40px, 4vw, 58px) clamp(32px, 3.8vw, 56px) clamp(30px, 3.4vw, 48px);
 }
 
+/*
+ * The green's darkest pool is #1f5c4d, so the inside stays milkier here than on the other
+ * water. 0.68 to begin with; measured against the still with glyphs and canvases hidden and
+ * written beside the number once it is.
+ */
+.head,
+.route {
+  --frame-fill: 0.68;
+}
+
+/* Everything the cards hold sits above the pen's canvas. */
+.head > :not(canvas),
+.route > :not(canvas) {
+  position: relative;
+  z-index: 1;
+}
+
+/* The label is the legend on the line — placed by `wash.legend`; this is only its type. */
 .label {
-  margin: 0 0 clamp(16px, 2vh, 22px);
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
   color: var(--color-ink-soft);
@@ -92,11 +111,11 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: clamp(22px, 2vw, 28px) clamp(24px, 2.2vw, 30px) clamp(24px, 2.2vw, 30px);
+  padding: clamp(32px, 3vw, 38px) clamp(24px, 2.2vw, 30px) clamp(24px, 2.2vw, 30px);
 }
 
+/* The route's label is its legend on the line — placed by `wash.legend`; this is only its type. */
 .routeLabel {
-  margin: 0;
   font: 500 12px/1 var(--font-sans);
   letter-spacing: 0.03em;
   color: var(--color-ink-soft);

@@ -140,7 +140,22 @@ test('the section is only ever transparent, never visibility:hidden', () => {
  */
 test('the whole section renders even though neither ink can start', () => {
   const section = mount();
-  expect(section.querySelectorAll('canvas')).toHaveLength(2);
+  // The two water canvases, the box's and the night card's; the four frame canvases are the pen's.
+  expect(section.querySelectorAll('canvas[data-water], canvas[data-water-card]')).toHaveLength(2);
   expect(within(section).getByText(s.title[0])).toBeInTheDocument();
   expect(tierButtons(section)).toHaveLength(s.tiers.length);
+});
+
+/**
+ * The box is a line drawn with the tree's pen: the head and the three routes each carry the
+ * canvas the pen draws on and their label on the line. The night card is a box in its own
+ * right — dark, with its own water — and wears none of it.
+ */
+test('the head and the three routes are frames with their labels on the line; the night card is not', () => {
+  const section = mount();
+  expect(section.querySelectorAll('canvas[data-frame-canvas]')).toHaveLength(4);
+  const legends = [...section.querySelectorAll('[data-legend]')].map((l) => l.textContent);
+  expect(legends).toEqual([s.label, ...s.routes.map((r) => r.label)]);
+  const night = section.querySelector('[data-water-card]')!.parentElement!;
+  expect(night.querySelector('[data-frame-canvas]')).toBeNull();
 });
