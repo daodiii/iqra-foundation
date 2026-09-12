@@ -42,7 +42,7 @@
   inset: 0;
 }
 
-/* The scene and the stroke: two canvases the size of the arch area, under the tree. */
+/* The stroke: a canvas the size of the arch area, under the tree. */
 .layer {
   position: absolute;
   inset: 0;

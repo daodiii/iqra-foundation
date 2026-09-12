@@ -5,9 +5,9 @@ export const GROW = 3.8;
 
 /**
  * Where the ground line sits in the stage and where the crown's top does, as fractions of
- * the stage's height. Exported because the section builds around them: the scene paints
- * its horizon on the first, and the stage is placed so the second lands under the top
- * card. Typed here once, so neither can drift from the figure.
+ * the stage's height. Exported because the section builds around them: the stage is
+ * placed so the second lands under the top card, and the tests hold the figure to the
+ * first. Typed here once, so neither can drift from the figure.
  */
 export const GROUND = 0.74;
 export const TOP = 0.06;

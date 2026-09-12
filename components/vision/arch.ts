@@ -2,14 +2,14 @@ import { TOP } from './tree';
 
 /*
  * The arch: one stroke across the box, drawn with the tree's pen as the tree grows, and
- * the opening it makes. Geometry only. Nothing here touches a canvas except `trace`,
- * `region` and `drawStroke`, so the shapes are tested where there is no canvas at all.
+ * the opening it makes. Geometry only. Nothing here touches a canvas except `trace` and
+ * `drawStroke`, so the shapes are tested where there is no canvas at all.
  *
  * Two shapes. On a desktop it is a circle's arc through the apex and both feet, the feet on
  * the box's floor near its corners. In flow (under 1100px) it has legs — a half circle on
  * two uprights — because a circle wide enough for a phone's arch area would be taller than
- * the area. Both are a path of arcs and lines walked by length, so the pen, the stroke and
- * the scene's clip all come from one description.
+ * the area. Both are a path of arcs and lines walked by length, so the pen and the stroke
+ * come from one description.
  */
 
 const TAU = Math.PI * 2;
@@ -38,8 +38,6 @@ export type ArchPath = {
   pointAt(p: number): [number, number];
   /** Stroke the path up to `p` in the context's current style. */
   trace(ctx: CanvasRenderingContext2D, p: number): void;
-  /** The opening: the path closed along the box's floor. Browser only — jsdom has no Path2D. */
-  region(): Path2D;
 };
 
 export type Arch = {
@@ -102,17 +100,6 @@ export function makePath(segs: Seg[]): ArchPath {
         ctx.stroke();
         d -= len[i];
       }
-    },
-    region() {
-      const P = new Path2D();
-      const [x0, y0] = segPoint(segs[0], 0);
-      P.moveTo(x0, y0);
-      for (const s of segs) {
-        if (s.type === 'arc') P.arc(s.cx, s.cy, s.r, s.a0, s.a1);
-        else P.lineTo(s.x1, s.y1);
-      }
-      P.closePath();
-      return P;
     },
   };
 }

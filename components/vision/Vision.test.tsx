@@ -17,12 +17,19 @@ test('three cards carry the values, the name stands under the roots, the headlin
   expect(screen.queryByText('Vi vil ha et Norge')).not.toBeInTheDocument();
 });
 
-test('the arch area holds the scene, the stroke and the tree, under the cards', () => {
+/**
+ * Just the arch and the tree. The pre-dawn scene that used to open inside the stroke — sky,
+ * stars, grass, earth — is gone by the user's call (2026-09-12: «just have the tree and the
+ * arch, delete everything inside»), so the ink shows through the opening and the only
+ * canvases in the area are the stroke's and the tree's.
+ */
+test('the arch area holds the stroke and the tree, nothing painted inside, under the cards', () => {
   render(<Vision />);
   const arch = document.querySelector('#visjon [data-arch]')!;
-  expect(arch.querySelector('[data-scene]')).not.toBeNull();
+  expect(arch.querySelector('[data-scene]')).toBeNull();
   expect(arch.querySelector('[data-stroke]')).not.toBeNull();
   expect(arch.querySelector('[data-tree] canvas')).not.toBeNull();
+  expect(arch.querySelectorAll('canvas')).toHaveLength(2);
   const order = [...document.querySelectorAll('#visjon [data-arch], #visjon [data-value]')];
   expect(order[0]).toBe(arch);
 });
