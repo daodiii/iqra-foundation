@@ -53,8 +53,15 @@ if (typeof window !== 'undefined') {
    * It takes over scrolling, so it also reaches things that have nothing to do with a pin:
    * `Support.tsx` scrolls a route into view with `behavior: 'smooth'`, and the header's
    * `/#stott-oss` link is a native anchor jump. Both are covered by e2e.
+   *
+   * And it takes over TOUCH, which by default it does for the whole page: a finger on a
+   * nested scroller — the row in Arrangementer · Nyheter — moved the page and never the
+   * row, on every phone, since the day this went in. Nobody had looked on a handset until
+   * 2026-09-12: «u cant sroll to the side». `allowNestedScroll` is the switch for exactly
+   * this; the mouse drag and the trackpad never went through here, which is why a desktop
+   * never showed it.
    */
-  if (!reducedMotion()) ScrollTrigger.normalizeScroll(true);
+  if (!reducedMotion()) ScrollTrigger.normalizeScroll({ allowNestedScroll: true });
 
   /*
    * The snap is deaf for the first half second of its life. Settle the one act that can be

@@ -548,6 +548,28 @@ test('phone: the cards stack, the axis stays an axis, and nothing pushes the pag
   expect(rail.wider, 'the axis is not actually longer than the screen').toBe(true);
 
   /*
+   * And a finger actually moves it. `ScrollTrigger.normalizeScroll` takes over touch for
+   * the whole page and, unless told otherwise, swallows a swipe on a nested scroller: the
+   * row did not move on any phone from the day the normaliser went in until
+   * `allowNestedScroll` (2026-09-12), and nothing above this line could see it — a rail can
+   * be wider than the screen and still never scroll. Playwright has no swipe, so the touch
+   * is dispatched through CDP, which is what a real finger arrives as.
+   */
+  const railAt = () => page.evaluate(() => (document.querySelector('#arrangementer [role="region"]') as HTMLElement).scrollLeft);
+  const railBox = (await page.locator('#arrangementer [role="region"]').boundingBox())!;
+  const before = await railAt();
+  const cdp = await page.context().newCDPSession(page);
+  const x0 = railBox.x + railBox.width / 2 + 80, y0 = railBox.y + railBox.height / 2;
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y: y0 }] });
+  for (let i = 1; i <= 10; i++) {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 - i * 16, y: y0 }] });
+    await page.waitForTimeout(16);
+  }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page.waitForTimeout(600);
+  expect(await railAt(), 'a swipe did not move the row').toBeGreaterThan(before);
+
+  /*
    * Every card stays inside the box on a phone: the row is clipped to the box's edge, and a
    * card that hung out of it would be a card on the page's white with no water under it.
    */
