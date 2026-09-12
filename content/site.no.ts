@@ -58,31 +58,31 @@ const supportRoutes = [
  * Brackets are caught by `scripts/check-content.mjs` before a production build, plausible
  * sentences are not, which is the whole argument.
  *
- * Two rows each: enough for the axis to show its rhythm, few enough that two identical rows
+ * Two rows each: enough for the row to show its rhythm, few enough that two identical rows
  * read as a template waiting to be filled rather than as a rendering fault. The section
  * disappears entirely when both arrays are emptied, so deleting these is also a way to ship.
  *
- * Both lists carry a day and a MONTH rather than a written-out date, because they are read
- * as one time axis and the axis needs the same two parts from every entry: a number to set
- * large, and a month to group by.
+ * Every entry carries a `date`, ISO `YYYY-MM-DD`, or null while it is a placeholder. The two
+ * lists are shown as ONE ROW sorted by that date, news and events mixed — «published by the
+ * date; news or arrangement doesn't matter» (2026-09-12) — with «i dag» set where the
+ * visitor's today falls. The day set large and the month beside it are both read off the
+ * date, so there is one thing to type and nothing to keep in step. A null date shows the
+ * bracketed `[00]` and `[mnd]` from `happenings.undated` and sorts as its list would —
+ * news before today, events after — because a real date on a placeholder would be an
+ * invented date, the one bracket a visitor could not see.
  *
  * `image` is `{ src, alt }` or null. One field rather than two, so a photograph cannot
  * arrive without the words that describe it — and so there is no empty `alt` sitting in the
  * content for the gate to trip over, which is exactly what it did when they were separate.
- *
- * They are in TIME ORDER, oldest first, and nothing sorts them. A real date on a placeholder
- * would be an invented date — the one bracket a visitor could not see — and an ISO field
- * nobody can fill in yet would be a sort key that lies. The order is the author's, the same
- * way the entries in any calendar are.
  */
 const eventItems = [
-  { day: '[00]', month: '[mnd]', title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]', image: null },
-  { day: '[00]', month: '[mnd]', title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]', image: null },
+  { date: null, title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]', image: null },
+  { date: null, title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]', image: null },
 ] as const;
 
 const newsItems = [
-  { day: '[00]', month: '[mnd]', title: '[Tittel]', note: '[Én setning om hva som skjedde.]', image: null },
-  { day: '[00]', month: '[mnd]', title: '[Tittel]', note: '[Én setning om hva som skjedde.]', image: null },
+  { date: null, title: '[Tittel]', note: '[Én setning om hva som skjedde.]', image: null },
+  { date: null, title: '[Tittel]', note: '[Én setning om hva som skjedde.]', image: null },
 ] as const;
 
 /**
@@ -157,9 +157,9 @@ export const site = {
     text: missionStanzas.flat().join(' '),
   },
   /**
-   * The two lists are one time axis: news behind «i dag», events ahead of it. That is not a
-   * layout, it is what they are — the same line read each way — and it is why they share a
-   * heading now instead of holding a column each.
+   * The two lists are one row in date order, news and events mixed, with «i dag» where
+   * today falls. That is not a layout, it is what they are — the same line read each way —
+   * and it is why they share a heading instead of holding a column each.
    */
   happenings: {
     label: 'Arrangementer · Nyheter',
@@ -167,17 +167,16 @@ export const site = {
     today: 'I dag',
     /** What each stop is, said once above its date. */
     kinds: { event: 'Arrangement', news: 'Nyhet' },
+    /** What a stop shows for its date while it has none. Bracketed, like everything we lack. */
+    undated: { day: '[00]', month: '[mnd]' },
     /** The label in an empty picture frame. Bracketed, like every other thing we lack. */
     imageLabel: '[Bilde]',
     /** Read on the phone by a screen reader, which cannot see that the axis runs sideways. */
     railLabel: 'Tidslinje. Bla sidelengs for det som kommer og det som var.',
     back: 'Bakover i tid',
     forward: 'Framover i tid',
-    /** Short month to the word above the line. Whatever is not here is shown as written. */
-    months: {
-      jan: 'Januar', feb: 'Februar', mar: 'Mars', apr: 'April', mai: 'Mai', jun: 'Juni',
-      jul: 'Juli', aug: 'August', sep: 'September', okt: 'Oktober', nov: 'November', des: 'Desember',
-    },
+    /** The months, short, in order — what a date's month is shown as beside the day. */
+    months: ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'],
   },
   events: {
     label: 'Arrangementer',

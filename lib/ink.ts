@@ -48,6 +48,22 @@ export type InkPalette = {
    * Subtractive palettes only; left unset, nothing stops the ink short of black.
    */
   peak?: number;
+  /**
+   * Colour hanging in clear water OVER a floor drawn beneath the canvas, rather than
+   * pigment staining paper. The dye is stored as colour carried by density and shown with
+   * an alpha, on a context that has one, so it composites onto whatever is under it — on
+   * Arrangementer · Nyheter, the water. Pigments are taken as colour, like `additive`; no
+   * ceiling is needed because the alpha saturates at the pigment's own hue.
+   */
+  over?: boolean;
+  /**
+   * The live drops enter near the top with a downward push — ink dropped into water —
+   * instead of appearing anywhere in the box. Small and dense, so each reads as a thread
+   * that unfurls on the way down.
+   */
+  rain?: boolean;
+  /** How fast the dye thins, per second. The ink boxes' 0.16 unless said otherwise. */
+  clear?: number;
 };
 
 export type InkHandle = {
@@ -141,6 +157,21 @@ export function deepest(palette: InkPalette): RGB {
 }
 
 /**
+ * The pigments as the solver stores them, in the order they are laid down.
+ *
+ * Absorbance, not colour, for pigment on paper: subtractive ink is what the paper LOSES, so
+ * it is stored inverted and purified and the show pass exponentiates it back. Additive ink
+ * (the night card) and ink hanging over a floor (`over`) are the colour itself — a lamp is
+ * only what it emits, and a thread of ink against lit water is only its own hue.
+ */
+export function preparePigments(palette: InkPalette): RGB[] {
+  const asColour = !!palette.additive || !!palette.over;
+  return pigmentCycle(palette).map((c) =>
+    asColour ? (c.map((v) => v / 255) as RGB) : purify(c.map((v) => 1 - v / 255) as RGB),
+  );
+}
+
+/**
  * Expand the weighted pigments into the order they will actually be laid down in.
  *
  * Not `[a,a,a,b]` — three drops of the same colour in a row read as one big blot, and the
@@ -177,8 +208,10 @@ precision highp float; precision highp sampler2D; in vec2 vUv; in vec2 vL; in ve
 
 const FRAG = {
   /** A gaussian blob of velocity or dye, added to whatever is already there. */
-  splat: `${H}uniform sampler2D uTarget; uniform float aspect; uniform vec2 point; uniform vec3 color; uniform float radius;
-    void main(){ vec2 p = vUv - point; p.x *= aspect; vec3 s = exp(-dot(p, p) / radius) * color; o = vec4(texture(uTarget, vUv).xyz + s, 1.); }`,
+  /** A gaussian blob added to all four channels: velocity in xy, or colour in rgb with the
+   *  density in a — which only the `over` show pass reads, and the others ignore. */
+  splat: `${H}uniform sampler2D uTarget; uniform float aspect; uniform vec2 point; uniform vec4 color; uniform float radius;
+    void main(){ vec2 p = vUv - point; p.x *= aspect; vec4 s = exp(-dot(p, p) / radius) * color; o = texture(uTarget, vUv) + s; }`,
   /** Semi-Lagrangian: look back along the velocity to see what arrives here. */
   advect: `${H}uniform sampler2D uVel; uniform sampler2D uSrc; uniform vec2 texel; uniform float dt; uniform float diss;
     void main(){ vec2 c = vUv - dt * texture(uVel, vUv).xy * texel; o = texture(uSrc, c) / (1. + diss * dt); }`,
@@ -207,13 +240,17 @@ const FRAG = {
    * The dither is not decoration: at these gradients an 8-bit framebuffer bands visibly,
    * and a half-LSB of noise costs nothing and removes it.
    */
-  show: `${H}uniform sampler2D uDye; uniform vec3 ground; uniform float t; uniform float additive; uniform float peak;
+  show: `${H}uniform sampler2D uDye; uniform vec3 ground; uniform float t; uniform float additive; uniform float over; uniform float peak;
     float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
-    void main(){ vec3 d = texture(uDye, vUv).rgb;
+    void main(){ vec4 dye = texture(uDye, vUv); vec3 d = dye.rgb; float dither = (hash(gl_FragCoord.xy + fract(t)) - .5) * (2. / 255.);
+      if (over > .5) {
+        // colour carried by density: the alpha is Beer-Lambert on the density, the colour is the mix that carried it
+        float a = 1. - exp(-max(dye.a, 0.) * 1.85); vec3 c = dye.a > 1e-4 ? clamp(d / dye.a, 0., 1.) : vec3(0.);
+        o = vec4((c + dither) * a, a); return; }
       float m = max(d.r, max(d.g, d.b)); float knee = peak * .5;
       if (peak > 0. && m > knee) d *= (knee + (peak - knee) * (1. - exp(-(m - knee) / (peak - knee)))) / m;
       vec3 col = additive > .5 ? min(ground + d, vec3(1.)) : ground * exp(-d * 1.85);
-      col += (hash(gl_FragCoord.xy + fract(t)) - .5) * (2. / 255.); o = vec4(col, 1.); }`,
+      col += dither; o = vec4(col, 1.); }`,
 } as const;
 
 type FragName = keyof typeof FRAG;
@@ -276,8 +313,11 @@ const SETTLE_FIRST = 12;
 const SETTLE_PER_FRAME = 5;
 
 export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandle | null {
+  // Over a floor the canvas has to let the floor through, so it gets an alpha channel and
+  // the show pass writes premultiplied colour into it. On paper it is opaque, as before.
+  const over = !!opts.palette.over;
   const context = canvas.getContext('webgl2', {
-    alpha: false, antialias: false, premultipliedAlpha: false, depth: false, stencil: false,
+    alpha: over, antialias: false, premultipliedAlpha: over, depth: false, stencil: false,
   });
   if (!context) return null;
   /*
@@ -376,7 +416,11 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) return null;
     gl.viewport(0, 0, w, h);
-    gl.clearColor(0, 0, 0, 1);
+    // Empty, in every channel. The dye's fourth channel is the density the `over` show pass
+    // reads, and a texture cleared to alpha 1 is a box full of ink before anything is dropped
+    // in — which is exactly what it was, and it drew the whole box dark. Nothing else reads
+    // the alpha, and the one- and two-channel fields have none to clear.
+    gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     const t: Target = {
       tex, fb, w, h, texel: [1 / w, 1 / h],
@@ -471,11 +515,7 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
    * inverted here and the show pass exponentiates it back. Additive ink is the light itself
    * and needs neither inversion nor purifying — a lamp is already only the colour it emits.
    */
-  const pigments = pigmentCycle(opts.palette).map((c) =>
-    additive
-      ? (c.map((v) => v / 255) as RGB)
-      : purify(c.map((v) => 1 - v / 255) as RGB),
-  );
+  const pigments = preparePigments(opts.palette);
   /* Light adds up much faster than pigment subtracts, so the night card takes about half
      the load or the lamps blow out to white. */
   const load = (k: number) => k * strength * (additive ? 0.55 : 1);
@@ -488,11 +528,12 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
     gl.uniform1i(uniform('splat', 'uTarget'), velocity.read.bind(0));
     gl.uniform1f(uniform('splat', 'aspect'), aspect);
     gl.uniform2f(uniform('splat', 'point'), x, y);
-    gl.uniform3f(uniform('splat', 'color'), dx, dy, 0);
+    gl.uniform4f(uniform('splat', 'color'), dx, dy, 0, 0);
     gl.uniform1f(uniform('splat', 'radius'), radius);
     blit(velocity.write); velocity.swap();
     gl.uniform1i(uniform('splat', 'uTarget'), dye.read.bind(0));
-    gl.uniform3f(uniform('splat', 'color'), colour[0] * amount, colour[1] * amount, colour[2] * amount);
+    // over a floor the density rides in the fourth channel; on paper and for the lamps it is unused
+    gl.uniform4f(uniform('splat', 'color'), colour[0] * amount, colour[1] * amount, colour[2] * amount, over ? amount : 0);
     blit(dye.write); dye.swap();
   }
 
@@ -542,7 +583,7 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
     bindProgram('advect', velocity.texel);
     gl.uniform1i(uniform('advect', 'uVel'), velocity.read.bind(0));
     gl.uniform1i(uniform('advect', 'uSrc'), dye.read.bind(1));
-    gl.uniform1f(uniform('advect', 'diss'), 0.16);
+    gl.uniform1f(uniform('advect', 'diss'), opts.palette.clear ?? 0.16);
     blit(dye.write); dye.swap();
   }
 
@@ -553,7 +594,8 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
     gl.uniform3f(uniform('show', 'ground'), ground[0], ground[1], ground[2]);
     gl.uniform1f(uniform('show', 't'), t);
     gl.uniform1f(uniform('show', 'additive'), additive ? 1 : 0);
-    gl.uniform1f(uniform('show', 'peak'), additive ? 0 : (opts.palette.peak ?? 0));
+    gl.uniform1f(uniform('show', 'peak'), additive || over ? 0 : (opts.palette.peak ?? 0));
+    gl.uniform1f(uniform('show', 'over'), over ? 1 : 0);
     blit(null);
   }
 
@@ -566,12 +608,23 @@ export function createInk(canvas: HTMLCanvasElement, opts: InkOptions): InkHandl
    * fold and thin, which is the whole difference between ink in water and a blurred circle.
    */
   function drop(seeding: boolean) {
+    if (opts.palette.rain && !seeding) {
+      // Ink dropped in: it enters near the top, small and dense, and is pushed down into
+      // the water — the thread is what the push makes of it on the way.
+      const x = 0.08 + Math.random() * 0.84;
+      const y = 0.8 + Math.random() * 0.16;
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.9;
+      const force = 160 + Math.random() * 220;
+      splat(x, y, Math.cos(angle) * force, Math.sin(angle) * force, nextPigment(), 0.004, load(1));
+      return;
+    }
     const x = 0.12 + Math.random() * 0.76;
     const y = 0.15 + Math.random() * 0.7;
     const angle = Math.random() * Math.PI * 2;
     const force = seeding ? 45 + Math.random() * 85 : 90 + Math.random() * 160;
+    // Over a floor the seeding drops are smaller: wide ones read as a haze rather than as ink.
     splat(x, y, Math.cos(angle) * force, Math.sin(angle) * force, nextPigment(),
-      seeding ? 0.055 : 0.022, load(seeding ? 0.62 : 0.8));
+      seeding ? (over ? 0.014 : 0.055) : 0.022, load(seeding ? 0.62 : 0.8));
   }
 
   /**

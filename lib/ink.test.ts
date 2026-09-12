@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { ceiling, createInk, deepest, pigmentCycle, purify, type InkPalette, type RGB } from './ink';
+import { ceiling, createInk, deepest, pigmentCycle, preparePigments, purify, type InkPalette, type RGB } from './ink';
 
 const hex = (c: [number, number, number]) =>
   '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
@@ -123,6 +123,31 @@ test('deepest is the deepest pigment at the ceiling, and black without one', () 
   expect(deepest({ ...p, peak: undefined })).toEqual([0, 0, 0]);
 });
 
+/*
+ * Three kinds of ink, one preparation. Pigment on paper is stored as what the paper LOSES —
+ * inverted and purified. Light in dark water (the night card) and colour hanging in clear
+ * water over a floor (Arrangementer · Nyheter) are both stored as the colour itself: a lamp
+ * is only what it emits, and a thread of ink seen against lit water is only its own hue.
+ */
+test('pigment on paper is stored as purified absorbance', () => {
+  const [p] = preparePigments(palette([['#4080c0', 1]]));
+  // what #4080c0 absorbs, with 0.55 of the part common to all three channels taken off each
+  const absorbed = [0x40, 0x80, 0xc0].map((v) => 1 - v / 255);
+  const common = Math.min(...absorbed) * 0.55;
+  expect(p[0]).toBeCloseTo(absorbed[0] - common, 5);
+  expect(p[1]).toBeCloseTo(absorbed[1] - common, 5);
+  expect(p[2]).toBeCloseTo(absorbed[2] - common, 5);
+});
+
+test('additive and over inks are stored as the colour itself', () => {
+  for (const mode of [{ additive: true }, { over: true }]) {
+    const [p] = preparePigments({ ...palette([['#4080c0', 1]]), ...mode });
+    expect(p[0]).toBeCloseTo(0x40 / 255, 5);
+    expect(p[1]).toBeCloseTo(0x80 / 255, 5);
+    expect(p[2]).toBeCloseTo(0xc0 / 255, 5);
+  }
+});
+
 /**
  * jsdom has no WebGL, and `vitest.setup.ts` returns null for every context but 2d — which
  * is what a real browser without WebGL2 does too. The section must survive that: it keeps
@@ -131,4 +156,5 @@ test('deepest is the deepest pigment at the ceiling, and black without one', () 
 test('createInk declines rather than throwing where there is no WebGL2', () => {
   const canvas = document.createElement('canvas');
   expect(createInk(canvas, { reduced: false, palette: palette([['#ff0000', 1]]) })).toBeNull();
+  expect(createInk(canvas, { reduced: false, palette: { ...palette([['#ff0000', 1]]), over: true } })).toBeNull();
 });

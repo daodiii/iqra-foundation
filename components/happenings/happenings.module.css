@@ -1,26 +1,19 @@
 /*
- * Arrangementer · Nyheter, as one time axis.
+ * Arrangementer · Nyheter, as one row on ink in lit water.
  *
- * On the page's own white — no box, no ground, nothing but a hairline — because this section
- * is the breath between the ink above it and the water below, and that is the whole argument
- * for it being here. See the note in `Happenings.tsx`.
- *
- * The shape is a corridor: the line runs across the middle, the pictures sit against it from
- * both sides, and the words run outward. Everything that is coming is above the line and
- * everything that has been is below it, so the direction never has to be spelled out.
+ * The heading sits on the page's white; under it a box like every other section's holds
+ * the row. The box is the bridge between the ink above and the water below — the page's
+ * own water with the page's own inks dropped into it — and the cards are glass on it, as
+ * they are everywhere else. Nothing here draws a line or a peg on a stop any more: the
+ * row is the order, and «i dag» is the one thing standing in it.
  */
 .happenings {
   position: relative;
   background: transparent;
   padding: clamp(64px, 8vh, 104px) 0;
-  /*
-   * The two rows the line's position is made of. Held as properties because the hairline is
-   * drawn on the list and the pegs are drawn in the stops, and nothing in CSS keeps those
-   * two in step — on the phone they came apart by 138px and neither a screenshot nor a test
-   * of the pegs alone could see it.
-   */
-  --line-row: 26px;
-  --below-row: 1fr;
+  /* The gutter the row keeps inside the box's edge: the same 52px the copy has always sat
+     inside a box, so the first card lines up with the copy above it. */
+  --gutter: 52px;
 }
 
 .head {
@@ -84,21 +77,39 @@
 }
 
 /*
+ * The pool: what the box is positioned against. The box is `wash.box`, which is inset from
+ * its section on all four sides; here it has to span this wrapper top to bottom and keep
+ * only the horizontal inset, so the heading stays on the page's white above it. Two class
+ * names of the same weight would leave the stylesheet order to decide, so this one wins by
+ * specificity.
+ */
+.pool {
+  position: relative;
+  isolation: isolate;
+}
+
+.pool > .box {
+  inset: 0 var(--box-inset-x);
+}
+
+/*
  * The rail is a native scroll container, so a trackpad, a touch screen, the arrow keys and
- * the pointer drag in the component all move one thing. `scroll-padding` is what keeps the
- * margin: a snap aligns to the scroll port's edge, which ignores padding, and without it the
- * axis lands with its first stop flush against the window while the heading is indented.
+ * the pointer drag in the component all move one thing. It is clipped to the box — its
+ * margins are the box's inset — so a card scrolls out under the box's rounded edge rather
+ * than across the page's white. `scroll-padding` keeps the gutter: a snap aligns to the
+ * scroll port's edge, which ignores padding.
  */
 .rail {
-  display: flex;
+  position: relative;
+  z-index: 1;
+  margin: 0 var(--box-inset-x);
+  padding: 56px var(--gutter) 22px;
   overflow-x: auto;
-  padding: 0 var(--margin);
-  scroll-padding-inline: var(--margin);
+  overflow-y: hidden;
+  scroll-padding-inline: var(--gutter);
   scroll-snap-type: x proximity;
   scrollbar-width: none;
   cursor: grab;
-  /* Nothing here is taller than the viewport, so a stray vertical scrollbar would be the
-     rail's own doing rather than the content's. */
   overscroll-behavior-x: contain;
 }
 
@@ -111,152 +122,93 @@
   scroll-snap-type: none;
 }
 
-/* The line itself. Drawn on the list rather than on the section, so it runs the full length
-   of the axis and off both edges of the screen — time does not start at the margin. */
-.axis {
-  position: relative;
+.row {
   display: flex;
-  align-items: center;
-  min-height: 500px;
-  /* At least as wide as the rail, so the line runs off both edges of the screen even when
-     there are only a few stops on it. Without this a short axis ends in mid-air, and a time
-     axis that stops is a chart of nothing. */
-  min-width: 100%;
+  align-items: stretch;
+  gap: 18px;
   margin: 0;
   padding: 0;
   list-style: none;
+  min-width: max-content;
 }
 
-.axis::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1px;
-  background: var(--color-hairline);
-}
-
-.stop,
-.now {
-  position: relative;
+.stop {
   flex: none;
-  width: 246px;
-  display: grid;
-  /* Three rows: everything above the line, the line, everything below it. */
-  grid-template-rows: 1fr var(--line-row) var(--below-row);
+  width: 300px;
+  scroll-snap-align: start;
+}
+
+/* The card is `wash.card`; this is only what it holds and how. */
+.card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 22px 20px;
+}
+
+/* What has been sits a touch deeper in the water than what is coming. */
+.past .card {
+  --glass-fill: 0.7;
+}
+
+/*
+ * Today: a crimson peg with the word under it, standing between the last stop before today
+ * and the first after. The stems above and below it are the only line left in the section,
+ * and they belong to the marker alone.
+ */
+.now {
+  flex: none;
+  width: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   scroll-snap-align: center;
 }
 
-.now {
-  width: 128px;
+.stem {
+  width: 1px;
+  flex: 1;
+  max-height: 120px;
+  background: linear-gradient(to bottom, transparent, var(--color-crimson) 30%, var(--color-crimson) 70%, transparent);
 }
 
 .peg {
-  grid-row: 2;
-  position: relative;
-}
-
-.peg::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  margin-top: -3px;
-  border-radius: 999px;
-  background: var(--color-navy);
-}
-
-/* Today is the one fixed point on the page, so it is the one mark that is not navy. */
-.now .peg::before {
-  left: -1px;
-  width: 13px;
-  height: 13px;
-  margin-top: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
   background: var(--color-crimson);
-  box-shadow: 0 0 0 5px #ffffff;
+  box-shadow: 0 0 0 6px rgba(171, 82, 99, 0.16);
 }
 
 .flag {
-  grid-row: 3;
   margin: 0;
-  padding-top: 18px;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-crimson);
 }
 
-.body {
-  display: flex;
-  flex-direction: column;
-  padding-right: 26px;
-}
-
-/* Above the line, the words end at the line and the picture sits against it; below, the
-   picture comes first for the same reason. The frames make the corridor. */
-.event .body {
-  grid-row: 1;
-  justify-content: flex-end;
-  padding-bottom: 14px;
-}
-
-.news .body {
-  grid-row: 3;
-  padding-top: 14px;
-}
-
-.event .frame {
-  order: 2;
-  margin-top: 16px;
-}
-
-.news .frame {
-  order: -1;
-  margin-bottom: 16px;
-}
-
-/* The month, written where it turns over. On the empty side of the line for that stop:
-   under it where the words are above, over it where they are below. */
-.mark {
-  position: absolute;
-  top: 50%;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-
-.event .mark {
-  margin-top: 14px;
-}
-
-.news .mark {
-  margin-top: -32px;
-}
-
 .kind {
-  margin: 0 0 6px;
+  margin: 0 0 12px;
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: var(--color-ink-soft);
 }
 
 .when {
   display: flex;
   align-items: baseline;
-  gap: 7px;
-  margin: 0 0 7px;
+  gap: 8px;
+  margin: 0 0 10px;
 }
 
 .day {
-  font-size: 24px;
+  font-size: 34px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -266,51 +218,49 @@
 }
 
 .month {
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-muted);
+  font-size: 13px;
+  color: var(--color-ink-soft);
 }
 
 .title {
-  margin: 0;
-  font-size: 17px;
+  margin: 0 0 6px;
+  font-size: 18px;
   font-weight: 600;
+  line-height: 1.25;
   letter-spacing: -0.02em;
   color: var(--color-navy);
   text-wrap: balance;
 }
 
 .meta {
-  margin: 4px 0 0;
-  font-size: 13px;
+  margin: 0 0 6px;
+  font-size: 14px;
   color: var(--color-ink-soft);
 }
 
 .note {
-  margin: 7px 0 0;
+  margin: 0 0 16px;
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-ink-soft);
 }
 
 /*
- * The picture, or the room one would take. An empty frame rather than a stock photograph —
- * the reasoning is in `Happenings.tsx`, and it is the same reasoning as the team list's
- * empty circles. `--color-paper` is the warm ground Om oss uses, one step off white so the
- * frame reads as a held place rather than as a hole.
+ * The picture, or the room one would take. A window rather than a filled frame: the water
+ * shows through it until there is a photograph to put in it, which is what a held place on
+ * glass looks like. The reasoning for an empty frame over a stock photograph is in
+ * `Happenings.tsx`.
  */
 .frame {
   position: relative;
   display: grid;
   place-items: center;
-  margin: 0;
-  aspect-ratio: 4 / 3;
-  border-radius: 6px;
+  margin: auto 0 0;
+  height: 132px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #edeff2;
-  box-shadow: inset 0 0 0 1px rgba(28, 38, 50, 0.07);
+  border: 1px solid rgba(42, 57, 75, 0.14);
+  background: rgba(255, 255, 255, 0.12);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -321,11 +271,14 @@
   object-fit: cover;
 }
 
+/* Inside the box, under the row. */
 .links {
+  position: relative;
+  z-index: 1;
   display: flex;
   gap: 26px;
-  margin: 26px 0 0;
-  padding: 0 var(--margin);
+  margin: 0;
+  padding: 14px var(--margin) 44px;
 }
 
 .more {
@@ -340,10 +293,14 @@
 }
 
 /*
- * A phone gets a narrower stop and a shorter axis, but the same shape — this is the one
+ * A phone gets a narrower stop and the phone's box inset, and the same row — this is the one
  * layout on the site that does not have to stack, because sideways is what it already is.
  */
 @media (max-width: 767px) {
+  .happenings {
+    --gutter: 14px;
+  }
+
   .head {
     flex-direction: column;
     align-items: flex-start;
@@ -354,102 +311,41 @@
     display: none;
   }
 
+  .rail {
+    padding: 34px var(--gutter) 14px;
+  }
+
   /*
-   * Narrow enough that the next stop is always showing at the edge. A stop as wide as the
-   * screen reads as a card you page through, and then the line between them is doing no
-   * work — the whole point is that you can see it continue.
+   * Sized so that today at the left edge and one whole card beside it fit inside the box
+   * with a sliver of the next showing: 14 + 48 + 18 + 70vw is 353px of the 370 a 390px
+   * phone has inside the box. A card as wide as the screen would read as a page you turn,
+   * and the row would stop being a row.
    */
   .stop {
-    width: 62vw;
-    max-width: 250px;
+    width: 70vw;
   }
 
-  /*
-   * Every stop above the line down here, whichever direction in time it belongs to.
-   *
-   * The desktop puts what is coming above the line and what has been below it, and that is
-   * the section's whole visual claim — but the two are contiguous along the axis rather than
-   * interleaved, so on a screen showing one stop at a time the opposite half is always
-   * empty. Half the viewport, all the way down the section, holding nothing.
-   *
-   * The direction does not disappear with it. It is carried by the «Nyhet» / «Arrangement»
-   * label above each date, by which side of «i dag» you are on, and by the peg below: hollow
-   * for what has been, filled for what is coming.
-   */
-  /*
-   * The row under the line is a fixed height rather than `auto`, and the stops stretch to a
-   * common height instead of centring. Both are about one thing: the line has to be at the
-   * same offset inside every stop, or it is not a line.
-   *
-   * With `auto` the today marker is taller than the stops by the height of its «I dag» flag,
-   * and centred items of different heights put their middles — and so their pegs — at
-   * different y. On the desktop the symmetric `1fr 26px 1fr` hides this; here it does not.
-   */
-  .happenings {
-    --below-row: 34px;
+  .card {
+    padding: 18px 18px 16px;
   }
 
-  .axis {
-    align-items: stretch;
+  /* Today snaps at its start here, so «today at the left edge» is a place the row can rest:
+     with the desktop's centre-snap the arrival was pulled straight to the next card's start
+     and today slid off the edge. */
+  .now {
+    width: 48px;
+    scroll-snap-align: start;
   }
 
-  /*
-   * And the line moves with them. It is drawn on the list at `top: 50%`, which is only the
-   * peg row while the rows above and below it are equal — and down here they are not. Same
-   * two properties as the grid, so the hairline and the pegs cannot come apart again.
-   */
-  .axis::before {
-    top: auto;
-    bottom: calc(var(--below-row) + var(--line-row) / 2);
-  }
-
-  .news .body {
-    grid-row: 1;
-    justify-content: flex-end;
-    padding-top: 0;
-    padding-bottom: 14px;
-  }
-
-  /* The frame hugs the line from above for both, so the corridor of pictures survives. */
-  .news .frame {
-    order: 2;
-    margin-top: 16px;
-    margin-bottom: 0;
-  }
-
-  .news .mark {
-    margin-top: 14px;
-  }
-
-  .news .peg::before {
-    background: #ffffff;
-    box-shadow: inset 0 0 0 1.5px var(--color-muted);
-  }
-
-  /*
-   * A measured height rather than a ratio, and that is load-bearing here.
-   *
-   * The row above the line is `1fr`, and a box sized by `aspect-ratio` does not hand its
-   * height to that row when the row is being sized — its height depends on a width the row
-   * does not know yet. The row came out 281px for 292px of content and every stop hung 160px
-   * below the line, through a grid that was doing exactly what it was told.
-   */
   .frame {
-    aspect-ratio: auto;
-    height: 150px;
-  }
-
-  /* Only a floor now. The axis is as tall as one stop rather than two, so the content sets
-     the height and this is here for the case where a stop is unusually short. */
-  .axis {
-    min-height: 300px;
-  }
-
-  .body {
-    padding-right: 18px;
+    height: 110px;
   }
 
   .title {
     font-size: 16px;
+  }
+
+  .links {
+    padding: 8px var(--margin) 30px;
   }
 }

@@ -98,18 +98,6 @@ const VALUE_CARDS = site.vision.values.map((v) => `#visjon [data-value="${v.key}
  * where the rows either side of it are equal, and from the bottom on a phone, where they
  * are not.
  */
-const lineAgainstPegs = (page: Page) => page.evaluate(() => {
-  const rail = document.querySelector('#arrangementer [role="region"]')!;
-  const axis = rail.querySelector('ol')!;
-  const box = axis.getBoundingClientRect();
-  const peg = rail.querySelector('[data-today] [class*="peg"]')!.getBoundingClientRect();
-  const style = getComputedStyle(axis, '::before');
-  const drawn = style.top === 'auto'
-    ? box.bottom - parseFloat(style.bottom)
-    : box.top + parseFloat(style.top);
-  return Math.abs(drawn - (peg.top + peg.height / 2));
-});
-
 /** `data-on-dark` is the whole wordmark contract. Nothing after the hero is dark any more,
  *  so below the film it must read false everywhere — including over Støtt oss, which used
  *  to be the one night section and is the assertion most likely to rot silently. */
@@ -323,15 +311,14 @@ test('desktop: the støtt oss heading fills its measure without overflowing', as
 /**
  * The order IS the argument.
  *
- * The page walks the film's scenes and thins its material as it goes: ink for the cave and
- * the mosque, then the page's own white, then clear water over Arafat and green water under
- * the ask. Arrangementer · Nyheter has to stay between the ink and the water — it is the
- * breath that makes the change of material read as the ink clearing rather than as one more
- * coloured rectangle — and Teamet has to stay directly above Støtt oss, whose headline is
- * «Tjue stykker gjør arbeidet». A reordering would leave every section working and the page
- * saying something else.
+ * The page walks the film's scenes and thins its material as it goes: ink on paper for the
+ * sky and the cream, then ink dropped into clear water, then clear water over Arafat and
+ * green water under the ask. Arrangementer · Nyheter has to stay between the ink boxes and
+ * the water boxes — it is the bridge, the one box that is both — and Teamet has to stay
+ * directly above Støtt oss, whose headline is «Tjue stykker gjør arbeidet». A reordering
+ * would leave every section working and the page saying something else.
  */
-test('the page walks from ink through white into water, in that order', async ({ page }) => {
+test('the page walks from ink through ink-in-water into water, in that order', async ({ page }) => {
   await page.goto('/');
   const order = await page.evaluate(() =>
     Array.from(document.querySelectorAll('main section')).map((s) => s.id));
@@ -391,18 +378,20 @@ test('desktop: om oss · teamet is water over Arafat, with the story and the tea
 });
 
 /**
- * The one section with no box: no ground, no canvas, no card. What it must not do is
- * promise a page that does not exist — «Alle arrangementer →» is rendered from an href in
- * the content file, and there is none yet, so there is no link. A dead link here would be
- * the only thing on the site that answers a click by doing nothing, and no build step would
- * ever catch it.
+ * The bridge: a box of the page's own water with the page's own ink dropped into it, the
+ * row on glass over both. Two canvases, the water under and the ink over, and the box
+ * carries the water's ground so a device without WebGL2 still sees lit water. What it must
+ * not do is promise a page that does not exist — «Alle arrangementer →» is rendered from an
+ * href in the content file, and there is none yet, so there is no link. A dead link here
+ * would be the only thing on the site that answers a click by doing nothing, and no build
+ * step would ever catch it.
  */
-test('desktop: the axis sits on the page’s own white and links to nothing that is not there', async ({ page, isMobile }) => {
+test('desktop: the row sits on ink in lit water and links to nothing that is not there', async ({ page, isMobile }) => {
   test.skip(isMobile, 'the phone has its own test for the rail');
   await pastHero(page);
   const top = await docTop(page, '#arrangementer');
   await page.evaluate((y) => window.scrollTo(0, y - 80), top);
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(1200);
 
   const section = page.locator('#arrangementer');
   await expect(section.getByRole('heading', { level: 2 })).toHaveText(site.happenings.line);
@@ -410,22 +399,30 @@ test('desktop: the axis sits on the page’s own white and links to nothing that
     site.events.items.length + site.news.items.length + 1, // the stops, and today
   );
 
+  // the heading is on the page's white; the box under it is the water
   expect(await section.evaluate((el) => getComputedStyle(el).backgroundColor))
     .toBe('rgba(0, 0, 0, 0)');
-  expect(await section.locator('canvas').count(), 'the breath grew a simulation').toBe(0);
+  await boxIsPainted(page, 'arrangementer', film.bridge.ground);
+  const layers = await section.locator('[data-box] canvas').evaluateAll((els) =>
+    els.map((c) => (c.hasAttribute('data-water') ? 'water' : c.hasAttribute('data-ink') ? 'ink' : '?')));
+  expect(layers, 'the water under, the ink over').toEqual(['water', 'ink']);
   const hrefs = await section.locator('a').evaluateAll((els) => els.map((a) => a.getAttribute('href')));
   expect(hrefs.filter((h) => !h || h === '#'), 'a link that goes nowhere').toEqual([]);
 });
 
 /**
- * The axis's own claim: news behind today, events ahead of it, and you arrive at today
- * rather than at the start of history. Read off the rendered geometry rather than the
- * markup, because the ordering is the point and a stylesheet could undo it.
+ * The row's own claim: one line in date order, «i dag» where today falls, and you arrive at
+ * today rather than at the start of history. With the placeholders in the content file the
+ * news are undated and sort before today, the events after — so this is also what the row
+ * says with real dates, read off the rendered geometry rather than the markup, because the
+ * ordering is the point and a stylesheet could undo it. Today is placed on the client, so
+ * the marker is waited for rather than assumed.
  */
-test('the timeline opens on today, with what was behind it and what is coming ahead', async ({ page }) => {
+test('the row opens on today, with what was behind it and what is coming ahead', async ({ page }) => {
   await pastHero(page);
   const top = await docTop(page, '#arrangementer');
   await page.evaluate((y) => window.scrollTo(0, y - 80), top);
+  await expect(page.locator('#arrangementer [data-today]')).toHaveCount(1);
   await page.waitForTimeout(900);
 
   const axis = await page.evaluate((kinds) => {
@@ -449,7 +446,6 @@ test('the timeline opens on today, with what was behind it and what is coming ah
 
   expect(axis.todayOnScreen, 'today is off the left of the rail').toBeGreaterThanOrEqual(0);
   expect(axis.todayOnScreen, 'today is off the right of the rail').toBeLessThan(axis.width);
-  expect(await lineAgainstPegs(page), 'the hairline drifted off the pegs').toBeLessThanOrEqual(2);
   for (const stop of axis.lefts) {
     if (stop.kind === 'news') expect(stop.x, 'a news stop sat ahead of today').toBeLessThan(axis.todayAt);
     if (stop.kind === 'event') expect(stop.x, 'an event sat behind today').toBeGreaterThan(axis.todayAt);
@@ -552,38 +548,19 @@ test('phone: the cards stack, the axis stays an axis, and nothing pushes the pag
   expect(rail.wider, 'the axis is not actually longer than the screen').toBe(true);
 
   /*
-   * On a phone every stop sits ABOVE the line, whichever direction in time it belongs to.
-   *
-   * The desktop puts what is coming above the line and what has been below it, and that is
-   * the section's whole visual claim — but the two are contiguous along the axis rather than
-   * interleaved, so on a screen showing one stop at a time it costs half the viewport with
-   * nothing in it. Down here the direction is carried by the label, by which side of «i dag»
-   * you are on, and by the peg: hollow for the past, filled for what is coming.
+   * Every card stays inside the box on a phone: the row is clipped to the box's edge, and a
+   * card that hung out of it would be a card on the page's white with no water under it.
    */
-  const sides = await page.evaluate(() => {
-    const el = document.querySelector('#arrangementer [role="region"]') as HTMLElement;
-    const line = (el.querySelector('[data-today] span') as HTMLElement).getBoundingClientRect();
-    return Array.from(el.querySelectorAll('li article')).map((body) => ({
-      bottom: Math.round(body.getBoundingClientRect().bottom),
-      line: Math.round(line.top),
-    }));
+  const inside = await page.evaluate(() => {
+    const box = document.querySelector('#arrangementer [data-box]')!.getBoundingClientRect();
+    return Array.from(document.querySelectorAll('#arrangementer li article')).every((c) => {
+      const r = c.getBoundingClientRect();
+      return r.top >= box.top - 1 && r.bottom <= box.bottom + 1;
+    });
   });
-  expect(sides.length, 'no stops to measure').toBeGreaterThan(0);
-  for (const stop of sides) {
-    expect(stop.bottom, 'a stop hangs below the line on a phone').toBeLessThanOrEqual(stop.line + 2);
-  }
+  expect(inside, 'a card hangs out of the box on a phone').toBe(true);
 
-  /*
-   * And the drawn line is where the pegs are.
-   *
-   * The hairline is a pseudo-element on the list; the pegs are in the stops. Nothing in CSS
-   * keeps them in step, and when the phone's rows stopped being symmetric the line was drawn
-   * 138px above the dots — through a screenshot that looked fine, because a 1px hairline over
-   * white is invisible until you look for it. Measuring the pegs alone could not see it.
-   */
-  expect(await lineAgainstPegs(page), 'the hairline drifted off the pegs').toBeLessThanOrEqual(2);
-
-  // The rail is wider than the screen by design; the PAGE still must not be. A 246px stop
+  // The rail is wider than the screen by design; the PAGE still must not be. A 300px stop
   // and a fixed-width frame are exactly the kind of thing that escapes its container.
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow, 'the page scrolls sideways on a phone').toBeLessThanOrEqual(1);
