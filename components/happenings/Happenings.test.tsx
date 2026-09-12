@@ -12,14 +12,15 @@ const mount = () => {
 const stops = (section: HTMLElement) =>
   Array.from(section.querySelectorAll('li')).map((li) => li.textContent ?? '');
 
+// Dated far enough either side of any «today» a test could run on.
 const NEWS = [
-  { day: '3', month: 'jul', title: 'Vi flytter kveldene', note: 'Første etasje fra august.', image: null },
-  { day: '4', month: 'sep', title: 'Ny brosjyre', note: 'Den svarer på det folk spør om.', image: null },
+  { date: '2020-07-03', title: 'Vi flytter kveldene', note: 'Første etasje fra august.', image: null },
+  { date: '2021-09-04', title: 'Ny brosjyre', note: 'Den svarer på det folk spør om.', image: null },
 ];
 
 const EVENTS = [
-  { day: '18', month: 'sep', title: 'Åpen kveld', meta: 'Torsdag kl. 18.00', note: 'Kom med spørsmål.', image: null },
-  { day: '8', month: 'okt', title: 'Hva er islam?', meta: 'Onsdag kl. 19.00', note: 'En time om det grunnleggende.', image: null },
+  { date: '2098-09-18', title: 'Åpen kveld', meta: 'Torsdag kl. 18.00', note: 'Kom med spørsmål.', image: null },
+  { date: '2099-10-08', title: 'Hva er islam?', meta: 'Onsdag kl. 19.00', note: 'En time om det grunnleggende.', image: null },
 ];
 
 const both = () => render(<Happenings events={{ ...site.events, items: EVENTS }} news={{ ...site.news, items: NEWS }} />);
@@ -31,19 +32,48 @@ test('the section carries one heading for both lists, not one each', () => {
 });
 
 /**
- * The whole idea, as a test. Nyheter lie behind «i dag» and Arrangementer ahead of it,
- * which is what they are rather than how they are arranged — so the order of the axis is
- * the one thing about this section that cannot drift without the section losing its point.
+ * The whole idea, as a test. One row in date order, whichever list a stop came from —
+ * «published by the date; news or arrangement doesn't matter» — with «i dag» set where
+ * today falls. A news item dated after an event sits after it, because the date decides.
  */
-test('the axis runs oldest news, then today, then the nearest event', () => {
-  const { container } = both();
+test('the row runs in date order across both lists, with today between past and future', () => {
+  const late = { date: '2098-10-01', title: 'Etter åpen kveld', note: 'En nyhet datert mellom to arrangementer.', image: null };
+  const { container } = render(
+    <Happenings events={{ ...site.events, items: EVENTS }} news={{ ...site.news, items: [...NEWS, late] }} />,
+  );
   const section = container.querySelector('#arrangementer') as HTMLElement;
   const text = stops(section);
   expect(text[0]).toContain('Vi flytter kveldene');
   expect(text[1]).toContain('Ny brosjyre');
   expect(text[2]).toContain(site.happenings.today);
   expect(text[3]).toContain('Åpen kveld');
-  expect(text[4]).toContain('Hva er islam?');
+  expect(text[4]).toContain('Etter åpen kveld');
+  expect(text[5]).toContain('Hva er islam?');
+  expect(text).toHaveLength(6);
+});
+
+/** A placeholder has no date to sort by, so it sorts as its list would — news before
+ *  today, events after — and shows the bracketed day and month from the content file. */
+test('an undated stop keeps its list’s side of today and shows the bracketed date', () => {
+  const news = [{ date: null, title: 'Uten dato', note: 'En nyhet.', image: null }];
+  const events = [{ date: null, title: 'Kommer', meta: 'Snart', note: 'Et arrangement.', image: null }];
+  const { container } = render(<Happenings events={{ ...site.events, items: events }} news={{ ...site.news, items: news }} />);
+  const section = container.querySelector('#arrangementer') as HTMLElement;
+  const text = stops(section);
+  expect(text[0]).toContain('Uten dato');
+  expect(text[1]).toContain(site.happenings.today);
+  expect(text[2]).toContain('Kommer');
+  expect(within(section).getAllByText(site.happenings.undated.day)).toHaveLength(2);
+  expect(within(section).getAllByText(site.happenings.undated.month)).toHaveLength(2);
+});
+
+/** One thing to type: the day set large and the month beside it are both read off the date. */
+test('the day and the month are read off the date', () => {
+  const { container } = both();
+  const section = container.querySelector('#arrangementer') as HTMLElement;
+  const stop = within(section).getByText('Åpen kveld').closest('li') as HTMLElement;
+  expect(within(stop).getByText('18')).toBeInTheDocument();
+  expect(within(stop).getByText('sep')).toBeInTheDocument();
 });
 
 test('every stop says whether it is something coming or something that was', () => {
@@ -53,14 +83,15 @@ test('every stop says whether it is something coming or something that was', () 
   expect(within(section).getAllByText(site.happenings.kinds.event)).toHaveLength(EVENTS.length);
 });
 
-/** The month is written above the line where it changes and nowhere else — repeated on
- *  every stop it stops being a ruler and becomes noise. */
-test('the month is named once, where it changes', () => {
-  const { container } = both();
-  const section = container.querySelector('#arrangementer') as HTMLElement;
-  expect(within(section).getAllByText(site.happenings.months.sep)).toHaveLength(1);
-  expect(within(section).getByText(site.happenings.months.jul)).toBeInTheDocument();
-  expect(within(section).getByText(site.happenings.months.okt)).toBeInTheDocument();
+/** The two canvases the material is drawn on: the water under, the ink over. Both inside
+ *  the box, which is hidden from assistive tech; the row is what a screen reader gets. */
+test('the box holds the water and the ink, in that order, hidden from assistive tech', () => {
+  const section = mount();
+  const box = section.querySelector('[data-box]') as HTMLElement;
+  expect(box).toHaveAttribute('aria-hidden', 'true');
+  const canvases = Array.from(box.querySelectorAll('canvas'));
+  expect(canvases.map((c) => (c.hasAttribute('data-water') ? 'water' : c.hasAttribute('data-ink') ? 'ink' : '?')))
+    .toEqual(['water', 'ink']);
 });
 
 /**
@@ -101,9 +132,9 @@ test('an «alle» link is rendered as soon as the content file has a route', () 
     .toHaveAttribute('href', '/arrangementer');
 });
 
-/** A timeline with nothing on it is an axis of white. The section goes rather than stand
- *  there as a headline over air. */
-test('the section is not rendered at all when there is nothing on the axis', () => {
+/** A row with nothing on it is a box of water under a headline. The section goes rather
+ *  than stand there over nothing. */
+test('the section is not rendered at all when there is nothing on the row', () => {
   const { container } = render(
     <Happenings events={{ ...site.events, items: [] }} news={{ ...site.news, items: [] }} />,
   );
