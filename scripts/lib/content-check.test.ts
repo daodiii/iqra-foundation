@@ -70,29 +70,20 @@ describe('paymentPlaceholders', () => {
   test('finds the payment details, and nothing that is merely unfinished', () => {
     const paths = paymentPlaceholders(site).map((p) => p.path);
     expect(paths).toEqual([
-      'support.routes[0].value',
-      'support.routes[1].value',
-      'support.routes[2].value',
-      'support.qr.value',
+      'support.vipps.value',
+      'support.also',
       'support.orgnr',
     ]);
     expect(paths.some((p) => p.startsWith('about.'))).toBe(false);
   });
 
   /**
-   * The ways to give are an array now, so the set has to be matched by shape. A list of
-   * exact paths would pass the test above and still go silent the moment somebody added a
-   * fourth route — which is the drift the comment worries about, not a hypothetical.
+   * The account number lives inside a sentence now, not in a field of its own, so the check
+   * has to read the sentence: a bracket anywhere in it is a number someone would try to use.
    */
-  test('a route added later is caught without anyone updating a list', () => {
-    const extended = {
-      ...site,
-      support: {
-        ...site.support,
-        routes: [...site.support.routes, { label: 'Ny', value: '[NYTT NUMMER]', how: 'x' }],
-      },
-    };
-    expect(paymentPlaceholders(extended).map((p) => p.path)).toContain('support.routes[3].value');
+  test('the account number is caught inside its sentence', () => {
+    const paths = paymentPlaceholders(site);
+    expect(paths.find((p) => p.path === 'support.also')?.token).toBe('[KONTO]');
   });
 
   test('it is a subset of every placeholder, not a separate list that can drift', () => {

@@ -19,16 +19,17 @@ import { DEPTH, floorAt, type WaterScene } from './water';
  * The page walks that arc, and it walks it in two materials. Visjon and Misjon are INK —
  * pigment spreading through water, `lib/ink.ts`. Then the bridge: Arrangementer · Nyheter
  * is ink DROPPED INTO clear water, both renderers at once. Below it the ink is gone: Om oss ·
- * Teamet is Arafat seen through clear WATER (`lib/water.ts`), and Støtt oss is water too,
- * with the night on the card at its foot. That is the whole shape of the page — a material
- * that thins as you go down it.
+ * Teamet is Arafat seen through clear WATER (`lib/water.ts`), and Støtt oss is water too.
+ * That is the whole shape of the page — a material that thins as you go down it. The Haram
+ * at night, the film's last scene, is not on the page any more: it was the card at the foot
+ * of Støtt oss until 2026-09-12, when the section became one number and the card went.
  *
  * Arafat belongs to the people because it is the one scene the page had never used and it is
  * the gathering: a plain with everyone on it, under the section that says who «everyone» is.
  *
  * Three of the five are the user's departures from the film. Støtt oss: «make the last one a
  * green color that looks like green water» (2026-09-10) — it replaces the Quran's gold, which
- * survives on the page as the middle route colour below. And the two ink boxes (2026-09-12):
+ * has no place left on the page. And the two ink boxes (2026-09-12):
  * «make the first one light blue like the sky, the other one make it like cream». They had
  * been the cave and the mosque, slate on grey and amber on cream, sampled from the frames
  * above; they are now the sky the cave opens onto and the mosque's light without its amber,
@@ -156,29 +157,6 @@ const GREEN: WaterScene = {
   ],
 };
 
-/**
- * The Haram at night, on the card at the foot of Støtt oss.
- *
- * The one night floor: its pools are lamps, so they ADD light to the ground instead of
- * staining it, and white type sits on the result — which is why the depth does not reach it
- * (a slider that could lighten this ground would be a contrast bug), and why its caustics
- * and glint are set here rather than ramped. Lamps on black water are the one place a hard
- * caustic net and a bright glint are the picture rather than an effect.
- */
-const NIGHT: WaterScene = {
-  pale: '#0c131d',
-  deep: '#0c131d',
-  night: true,
-  caus: 3,
-  spec: 1.6,
-  pools: [
-    ['#d9b783', 0.28, 0.3, 0.55, 1.2],
-    ['#c9a878', 0.76, 0.66, 0.46, 0.9],
-    ['#6f8aa6', 0.58, 0.14, 0.5, 0.6],
-    ['#3a8a66', 0.12, 0.88, 0.36, 0.34],
-  ],
-};
-
 export const film = {
   vision: VISION,
   mission: MISSION,
@@ -191,16 +169,8 @@ export const film = {
   bridge: floorAt(BRIDGE, DEPTH),
   people: floorAt(ARAFAT, DEPTH),
   supportWater: floorAt(GREEN, DEPTH),
-  supportCard: floorAt(NIGHT, DEPTH),
-  /**
-   * The three payment routes, in the film's order: the cave's slate, the Quran's gold, the
-   * night. They are CSS gradients rather than simulations — five sims on one page is
-   * already the page's whole performance budget, and a box this small shows no flow. The
-   * gold is also the last of the Quran left on the page, now that the ask is green.
-   */
-  routes: ['#5f7383', '#a07a44', '#22303f'],
 } as const;
 
 /** The sections painted in pigment, and the ones painted in water. */
 export type FilmInk = 'vision' | 'mission' | 'drops';
-export type FilmWater = 'bridge' | 'people' | 'supportWater' | 'supportCard';
+export type FilmWater = 'bridge' | 'people' | 'supportWater';

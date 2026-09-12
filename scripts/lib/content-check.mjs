@@ -57,17 +57,13 @@ export function contentProblems(site, { production, allowPlaceholders = false })
  * are merely unfinished. A visitor cannot be misled by a team member called [Navn], but
  * these are the numbers someone would try to send money to — so when the gate is
  * deliberately held open they are what the build log has to say out loud.
- *
- * Patterns, not a list of exact paths. The ways to give are an array now, and a list would
- * have gone quiet about a fourth route the moment somebody added one — which is precisely
- * the drift this exists to catch. `[0]` is how `walkStrings` writes an array index.
  */
 const PAYMENT = [
-  /** Every route's number: the account, the Vipps number, the KID. */
-  /^support\.routes\[\d+\]\.value$/,
-  /** The code a visitor would point a bank app at. */
-  /^support\.qr\.value$/,
-  /** The number the gift is reported on, which is what makes the deduction real. */
+  /** The Vipps number, which is the section. */
+  /^support\.vipps\.value$/,
+  /** The sentence the account number lives in: a bracket anywhere in it is a number. */
+  /^support\.also$/,
+  /** The number the gift is reported on, in the footer. */
   /^support\.orgnr$/,
 ];
 

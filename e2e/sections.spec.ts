@@ -258,16 +258,17 @@ test('desktop: misjon does not pin, the copy arrives and the wordmark stays navy
 });
 
 /**
- * Støtt oss, rebuilt. It is a light box now like the two above it, which is why the
- * wordmark assertion here matters more than it looks: this section used to own the page's
- * one handoff to white, and a wordmark left white over a light box looks like no wordmark.
+ * Støtt oss: one screen, one number. It was a screen and a half of boxes; the brief was
+ * «way too big», so the first assertion is the height. The rest is what the screen holds:
+ * the green water painted, one frame drawn with the pen, «Støtt oss» on its line, the
+ * number inside the frame — today it is the eight-character placeholder, which is wider
+ * than the five digits it stands for, and the one thing on the page that could run out of
+ * its box — and nothing to press, because nothing is wired to a payment.
  *
- * The three routes lead because they are the part that works today — no payment is wired,
- * every number is a placeholder, and a number you copy into your own bank needs nothing
- * built. So all three are on screen with nothing to open, which is the thing that would
- * regress if a disclosure panel ever came back.
+ * The wordmark assertion matters more than it looks: this section used to own the page's
+ * one handoff to white, and a wordmark left white over a light box looks like no wordmark.
  */
-test('desktop: støtt oss shows all three routes and the amount follows the tiers', async ({ page, isMobile }) => {
+test('desktop: støtt oss is one screen, one frame and one number', async ({ page, isMobile }) => {
   test.skip(isMobile, 'the phone layout has its own test');
   await pastHero(page);
   const top = await docTop(page, '#stott-oss');
@@ -280,58 +281,34 @@ test('desktop: støtt oss shows all three routes and the amount follows the tier
 
   const section = page.locator('#stott-oss');
   const s = site.support;
+  await expect(section.getByRole('heading', { name: s.title })).toBeVisible();
+  await expect(section.getByText(s.vipps.value, { exact: true })).toBeVisible();
+  await expect(section.getByText(s.also)).toBeVisible();
+  await expect(section.getByRole('button')).toHaveCount(0);
 
-  for (const route of s.routes) {
-    await expect(section.getByText(route.value, { exact: true })).toBeVisible();
-    await expect(section.getByText(route.how)).toBeVisible();
-  }
-
-  const tiers = section.getByRole('group', { name: s.giver.amountLabel }).getByRole('button');
-  await expect(tiers).toHaveCount(s.tiers.length);
-  await expect(section.locator('[data-amount]')).toHaveText(String(s.tiers[s.giver.preselect]));
-  await tiers.last().click();
-  await expect(section.locator('[data-amount]')).toHaveText(/1\s*000/);
-  await expect(tiers.last()).toHaveAttribute('aria-pressed', 'true');
-
-  // The card is the film's last scene and the only night water on the site. It is a
-  // separate simulation from the box, so it gets its own check.
-  const card = await page.evaluate(() => {
-    const c = document.querySelector('#stott-oss canvas[data-water-card]') as HTMLCanvasElement;
-    const cs = getComputedStyle(c.parentElement!);
-    return { background: cs.backgroundColor, bitmap: [c.width, c.height] };
+  await expect(section.locator('[data-card]')).toHaveAttribute('data-frame-drawn', 'true', { timeout: 8_000 });
+  const geometry = await page.evaluate(() => {
+    const section = document.getElementById('stott-oss')!;
+    const card = section.querySelector('[data-card]') as HTMLElement;
+    const legend = card.querySelector('[data-legend]')!.getBoundingClientRect();
+    const number = card.querySelector('[data-number]') as HTMLElement;
+    const c = card.getBoundingClientRect();
+    // The glyphs, not the block: the number is `nowrap` in a block as wide as the frame, so
+    // its element's rect fits by construction and only the text can run out.
+    const range = document.createRange();
+    range.selectNodeContents(number);
+    const n = range.getBoundingClientRect();
+    return {
+      screens: section.getBoundingClientRect().height / window.innerHeight,
+      legendMid: legend.top + legend.height / 2 - c.top,
+      numberInside: n.left >= c.left && n.right <= c.right,
+      overflow: number.scrollWidth - number.clientWidth,
+    };
   });
-  expect(card.background).toBe('rgb(12, 19, 29)'); // film.supportCard.ground, #0c131d
-
-  // There is no frequency toggle any more, and no panel to open for a number.
-  await expect(section.getByRole('group', { name: /hvor ofte/i })).toHaveCount(0);
-  await expect(section.locator('#stott-detaljer')).toHaveCount(0);
-});
-
-/**
- * The heading measures its own words and scales to the measure, and it does that again once
- * the font arrives — measured in the fallback face it comes out several points too small,
- * and nothing about the page changes afterwards to trigger a re-measure. Both lines are
- * `nowrap`, so a fit that failed shows as an overflow.
- */
-test('desktop: the støtt oss heading fills its measure without overflowing', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'the phone measure is much narrower');
-  await pastHero(page);
-  const top = await docTop(page, '#stott-oss');
-  await page.evaluate((y) => window.scrollTo(0, y + 10), top);
-  const fit = await page.evaluate(() => {
-    const h2 = document.querySelector('#stott-oss [data-title]') as HTMLElement;
-    const measure = h2.clientWidth;
-    const widest = Math.max(...Array.from(h2.querySelectorAll('span')).map((s) => {
-      const r = document.createRange();
-      r.selectNodeContents(s);
-      return r.getBoundingClientRect().width;
-    }));
-    return { measure, widest, overflow: h2.scrollWidth - h2.clientWidth };
-  });
-  expect(fit.overflow, 'the heading ran out of its card').toBeLessThanOrEqual(1);
-  // It is meant to LAND on the measure, not merely fit inside it — a heading sized to half
-  // the column would pass an overflow check and fail the design.
-  expect(fit.widest).toBeGreaterThan(fit.measure * 0.75);
+  expect(geometry.screens, 'the section is taller than the screen').toBeLessThanOrEqual(1.01);
+  expect(Math.abs(geometry.legendMid), 'the label is not on the top line').toBeLessThan(2);
+  expect(geometry.numberInside, 'the number ran out of its frame').toBe(true);
+  expect(geometry.overflow, 'the number is wider than its line').toBeLessThanOrEqual(1);
 });
 
 /**
@@ -341,7 +318,7 @@ test('desktop: the støtt oss heading fills its measure without overflowing', as
  * sky and the cream, then ink dropped into clear water, then clear water over Arafat and
  * green water under the ask. Arrangementer · Nyheter has to stay between the ink boxes and
  * the water boxes — it is the bridge, the one box that is both — and Teamet has to stay
- * directly above Støtt oss, whose headline is «Tjue stykker gjør arbeidet». A reordering
+ * directly above Støtt oss, so the ask comes after the people who do the work. A reordering
  * would leave every section working and the page saying something else.
  */
 test('the page walks from ink through ink-in-water into water, in that order', async ({ page }) => {
@@ -522,11 +499,16 @@ test('phone: no pins after the hero; the tree grows and every section stays legi
   await page.evaluate((y) => window.scrollTo(0, y + 10), stop);
   await page.waitForTimeout(800);
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
-  // Stacked, the three routes become one column; all three still have to be reachable
-  // without opening anything.
-  for (const route of site.support.routes) {
-    await expect(page.locator('#stott-oss').getByText(route.value, { exact: true })).toBeVisible();
-  }
+  // One screen on the phone as well, and the number — the placeholder, wider than the
+  // digits — still inside its frame at this width.
+  await expect(page.locator('#stott-oss').getByText(site.support.vipps.value, { exact: true })).toBeVisible();
+  const ask = await page.evaluate(() => {
+    const section = document.getElementById('stott-oss')!;
+    const number = section.querySelector('[data-number]') as HTMLElement;
+    return { screens: section.getBoundingClientRect().height / window.innerHeight, overflow: number.scrollWidth - number.clientWidth };
+  });
+  expect(ask.screens, 'støtt oss is taller than the phone screen').toBeLessThanOrEqual(1.01);
+  expect(ask.overflow, 'the number is wider than its line').toBeLessThanOrEqual(1);
 });
 
 /**

@@ -4,7 +4,7 @@ import { deepest, type InkPalette } from './ink';
 import { POOL_LIMIT, type WaterFloor } from './water';
 
 const INK: FilmInk[] = ['vision', 'mission', 'drops'];
-const WATER: FilmWater[] = ['bridge', 'people', 'supportWater', 'supportCard'];
+const WATER: FilmWater[] = ['bridge', 'people', 'supportWater'];
 const rgb = (hex: string) => [
   parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16),
 ] as const;
@@ -25,16 +25,18 @@ const water: [FilmWater, WaterFloor][] = WATER.map((k) => [k, film[k]]);
 test('every colour is a full six-digit hex, so the shader parse cannot half-succeed', () => {
   const ink = INK.flatMap((s) => [film[s].ground, ...film[s].ink.map(([h]) => h)]);
   const pools = WATER.flatMap((s) => [film[s].ground, ...film[s].pools.map(([h]) => h)]);
-  for (const h of ink.concat(pools).concat(film.routes)) expect(h).toMatch(/^#[0-9a-f]{6}$/);
+  for (const h of ink.concat(pools)) expect(h).toMatch(/^#[0-9a-f]{6}$/);
 });
 
-test('the night card is the only additive ink and the only night water', () => {
-  expect(film.supportCard.night).toBe(true);
+/**
+ * Nothing on the page is night any more: the Haram card went with the Støtt oss rebuild
+ * (2026-09-12), and navy type sits on every ground that is left. A night floor or an
+ * additive ink coming back would put white type's contrast in play again.
+ */
+test('no ink is additive and no water is night', () => {
   for (const [, p] of paper) expect(p.additive).toBeFalsy();
   expect(film.drops.additive).toBeFalsy();
-  expect(film.bridge.night).toBe(false);
-  expect(film.people.night).toBe(false);
-  expect(film.supportWater.night).toBe(false);
+  for (const [name, floor] of water) expect(floor.night, name).toBe(false);
 });
 
 /*
@@ -65,13 +67,11 @@ test('the drops are the page’s own inks: blues, golds and one green, hanging o
 });
 
 /**
- * Contrast, not taste. Navy copy sits on the paper grounds and on both water floors, and
- * white type sits on the night card — so a ground that drifted the wrong way would take the
- * text with it.
+ * Contrast, not taste. Navy copy sits on the paper grounds and on both water floors, so a
+ * ground that drifted the wrong way would take the text with it.
  */
-test('the paper grounds are light and the night card is dark', () => {
+test('the paper grounds are light', () => {
   for (const [name, p] of paper) expect(lum(p.ground), name).toBeGreaterThan(200);
-  expect(lum(film.supportCard.ground)).toBeLessThan(40);
 });
 
 /**
@@ -79,7 +79,7 @@ test('the paper grounds are light and the night card is dark', () => {
  * white cards have to keep sitting ON it rather than disappearing into it, and the cards
  * are the page's whole shape.
  */
-test('the day water floors are mid-tones: darker than the paper, far lighter than the night', () => {
+test('the water floors are mid-tones, darker than the paper', () => {
   for (const name of ['people', 'supportWater'] as const) {
     expect(lum(film[name].ground), name).toBeGreaterThan(120);
     expect(lum(film[name].ground), name).toBeLessThan(200);
@@ -219,8 +219,4 @@ test('nothing a hand does makes the sky darker than sky blue, or the cream darke
   expect(hue(sky), sky).toBeLessThan(225);
   expect(lum(cream), cream).toBeGreaterThan(210);
   expect(hue(cream), cream).toBeLessThan(60);
-});
-
-test('there is one route colour for each of the three ways to pay', () => {
-  expect(film.routes).toHaveLength(3);
 });

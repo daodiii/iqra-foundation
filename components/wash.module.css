@@ -148,20 +148,6 @@
     radial-gradient(52% 58% at 84% 40%, rgba(207, 232, 220, 0.54) 0%, transparent 70%);
 }
 
-/**
- * The Haram at night, and the one floor whose colours are lamps: they add light to the
- * ground rather than staining it. It is a card inside Støtt oss rather than a section's
- * backdrop, so it takes the ground and the still picture from here but is positioned by
- * that section.
- */
-.night {
-  --ground: #0c131d;
-  --still:
-    radial-gradient(56% 46% at 30% 34%, rgba(217, 183, 131, 0.34) 0%, transparent 70%),
-    radial-gradient(50% 42% at 76% 62%, rgba(111, 138, 166, 0.32) 0%, transparent 70%),
-    radial-gradient(38% 32% at 58% 20%, rgba(58, 138, 102, 0.2) 0%, transparent 72%);
-}
-
 /*
  * The box the copy sits in — a LINE, not a pane.
  *
