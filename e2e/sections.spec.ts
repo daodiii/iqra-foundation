@@ -154,10 +154,11 @@ test('desktop: the hero is the only pin, and it pins where its spacer sits', asy
  * The tree used to be scrubbed by a pin here, and this test scrolled through the pin to
  * open it. It runs on a clock now, so arriving IS the interaction — nothing below scrolls
  * a pixel after the first line, and what follows is what arriving has to be worth: the
- * arch drawn, the sky inside it, the three cards surfaced in its wake, the name under the
- * roots.
+ * arch drawn, the three cards surfaced in its wake, the name under the roots. Nothing is
+ * painted inside the arch any more — the ink shows through it — so the only canvases in
+ * the area are the stroke's and the tree's.
  */
-test('desktop: visjon does not pin; the cards surface, the tree opens, the sky is painted, the box holds ink', async ({ page, isMobile }) => {
+test('desktop: visjon does not pin; the cards surface, the tree opens, the arch is drawn, the box holds ink', async ({ page, isMobile }) => {
   test.skip(isMobile, 'the arch with the cards on its flanks is the desktop layout');
   await pastHero(page);
   const top = await docTop(page, '#visjon');
@@ -168,7 +169,7 @@ test('desktop: visjon does not pin; the cards surface, the tree opens, the sky i
   }
   await expect(page.locator('#visjon [data-root]')).toHaveCSS('opacity', '1', { timeout: 12_000 });
   expect(await treeHasInk(page)).toBe(true);
-  expect(await canvasHasPaint(page, '#visjon [data-scene]'), 'the sky never opened inside the arch').toBe(true);
+  await expect(page.locator('#visjon [data-arch] canvas')).toHaveCount(2); // the stroke and the tree, no scene
   expect(await canvasHasPaint(page, '#visjon [data-stroke]'), 'the arch was never drawn').toBe(true);
   await boxIsPainted(page, 'visjon', film.vision.ground);
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');

@@ -17,7 +17,7 @@ import { film } from './film';
  */
 const css = readFileSync(join(import.meta.dirname, '..', 'components', 'wash.module.css'), 'utf8');
 
-/** The `--ground` declared inside one class block, e.g. `.cave { --ground: #e6eaea; }`. */
+/** The `--ground` declared inside one class block, e.g. `.cave { --ground: #eef5fb; }`. */
 function groundOf(className: string): string | null {
   const block = css.match(new RegExp(`\\.${className}\\s*\\{([^}]*)\\}`));
   return block?.[1].match(/--ground:\s*(#[0-9a-f]{6})/)?.[1] ?? null;

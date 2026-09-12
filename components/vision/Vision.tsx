@@ -8,7 +8,6 @@ import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { createInkWhenNear, type InkHandle } from '@/lib/ink';
 import { setWordmarkOnDark } from '@/lib/wordmark';
 import { desktopArch, desktopStage, drawStroke, phoneArch, phoneStage, type Arch, type Rect } from './arch';
-import { createDawnScene } from './dawn';
 import { createVisionTree, GROW } from './tree';
 // TreeFigure, not Tree: on a case-insensitive filesystem './Tree' resolves to tree.ts.
 import { Tree } from './TreeFigure';
@@ -18,7 +17,12 @@ import styles from './vision.module.css';
  * How long the tree takes to open, in seconds. Nothing holds the reader here now that the
  * pin is gone, so it has to be shorter than a pass down the section rather than longer: at
  * five — the figure the phone branch used to run — a normal scroll left a half-grown tree
- * behind it. The arch is drawn on the same clock, and the sky opens in its wake.
+ * behind it. The arch is drawn on the same clock.
+ *
+ * The arch is a stroke and nothing more. It used to open onto a painted pre-dawn — sky,
+ * stars, grass, earth under the roots — and that went by the user's call (2026-09-12: «just
+ * have the tree and the arch, delete everything inside»). What is inside the stroke now is
+ * the box's own ink.
  */
 const OPEN = 3;
 
@@ -62,10 +66,9 @@ export function Vision() {
       const figure = section.querySelector<HTMLElement>('[data-figure]');
       const area = section.querySelector<HTMLElement>('[data-arch]');
       const stage = section.querySelector<HTMLElement>('[data-tree]');
-      const sceneCanvas = section.querySelector<HTMLCanvasElement>('[data-scene]');
       const strokeCanvas = section.querySelector<HTMLCanvasElement>('[data-stroke]');
       const cards = Array.from(section.querySelectorAll<HTMLElement>('[data-value]'));
-      if (!figure || !area || !stage || !sceneCanvas || !strokeCanvas || cards.length !== 3) return;
+      if (!figure || !area || !stage || !strokeCanvas || cards.length !== 3) return;
       const treeCanvas = stage.querySelector('canvas');
       const mark = stage.querySelector<HTMLElement>('[data-root]');
       const reduced = reducedMotion();
@@ -74,17 +77,16 @@ export function Vision() {
       const tree = treeCanvas ? createVisionTree(stage, treeCanvas, { reduced, limbLabels: [], rootLabel: mark }) : null;
 
       /*
-       * The cave before sunrise, in ink. The host is the section rather than the canvas, so
+       * The sky, in ink (`film.vision`). The host is the section rather than the canvas, so
        * a hand moving across the copy stirs the colour behind it too — the cards are glass
        * lying on the water, not a lid on it. `createInk` returns null wherever WebGL2 or a
        * float colour buffer is missing, and the box keeps the still gradient underneath;
-       * the scene inside the arch is 2D and draws either way.
+       * the stroke and the tree are 2D and draw either way.
        */
       const inkCanvas = section.querySelector<HTMLCanvasElement>('[data-ink]');
       const ink: InkHandle | null = inkCanvas
         ? createInkWhenNear(inkCanvas, { reduced, palette: film.vision, host: section })
         : null;
-      const scene = createDawnScene(sceneCanvas, { reduced });
       const strokeCtx = strokeCanvas.getContext('2d');
 
       /* The geometry, remade on every layout. */
@@ -92,26 +94,21 @@ export function Vision() {
       let surfaces: [number, number, number] = [0.3, 0.55, 0.8];
       let W = 0;
       let H = 0;
-      /** The tree's growth time; the stroke and the scene are drawn from it. */
+      /** The tree's growth time; the stroke is drawn from it. */
       let T = reduced ? 99 : 0;
-      let settled = reduced;
       let dead = false;
       const shown = [false, false, false];
 
       const draw = () => {
-        if (!arch) return;
-        const p = Math.min(1, T / GROW);
-        if (strokeCtx) {
-          strokeCtx.clearRect(0, 0, W, H);
-          drawStroke(strokeCtx, arch.path, p);
-        }
-        scene?.frame(p, arch.path.pointAt(p), performance.now() / 1000);
+        if (!arch || !strokeCtx) return;
+        strokeCtx.clearRect(0, 0, W, H);
+        drawStroke(strokeCtx, arch.path, Math.min(1, T / GROW));
       };
 
       /*
        * Everything that depends on a measurement. The cards are placed by CSS; this reads
-       * where they landed and puts the arch, the stage and the scene around them. In flow
-       * the arch area is the space; on a desktop it is the whole figure.
+       * where they landed and puts the arch and the stage around them. In flow the arch
+       * area is the space; on a desktop it is the whole figure.
        */
       const layout = () => {
         W = area.clientWidth;
@@ -139,9 +136,7 @@ export function Vision() {
         [stage.style.left, stage.style.top, stage.style.width, stage.style.height] = size;
         // The renderer fitted the tree to whatever size the stage had before; tell it.
         if (changed) tree?.refit();
-        scene?.layout({ W, H, arch, stage: rect });
         draw();
-        if (settled) scene?.settle();
       };
 
       let rt = 0;
@@ -156,7 +151,6 @@ export function Vision() {
         window.clearTimeout(rt);
         tree?.destroy();
         ink?.destroy();
-        scene?.destroy();
       };
 
       if (reduced) tree?.setT(99);
@@ -171,9 +165,9 @@ export function Vision() {
 
       /*
        * The tree opens by itself on a clock, and the arch is drawn on the same clock with
-       * the tree's pen: `p` is how far the pen has come, and the scene shows the sky
-       * where it has passed. Each card surfaces as the pen reaches its flank, once —
-       * glass sliding into place in the stroke's wake, not a stagger.
+       * the tree's pen: `p` is how far the pen has come. Each card surfaces as the pen
+       * reaches its flank, once — glass sliding into place in the stroke's wake, not a
+       * stagger.
        */
       const growth = { T: 0 };
       let arrived = false;
@@ -193,7 +187,6 @@ export function Vision() {
               gsap.to(card, { y: 0, opacity: 1, duration: 0.9, ease: EASE.out });
             });
           },
-          onComplete: () => { settled = true; scene?.settle(); },
         });
       };
 
@@ -240,9 +233,8 @@ export function Vision() {
       {/* Inset exactly as the box is, so 16px from this edge is 16px inside the ink. */}
       <div className={styles.figure} data-figure>
         <p id="visjon-label" className={styles.label}>{site.vision.label}</p>
-        {/* The arch and what is inside it: the sky, the stroke, the tree with the name under its roots. */}
+        {/* The arch: the stroke, and the tree with the name under its roots. The ink shows through the opening. */}
         <div className={styles.arch} data-arch>
-          <canvas className={styles.layer} data-scene aria-hidden="true" />
           <canvas className={styles.layer} data-stroke aria-hidden="true" />
           <Tree />
         </div>
