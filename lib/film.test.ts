@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { film, type FilmInk, type FilmWater } from './film';
-import type { InkPalette } from './ink';
+import { deepest, type InkPalette } from './ink';
 import { POOL_LIMIT, type WaterFloor } from './water';
 
 const INK: FilmInk[] = ['vision', 'mission'];
@@ -171,6 +171,25 @@ test('Visjon is the sky: every pigment light, and the ones carrying the box plai
 
 test('Misjon is cream: no pigment as dark as the mosque’s amber', () => {
   for (const [hex] of film.mission.ink) expect(lum(hex), hex).toBeGreaterThan(180);
+});
+
+/*
+ * What a hand can do. The pointer lays pigment on pigment, and the display is Beer-Lambert,
+ * so with no ceiling a slow finger ran the sky to navy and the cream to brown — «when you
+ * touch the screen the color that comes out is waaay too dark. want it to be sky blue and
+ * white cream color» (2026-09-12). Each paper palette now carries a `peak`, and `deepest`
+ * is the darkest tone that box can ever show, whatever anyone does to it. Held in
+ * luminance, where the words «light blue» and «white cream» actually live.
+ */
+test('nothing a hand does makes the sky darker than sky blue, or the cream darker than cream', () => {
+  const toHex = (c: readonly number[]) => '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+  const sky = toHex(deepest(film.vision));
+  const cream = toHex(deepest(film.mission));
+  expect(lum(sky), sky).toBeGreaterThan(170);
+  expect(hue(sky), sky).toBeGreaterThan(190);
+  expect(hue(sky), sky).toBeLessThan(225);
+  expect(lum(cream), cream).toBeGreaterThan(210);
+  expect(hue(cream), cream).toBeLessThan(60);
 });
 
 test('there is one route colour for each of the three ways to pay', () => {

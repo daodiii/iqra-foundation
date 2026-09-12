@@ -50,6 +50,13 @@ const VISION: InkPalette = {
   ink: [['#a5d4f1', 3], ['#c3e2f6', 3], ['#7ec0ea', 2], ['#4f9fd9', 1], ['#f3e5c6', 1]],
   ground: '#eef5fb',
   strength: 0.9,
+  /*
+   * The ceiling, so that a hand on the box draws in sky blue and never in navy: at this
+   * peak the deepest pigment shows as about #89bbec, and nothing can get darker. Set
+   * against «when you touch the screen the color that comes out is waaay too dark. want
+   * it to be sky blue» (2026-09-12); `film.test.ts` holds the darkest tone to a floor.
+   */
+  peak: 0.3,
 };
 
 /**
@@ -61,6 +68,9 @@ const MISSION: InkPalette = {
   ink: [['#eddfbd', 3], ['#f2e7cc', 3], ['#e4d2a3', 2], ['#d6bd83', 1]],
   ground: '#f8f2e4',
   strength: 0.7,
+  /* Lower than the sky's: cream has less room before it is tan. The deepest tone a hand
+     can leave here is about #eedcb7 — «white cream», the same call. */
+  peak: 0.12,
 };
 
 /*
