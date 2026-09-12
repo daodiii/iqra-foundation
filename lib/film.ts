@@ -17,10 +17,11 @@ import { DEPTH, floorAt, type WaterScene } from './water';
  * | 3.80 s | Masjid al-Haram at night   | `#0c131d` `#958679` `#bab5af`           |
  *
  * The page walks that arc, and it walks it in two materials. Visjon and Misjon are INK —
- * pigment spreading through water, `lib/ink.ts`. Below them the ink clears: Om oss · Teamet
- * is Arafat seen through clear WATER (`lib/water.ts`), and Støtt oss is water too, with the
- * night on the card at its foot. That is the whole shape of the page — a material that thins
- * as you go down it.
+ * pigment spreading through water, `lib/ink.ts`. Then the bridge: Arrangementer · Nyheter
+ * is ink DROPPED INTO clear water, both renderers at once. Below it the ink is gone: Om oss ·
+ * Teamet is Arafat seen through clear WATER (`lib/water.ts`), and Støtt oss is water too,
+ * with the night on the card at its foot. That is the whole shape of the page — a material
+ * that thins as you go down it.
  *
  * Arafat belongs to the people because it is the one scene the page had never used and it is
  * the gathering: a plain with everyone on it, under the section that says who «everyone» is.
@@ -73,6 +74,23 @@ const MISSION: InkPalette = {
   peak: 0.12,
 };
 
+/**
+ * The drops: the ink of Arrangementer · Nyheter, which hangs in clear water over the
+ * bridge's floor rather than staining paper (`over`). The sky's blues from Visjon, the
+ * cream's golds from Misjon, and one green from the water below — the page's own inks,
+ * dropped in from the top (`rain`) and slow to thin (`clear`), so a thread has time to
+ * unfurl on the way down. The ground is the water's, because the box under it is the
+ * water; nothing is painted with it.
+ */
+const DROPS: InkPalette = {
+  ink: [['#4f9fd9', 3], ['#2f7fc4', 2], ['#7ec0ea', 2], ['#c9ad84', 2], ['#d6bd83', 2], ['#3b8f7c', 1]],
+  ground: '#b5c6cf',
+  strength: 3.4,
+  over: true,
+  rain: true,
+  clear: 0.07,
+};
+
 /*
  * The water scenes.
  *
@@ -81,6 +99,23 @@ const MISSION: InkPalette = {
  * shallowest and deepest water the page allows, and `DEPTH` picks the point between them —
  * see `lib/water.ts`, where the number and whose it is are written down.
  */
+
+/**
+ * The bridge: lit water between the ink boxes and the water boxes, with the drops above
+ * hanging in it. Paler than Arafat's floor so the page keeps thinning as it goes down —
+ * the ink boxes' paper, then this, then Arafat's stone, then the green. The pools are sky
+ * glare, a stone shadow, the cream's warmth and a pale blue: the neighbours on either side.
+ */
+const BRIDGE: WaterScene = {
+  pale: '#e9f0f3',
+  deep: '#9fb4bf',
+  pools: [
+    ['#f4f8fa', 0.22, 0.78, 0.5, 0.6],
+    ['#8ea6b3', 0.78, 0.26, 0.42, 0.42],
+    ['#e8e2d2', 0.56, 0.6, 0.46, 0.4],
+    ['#bfd0d8', 0.12, 0.2, 0.36, 0.3],
+  ],
+};
 
 /**
  * Arafat: white plain, glare, and the crowd as shadow.
@@ -147,11 +182,13 @@ const NIGHT: WaterScene = {
 export const film = {
   vision: VISION,
   mission: MISSION,
+  drops: DROPS,
   /*
    * Resolved here, once, at the page's one depth. Two boxes of water at different depths
    * read as two bodies of water rather than as one idea, so nothing downstream is given a
    * scene and a knob — it is given the floor.
    */
+  bridge: floorAt(BRIDGE, DEPTH),
   people: floorAt(ARAFAT, DEPTH),
   supportWater: floorAt(GREEN, DEPTH),
   supportCard: floorAt(NIGHT, DEPTH),
@@ -165,5 +202,5 @@ export const film = {
 } as const;
 
 /** The sections painted in pigment, and the ones painted in water. */
-export type FilmInk = 'vision' | 'mission';
-export type FilmWater = 'people' | 'supportWater' | 'supportCard';
+export type FilmInk = 'vision' | 'mission' | 'drops';
+export type FilmWater = 'bridge' | 'people' | 'supportWater' | 'supportCard';

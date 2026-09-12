@@ -125,6 +125,20 @@
 }
 
 /**
+ * The bridge: Arrangementer · Nyheter, ink dropped into lit water. The still is the water's
+ * pools; the ink is only ever drawn live, so a device that declines sees lit water with no
+ * ink in it, which is a complete answer.
+ */
+.bridge {
+  --ground: #b5c6cf;
+  --still:
+    radial-gradient(35% 38% at 12% 80%, rgba(191, 208, 216, 0.29) 0%, transparent 70%),
+    radial-gradient(44% 49% at 56% 40%, rgba(232, 226, 210, 0.39) 0%, transparent 70%),
+    radial-gradient(40% 44% at 78% 74%, rgba(142, 166, 179, 0.41) 0%, transparent 70%),
+    radial-gradient(48% 53% at 22% 22%, rgba(244, 248, 250, 0.58) 0%, transparent 70%);
+}
+
+/**
  * Arafat under clear water: the white plain, the crowd as shadow, sand. The first box on the
  * page where the material is water rather than ink, and the people are on it.
  */
