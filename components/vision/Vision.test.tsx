@@ -33,3 +33,19 @@ test('the arch area holds the stroke and the tree, nothing painted inside, under
   const order = [...document.querySelectorAll('#visjon [data-arch], #visjon [data-value]')];
   expect(order[0]).toBe(arch);
 });
+
+/**
+ * The box is a line drawn with the tree's pen (2026-09-12, «make all the boxes on the site
+ * like this»): each card carries the canvas the pen draws on, the name is the legend that
+ * sits on the line, and the paragraph is the copy the arrival brings in after it.
+ */
+test('each card carries a frame canvas, its name as the legend, and its paragraph as the copy', () => {
+  render(<Vision />);
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-value]')];
+  expect(cards).toHaveLength(3);
+  for (const card of cards) {
+    expect(card.querySelector('canvas[data-frame-canvas]')).toHaveAttribute('aria-hidden', 'true');
+    expect(card.querySelector('h2[data-legend]')).not.toBeNull();
+    expect(card.querySelector('p[data-copy]')).not.toBeNull();
+  }
+});
