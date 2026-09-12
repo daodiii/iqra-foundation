@@ -3,7 +3,7 @@ import { film, type FilmInk, type FilmWater } from './film';
 import { deepest, type InkPalette } from './ink';
 import { POOL_LIMIT, type WaterFloor } from './water';
 
-const INK: FilmInk[] = ['vision', 'mission', 'drops'];
+const INK: FilmInk[] = ['vision', 'mission'];
 const WATER: FilmWater[] = ['bridge', 'people', 'supportWater'];
 const rgb = (hex: string) => [
   parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16),
@@ -35,35 +35,34 @@ test('every colour is a full six-digit hex, so the shader parse cannot half-succ
  */
 test('no ink is additive and no water is night', () => {
   for (const [, p] of paper) expect(p.additive).toBeFalsy();
-  expect(film.drops.additive).toBeFalsy();
   for (const [name, floor] of water) expect(floor.night, name).toBe(false);
 });
 
 /*
- * The bridge: Arrangementer · Nyheter is ink dropped into lit water, between the ink boxes
- * and the water boxes. Its floor has to sit between them in weight too — lighter than
- * Arafat's, darker than the paper — or the page stops thinning as it goes down, which is
- * its whole idea. And the ink it hangs there is the page's own: the sky's blues, the
- * cream's golds, one green from the water below. It is the one palette with two hue
- * families on purpose, so it is kept out of `paper` and held to its own claim here.
+ * Arrangementer · Nyheter: still water, sage, between the ink boxes and the water boxes. Its
+ * floor has to sit between them in weight — lighter than Arafat's, darker than the paper —
+ * or the page stops thinning as it goes down, which is its whole idea.
  */
 test('the bridge floor sits between the paper and Arafat in weight', () => {
   expect(lum(film.bridge.ground)).toBeLessThan(Math.min(lum(film.vision.ground), lum(film.mission.ground)));
   expect(lum(film.bridge.ground)).toBeGreaterThan(lum(film.people.ground));
 });
 
-test('the drops are the page’s own inks: blues, golds and one green, hanging over the bridge', () => {
-  expect(film.drops.over).toBe(true);
-  expect(film.drops.rain).toBe(true);
-  expect(film.drops.ground).toBe(film.bridge.ground); // the box's ground is the water's
-  for (const [hex] of film.drops.ink) {
-    const h = hue(hex);
-    const blue = h > 190 && h < 225, gold = h > 30 && h < 50, green = h > 150 && h < 175;
-    expect(blue || gold || green, `${hex} is ${Math.round(h)}°`).toBe(true);
-  }
-  const greens = film.drops.ink.filter(([hex]) => hue(hex) > 150 && hue(hex) < 175);
-  expect(greens).toHaveLength(1);
-  expect(greens[0][1]).toBe(Math.min(...film.drops.ink.map(([, w]) => w)));
+/**
+ * The user's pick, pinned: «C Salvie, 0.3» (2026-09-12) — the sage scene resolved at a depth
+ * of 0.3 while every other water box keeps the page's 0.7, and the ground that comes out is
+ * this one. A shallower box on purpose, so a refactor that quietly puts it back on the
+ * shared depth would darken it to #a7b9aa and fail here.
+ */
+test('the bridge is sage, resolved shallower than the other water by the user’s call', () => {
+  expect(film.bridge.ground).toBe('#c8d4ca');
+  expect(hue(film.bridge.ground)).toBeGreaterThan(110);
+  expect(hue(film.bridge.ground)).toBeLessThan(150);
+});
+
+/** The drops that used to fall into it are gone, palette and all; nothing on the page rains ink now. */
+test('there is no drops ink any more', () => {
+  expect('drops' in film).toBe(false);
 });
 
 /**
