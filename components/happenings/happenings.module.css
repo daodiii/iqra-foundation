@@ -315,18 +315,26 @@
     padding: 34px var(--gutter) 14px;
   }
 
-  /* Narrow enough that the next card always shows at the edge: a card as wide as the screen
-     reads as a page you turn, and the row stops being a row. */
+  /*
+   * Sized so that today at the left edge and one whole card beside it fit inside the box
+   * with a sliver of the next showing: 14 + 48 + 18 + 70vw is 353px of the 370 a 390px
+   * phone has inside the box. A card as wide as the screen would read as a page you turn,
+   * and the row would stop being a row.
+   */
   .stop {
-    width: 76vw;
+    width: 70vw;
   }
 
   .card {
     padding: 18px 18px 16px;
   }
 
+  /* Today snaps at its start here, so «today at the left edge» is a place the row can rest:
+     with the desktop's centre-snap the arrival was pulled straight to the next card's start
+     and today slid off the edge. */
   .now {
-    width: 56px;
+    width: 48px;
+    scroll-snap-align: start;
   }
 
   .frame {

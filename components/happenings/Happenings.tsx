@@ -37,6 +37,9 @@ type Props = {
 
 const { happenings } = site;
 
+/** Below this the row opens on today at the left edge rather than in the middle. The same line the stylesheet draws. */
+const PHONE = '(max-width: 767px)';
+
 type Kind = 'news' | 'event';
 type Stop = { kind: Kind; item: Item; key: string };
 
@@ -103,12 +106,21 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
    * Arrive at today, not at the start of history — once it is on the row. Set on the rail's
    * own scrollLeft, so the page itself never moves: `scrollIntoView` on the marker would
    * drag the whole document to this section the moment it hydrates.
+   *
+   * On a desktop today stands in the middle with cards either side. On a phone that would
+   * show half a card on each side and no whole one, so there today stands at the left edge
+   * with the first thing coming fully in view beside it — «fully card» (2026-09-12) — and
+   * the past is a swipe to the left. The breakpoint is the stylesheet's.
    */
   useEffect(() => {
     const track = rail.current;
     const marker = track?.querySelector<HTMLElement>('[data-today]');
     if (!track || !marker) return;
-    track.scrollLeft = marker.offsetLeft - track.clientWidth * 0.5 + marker.offsetWidth / 2;
+    const phone = window.matchMedia(PHONE).matches;
+    const gutter = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+    track.scrollLeft = phone
+      ? marker.offsetLeft - gutter
+      : marker.offsetLeft - track.clientWidth * 0.5 + marker.offsetWidth / 2;
   }, [today]);
 
   useGSAP(
