@@ -165,6 +165,18 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
   const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  /*
+   * The glow's own layer, a third the size in each direction and never at the device's
+   * ratio. A blur costs by the pixel: at DPR 2 the halo alone was dropping two frames in
+   * five on Visjon at rest (measured 2026-09-13, the same page with shadowBlur swallowed
+   * holding 60), and a halo is soft by definition, so nothing is lost by blurring it small
+   * and scaling it up — the colour pass on the main canvas carries every crisp edge. At a
+   * third of the CSS size and DPR 1 the blur touches a thirty-sixth of the pixels it did.
+   * No context, no glow: the tree is then drawn without its halo rather than not at all.
+   */
+  const glow = document.createElement('canvas');
+  const gctx = glow.getContext('2d');
+  const GLOW_SCALE = 1 / 3;
   const model = generate();
   let tree = fit(model, { W: 1, H: 1 });
   let T = 0, raf = 0, visible = true;
@@ -189,6 +201,10 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
   function size() {
     const W = stage.clientWidth, H = stage.clientHeight;
     canvas.width = W * DPR; canvas.height = H * DPR; ctx!.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (gctx) {
+      glow.width = Math.max(1, Math.ceil(W * GLOW_SCALE)); glow.height = Math.max(1, Math.ceil(H * GLOW_SCALE));
+      gctx.setTransform(GLOW_SCALE, 0, 0, GLOW_SCALE, 0, 0);
+    }
     tree = fit(model, { W, H });
     const span = tree.GY - tree.TOPY || 1;
     segColour = [];
@@ -254,7 +270,7 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
    * one stroke: eight blurs a frame. The colour pass then paints the same geometry on top
    * at the same widths, so nothing of this survives except the halo outside the line.
    */
-  function glowPass(list: FittedSeg[], ws: number[], isRoot: boolean, t: number) {
+  function glowPass(g: CanvasRenderingContext2D, list: FittedSeg[], ws: number[], isRoot: boolean, t: number) {
     for (let d = 0; d < ws.length; d++) {
       const path = new Path2D();
       let first: FittedSeg | null = null;
@@ -265,9 +281,11 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
         trace(path, s, p, t, isRoot);
       }
       if (!first) continue;
-      ctx!.strokeStyle = isRoot ? ROOT : segColour[first.id] ?? `rgb(${NAVY})`;
-      ctx!.lineWidth = ws[d];
-      ctx!.stroke(path);
+      g.strokeStyle = isRoot ? ROOT : segColour[first.id] ?? `rgb(${NAVY})`;
+      // A twig thinner than one of the layer's pixels would leave next to no halo; the floor
+      // keeps every stroke lit, and a halo a little wide on a twig is still a halo.
+      g.lineWidth = Math.max(ws[d], 1 / GLOW_SCALE);
+      g.stroke(path);
     }
   }
 
@@ -280,11 +298,18 @@ export function createVisionTree(stage: HTMLElement, canvas: HTMLCanvasElement, 
        one-pixel twig from reading as a scratch on the panel, and it is the difference
        between a diagram of a tree and a lit one. */
     ctx!.lineCap = 'round';
-    ctx!.shadowColor = GLOW;
-    ctx!.shadowBlur = 18 * K;
-    glowPass(tree.rootSegs, rootWidths(), true, t);
-    glowPass(tree.segs, widths(), false, t);
-    ctx!.shadowBlur = 0;
+    if (gctx) {
+      // The blur radius is in the layer's own pixels, which the transform does not scale;
+      // the line widths are, so they are given as they are.
+      gctx.clearRect(0, 0, W, H);
+      gctx.lineCap = 'round';
+      gctx.shadowColor = GLOW;
+      gctx.shadowBlur = 18 * K * GLOW_SCALE;
+      glowPass(gctx, tree.rootSegs, rootWidths(), true, t);
+      glowPass(gctx, tree.segs, widths(), false, t);
+      gctx.shadowBlur = 0;
+      ctx!.drawImage(glow, 0, 0, W, H);
+    }
     for (const s of tree.rootSegs) drawSeg(s, t, true);
     for (const s of tree.segs) drawSeg(s, t, false);
 

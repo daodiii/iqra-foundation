@@ -17,12 +17,18 @@
   align-items: center;
 }
 
+/*
+ * Two columns no wider than a square, drawn to the middle of the measure with one gap of
+ * water between them — «make the boxes closer to each other» (2026-09-13); they used to
+ * stand at the two edges of the measure with the whole width between.
+ */
 .inner {
   position: relative;
   z-index: 1;
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 480px));
+  justify-content: center;
   gap: clamp(18px, 2vw, 28px);
   align-items: start;
   /* 112 at least on top: the legend stands on the frame's edge and has to clear the
@@ -52,9 +58,8 @@
   padding: clamp(32px, 3.4vw, 44px) clamp(26px, 2.8vw, 40px) clamp(26px, 2.6vw, 36px);
 }
 
-/* The second square sits at the right edge of the measure, the water between the two. */
 .cardSquare {
-  justify-self: end;
+  justify-self: stretch;
 }
 
 /* Everything the frame holds sits above the pen's canvas — but not the legend or the seat,
@@ -248,7 +253,6 @@
   }
 
   .cardSquare {
-    justify-self: stretch;
     /* Room under it for the button sitting over its edge. */
     margin-bottom: 26px;
   }

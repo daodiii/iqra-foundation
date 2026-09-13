@@ -71,10 +71,10 @@ export function Support() {
         frames.forEach((f) => f.destroy());
         water?.destroy();
       };
-      if (reduced) {
-        frames.forEach((f) => { f.p = 1; f.draw(); });
-        return stop;
-      }
+      // Drawn whole, not by the pen: below Misjon the boxes are simply there (the user,
+      // 2026-09-13); what is in them still rises.
+      frames.forEach((f) => { f.p = 1; f.draw(); });
+      if (reduced) return stop;
 
       const rise = section.querySelectorAll<HTMLElement>('[data-rise]');
       // `opacity`, never `autoAlpha`: autoAlpha adds visibility:hidden, which would take
@@ -85,10 +85,6 @@ export function Support() {
 
       const tl = gsap.timeline({ paused: true });
       tl.to(rise, { opacity: 1, y: 0, duration: 0.95, ease: EASE.out, stagger: 0.09 });
-      // The pen draws the first square as the first line rises, the second a beat later.
-      frames.forEach((f, i) => {
-        tl.to(f, { p: 1, duration: 1.1, ease: EASE.none, onUpdate: () => f.draw() }, i * 0.18);
-      });
       const entrance = ScrollTrigger.create({
         trigger: section, start: 'top 72%', once: true, onEnter: () => tl.play(),
       });
