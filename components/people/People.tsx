@@ -29,8 +29,12 @@ const LAST = progressFor(count - 1);
 
 /** A white cover on water: transparent round the pages, more light, a softer spine. */
 const LOOK = { alpha: true, ambient: 0.84, gutter: 0.5 } as const;
-/** The camera, nearer than on `/om-oss` — the book fills its box rather than a screen. */
-const DIST = { spread: 2.55, single: 2.35 } as const;
+/**
+ * The camera, nearer than on `/om-oss` — the book fills its box rather than a screen. At
+ * 2.28 the open spread stands 93% of the canvas's height (2.55 gave 83%): «make the book
+ * larger so it fills up more of the section», 2026-09-13.
+ */
+const DIST = { spread: 2.28, single: 2.35 } as const;
 /**
  * The page textures are painted at the size the page is seen (`pagePixels`), one texel
  * per pixel, between these: no wider than the `/om-oss` page — sixteen of those are some

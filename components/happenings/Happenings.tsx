@@ -197,10 +197,11 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
         water?.destroy();
       };
 
-      if (reduced) {
-        frames.forEach((f) => { f.p = 1; f.draw(); });
-        return stop;
-      }
+      // The frames are drawn whole, not by the pen: below Misjon the boxes are simply there
+      // («the animation of making the boxes can go away after misjon», 2026-09-13), and
+      // only what is in them still rises.
+      frames.forEach((f) => { f.p = 1; f.draw(); });
+      if (reduced) return stop;
 
       const rise = section.querySelectorAll<HTMLElement>('[data-rise]');
       // Set here rather than in the stylesheet, so a script that never runs leaves the row
@@ -210,10 +211,6 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
 
       const tl = gsap.timeline({ paused: true });
       tl.to(rise, { opacity: 1, y: 0, duration: 0.8, ease: EASE.out, stagger: 0.08 });
-      // The frames draw one after another along the row as it rises.
-      frames.forEach((frame, i) => {
-        tl.to(frame, { p: 1, duration: 0.9, ease: EASE.none, onUpdate: () => frame.draw() }, 0.1 + i * 0.08);
-      });
       const entrance = ScrollTrigger.create({
         trigger: section, start: 'top 78%', once: true, onEnter: () => tl.play(),
       });
