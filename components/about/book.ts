@@ -17,7 +17,7 @@ import { drawFace, faces, leafCount, type Face } from './pages';
 const THETA_MIN = 0.3 * (Math.PI / 2);
 const APEX_K = 0.75;
 
-const PW = 1.0, PH = 1.36;          // page size in world units
+export const PW = 1.0, PH = 1.36;   // page size in world units
 const FOV = 0.62;                   // radians
 const NX = 40, NY = 56;             // mesh resolution
 const TEX_W = 768, TEX_H = 1040;    // page texture size
@@ -37,6 +37,41 @@ export type BookHandle = {
   readonly turns: number;
   destroy(): void;
 };
+
+/**
+ * What a section may ask of the renderer. Every default is what `/om-oss` has always had,
+ * so a caller that passes nothing gets that book to the pixel; the landing page's book
+ * (`components/people`) sets all of them.
+ */
+export type BookOptions = {
+  /**
+   * The faces, painted — one canvas per face, an EVEN number of them, leaf i showing
+   * faces[2i] on its front and faces[2i+1] on its back, the last one blank. Omitted, the
+   * pages are the `/om-oss` chapters from `./pages`. The canvases can be any one size;
+   * the renderer keeps only the textures made from them.
+   */
+  faces?: readonly HTMLCanvasElement[];
+  /** Transparent round the pages, so whatever is under the canvas shows; else the paper ground. */
+  alpha?: boolean;
+  /** The camera's distance from the spine. Omitted, it is chosen from the canvas's aspect. */
+  dist?: number;
+  /** One page at a time: the camera stays on the page and the turned-back sheet is not drawn. */
+  single?: boolean;
+  /** The light: how much of the paper's colour reaches the eye without a lamp on it (0..1). */
+  ambient?: number;
+  /** The shadow in the gutter, 0 for none. */
+  gutter?: number;
+};
+
+/**
+ * Where the camera looks, across the spine. A closed book is one page, not a spread, so
+ * the camera centres on the page while the book is shut and drifts to the spine as the
+ * first sheet turns; otherwise the first screen sits hard right. One page at a time never
+ * leaves the page: with the turned-back sheet not drawn there is nothing to the left.
+ */
+export function cameraX(progress: number, single: boolean): number {
+  return single ? PW * 0.5 : PW * 0.5 * (1 - Math.min(1, Math.max(0, progress)));
+}
 
 const VS = `
 precision highp float;
@@ -112,8 +147,9 @@ export function chapterIndex(p: number, chapters: number): number {
   return Math.max(0, Math.min(chapters + 1, Math.round(p)));
 }
 
-export function createBook(canvas: HTMLCanvasElement): BookHandle | null {
-  const gl = canvas.getContext('webgl', { antialias: true, alpha: false });
+export function createBook(canvas: HTMLCanvasElement, opts: BookOptions = {}): BookHandle | null {
+  const { alpha = false, single = false, ambient = AMBIENT, gutter = GUTTER } = opts;
+  const gl = canvas.getContext('webgl', { antialias: true, alpha });
   if (!gl) return null;
 
   // A driver that will not compile these shaders is a real possibility, and the page has
@@ -156,11 +192,12 @@ export function createBook(canvas: HTMLCanvasElement): BookHandle | null {
   for (const n of ['uMVP', 'uTheta', 'uApex', 'uRho', 'uPW', 'uPH', 'uFront', 'uBack',
     'uLight', 'uEye', 'uAmb', 'uSpec', 'uGutter']) U[n] = gl.getUniformLocation(prog, n);
 
-  const list: Face[] = faces();
-  const tex = list.map((face) => {
+  const painted: readonly HTMLCanvasElement[] =
+    opts.faces ?? faces().map((face: Face) => drawFace(face, TEX_W, TEX_H));
+  const tex = painted.map((page) => {
     const t = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, drawFace(face, TEX_W, TEX_H));
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, page);
     // The page is 768x1040, which is not power-of-two. WebGL 1 leaves NPOT textures
     // incomplete if you ask for mipmaps or repeat wrapping, and an incomplete texture
     // samples as solid black. LINEAR with CLAMP_TO_EDGE is what NPOT is allowed.
@@ -171,7 +208,7 @@ export function createBook(canvas: HTMLCanvasElement): BookHandle | null {
     return t;
   });
   const blank = tex[tex.length - 1];
-  const turns = leafCount(list.length) - 1;
+  const turns = leafCount(painted.length) - 1;
 
   gl.enable(gl.DEPTH_TEST);
   gl.depthFunc(gl.LEQUAL);
@@ -194,14 +231,14 @@ export function createBook(canvas: HTMLCanvasElement): BookHandle | null {
     const cw = Math.round(W * dpr), chh = Math.round(H * dpr);
     if (canvas.width !== cw || canvas.height !== chh) { canvas.width = cw; canvas.height = chh; }
     gl!.viewport(0, 0, canvas.width, canvas.height);
-    gl!.clearColor(CLEAR[0], CLEAR[1], CLEAR[2], 1);
+    // Transparent round the pages when asked, so the material under the canvas shows.
+    if (alpha) gl!.clearColor(0, 0, 0, 0);
+    else gl!.clearColor(CLEAR[0], CLEAR[1], CLEAR[2], 1);
     gl!.clear(gl!.COLOR_BUFFER_BIT | gl!.DEPTH_BUFFER_BIT);
 
     const asp = canvas.width / canvas.height;
-    // A closed book is one page, not a spread, so centre on the page while it is shut
-    // and drift to the spine as it opens; otherwise the first screen sits hard right.
-    const cx = PW * 0.5 * (1 - Math.min(1, Math.max(0, progress)));
-    const dist = asp < 1.35 ? 3.9 : 3.05;
+    const cx = cameraX(progress, single);
+    const dist = opts.dist ?? (asp < 1.35 ? 3.9 : 3.05);
     const eye = [cx, 0.06, dist];
     const mvp = mul(perspective(FOV, asp, 0.1, 40), lookAt(eye, [cx, -0.02, 0], [0, 1, 0]));
 
@@ -209,9 +246,9 @@ export function createBook(canvas: HTMLCanvasElement): BookHandle | null {
     gl!.uniform1f(U.uPW, PW); gl!.uniform1f(U.uPH, PH);
     gl!.uniform3fv(U.uLight, LIGHT);
     gl!.uniform3fv(U.uEye, eye);
-    gl!.uniform1f(U.uAmb, AMBIENT);
+    gl!.uniform1f(U.uAmb, ambient);
     gl!.uniform1f(U.uSpec, SPECULAR);
-    gl!.uniform1f(U.uGutter, GUTTER);
+    gl!.uniform1f(U.uGutter, gutter);
 
     const p = Math.max(0, Math.min(turns - 1e-4, progress));
     const i = Math.floor(p), t = p - i;
@@ -220,8 +257,9 @@ export function createBook(canvas: HTMLCanvasElement): BookHandle | null {
     // The spread underneath: the page being revealed on the right, and on the left the
     // back of the sheet already turned. The left one is flipped to pi, so the camera
     // sees its BACK face — its content has to be the back texture or it renders blank.
+    // One page at a time has no left: the turned-back sheet is simply not drawn.
     sheet(tex[2 * i + 2] ?? blank, blank, FLAT, apex, 0);
-    if (i > 0) sheet(blank, tex[2 * i - 1] ?? blank, FLAT, apex, Math.PI);
+    if (i > 0 && !single) sheet(blank, tex[2 * i - 1] ?? blank, FLAT, apex, Math.PI);
 
     // And the sheet in the air: flat at both ends of the turn, tightest in the middle.
     const curl = FLAT - (FLAT - THETA_MIN) * Math.sin(Math.PI * t);

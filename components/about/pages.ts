@@ -6,15 +6,16 @@
  */
 import { site } from '@/content/site.no';
 
-// Same values as app/globals.css; canvas cannot read the custom properties.
-const NAVY = '#2a394b';
-const CRIMSON = '#ab5263';
-const INK = '#4b586a';
-const MUTED = '#8a94a3';
-const HAIRLINE = '#e3e7ec';
+// Same values as app/globals.css; canvas cannot read the custom properties. Exported for
+// the landing page's book (`components/people/pages.ts`), which is set on the same stock.
+export const NAVY = '#2a394b';
+export const CRIMSON = '#ab5263';
+export const INK = '#4b586a';
+export const MUTED = '#8a94a3';
+export const HAIRLINE = '#e3e7ec';
 /** Cream stock. The paper is coloured here rather than warmed by the light, so the
  *  ink keeps its contrast and the pages look the same from every angle. */
-const STOCK = '#f7f2e7';
+export const STOCK = '#f7f2e7';
 
 export type Figure = { value: string; label: string };
 export type Member = { first: string; last: string; role: string; bio: string };
@@ -65,7 +66,8 @@ export function faces(): Face[] {
 /** How many sheets the book has; the last one never turns. */
 export const leafCount = (n: number) => Math.ceil(n / 2);
 
-function wrap(c: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lh: number) {
+/** Sets `text` from (x, y) in lines no wider than `maxW`; returns the y after the last line. */
+export function wrap(c: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lh: number) {
   const words = text.split(' ');
   let line = '', at = y;
   for (const w of words) {
