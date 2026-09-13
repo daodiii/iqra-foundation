@@ -58,25 +58,6 @@ const newsItems = [
 const eventsHref: string | null = null;
 const newsHref: string | null = null;
 
-/**
- * The photograph on the landing page's book — the left page of the first spread, and the
- * picture in the readable layout under it. `{ src, alt, focus }` or null, one field like the
- * happenings' pictures, so a photograph cannot arrive without the words that describe it.
- * `focus` is where the subject sits, as a fraction of the picture's height from the top:
- * the page crops to it, and so does the readable layout's `object-position`.
- *
- * The picture here is GENERATED (2026-09-13, a kitchen table in Oslo light), a stand-in
- * until the foundation has a photograph of its own — and a plausible kitchen table is
- * exactly the kind of placeholder a visitor cannot tell from the real thing, which is why
- * the alt carries a bracket: `scripts/check-content.mjs` reports it with everything else
- * the site still lacks. Replace the file and the alt together.
- */
-const aboutImage: { src: string; alt: string; focus: number } | null = {
-  src: '/media/om-oss-kjokken.jpg',
-  alt: '[Midlertidig bilde] Et kjøkkenbord ved vinduet, med te, en åpen notatbok og en avis.',
-  focus: 0.56,
-};
-
 export const site = {
   lang: 'nb',
   name: 'Iqra Foundation',
@@ -206,7 +187,7 @@ export const site = {
   },
   /**
    * Om oss · Teamet on the landing page: the `/om-oss` book lying on the section's water,
-   * the photograph facing the words, the team as the pages after. The words themselves
+   * open on the logo facing the words, the team as the pages after. The words themselves
    * come from `about.chapters` — chapter I for the story, chapter II for the people — so
    * they are written once and the landing page and `/om-oss` cannot drift. Only what the
    * landing page adds is here.
@@ -223,7 +204,6 @@ export const site = {
   },
   about: {
     label: 'Om oss',
-    image: aboutImage,
     meta: {
       title: 'Om oss — Iqra Foundation',
       description: 'Fire kapitler om hvem vi er, hvorfor vi begynte, og hva vi holder på med.',

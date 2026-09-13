@@ -391,10 +391,9 @@ test('desktop: om oss · teamet is the book on the water, the rings turning its 
     const clip = (await section.locator('[data-readable]').boundingBox())!;
     expect(Math.max(clip.width, clip.height), 'the readable copy is not clipped while the book runs').toBeLessThanOrEqual(1);
   } else {
-    // No WebGL: the photograph, the words and the member card are the layout, and the
-    // band opens on the first member — the words are not a stop when they are always shown.
+    // No WebGL: the words and the member card are the layout, and the band opens on
+    // the first member — the words are not a stop when they are always shown.
     expect(mode).toBe('off');
-    await expect(section.locator('[data-photo] img')).toBeVisible();
     await expect(section.getByText(story.lede)).toBeVisible();
     await expect(card).toBeVisible();
     await expect(where).toHaveText(teamLabel(1));
@@ -586,14 +585,11 @@ test('phone: the book is one page over the band over the words, the axis stays a
     expect(under(band, words), 'the words are not under the band').toBe(true);
     // On the pages, so out of sight: clipped to a pixel, which Playwright still calls
     // visible, so the clip is measured.
-    for (const sel of ['[data-row]', '[data-photo]']) {
-      const clip = await box(sel);
-      expect(Math.max(clip.width, clip.height), `${sel} is not clipped while the book runs`).toBeLessThanOrEqual(1);
-    }
+    const clip = await box('[data-row]');
+    expect(Math.max(clip.width, clip.height), 'the member card is not clipped while the book runs').toBeLessThanOrEqual(1);
   } else {
     expect(mode).toBe('off');
-    const [photo, words, row] = await Promise.all([box('[data-photo]'), box('[data-words]'), box('[data-row]')]);
-    expect(under(photo, words), 'the words are not under the photograph').toBe(true);
+    const [words, row] = await Promise.all([box('[data-words]'), box('[data-row]')]);
     expect(under(words, row), 'the member card is not under the words').toBe(true);
     // The member card on a phone is portrait over name, not beside it.
     const [portrait, info] = await Promise.all([box('[data-part="portrait"]'), box('[data-part="info"]')]);
