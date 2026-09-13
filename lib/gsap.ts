@@ -97,7 +97,17 @@ if (typeof window !== 'undefined') {
       const toScroll = ScrollTrigger.getScrollFunc(window);
       for (const st of ScrollTrigger.getAll()) {
         const snap = st.vars.snap as typeof ACT_SNAP | undefined;
-        if (!snap || !st.isActive || st.getTween(true)?.isActive()) continue;
+        if (!snap || !st.isActive) continue;
+        /*
+         * `getTween(true)` is declared to return a Tween and does not always: ScrollTrigger
+         * writes the number 0 into that slot once a snap tween completes, or the wheel cuts
+         * one short. `0?.isActive()` is a TypeError, not a skip — `?.` guards only null and
+         * undefined — and it was thrown whenever the hero's own snap had finished before this
+         * ran (2026-09-13, a scroll to 1.5 screens right after load). Timing-dependent, so it
+         * looked like a flake.
+         */
+        const tween = st.getTween(true) as gsap.core.Tween | 0 | undefined;
+        if (tween && tween.isActive()) continue;
         const to = snap.snapTo(st.progress, st);
         if (Math.abs(to - st.progress) < 0.001) continue; // the middle of an act: leave it alone
         /*
