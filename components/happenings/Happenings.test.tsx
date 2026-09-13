@@ -9,18 +9,17 @@ const mount = () => {
   return container.querySelector('#arrangementer') as HTMLElement;
 };
 
-const stops = (section: HTMLElement) =>
+const boxes = (section: HTMLElement) =>
   Array.from(section.querySelectorAll('li')).map((li) => li.textContent ?? '');
 
-// Dated far enough either side of any «today» a test could run on.
 const NEWS = [
-  { date: '2020-07-03', title: 'Vi flytter kveldene', note: 'Første etasje fra august.', image: null },
-  { date: '2021-09-04', title: 'Ny brosjyre', note: 'Den svarer på det folk spør om.', image: null },
+  { note: 'Første etasje fra august.', image: null },
+  { note: 'Den svarer på det folk spør om.', image: null },
 ];
 
 const EVENTS = [
-  { date: '2098-09-18', title: 'Åpen kveld', meta: 'Torsdag kl. 18.00', note: 'Kom med spørsmål.', image: null },
-  { date: '2099-10-08', title: 'Hva er islam?', meta: 'Onsdag kl. 19.00', note: 'En time om det grunnleggende.', image: null },
+  { note: 'Kom med spørsmål.', image: null },
+  { note: 'En time om det grunnleggende.', image: null },
 ];
 
 const both = () => render(<Happenings events={{ ...site.events, items: EVENTS }} news={{ ...site.news, items: NEWS }} />);
@@ -32,51 +31,43 @@ test('the section carries one heading for both lists, not one each', () => {
 });
 
 /**
- * The whole idea, as a test. One row in date order, whichever list a stop came from —
- * «published by the date; news or arrangement doesn't matter» — with «i dag» set where
- * today falls. A news item dated after an event sits after it, because the date decides.
+ * The row is the boxes and nothing else: the events in the order they are listed, then
+ * the news. There is no «i dag» standing between them and no date to sort them by — the
+ * timeline went on 2026-09-14 («take away today … let it just be four boxes») — and with
+ * nothing to page through there are no arrows either.
  */
-test('the row runs in date order across both lists, with today between past and future', () => {
-  const late = { date: '2098-10-01', title: 'Etter åpen kveld', note: 'En nyhet datert mellom to arrangementer.', image: null };
-  const { container } = render(
-    <Happenings events={{ ...site.events, items: EVENTS }} news={{ ...site.news, items: [...NEWS, late] }} />,
-  );
-  const section = container.querySelector('#arrangementer') as HTMLElement;
-  const text = stops(section);
-  expect(text[0]).toContain('Vi flytter kveldene');
-  expect(text[1]).toContain('Ny brosjyre');
-  expect(text[2]).toContain(site.happenings.today);
-  expect(text[3]).toContain('Åpen kveld');
-  expect(text[4]).toContain('Etter åpen kveld');
-  expect(text[5]).toContain('Hva er islam?');
-  expect(text).toHaveLength(6);
-});
-
-/** A placeholder has no date to sort by, so it sorts as its list would — news before
- *  today, events after — and shows the bracketed day and month from the content file. */
-test('an undated stop keeps its list’s side of today and shows the bracketed date', () => {
-  const news = [{ date: null, title: 'Uten dato', note: 'En nyhet.', image: null }];
-  const events = [{ date: null, title: 'Kommer', meta: 'Snart', note: 'Et arrangement.', image: null }];
-  const { container } = render(<Happenings events={{ ...site.events, items: events }} news={{ ...site.news, items: news }} />);
-  const section = container.querySelector('#arrangementer') as HTMLElement;
-  const text = stops(section);
-  expect(text[0]).toContain('Uten dato');
-  expect(text[1]).toContain(site.happenings.today);
-  expect(text[2]).toContain('Kommer');
-  expect(within(section).getAllByText(site.happenings.undated.day)).toHaveLength(2);
-  expect(within(section).getAllByText(site.happenings.undated.month)).toHaveLength(2);
-});
-
-/** One thing to type: the day set large and the month beside it are both read off the date. */
-test('the day and the month are read off the date', () => {
+test('the row is the boxes in the order they are listed, the events then the news, and nothing else', () => {
   const { container } = both();
   const section = container.querySelector('#arrangementer') as HTMLElement;
-  const stop = within(section).getByText('Åpen kveld').closest('li') as HTMLElement;
-  expect(within(stop).getByText('18')).toBeInTheDocument();
-  expect(within(stop).getByText('sep')).toBeInTheDocument();
+  const text = boxes(section);
+  expect(text).toHaveLength(EVENTS.length + NEWS.length);
+  expect(text[0]).toContain(EVENTS[0].note);
+  expect(text[1]).toContain(EVENTS[1].note);
+  expect(text[2]).toContain(NEWS[0].note);
+  expect(text[3]).toContain(NEWS[1].note);
+  expect(section.querySelector('[data-today]')).toBeNull();
+  expect(within(section).queryByRole('button')).toBeNull();
 });
 
-test('every stop says whether it is something coming or something that was', () => {
+/**
+ * A box is the picture over one sentence: the kind as the legend on the frame's line,
+ * the picture, the sentence, and nothing else — no title, no date, no line under it.
+ */
+test('a box is its kind, the picture, and one sentence', () => {
+  const item = { note: 'Kom med spørsmål.', image: { src: '/media/kveld.jpg', alt: 'Folk rundt et bord' } };
+  const { container } = render(
+    <Happenings events={{ ...site.events, items: [item] }} news={{ ...site.news, items: [] }} />,
+  );
+  const section = container.querySelector('#arrangementer') as HTMLElement;
+  const card = section.querySelector('article') as HTMLElement;
+  expect(card.textContent).toBe(`${site.happenings.kinds.event}${item.note}`);
+  const picture = within(card).getByAltText(item.image.alt);
+  const sentence = within(card).getByText(item.note);
+  // The picture is on top: it comes first in the box, and the sentence sits under it.
+  expect(picture.compareDocumentPosition(sentence) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
+test('every box says which list it came from', () => {
   const { container } = both();
   const section = container.querySelector('#arrangementer') as HTMLElement;
   expect(within(section).getAllByText(site.happenings.kinds.news)).toHaveLength(NEWS.length);
@@ -99,11 +90,11 @@ test('the box holds the water alone, hidden from assistive tech', () => {
 });
 
 /**
- * There are no photographs of Iqra, so the frame stands where one would go — the same
- * answer the team list gives with its empty circles. It is bracketed so it cannot be read
- * as content, and it is `aria-hidden` because an empty frame has nothing to say out loud.
+ * A box with no picture keeps the frame where one would go — the same answer the team
+ * list gives with its empty circles. It is bracketed so it cannot be read as content, and
+ * it is `aria-hidden` because an empty frame has nothing to say out loud.
  */
-test('a stop with no photograph shows an empty frame rather than a broken image', () => {
+test('a box with no photograph shows an empty frame rather than a broken image', () => {
   const { container } = both();
   const section = container.querySelector('#arrangementer') as HTMLElement;
   expect(section.querySelectorAll('img')).toHaveLength(0);
@@ -111,13 +102,31 @@ test('a stop with no photograph shows an empty frame rather than a broken image'
     .toHaveLength(NEWS.length + EVENTS.length);
 });
 
-test('a stop with a photograph shows it, with the alt text from the content file', () => {
+test('a box with a photograph shows it, with the alt text from the content file', () => {
   const withPhoto = [{ ...NEWS[0], image: { src: '/media/kveld.jpg', alt: 'Folk rundt et bord' } }];
   const { container } = render(
     <Happenings events={{ ...site.events, items: [] }} news={{ ...site.news, items: withPhoto }} />,
   );
   const section = container.querySelector('#arrangementer') as HTMLElement;
   expect(within(section).getByAltText('Folk rundt et bord')).toBeInTheDocument();
+});
+
+/**
+ * The four boxes in the content file are filled, so the section can be seen with something
+ * in it («fill them with some stock pictures and just a random sentence», 2026-09-14): the
+ * sentences are the site's own lines, so nothing on the page is invented, and the pictures
+ * are stand-ins whose alt carries a bracket, so `check-content` reports them with
+ * everything else the site still lacks.
+ */
+test('the content file holds four filled boxes, the pictures marked as stand-ins', () => {
+  const items = [...site.events.items, ...site.news.items];
+  expect(items).toHaveLength(4);
+  for (const item of items) {
+    expect(item.note).not.toMatch(/\[[^\]]+\]/);
+    expect(item.image).not.toBeNull();
+    expect(item.image!.src).toMatch(/^\/media\/midlertidig-/);
+    expect(item.image!.alt).toMatch(/^\[Midlertidig bilde\] /);
+  }
 });
 
 /** "Alle arrangementer →" has nowhere to go until the route exists, and a link to `#` is
@@ -145,21 +154,19 @@ test('the section is not rendered at all when there is nothing on the row', () =
   expect(container.querySelector('#arrangementer')).toBeNull();
 });
 
-test('one empty list leaves the other one and today still standing', () => {
+test('one empty list leaves the other one standing', () => {
   const { container } = render(
     <Happenings events={{ ...site.events, items: EVENTS }} news={{ ...site.news, items: [] }} />,
   );
   const section = container.querySelector('#arrangementer') as HTMLElement;
-  const text = stops(section);
-  expect(text[0]).toContain(site.happenings.today);
-  expect(text).toHaveLength(EVENTS.length + 1);
+  expect(boxes(section)).toHaveLength(EVENTS.length);
 });
 
 /**
- * The box is a line drawn with the tree's pen: every stop carries the canvas the pen draws
+ * The box is a line drawn with the tree's pen: every box carries the canvas the pen draws
  * on, and its kind — «Nyhet» or «Arrangement» — is the legend that sits on the line.
  */
-test('every stop is a frame with its kind as the legend on the line', () => {
+test('every box is a frame with its kind as the legend on the line', () => {
   const { container } = both();
   const section = container.querySelector('#arrangementer') as HTMLElement;
   const cards = section.querySelectorAll('article');

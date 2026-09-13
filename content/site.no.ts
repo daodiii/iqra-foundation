@@ -11,40 +11,54 @@ const missionStanzas = [
 ] as const;
 
 /**
- * Arrangementer and Nyheter, which have no content yet.
+ * Arrangementer and Nyheter: four boxes, each a picture and one sentence.
  *
- * Every row here is a bracketed placeholder, and that is deliberate rather than lazy: the
- * mockup these came from was filled with invented events — an open evening in the mosque, a
- * stand on Karl Johan — and an invented event is the one kind of placeholder a visitor
- * cannot tell from the real thing. They would have walked into a mosque on a Thursday.
- * Brackets are caught by `scripts/check-content.mjs` before a production build, plausible
- * sentences are not, which is the whole argument.
+ * They have no content yet, and until 2026-09-14 every row here was a bracketed
+ * placeholder — a title, a date, a line — because an invented event is the one kind of
+ * placeholder a visitor cannot tell from the real thing: the mockup these came from had an
+ * open evening in the mosque and a stand on Karl Johan, and someone would have walked into
+ * a mosque on a Thursday. Brackets are caught by `scripts/check-content.mjs` before a
+ * production build, plausible sentences are not.
  *
- * Two rows each: enough for the row to show its rhythm, few enough that two identical rows
- * read as a template waiting to be filled rather than as a rendering fault. The section
- * disappears entirely when both arrays are emptied, so deleting these is also a way to ship.
+ * Then: «take away today … let it just be four boxes, and fill them with some stock
+ * pictures and just a random sentence, just so you could see how it looks.» So the boxes
+ * are filled, and the way Misjon's wall is filled: the sentences are the site's own lines
+ * (Om oss chapter III, the contact line), which are true of the foundation and invent
+ * nothing, so the gate has nothing to refuse and nothing false is on the page meanwhile.
+ * The pictures are stock stand-ins, and a stand-in photograph is exactly the placeholder a
+ * visitor cannot tell from the real thing — which is why each alt carries `[Midlertidig
+ * bilde]`: the gate reports it with everything else the site still lacks. Replace the file
+ * and the alt together.
  *
- * Every entry carries a `date`, ISO `YYYY-MM-DD`, or null while it is a placeholder. The two
- * lists are shown as ONE ROW sorted by that date, news and events mixed — «published by the
- * date; news or arrangement doesn't matter» (2026-09-12) — with «i dag» set where the
- * visitor's today falls. The day set large and the month beside it are both read off the
- * date, so there is one thing to type and nothing to keep in step. A null date shows the
- * bracketed `[00]` and `[mnd]` from `happenings.undated` and sorts as its list would —
- * news before today, events after — because a real date on a placeholder would be an
- * invented date, the one bracket a visitor could not see.
+ * The two lists are shown as one row, the events first and then the news, in this order.
+ * There is no date on a box and no «i dag» between them any more; the timeline they used
+ * to stand on went with the brackets. The section disappears entirely when both arrays
+ * are emptied, so deleting these is also a way to ship.
  *
  * `image` is `{ src, alt }` or null. One field rather than two, so a photograph cannot
  * arrive without the words that describe it — and so there is no empty `alt` sitting in the
  * content for the gate to trip over, which is exactly what it did when they were separate.
  */
 const eventItems = [
-  { date: null, title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]', image: null },
-  { date: null, title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]', image: null },
+  {
+    note: 'Vi står på stand i byen.',
+    image: { src: '/media/midlertidig-gata.jpg', alt: '[Midlertidig bilde] En mann går over en gate, sett ovenfra.' },
+  },
+  {
+    note: 'Vi holder åpne kvelder i moskeen.',
+    image: { src: '/media/midlertidig-kafe.jpg', alt: '[Midlertidig bilde] To kopper på et langbord i en kafé.' },
+  },
 ] as const;
 
 const newsItems = [
-  { date: null, title: '[Tittel]', note: '[Én setning om hva som skjedde.]', image: null },
-  { date: null, title: '[Tittel]', note: '[Én setning om hva som skjedde.]', image: null },
+  {
+    note: 'Vi svarer på e-post, og vi drar dit vi blir invitert.',
+    image: { src: '/media/midlertidig-notatbok.jpg', alt: '[Midlertidig bilde] En hånd skriver i en notatbok ved siden av en laptop.' },
+  },
+  {
+    note: 'Skriv til oss, så svarer et menneske.',
+    image: { src: '/media/midlertidig-bok.jpg', alt: '[Midlertidig bilde] En åpen bok på et bord.' },
+  },
 ] as const;
 
 /**
@@ -152,26 +166,18 @@ export const site = {
     },
   },
   /**
-   * The two lists are one row in date order, news and events mixed, with «i dag» where
-   * today falls. That is not a layout, it is what they are — the same line read each way —
-   * and it is why they share a heading instead of holding a column each.
+   * The two lists are one row of boxes under one heading: what is coming and what was,
+   * side by side, which is why they share a heading instead of holding a column each.
    */
   happenings: {
     label: 'Arrangementer · Nyheter',
     line: 'Det som kommer, og det som var.',
-    today: 'I dag',
-    /** What each stop is, said once above its date. */
+    /** What each box is, on the frame's line. */
     kinds: { event: 'Arrangement', news: 'Nyhet' },
-    /** What a stop shows for its date while it has none. Bracketed, like everything we lack. */
-    undated: { day: '[00]', month: '[mnd]' },
     /** The label in an empty picture frame. Bracketed, like every other thing we lack. */
     imageLabel: '[Bilde]',
-    /** Read on the phone by a screen reader, which cannot see that the axis runs sideways. */
-    railLabel: 'Tidslinje. Bla sidelengs for det som kommer og det som var.',
-    back: 'Bakover i tid',
-    forward: 'Framover i tid',
-    /** The months, short, in order — what a date's month is shown as beside the day. */
-    months: ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'],
+    /** Read on the phone by a screen reader, which cannot see that the row runs sideways. */
+    railLabel: 'Arrangementer og nyheter. Bla sidelengs.',
   },
   events: {
     label: 'Arrangementer',

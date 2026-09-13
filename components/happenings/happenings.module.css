@@ -1,25 +1,21 @@
 /*
- * Arrangementer · Nyheter, as one row on still water.
+ * Arrangementer · Nyheter: four boxes on still water.
  *
  * The heading sits on the page's white; under it a box like every other section's holds
- * the row: sage water, the shallowest on the page, and each card is a frame drawn on it
- * with the tree's pen, as every box on the page is. Nothing here draws a peg on a stop any
- * more: the row is the order, and «i dag» is the one thing standing in it.
+ * the row: sage water, the shallowest on the page, and each box is a frame drawn on it
+ * with the tree's pen, as every box on the page is. The row used to be a timeline with
+ * «i dag» standing in it; since 2026-09-14 it is the boxes and nothing else.
  */
 .happenings {
   position: relative;
   background: transparent;
   padding: clamp(64px, 8vh, 104px) 0;
   /* The gutter the row keeps inside the box's edge: the same 52px the copy has always sat
-     inside a box, so the first card lines up with the copy above it. */
+     inside a box, so the first box lines up with the copy above it. */
   --gutter: 52px;
 }
 
 .head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
   padding: 0 var(--margin);
   margin-bottom: clamp(18px, 2.4vh, 30px);
 }
@@ -41,40 +37,6 @@
   text-wrap: balance;
 }
 
-.arrows {
-  display: flex;
-  gap: 8px;
-  flex: none;
-}
-
-.arrow {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid var(--color-hairline);
-  border-radius: 999px;
-  background: #ffffff;
-  color: var(--color-navy);
-  cursor: pointer;
-  transition: border-color 160ms var(--ease-out-expo), color 160ms var(--ease-out-expo);
-}
-
-.arrow:hover:not(:disabled) {
-  border-color: var(--color-navy);
-}
-
-.arrow:disabled {
-  color: #c6ccd4;
-  cursor: default;
-}
-
-.arrow svg {
-  width: 15px;
-  height: 15px;
-}
-
 /*
  * The pool: what the box is positioned against. The box is `wash.box`, which is inset from
  * its section on all four sides; here it has to span this wrapper top to bottom and keep
@@ -93,17 +55,18 @@
 
 /*
  * The rail is a native scroll container, so a trackpad, a touch screen, the arrow keys and
- * the pointer drag in the component all move one thing. It is clipped to the box — its
- * margins are the box's inset — so a card scrolls out under the box's rounded edge rather
- * than across the page's white. `scroll-padding` keeps the gutter: a snap aligns to the
- * scroll port's edge, which ignores padding.
+ * the pointer drag in the component all move one thing — where the row is wider than the
+ * rail, which below 1200px it is. It is clipped to the box — its margins are the box's
+ * inset — so a box scrolls out under the water's rounded edge rather than across the
+ * page's white. `scroll-padding` keeps the gutter: a snap aligns to the scroll port's
+ * edge, which ignores padding.
  */
 .rail {
   position: relative;
   z-index: 1;
   margin: 0 var(--box-inset-x);
   /* 34px at the foot, not 22: the pen's tip has a 26px glow and each frame's canvas reaches
-     32px below its card; the rail clips at its padding. */
+     32px below its box; the rail clips at its padding. */
   padding: 56px var(--gutter) 34px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -139,16 +102,35 @@
   scroll-snap-align: start;
 }
 
-/* The card is `wash.frame`; this is only what it holds and how. The top leaves room under
+/*
+ * On a desktop the four boxes share the row: one column each, whatever their number, and
+ * nothing to scroll. The rail keeps its overflow for the widths under this, where a box
+ * at a quarter of the row would be too narrow for its picture.
+ */
+@media (min-width: 1200px) {
+  .row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    min-width: 0;
+  }
+
+  .stop {
+    width: auto;
+  }
+}
+
+/* The box is `wash.frame`; this is only what it holds and how. The top leaves room under
    the line for the legend's lower half. */
 .card {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 30px 22px 20px;
+  gap: 14px;
+  padding: 30px 22px 22px;
 }
 
-/* Everything the card holds sits above the pen's canvas — but not the legend, which `wash.legend` positions. */
+/* Everything the box holds sits above the pen's canvas — but not the legend, which `wash.legend` positions. */
 .card > :not(canvas, [data-legend]) {
   position: relative;
   z-index: 1;
@@ -164,51 +146,6 @@
   --frame-fill: 0.5;
 }
 
-/* What has been sits a touch deeper in the water than what is coming: 5.35:1 / 7.1:1. */
-.past .card {
-  --frame-fill: 0.42;
-}
-
-/*
- * Today: a crimson peg with the word under it, standing between the last stop before today
- * and the first after. The stems above and below it are the only line left in the section,
- * and they belong to the marker alone.
- */
-.now {
-  flex: none;
-  width: 88px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  scroll-snap-align: center;
-}
-
-.stem {
-  width: 1px;
-  flex: 1;
-  max-height: 120px;
-  background: linear-gradient(to bottom, transparent, var(--color-crimson) 30%, var(--color-crimson) 70%, transparent);
-}
-
-.peg {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--color-crimson);
-  box-shadow: 0 0 0 6px rgba(171, 82, 99, 0.16);
-}
-
-.flag {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-crimson);
-}
-
 /* The legend on the line — placed by `wash.legend`; this is only its type. */
 .kind {
   font-size: 11px;
@@ -218,63 +155,28 @@
   color: var(--color-ink-soft);
 }
 
-.when {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin: 0 0 10px;
-}
-
-.day {
-  font-size: 34px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  /* Tabular, so a 9 and an 18 leave the month in the same place beside them. */
-  font-variant-numeric: tabular-nums;
-  color: var(--color-navy);
-}
-
-.month {
-  font-size: 13px;
-  color: var(--color-ink-soft);
-}
-
-.title {
-  margin: 0 0 6px;
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-  color: var(--color-navy);
-  text-wrap: balance;
-}
-
-.meta {
-  margin: 0 0 6px;
-  font-size: 14px;
-  color: var(--color-ink-soft);
-}
-
+/* The one sentence, under the picture. It is the box's whole text, so it is set in navy
+   like a line that carries something, not as a note under a title. */
 .note {
-  margin: 0 0 16px;
-  font-size: 14px;
+  margin: 0;
+  font-size: 16px;
   line-height: 1.5;
-  color: var(--color-ink-soft);
+  color: var(--color-navy);
+  text-wrap: pretty;
 }
 
 /*
- * The picture, or the room one would take. A window rather than a filled frame: the water
- * shows through it until there is a photograph to put in it, which is what a held place
- * looks like. The reasoning for an empty frame over a stock photograph is in
- * `Happenings.tsx`.
+ * The picture, on top, or the room one would take. A window rather than a filled frame: the
+ * water shows through it until there is a photograph to put in it, which is what a held
+ * place looks like. The reasoning for an empty frame over a stock photograph — and for the
+ * stock stand-ins that are in it today — is in `Happenings.tsx`.
  */
 .frame {
   position: relative;
   display: grid;
   place-items: center;
-  margin: auto 0 0;
-  height: 132px;
+  margin: 0;
+  aspect-ratio: 4 / 3;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(42, 57, 75, 0.14);
@@ -311,7 +213,7 @@
 }
 
 /*
- * A phone gets a narrower stop and the phone's box inset, and the same row — this is the one
+ * A phone gets a narrower box and the phone's box inset, and the same row — this is the one
  * layout on the site that does not have to stack, because sideways is what it already is.
  */
 @media (max-width: 767px) {
@@ -319,48 +221,22 @@
     --gutter: 14px;
   }
 
-  .head {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .arrows {
-    display: none;
-  }
-
   .rail {
     padding: 34px var(--gutter) 14px;
   }
 
   /*
-   * Sized so that today at the left edge and one whole card beside it fit inside the box
-   * with a sliver of the next showing: 14 + 48 + 18 + 70vw is 353px of the 370 a 390px
-   * phone has inside the box. A card as wide as the screen would read as a page you turn,
-   * and the row would stop being a row.
+   * Sized so that one whole box fits inside the box with a sliver of the next showing: a
+   * box as wide as the screen would read as a page you turn, and the row would stop being
+   * a row.
    */
   .stop {
     width: 70vw;
   }
 
   .card {
-    padding: 18px 18px 16px;
-  }
-
-  /* Today snaps at its start here, so «today at the left edge» is a place the row can rest:
-     with the desktop's centre-snap the arrival was pulled straight to the next card's start
-     and today slid off the edge. */
-  .now {
-    width: 48px;
-    scroll-snap-align: start;
-  }
-
-  .frame {
-    height: 110px;
-  }
-
-  .title {
-    font-size: 16px;
+    gap: 12px;
+    padding: 18px 18px 18px;
   }
 
   .links {

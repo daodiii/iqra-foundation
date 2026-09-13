@@ -438,9 +438,7 @@ test('desktop: the row sits on still water and links to nothing that is not ther
 
   const section = page.locator('#arrangementer');
   await expect(section.getByRole('heading', { level: 2 })).toHaveText(site.happenings.line);
-  await expect(section.locator('li')).toHaveCount(
-    site.events.items.length + site.news.items.length + 1, // the stops, and today
-  );
+  await expect(section.locator('li')).toHaveCount(site.events.items.length + site.news.items.length);
 
   // the heading is on the page's white; the box under it is the water
   expect(await section.evaluate((el) => getComputedStyle(el).backgroundColor))
@@ -454,44 +452,35 @@ test('desktop: the row sits on still water and links to nothing that is not ther
 });
 
 /**
- * The row's own claim: one line in date order, «i dag» where today falls, and you arrive at
- * today rather than at the start of history. With the placeholders in the content file the
- * news are undated and sort before today, the events after — so this is also what the row
- * says with real dates, read off the rendered geometry rather than the markup, because the
- * ordering is the point and a stylesheet could undo it. Today is placed on the client, so
- * the marker is waited for rather than assumed.
+ * The row's own claim, since the timeline went (2026-09-14): four boxes and nothing else on
+ * the rail, the events first and then the news as the content file lists them, and on a
+ * desktop all four inside the rail at once with nothing to scroll — read off the rendered
+ * geometry rather than the markup, because a stylesheet could undo either.
  */
-test('the row opens on today, with what was behind it and what is coming ahead', async ({ page }) => {
+test('desktop: the four boxes stand in the rail at once, the events then the news', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the phone has its own test for the rail');
   await pastHero(page);
   const top = await docTop(page, '#arrangementer');
   await page.evaluate((y) => window.scrollTo(0, y - 80), top);
-  await expect(page.locator('#arrangementer [data-today]')).toHaveCount(1);
   await page.waitForTimeout(900);
 
-  const axis = await page.evaluate((kinds) => {
+  const row = await page.evaluate((kinds) => {
     const rail = document.querySelector('#arrangementer [role="region"]') as HTMLElement;
-    const today = rail.querySelector('[data-today]') as HTMLElement;
-    const lefts = Array.from(rail.querySelectorAll('li')).map((li) => ({
-      x: li.offsetLeft,
-      kind: li.textContent?.includes(kinds.news) ? 'news' : li.textContent?.includes(kinds.event) ? 'event' : 'today',
-    }));
-    return {
-      /* Where today sits in the rail's own viewport, which is the claim being made: you
-         arrive at today. Asserted this way rather than as a scroll offset because with only
-         the placeholder stops on it the axis is shorter than a desktop window and there is
-         nothing to scroll — and «already on screen» is the same promise kept. */
-      todayOnScreen: today.offsetLeft - rail.scrollLeft,
-      width: rail.clientWidth,
-      todayAt: today.offsetLeft,
-      lefts,
-    };
+    const boxes = Array.from(rail.querySelectorAll('li')).map((li) => {
+      const r = li.getBoundingClientRect();
+      const legend = li.querySelector('[data-legend]')?.textContent;
+      return { left: r.left, right: r.right, kind: legend === kinds.event ? 'event' : legend === kinds.news ? 'news' : '?' };
+    });
+    const r = rail.getBoundingClientRect();
+    return { boxes, rail: { left: r.left, right: r.right }, scrollable: rail.scrollWidth > rail.clientWidth + 1 };
   }, site.happenings.kinds);
 
-  expect(axis.todayOnScreen, 'today is off the left of the rail').toBeGreaterThanOrEqual(0);
-  expect(axis.todayOnScreen, 'today is off the right of the rail').toBeLessThan(axis.width);
-  for (const stop of axis.lefts) {
-    if (stop.kind === 'news') expect(stop.x, 'a news stop sat ahead of today').toBeLessThan(axis.todayAt);
-    if (stop.kind === 'event') expect(stop.x, 'an event sat behind today').toBeGreaterThan(axis.todayAt);
+  expect(row.boxes.map((b) => b.kind)).toEqual(['event', 'event', 'news', 'news']);
+  expect(row.scrollable, 'the rail still scrolls with four boxes in it').toBe(false);
+  for (const [i, b] of row.boxes.entries()) {
+    expect(b.left, `box ${i} starts left of the rail`).toBeGreaterThanOrEqual(row.rail.left);
+    expect(b.right, `box ${i} ends past the rail`).toBeLessThanOrEqual(row.rail.right + 1);
+    if (i > 0) expect(b.left, `box ${i} is not to the right of box ${i - 1}`).toBeGreaterThan(row.boxes[i - 1].right);
   }
 });
 
