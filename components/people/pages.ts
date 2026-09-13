@@ -47,7 +47,8 @@ export function faces(single: boolean): PeopleFace[] {
   };
   const team = menneskene.team;
   const out: PeopleFace[] = [{ kind: 'cover' }];
-  let folio = 2;
+  // The words are page 2 on a spread; one page at a time, the photograph is, unnumbered.
+  let folio = single ? 3 : 2;
   if (single) {
     out.push({ kind: 'blank' }, { kind: 'photo' }, { kind: 'blank' });
     team.forEach((member, index) => {
@@ -180,23 +181,33 @@ export function drawFace(face: PeopleFace, W: number, H: number, assets: Assets)
   c.fillStyle = INK;
   c.font = font(500, 21);
   c.fillText(face.label, M, M + px(20));
+  /*
+   * The rhythm under the role's baseline: the two names, then the line. One page at a
+   * time carries the slot as well, so it sets everything a step smaller and closer, or
+   * the line runs into the folio — which is what the first cut did, and read as a
+   * broken bracket at the start of every bio.
+   */
+  const r = face.portrait
+    ? { name: 64, first: 84, last: 154, line: 26, at: 222, lh: 38 }
+    : { name: 70, first: 92, last: 168, line: 28, at: 250, lh: 44 };
   let y = M + px(190);
   if (face.portrait) {
-    const pw = W - M * 2, ph = Math.round((pw * 3) / 4);
-    portraitSlot(c, M, M + px(130), pw, ph);
-    y = M + px(130) + ph + px(70);
+    const pw = W - M * 2, ph = Math.round((pw * 2) / 3);
+    portraitSlot(c, M, M + px(110), pw, ph);
+    y = M + px(110) + ph + px(66);
   }
   c.fillStyle = MUTED;
   c.font = font(500, 19);
   c.fillText(tracked(m.role), M, y);
   c.fillStyle = NAVY;
-  c.font = font(200, 70);
-  c.fillText(m.first, M, y + px(92));
-  c.font = font(400, 70);
-  c.fillText(m.last, M, y + px(168));
+  c.font = font(200, r.name);
+  c.fillText(m.first, M, y + px(r.first));
+  c.font = font(400, r.name);
+  c.fillText(m.last, M, y + px(r.last));
   c.fillStyle = INK;
-  c.font = font(400, 28);
-  wrap(c, m.bio, M, y + px(250), W - M * 2 - px(40), px(44));
-  folio(face.folio);
+  c.font = font(400, r.line);
+  const after = wrap(c, m.bio, M, y + px(r.at), W - M * 2 - px(40), px(r.lh));
+  // The folio only where the line leaves it room; a number printed through a sentence is worse than none.
+  if (after < H - px(90)) folio(face.folio);
   return cv;
 }

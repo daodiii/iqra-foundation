@@ -1,94 +1,60 @@
 /*
- * Om oss · Teamet. The box behind this is sage water (`wash.people`); everything
- * here is the two cards on it and what is set inside them.
+ * Om oss · Teamet. The box behind this is sage water (`wash.people`); on it lies the book
+ * from /om-oss, and under the book, inside the box, the band: the offer, where you are,
+ * the two rings. The readable copy — the words in a frame, the member card, the
+ * photograph — is what a phone shows under the book, and the whole layout when the book
+ * cannot run (`data-book="off"`).
  */
 .people {
   position: relative;
   overflow: hidden;
   background: transparent;
+  /* One screen: the box is the screen and the book lies in it. */
+  min-height: 100svh;
+  /* The band under the book, on a desktop; the book canvas fills the rest of the box. */
+  --band: 104px;
 }
 
-/*
- * Not a full screen. The two boxes above this each fill the viewport, and a third that did
- * the same would make the page a march of identical rectangles; this one is a little
- * shorter, which is also what gives the water below it somewhere to arrive from.
- */
-.inner {
-  position: relative;
+/* The stage is the box's own rectangle, so the book and the band sit inside the water's edge. */
+.stage {
+  position: absolute;
+  inset: var(--box-inset-y) var(--box-inset-x);
   z-index: 1;
-  min-height: 78svh;
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: 28px;
-  align-items: center;
-  /* 112 on top, not 100: the first legend stands on its card's top edge and has to clear
-     the header's haze, which runs out at 104px. */
-  padding: 112px var(--margin) 80px;
 }
 
-/*
- * Each card is as tall as its own words, and the grid centres both — so they sit staggered
- * rather than squared off. Stretching them to a common height was tried and is worse: the
- * shorter card gains a hole between its last paragraph and its link, and a link floating
- * that far from what it refers to stops reading as the end of the passage.
- */
-.card {
+.book {
+  position: absolute;
+  inset: 0 0 var(--band);
+  width: 100%;
+  height: calc(100% - var(--band));
+  display: block;
+}
+
+/* The band: the offer at the left, where you are in the middle, the rings at the right. */
+.controls {
+  position: absolute;
+  left: clamp(32px, 4vw, 56px);
+  right: clamp(32px, 4vw, 56px);
+  bottom: 28px;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 18px;
-  border-radius: 12px;
-  /* The top leaves room under the line for the legend's lower half. */
-  padding: clamp(40px, 4vw, 60px) clamp(32px, 3.4vw, 52px) clamp(32px, 3.4vw, 52px);
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
 }
 
-/* Everything the cards hold sits above the pen's canvas — but not the legends, which
-   `wash.legend` positions, and not the count, which sits in the corner on its own. */
-.card > :not(canvas, [data-legend]),
-.row > :not(canvas, [data-legend], [data-counter]) {
-  position: relative;
-  z-index: 1;
-}
-
-/* The label is the legend on the line — placed by `wash.legend`; this is only its type. */
-.label {
+/* «OM OSS», then «TEAMET · 1 / 6»: small tracked caps, tabular so the digit does not shuffle. */
+.where {
+  margin: 0 auto;
   font: 500 12px/1 var(--font-sans);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   color: var(--color-ink-soft);
-}
-
-/* The one line in each card set at size. `balance` because these are two and three lines
-   long depending on the width, and a single word left alone on the last line is the most
-   visible thing on the page. */
-.lede {
-  margin: 0;
-  font-size: clamp(26px, 2.6vw, 40px);
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  text-wrap: balance;
-  color: var(--color-navy);
-}
-
-.para {
-  margin: 0;
-  font-size: 16px;
-  line-height: 1.55;
-  max-width: 460px;
-  color: var(--color-ink-soft);
-}
-
-/* «Rundt tjue stykker. Studenter, lærere, en snekker, to sykepleiere.» — the sentence the
-   whole ask below rests on, so it is set a step above the paragraphs around it. */
-.count {
-  margin: 0;
-  font-size: clamp(17px, 1.4vw, 21px);
-  line-height: 1.45;
-  color: var(--color-navy);
+  white-space: nowrap;
 }
 
 .more {
-  padding-top: 6px;
+  white-space: nowrap;
   font-size: 14px;
   font-weight: 500;
   color: var(--color-crimson);
@@ -99,118 +65,30 @@
   text-decoration: underline;
 }
 
-/*
- * The member card. One person at a time, spanning both grid columns under the two cards,
- * so the section is the two cards and then the one. Set from an editorial team card: the
- * role above in small tracked caps with the count beside it, then the portrait with the
- * name block overlapping its inner edge.
- */
-.row {
-  --portrait-w: clamp(220px, 27vw, 360px);
-  --overlap: 32px;
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  border-radius: 12px;
-  /* The top leaves room under the line for the role's lower half. */
-  padding: clamp(40px, 4vw, 60px) clamp(32px, 3.4vw, 52px) clamp(32px, 3.4vw, 52px);
-}
-
-/* The role, on the line as the legend — placed by `wash.legend` — and the count in the same voice. */
-.eyebrow {
-  margin: 0;
-  font: 500 12px/1 var(--font-sans);
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-
-/* «1 / 6» — what the arrow does, said before it is pressed, inside the card at the top
-   right. Tabular so it does not shuffle as the digit changes. */
-.counter {
-  position: absolute;
-  z-index: 1;
-  top: 18px;
-  right: clamp(32px, 3.4vw, 52px);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.12em;
-}
-
-.body {
+.rings {
   display: flex;
   align-items: center;
-}
-
-/* 360 × 500 in the original, at the width this section has; the ratio is kept. */
-.portrait {
-  flex: none;
-  width: var(--portrait-w);
-  aspect-ratio: 360 / 500;
-  background: var(--color-hairline);
-  /* The original's grain: a little weight at the foot of the photograph. */
-  background-image: linear-gradient(to top, rgba(20, 30, 42, 0.12), transparent 40%);
-}
-
-/* The name block sits ON the portrait's inner edge, by exactly the overlap. */
-.info {
-  position: relative;
-  z-index: 1;
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(28px, 4vw, 56px);
-  margin-left: calc(var(--overlap) * -1);
-}
-
-.display {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  font-size: clamp(36px, 3.8vw, 56px);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: var(--color-navy);
-  text-wrap: balance;
-}
-
-.first {
-  font-weight: 200;
-}
-
-.last {
-  font-weight: 400;
-}
-
-.details {
-  display: flex;
-  /* Centred, not top-aligned as in the original: a one-line sentence against an 80px
-     ring reads as fallen off it otherwise. */
-  align-items: center;
-  gap: clamp(16px, 2vw, 24px);
+  gap: 12px;
 }
 
 /*
- * The round arrow: the next person. Grows a little under the pointer and fills navy, the
- * arrow turning up towards the corner as in the original; `:active` is the press.
- * Transforms only, so the hover costs nothing but a composite.
+ * The round arrow: the next page. Grows a little under the pointer and fills navy, the
+ * arrow turning up towards the corner as in the card it came from; `:active` is the press.
+ * Transforms only, so the hover costs nothing but a composite. The ring sits on the
+ * water, so it is filled — most of the way, not all: the water still moves behind it.
  */
 .go {
   flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
+  width: 56px;
+  height: 56px;
   padding: 0;
   border-radius: 50%;
-  /* Muted rather than hairline, and filled white: on the original the ring sits on a
-     photograph and the picture draws it; here it sits half on a grey rectangle, and a
-     hairline over that was a circle nobody could see. */
   border: 1px solid var(--color-muted);
   color: var(--color-ink-soft);
-  background: #fff;
+  background: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   transition: transform 300ms var(--ease-out-expo), background-color 300ms, border-color 300ms, color 300ms;
 }
@@ -244,8 +122,8 @@
 /* Back: the same ring smaller and lighter, its arrow turned round, turning down-and-back
    under the pointer as the other turns up-and-on. */
 .back {
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
   border-color: var(--color-hairline);
 }
 
@@ -258,7 +136,212 @@
   transform: rotate(135deg);
 }
 
-/* The line about the person: a short measure beside the arrow, as in the original. */
+/*
+ * The readable copy while the book runs: taken out of sight but left in the DOM and in
+ * the accessibility tree, so the book is never the only copy of the words. `clip-path`
+ * rather than `display:none`, for the same reason — the /om-oss pattern.
+ */
+.people[data-book='on'] .readable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/*
+ * The readable layout: no book. The stage flows instead of filling the box — the
+ * photograph, the words, the member card, then the band, which steps the card. Stepped in
+ * from the box's edge by what the copy has always sat inside it.
+ */
+.people[data-book='off'] .book {
+  display: none;
+}
+
+.people[data-book='off'] .stage {
+  position: relative;
+  inset: auto;
+  padding: calc(var(--box-inset-y) + 88px) calc(var(--box-inset-x) + 16px) calc(var(--box-inset-y) + 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.people[data-book='off'] .readable {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.people[data-book='off'] .row {
+  grid-column: 1 / -1;
+}
+
+.people[data-book='off'] .controls {
+  position: static;
+  padding: 0 4px;
+  gap: 10px;
+}
+
+/* The photograph, as the page would have it: cropped to its subject, the corners the frames'. */
+.photo {
+  margin: 0;
+  min-height: 360px;
+  max-height: 60svh;
+  aspect-ratio: 4 / 5;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The words in one frame, «Om oss» on the line: the same card the section used to set them in. */
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  border-radius: 12px;
+  /* The top leaves room under the line for the legend's lower half. */
+  padding: clamp(40px, 4vw, 60px) clamp(32px, 3.4vw, 52px) clamp(32px, 3.4vw, 52px);
+}
+
+/* Everything the cards hold sits above the pen's canvas — but not the legends, which
+   `wash.legend` positions, and not the count, which sits in the corner on its own. */
+.card > :not(canvas, [data-legend]),
+.row > :not(canvas, [data-legend], [data-counter]) {
+  position: relative;
+  z-index: 1;
+}
+
+/* The label is the legend on the line — placed by `wash.legend`; this is only its type. */
+.label {
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.03em;
+  color: var(--color-ink-soft);
+}
+
+/* The one line set at size. `balance` because it is two and three lines long depending on
+   the width, and a single word left alone on the last line is the most visible thing on
+   the page. */
+.lede {
+  margin: 0;
+  font-size: clamp(26px, 2.6vw, 40px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: var(--color-navy);
+}
+
+.para {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 460px;
+  color: var(--color-ink-soft);
+}
+
+/* «Rundt tjue stykker. Studenter, lærere, en snekker, to sykepleiere.» — the sentence the
+   whole ask below rests on, so it is set a step above the paragraph around it. */
+.count {
+  margin: 0;
+  font-size: clamp(17px, 1.4vw, 21px);
+  line-height: 1.45;
+  color: var(--color-navy);
+}
+
+/*
+ * The member card: one person at a time, the role on the line with the count beside it,
+ * the portrait with the name block overlapping its inner edge. The card the book's team
+ * pages were set from; it is the layout only where the book is not.
+ */
+.row {
+  --portrait-w: clamp(220px, 27vw, 360px);
+  --overlap: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border-radius: 12px;
+  /* The top leaves room under the line for the role's lower half. */
+  padding: clamp(40px, 4vw, 60px) clamp(32px, 3.4vw, 52px) clamp(32px, 3.4vw, 52px);
+}
+
+/* The role, on the line as the legend — placed by `wash.legend` — and the count in the same voice. */
+.eyebrow {
+  margin: 0;
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* «1 / 6», inside the card at the top right. Tabular so it does not shuffle as the digit changes. */
+.counter {
+  position: absolute;
+  z-index: 1;
+  top: 18px;
+  right: clamp(32px, 3.4vw, 52px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+}
+
+.body {
+  display: flex;
+  align-items: center;
+}
+
+/* 360 × 500 in the original, at the width this section has; the ratio is kept. */
+.portrait {
+  flex: none;
+  width: var(--portrait-w);
+  aspect-ratio: 360 / 500;
+  background: var(--color-hairline);
+  /* The original's grain: a little weight at the foot of the photograph. */
+  background-image: linear-gradient(to top, rgba(20, 30, 42, 0.12), transparent 40%);
+}
+
+/* The name block sits ON the portrait's inner edge, by exactly the overlap. */
+.info {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 3vw, 40px);
+  margin-left: calc(var(--overlap) * -1);
+}
+
+.display {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(36px, 3.8vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
+  text-wrap: balance;
+}
+
+.first {
+  font-weight: 200;
+}
+
+.last {
+  font-weight: 400;
+}
+
+/* The line about the person: a short measure, as in the original. */
 .bio {
   margin: 0;
   max-width: 34ch;
@@ -268,23 +351,109 @@
 }
 
 /*
- * The cards stack before the type gets too narrow to set. The story card keeps its measure
- * and the team goes under it, which is the reading order anyway.
+ * Under 900px the book shows one page at a time and cannot hold the words: the stage
+ * flows — the book 52svh tall, the band under it, then the words in their frame — and the
+ * photograph and the member card stay out of sight, since they are on the pages.
  */
-@media (max-width: 900px) {
-  .inner {
+@media (max-width: 899px) {
+  .people[data-book='on'] .stage {
+    position: relative;
+    inset: auto;
+    padding: calc(var(--box-inset-y) + 88px) calc(var(--box-inset-x) + 16px) calc(var(--box-inset-y) + 24px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .people[data-book='on'] .book {
+    position: relative;
+    inset: auto;
+    height: 52svh;
+    min-height: 360px;
+    order: 0;
+  }
+
+  .people[data-book='on'] .controls {
+    position: static;
+    padding: 0 4px;
+    gap: 10px;
+    order: 1;
+  }
+
+  .people[data-book='on'] .readable {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    order: 2;
+    margin-top: 6px;
+  }
+
+  .people[data-book='on'] .photo,
+  .people[data-book='on'] .row {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .people[data-book='off'] .readable {
     grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-    padding: 116px var(--margin) 64px;
+  }
+
+  .people[data-book='off'] .photo {
+    height: 52svh;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
+  .more {
+    font-size: 13px;
   }
 }
 
 /*
  * On a phone there is no room beside a portrait for a name at display size. The portrait
  * goes full width and shorter — a landscape crop, not a tall one — and the name and the
- * line stack under it, no overlap.
+ * line stack under it, no overlap. The rings shrink to the band's height.
  */
 @media (max-width: 767px) {
+  /* The band is one row too many for a phone once it says «TEAMET · 6 / 6» beside the
+     offer and the rings (the mock lost its right ring to the edge): where you are goes
+     above, centred under the page, and the offer and the rings share the row below. */
+  .controls {
+    flex-wrap: wrap;
+    row-gap: 14px;
+  }
+
+  .where {
+    order: -1;
+    width: 100%;
+    margin: 0;
+    text-align: center;
+  }
+
+  .card,
+  .row {
+    padding: 36px 22px 28px;
+    gap: 14px;
+  }
+
+  .para {
+    font-size: 15px;
+  }
+
+  .counter {
+    right: 22px;
+  }
+
   .body {
     flex-direction: column;
     align-items: stretch;
@@ -298,25 +467,21 @@
 
   .info {
     margin: 0;
-    gap: 24px;
+    gap: 20px;
   }
 
   .display {
     font-size: clamp(32px, 9vw, 40px);
   }
 
-  .details {
-    gap: 18px;
-  }
-
   .go {
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
   }
 
   .back {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
   }
 
   .bio {

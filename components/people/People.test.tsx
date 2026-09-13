@@ -2,8 +2,11 @@ import { fireEvent, render, within } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import { site } from '@/content/site.no';
 import { People } from './People';
+import { memberLabel } from './pages';
 
 const [story, menneskene] = site.about.chapters;
+const team = menneskene.team;
+const n = team.length;
 
 /** There is no auto-cleanup configured, so every query is scoped to its own render. */
 const mount = () => {
@@ -11,95 +14,110 @@ const mount = () => {
   return container.querySelector('#om-oss-teamet') as HTMLElement;
 };
 
-test('the story card takes its lede and paragraphs from the book’s first chapter', () => {
-  const section = mount();
-  expect(within(section).getByText(site.about.label)).toBeInTheDocument();
-  expect(within(section).getByText(story.lede)).toBeInTheDocument();
-  expect(within(section).getByText(story.paras[0])).toBeInTheDocument();
-  expect(within(section).getByText(story.paras[1])).toBeInTheDocument();
-});
-
 /**
- * Two paragraphs, not three. The chapter has a third and `/om-oss` shows it; the landing
- * page is an invitation to read the chapter rather than the chapter itself, and the link
- * below only means something if something has been held back.
+ * The words are the book's own first chapter and the count line its second, read from the
+ * same place `/om-oss` reads them, so the landing page and the book cannot drift. One
+ * paragraph, not the chapter: the link is only an offer if something was held back.
  */
-test('the story card stops short of the chapter’s last paragraph', () => {
+test('the words are the first chapter’s lede and paragraph, and the second’s count line', () => {
   const section = mount();
+  const words = section.querySelector('[data-words]') as HTMLElement;
+  expect(within(words).getByText(site.about.label)).toBeInTheDocument();
+  expect(within(words).getByText(story.lede)).toBeInTheDocument();
+  expect(within(words).getByText(story.paras[0])).toBeInTheDocument();
+  expect(within(words).getByText(menneskene.paras[0])).toBeInTheDocument();
+  expect(within(section).queryByText(story.paras[1])).toBeNull();
   expect(within(section).queryByText(story.paras[2])).toBeNull();
 });
 
-test('the story card links to the chapter it is quoting', () => {
+test('the link to the chapter is in the band under the book, once', () => {
   const section = mount();
-  expect(within(section).getByRole('link', { name: new RegExp(site.people.more) }))
-    .toHaveAttribute('href', '/om-oss');
-});
-
-test('the team card takes its lede and its count line from the book’s second chapter', () => {
-  const section = mount();
-  expect(within(section).getByText(site.people.teamLabel)).toBeInTheDocument();
-  expect(within(section).getByText(menneskene.lede)).toBeInTheDocument();
-  expect(within(section).getByText(menneskene.paras[0])).toBeInTheDocument();
-});
-
-/** One person at a time: the first, with everything the card says about them. */
-test('the member card opens on the first person: role, both names, the line, and the count', () => {
-  const section = mount();
-  const card = section.querySelector('[data-row]') as HTMLElement;
-  const [first] = menneskene.team;
-  expect(section.querySelectorAll('[data-row]')).toHaveLength(1);
-  expect(card).toHaveTextContent(first.role);
-  expect(card).toHaveTextContent(first.first);
-  expect(card).toHaveTextContent(first.last);
-  expect(card).toHaveTextContent(first.bio);
-  expect(card).toHaveTextContent(`1 / ${menneskene.team.length}`);
+  const links = within(section).getAllByRole('link', { name: new RegExp(site.people.more) });
+  expect(links).toHaveLength(1);
+  expect(links[0]).toHaveAttribute('href', '/om-oss');
+  expect(links[0].closest('[data-controls]')).not.toBeNull();
 });
 
 /**
- * The arrow is how you meet the next one, and after the last it comes round to the first:
- * a button that stopped working on the sixth press would look broken, not finished.
+ * jsdom has no WebGL, so the renderer declines and the section is its readable layout —
+ * which is also what a visitor without WebGL gets: the photograph, the words, the member
+ * card. Everything the book shows exists as real text under it.
  */
-test('the arrow steps through every member and wraps to the first', () => {
+test('without WebGL the section is the readable layout: the photograph, the words, the card', () => {
   const section = mount();
-  const next = within(section).getByRole('button', { name: site.people.next });
+  expect(section.dataset.book).toBe('off');
+  const img = section.querySelector('[data-photo] img');
+  expect(img).toHaveAttribute('alt', site.about.image!.alt);
+  expect(img).toHaveAttribute('src', site.about.image!.src);
   const card = section.querySelector('[data-row]') as HTMLElement;
-  menneskene.team.forEach((member, i) => {
-    expect(card).toHaveAttribute('data-index', String(i));
-    expect(card).toHaveTextContent(member.role);
-    expect(card).toHaveTextContent(`${i + 1} / ${menneskene.team.length}`);
-    fireEvent.click(next);
-  });
   expect(card).toHaveAttribute('data-index', '0');
-  expect(card).toHaveTextContent(menneskene.team[0].role);
+  expect(card).toHaveTextContent(team[0].role);
+  expect(card).toHaveTextContent(team[0].first);
+  expect(card).toHaveTextContent(team[0].last);
+  expect(card).toHaveTextContent(team[0].bio);
+  expect(card).toHaveTextContent(`1 / ${n}`);
 });
 
-/** The small ring goes the other way, and from the first person it goes to the last. */
-test('the back arrow steps to the previous member and wraps to the last', () => {
+/**
+ * The picture is generated, a stand-in until the foundation has a real one — and a
+ * generated kitchen table is exactly the kind of placeholder a visitor cannot tell from
+ * the real thing. Its alt carries a bracket so `check-content` reports it like every
+ * other thing the site still lacks.
+ */
+test('the photograph is a stand-in, and says so where the content gate can see it', () => {
+  expect(site.about.image).not.toBeNull();
+  expect(site.about.image!.alt).toMatch(/\[[^\]]+\]/);
+  expect(site.about.image!.focus).toBeGreaterThan(0);
+  expect(site.about.image!.focus).toBeLessThan(1);
+});
+
+/**
+ * The rings turn the book; without one they step the card, and the label says where you
+ * are either way. After the last member the large ring comes round to the first: a button
+ * that stopped working on the sixth press would look broken, not finished.
+ */
+test('the large ring steps the label and the card through every member and wraps', () => {
+  const section = mount();
+  const next = within(section).getByRole('button', { name: site.people.next });
+  const where = section.querySelector('[data-where]') as HTMLElement;
+  const card = section.querySelector('[data-row]') as HTMLElement;
+  team.forEach((member, i) => {
+    expect(where).toHaveTextContent(memberLabel(i, n));
+    expect(card).toHaveAttribute('data-index', String(i));
+    expect(card).toHaveTextContent(member.role);
+    fireEvent.click(next);
+  });
+  expect(where).toHaveTextContent(memberLabel(0, n));
+  expect(card).toHaveAttribute('data-index', '0');
+});
+
+test('the small ring steps back, and from the first member goes to the last', () => {
   const section = mount();
   const back = within(section).getByRole('button', { name: site.people.prev });
   const card = section.querySelector('[data-row]') as HTMLElement;
-  const last = menneskene.team.length - 1;
+  const where = section.querySelector('[data-where]') as HTMLElement;
   fireEvent.click(back);
-  expect(card).toHaveAttribute('data-index', String(last));
-  expect(card).toHaveTextContent(menneskene.team[last].role);
+  expect(card).toHaveAttribute('data-index', String(n - 1));
+  expect(where).toHaveTextContent(memberLabel(n - 1, n));
   fireEvent.click(back);
-  expect(card).toHaveAttribute('data-index', String(last - 1));
+  expect(card).toHaveAttribute('data-index', String(n - 2));
   fireEvent.click(within(section).getByRole('button', { name: site.people.next }));
-  expect(card).toHaveAttribute('data-index', String(last));
+  expect(card).toHaveAttribute('data-index', String(n - 1));
 });
 
-/** What changed on a step is the name and the line; a screen reader hears them. */
-test('the name and the line about the person are a live region', () => {
+/** What a press changed is where you are and who is on the page; a screen reader hears both. */
+test('the label and the member’s name and line are live regions', () => {
   const section = mount();
+  expect(section.querySelector('[data-where]')).toHaveAttribute('aria-live', 'polite');
   const info = section.querySelector('[data-part="info"]');
   expect(info).toHaveAttribute('aria-live', 'polite');
-  expect(info).toHaveTextContent(menneskene.team[0].first);
-  expect(info).toHaveTextContent(menneskene.team[0].bio);
+  expect(info).toHaveTextContent(team[0].first);
+  expect(info).toHaveTextContent(team[0].bio);
 });
 
 /** No name, no face, no sentence about anyone is invented until there is someone to name. */
 test('every slot on every member card is still a bracket', () => {
-  for (const m of menneskene.team) {
+  for (const m of team) {
     expect(m.first).toMatch(/^\[.+\]$/);
     expect(m.last).toMatch(/^\[.+\]$/);
     expect(m.bio).toMatch(/^\[.+\]$/);
@@ -107,10 +125,8 @@ test('every slot on every member card is still a bracket', () => {
 });
 
 /**
- * The box is water — sage since the reorder of 2026-09-13, Arafat's stone before that — and
- * the class is the section's, not the scene's, so the colour can move without the markup
- * lying about it. The canvas is what the simulation paints on; the class is what carries
- * the floor colour before it.
+ * The box is water — sage — and the class is the section's, not the scene's, so the colour
+ * can move without the markup lying about it. The canvas is what the simulation paints on.
  */
 test('the box is the people’s floor, with a canvas for the water to paint on', () => {
   const section = mount();
@@ -120,16 +136,17 @@ test('the box is the people’s floor, with a canvas for the water to paint on',
 });
 
 /**
- * The box is a line drawn with the tree's pen: the two cards and the member card each carry
- * the canvas the pen draws on and a legend on the line — the two labels, and on the member
- * card the role, with the count kept inside at the top right.
+ * The book is drawn on a canvas, which is decorative: the readable copy is the section's
+ * content. The words and the member card are frames drawn with the tree's pen, each with
+ * its legend on the line — the label, and the member's role.
  */
-test('the two cards and the member card are frames; the role is the member card’s legend and the count stays inside', () => {
+test('the book canvas is decorative; the words and the card are frames with legends on the line', () => {
   const section = mount();
-  expect(section.querySelectorAll('canvas[data-frame-canvas]')).toHaveLength(3);
+  expect(section.querySelector('canvas[data-book]')).toHaveAttribute('aria-hidden', 'true');
+  expect(section.querySelectorAll('canvas[data-frame-canvas]')).toHaveLength(2);
   const legends = [...section.querySelectorAll('[data-legend]')].map((l) => l.textContent);
-  expect(legends).toEqual([site.about.label, site.people.teamLabel, menneskene.team[0].role]);
+  expect(legends).toEqual([site.about.label, team[0].role]);
   const card = section.querySelector('[data-row]') as HTMLElement;
   expect(card.querySelector('[data-legend]')).toHaveAttribute('data-part', 'role');
-  expect(card.querySelector('[data-counter]')).toHaveTextContent(`1 / ${menneskene.team.length}`);
+  expect(card.querySelector('[data-counter]')).toHaveTextContent(`1 / ${n}`);
 });

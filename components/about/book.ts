@@ -73,6 +73,17 @@ export function cameraX(progress: number, single: boolean): number {
   return single ? PW * 0.5 : PW * 0.5 * (1 - Math.min(1, Math.max(0, progress)));
 }
 
+/**
+ * How wide one page renders, in the canvas's own pixels, with the camera `dist` from the
+ * spine: the field of view is vertical, so it is the canvas's height that sets the scale.
+ * A caller that paints its own pages can size them to this and have them seen at one
+ * texel per pixel — neither soft from magnifying nor aliased from minifying, which the
+ * NPOT textures cannot mipmap away.
+ */
+export function pagePixels(canvasHeight: number, dist: number): number {
+  return (canvasHeight * PW) / (2 * dist * Math.tan(FOV / 2));
+}
+
 const VS = `
 precision highp float;
 attribute vec2 aUV;
