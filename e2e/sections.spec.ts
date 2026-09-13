@@ -341,7 +341,15 @@ test('the page walks from ink through ink-in-water into water, in that order', a
   expect(order).toEqual(['hero', 'visjon', 'misjon', 'arrangementer', 'om-oss-teamet', 'stott-oss']);
 });
 
-test('desktop: om oss · teamet is water over Arafat, with the story and the team on it', async ({ page, isMobile }) => {
+/**
+ * The book on the water. Whether it runs is the renderer's own report, `data-book`: on
+ * SwiftShader the book draws (it is the water that declines there), so the usual headless
+ * run sees the book; a browser with no WebGL at all sees the readable layout, which is
+ * asserted on its own terms below rather than skipped — it is what such a visitor gets.
+ */
+const teamLabel = (k: number) => `${site.people.teamLabel} · ${k} / ${site.about.chapters[1].team!.length}`;
+
+test('desktop: om oss · teamet is the book on the water, the rings turning its pages', async ({ page, isMobile }) => {
   test.skip(isMobile, 'the phone layout has its own test');
   await pastHero(page);
   const top = await docTop(page, '#om-oss-teamet');
@@ -353,44 +361,65 @@ test('desktop: om oss · teamet is water over Arafat, with the story and the tea
 
   const section = page.locator('#om-oss-teamet');
   const [story, menneskene] = site.about.chapters;
-  // Both cards are the book's own chapters, so this is also the check that the landing page
-  // and /om-oss cannot drift: the words are read from the same place the book reads them.
-  await expect(section.getByText(story.lede)).toBeVisible();
-  await expect(section.getByText(menneskene.lede)).toBeVisible();
-  await expect(section.getByText(menneskene.paras[0])).toBeVisible();
-  // Held back on purpose: the link below is only an offer if something was not said here.
+  // The words are the book's own chapters, so this is also the check that the landing page
+  // and /om-oss cannot drift. Presence, not visibility: while the book runs the readable
+  // copy is clipped out of sight and stays in the DOM, which is the whole point of it.
+  await expect(section.getByText(story.lede)).toHaveCount(1);
+  await expect(section.getByText(story.paras[0])).toHaveCount(1);
+  await expect(section.getByText(menneskene.paras[0])).toHaveCount(1);
+  // Held back on purpose: the link is only an offer if something was not said here.
+  await expect(section.getByText(story.paras[1])).toHaveCount(0);
   await expect(section.getByText(story.paras[2])).toHaveCount(0);
   await expect(section.getByRole('link', { name: new RegExp(site.people.more) }))
     .toHaveAttribute('href', '/om-oss');
-  // One card for one person at a time, under the two: it opens on the first member, sits
-  // below the team card with the portrait left of the name, and the arrow steps to the
-  // next — wrapping to the first after the last, so it never stops working.
-  const card = section.locator('[data-row]');
-  await expect(card).toHaveCount(1);
-  await expect(card).toContainText(menneskene.team[0].role);
-  await expect(card).toContainText(`1 / ${menneskene.team.length}`);
-  const teamCard = section.getByText(menneskene.lede).locator('..');
-  expect((await card.boundingBox())!.y).toBeGreaterThan(
-    (await teamCard.boundingBox())!.y + (await teamCard.boundingBox())!.height - 1);
-  expect((await card.locator('[data-part="portrait"]').boundingBox())!.x)
-    .toBeLessThan((await card.locator('[data-part="info"]').boundingBox())!.x);
 
-  await card.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(1200);
-  const next = card.getByRole('button', { name: site.people.next });
-  for (let i = 1; i <= menneskene.team.length; i++) {
-    await next.click();
-    const at = i % menneskene.team.length;
-    await expect(card).toHaveAttribute('data-index', String(at));
-    await expect(card).toContainText(`${at + 1} / ${menneskene.team.length}`);
+  const where = section.locator('[data-where]');
+  const card = section.locator('[data-row]');
+  const next = section.locator('[data-controls]').getByRole('button', { name: site.people.next });
+  const prev = section.locator('[data-controls]').getByRole('button', { name: site.people.prev });
+  const mode = await section.getAttribute('data-book');
+
+  if (mode === 'on') {
+    // The backing store, not the CSS box: `on` only says the renderer started. A canvas
+    // measured while it was still display:none keeps the default 300x150 and draws nothing.
+    const backing = await section.locator('canvas[data-book]').evaluate((c: HTMLCanvasElement) => [c.width, c.height]);
+    expect(backing[0], 'the book canvas never got a real backing store').toBeGreaterThan(600);
+    expect(backing[1]).toBeGreaterThan(300);
+    // The book opens onto the words; the band says so, and the readable copy is out of
+    // sight — clipped to a pixel, which Playwright still calls visible, so it is measured.
+    await expect(where).toHaveText(site.about.label);
+    const clip = (await section.locator('[data-readable]').boundingBox())!;
+    expect(Math.max(clip.width, clip.height), 'the readable copy is not clipped while the book runs').toBeLessThanOrEqual(1);
+  } else {
+    // No WebGL: the photograph, the words and the member card are the layout, and the
+    // band opens on the first member — the words are not a stop when they are always shown.
+    expect(mode).toBe('off');
+    await expect(section.locator('[data-photo] img')).toBeVisible();
+    await expect(section.getByText(story.lede)).toBeVisible();
+    await expect(card).toBeVisible();
+    await expect(where).toHaveText(teamLabel(1));
+    await expect(card).toHaveAttribute('data-index', '0');
   }
-  // Back from the first is the last. After the last press the parts have arrived again,
-  // not been left half-hidden.
-  await card.getByRole('button', { name: site.people.prev }).click();
-  await expect(card).toHaveAttribute('data-index', String(menneskene.team.length - 1));
-  await page.waitForTimeout(1200);
-  const shown = await card.locator('[data-part="info"]').evaluate((el) => getComputedStyle(el).opacity);
-  expect(Number(shown)).toBe(1);
+
+  // The large ring turns to the next member; a turn takes a second, so the label is
+  // waited for. Clicked through the DOM rather than the pointer: Playwright's click
+  // scrolls the button into view, which moves the page and everything measured on it.
+  const press = (b: typeof next) => b.evaluate((el: HTMLButtonElement) => el.click());
+  const n = menneskene.team.length;
+  for (let k = 1; k <= n; k++) {
+    // Without a book the first press already stands on member 1.
+    if (!(mode === 'off' && k === 1)) await press(next);
+    await expect(where).toHaveText(teamLabel(k), { timeout: 4_000 });
+    await expect(card).toHaveAttribute('data-index', String(k - 1));
+    await expect(card).toContainText(menneskene.team[k - 1].role);
+  }
+  // After the last, the long way round to the first — a ring that stopped on the sixth
+  // press would look broken, not finished. Then back from the first is the last again.
+  await press(next);
+  await expect(where).toHaveText(mode === 'on' ? site.about.label : teamLabel(1), { timeout: 5_000 });
+  await press(prev);
+  await expect(where).toHaveText(teamLabel(n), { timeout: 5_000 });
+  await expect(card).toHaveAttribute('data-index', String(n - 1));
 });
 
 /**
@@ -528,39 +557,53 @@ test('phone: no pins after the hero; the tree grows and every section stays legi
 });
 
 /**
- * The people's two cards are side by side on a desktop and there is no room for that on a
- * phone. Asserted as geometry rather than as a media query: what matters is that the second
- * card ends up UNDER the first rather than beside it, whatever the breakpoint says.
+ * A phone has no room for a spread, so the book shows one page at a time and the words
+ * come out from under it: the book, the band, then the words in their frame, stacked in
+ * that order — and the photograph and the member card, which are on the pages, stay out of
+ * sight. Without a book the same three things stack the other way round: the photograph,
+ * the words, the card. Asserted as geometry rather than as a media query: what matters is
+ * what ends up UNDER what, whatever the breakpoint says.
  *
  * The timeline is the one layout on the site that does NOT stack, because sideways is what
  * it already is — so it is checked the other way round: it must still scroll, and it must
  * not take the page with it.
  */
-test('phone: the cards stack, the axis stays an axis, and nothing pushes the page sideways', async ({ page, isMobile }) => {
+test('phone: the book is one page over the band over the words, the axis stays an axis, and nothing pushes the page sideways', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'stacked layout is the phone layout');
   await pastHero(page);
 
   const peopleTop = await docTop(page, '#om-oss-teamet');
   await page.evaluate((y) => window.scrollTo(0, y - 40), peopleTop);
-  await page.waitForTimeout(500);
-  // The two chapter cards carry `data-rise`; the member rows below them are `data-row`.
-  const cards = await page.locator('#om-oss-teamet [data-rise]').evaluateAll((els) =>
-    els.map((el) => { const r = el.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y) }; }));
-  expect(cards.length, 'the people cards').toBe(2);
-  expect(cards[0].x, 'the people cards did not stack').toBe(cards[1].x);
-  expect(cards[1].y, 'the people cards did not stack').toBeGreaterThan(cards[0].y);
-  // The member card on a phone is portrait over name, not beside it.
-  const row = page.locator('#om-oss-teamet [data-row]');
-  await row.scrollIntoViewIfNeeded();
-  // Scrolling to it starts its entrance; measured mid-tween the portrait is still 5%
-  // small and 30px low, and the boxes overlap by a couple of pixels that are not layout.
-  await page.waitForTimeout(1200);
-  const [portrait, info] = await Promise.all([
-    row.locator('[data-part="portrait"]').boundingBox(),
-    row.locator('[data-part="info"]').boundingBox(),
-  ]);
-  expect(info!.y, 'the member card did not stack').toBeGreaterThanOrEqual(portrait!.y + portrait!.height);
-  expect(Math.round(info!.x), 'the name is not under the portrait').toBe(Math.round(portrait!.x));
+  await page.waitForTimeout(1500);
+  const section = page.locator('#om-oss-teamet');
+  const box = async (sel: string) => (await section.locator(sel).boundingBox())!;
+  const under = (a: { y: number; height: number }, b: { y: number }) => b.y >= a.y + a.height - 1;
+  const mode = await section.getAttribute('data-book');
+  if (mode === 'on') {
+    const [book, band, words] = await Promise.all([box('canvas[data-book]'), box('[data-controls]'), box('[data-words]')]);
+    expect(book.width, 'the book is not the width of the box').toBeGreaterThan(300);
+    expect(under(book, band), 'the band is not under the book').toBe(true);
+    expect(under(band, words), 'the words are not under the band').toBe(true);
+    // On the pages, so out of sight: clipped to a pixel, which Playwright still calls
+    // visible, so the clip is measured.
+    for (const sel of ['[data-row]', '[data-photo]']) {
+      const clip = await box(sel);
+      expect(Math.max(clip.width, clip.height), `${sel} is not clipped while the book runs`).toBeLessThanOrEqual(1);
+    }
+  } else {
+    expect(mode).toBe('off');
+    const [photo, words, row] = await Promise.all([box('[data-photo]'), box('[data-words]'), box('[data-row]')]);
+    expect(under(photo, words), 'the words are not under the photograph').toBe(true);
+    expect(under(words, row), 'the member card is not under the words').toBe(true);
+    // The member card on a phone is portrait over name, not beside it.
+    const [portrait, info] = await Promise.all([box('[data-part="portrait"]'), box('[data-part="info"]')]);
+    expect(under(portrait, info), 'the member card did not stack').toBe(true);
+    expect(Math.round(info.x), 'the name is not under the portrait').toBe(Math.round(portrait.x));
+  }
+  // The band fits the screen: the right ring ends inside it, not past the edge.
+  const ring = await box(`[data-controls] button[aria-label="${site.people.next}"]`);
+  const width = await page.evaluate(() => window.innerWidth);
+  expect(ring.x + ring.width, 'the right ring is off the screen').toBeLessThanOrEqual(width);
 
   const axisTop = await docTop(page, '#arrangementer');
   await page.evaluate((y) => window.scrollTo(0, y - 40), axisTop);

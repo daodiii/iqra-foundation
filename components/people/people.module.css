@@ -174,7 +174,7 @@
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 14px;
-  align-items: start;
+  align-items: center;
 }
 
 .people[data-book='off'] .row {
@@ -190,8 +190,8 @@
 /* The photograph, as the page would have it: cropped to its subject, the corners the frames'. */
 .photo {
   margin: 0;
+  width: 100%;
   min-height: 360px;
-  max-height: 60svh;
   aspect-ratio: 4 / 5;
   border-radius: 10px;
   overflow: hidden;
@@ -410,7 +410,6 @@
 
   .people[data-book='off'] .photo {
     height: 52svh;
-    max-height: none;
     aspect-ratio: auto;
   }
 

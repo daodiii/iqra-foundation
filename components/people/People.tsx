@@ -206,9 +206,11 @@ export function People() {
           await Promise.all([200, 400, 500, 600].map((w) => document.fonts.load(`${w} 40px ${family}`)));
           const [logo, photo] = await Promise.all([loadImage(LOGO), image ? loadImage(image.src) : null]);
           if (gone) return;
-          // The renderer draws at the device's pixels (to 2×), so the page is measured in those.
+          // The renderer draws at the device's pixels (to 2×), so the page is measured in
+          // those. A canvas with no size yet — a tab that has never been shown — gets full
+          // pages rather than the smallest: they are painted once and seen at any size after.
           const dist = single ? DIST.single : DIST.spread;
-          const seen = pagePixels(canvas.clientHeight * Math.min(window.devicePixelRatio || 1, 2), dist);
+          const seen = pagePixels(canvas.clientHeight * Math.min(window.devicePixelRatio || 1, 2), dist) || TEX_W.max;
           const W = Math.round(Math.min(TEX_W.max, Math.max(TEX_W.min, seen)));
           const H = Math.round(W * TEX_RATIO);
           const assets = { family, logo, photo, focus: image?.focus ?? 0.5 };
@@ -312,7 +314,7 @@ export function People() {
           * runs, the layout when it does not — and on a phone the words are shown under
           * the book either way, since one page at a time leaves them no page.
           */}
-        <div className={styles.readable}>
+        <div className={styles.readable} data-readable>
           {image && (
             <figure className={styles.photo} data-photo>
               <img
