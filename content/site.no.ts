@@ -136,6 +136,39 @@ export const site = {
     label: 'Misjon',
     stanzas: missionStanzas,
     text: missionStanzas.flat().join(' '),
+    /**
+     * The wall (2026-09-13). Misjon is a bento now: eight tiles on the page's white, the
+     * gold film the tall one in the middle, the mission and five smaller boxes round it.
+     * Visjon's tile takes `vision.lines` above. The rest is here.
+     *
+     * These words are STAND-INS. The user has said so — «the words are not important,
+     * real info is coming soon» — and they are the site's own lines (the values, Om oss,
+     * the hero's lede) rather than anything invented, so the production gate has nothing
+     * to refuse and nothing false is on the page meanwhile. They live here rather than in
+     * the component so the real ones drop in without a code change; if they run much
+     * longer or shorter than these, the grid is re-cut to them, not the other way round.
+     */
+    wall: {
+      film: {
+        title: 'Iqra betyr les.',
+        line: 'Det første ordet i Koranen.',
+        /** What the film shows, for anyone who cannot see it. */
+        alt: 'En gullpenn skriver «iqra» på arabisk.',
+      },
+      question: {
+        label: 'Spørsmål vi får',
+        q: 'Må jeg være muslim for å komme?',
+        a: 'Nei. Alle er velkomne, og du trenger ikke kunne noe fra før.',
+      },
+      how: {
+        label: 'Slik jobber vi',
+        items: ['Stand i byen', 'Åpne kvelder i moskeen', 'Svar på e-post', 'Besøk der vi blir invitert'],
+      },
+      contact: {
+        label: 'Kontakt',
+        line: 'Skriv til oss, så svarer et menneske. Vanligvis samme uka.',
+      },
+    },
   },
   /**
    * The two lists are one row in date order, news and events mixed, with «i dag» where
