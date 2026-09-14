@@ -13,9 +13,10 @@ export const CRIMSON = '#ab5263';
 export const INK = '#4b586a';
 export const MUTED = '#8a94a3';
 export const HAIRLINE = '#e3e7ec';
-/** Cream stock. The paper is coloured here rather than warmed by the light, so the
- *  ink keeps its contrast and the pages look the same from every angle. */
-export const STOCK = '#f7f2e7';
+/** White paper («make the book white», 2026-09-14; it was cream, #f7f2e7). The paper is
+ *  coloured here rather than by the light, so the ink keeps its contrast and the pages
+ *  look the same from every angle. */
+export const STOCK = '#ffffff';
 
 export type Figure = { value: string; label: string };
 export type Member = { first: string; last: string; role: string; bio: string };

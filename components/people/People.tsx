@@ -10,7 +10,7 @@ import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { createFrame, type FrameHandle, keepFramesFitted } from '@/lib/pen';
 import { createWaterWhenNear } from '@/lib/water';
 import { setWordmarkOnDark } from '@/lib/wordmark';
-import { drawFace, faces, indexAt, memberLabel, progressFor } from './pages';
+import { drawFace, faces, indexAt, progressFor } from './pages';
 import styles from './people.module.css';
 
 /*
@@ -33,11 +33,13 @@ const LAST = progressFor(count - 1);
 /** White pages on water: transparent round the pages, more light, a softer spine. */
 const LOOK = { alpha: true, ambient: 0.84, gutter: 0.5 } as const;
 /**
- * The camera, nearer than on `/om-oss` — the book fills its box rather than a screen. At
- * 2.28 the open spread stands 93% of the canvas's height (2.55 gave 83%): «make the book
- * larger so it fills up more of the section», 2026-09-13.
+ * The camera, nearer than on `/om-oss` — the book fills its box rather than a screen. The
+ * spread's height is 2.12 / dist of the canvas's: 2.28 stood 93% of a canvas that stopped
+ * above the band, and since «make the book bigger and in the centre» (2026-09-14) the
+ * canvas is the whole box, so 2.46 stands 86% of the box, centred in it, with the band
+ * lying over its foot at the corners where the pages are not.
  */
-const DIST = { spread: 2.28, single: 2.35 } as const;
+const DIST = { spread: 2.46, single: 2.35 } as const;
 /**
  * The page textures are painted at the size the page is seen (`pagePixels`), one texel
  * per pixel, between these: no wider than the `/om-oss` page — sixteen of those are some
@@ -110,6 +112,8 @@ export function People() {
   const rowFrame = useRef<FrameHandle | null>(null);
   const index = Math.max(0, indexAt(spread));
   const member = team[index];
+  // Removed 2026-09-14: the «Teamet · k / n» the band and the card used to show («take
+  // away team 01/06»). Which spread the book is on is written on the section instead.
 
   useGSAP(
     () => {
@@ -289,8 +293,6 @@ export function People() {
    */
   useGSAP(() => { rowFrame.current?.layout(); }, { scope: root, dependencies: [index] });
 
-  const where = spread <= WORDS ? site.about.label : memberLabel(index, count);
-
   return (
     <section
       ref={root}
@@ -298,13 +300,14 @@ export function People() {
       className={styles.people}
       aria-label={site.people.sectionLabel}
       data-book="off"
+      data-spread={spread}
     >
       <div className={`${wash.box} ${wash.people}`} aria-hidden="true">
         <canvas className={wash.paint} data-water />
       </div>
 
       {/* The stage is the box's own rectangle: the book lies in it, the band sits at its foot. */}
-      <div className={styles.stage}>
+      <div className={styles.stage} data-stage>
         <canvas className={styles.book} data-book aria-hidden="true" />
 
         {/*
@@ -327,9 +330,8 @@ export function People() {
             aria-label={site.people.teamLabel}
           >
             <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
-            {/* The role is the legend on the line; the count stays inside, at the top right. */}
+            {/* The role is the legend on the line. */}
             <p className={`${wash.legend} ${styles.eyebrow}`} data-legend data-part="role">{member.role}</p>
-            <p className={`${styles.eyebrow} ${styles.counter}`} data-counter>{index + 1} / {count}</p>
             <div className={styles.body}>
               {/* An empty rectangle where a photograph would go. Drawn rather than left out,
                   because the card's shape is what it will be when it has a face in it — and
@@ -347,12 +349,11 @@ export function People() {
           </div>
         </div>
 
-        {/* Under the book, inside the box: the offer, where you are, and the two rings. */}
+        {/* Under the book, inside the box: the offer at the left, the two rings at the right. */}
         <div className={styles.controls} data-controls>
           <Link className={styles.more} href="/om-oss" prefetch={false}>
             {site.people.more} →
           </Link>
-          <p className={styles.where} data-where aria-live="polite">{where}</p>
           <div className={styles.rings}>
             {/* Back is the smaller ring, and first: the eye lands on the large one, which
                 is the way the book was designed to be read — on. */}

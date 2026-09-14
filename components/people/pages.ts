@@ -24,9 +24,10 @@ export type PeopleFace =
   | { kind: 'story'; words: Words; folio: string }
   /** The portrait slot on its own page, facing the member's words. */
   | { kind: 'portrait'; index: number; folio: string }
-  /** One member: the label «Teamet · k / n», the role, the name, the line — and on one page
-   *  at a time, the portrait slot above them, since there is no facing page to hold it. */
-  | { kind: 'member'; member: Member; index: number; label: string; portrait: boolean; folio: string }
+  /** One member: the role, the name, the line — and on one page at a time, the portrait
+   *  slot above them, since there is no facing page to hold it. The «Teamet · k / n» that
+   *  headed the page went («take away team 01/06», 2026-09-14). */
+  | { kind: 'member'; member: Member; index: number; portrait: boolean; folio: string }
   | { kind: 'blank' };
 
 /** Member k (0-based) is the spread after the words: the words are at 1, so k is at k + 2. */
@@ -39,7 +40,7 @@ export const indexAt = (p: number) => Math.max(-1, Math.round(p) - 2);
  * one blank to close the last leaf. One page at a time (the phone): every page on the
  * right of its leaf and a blank on every back, so each turn shows a cream reverse and
  * lands on the next page — [blank] · [blank | logo] · [blank | member k]. On both, the
- * words are at 1 and member k at k + 2, so the rings and the label need not know which.
+ * words are at 1 and member k at k + 2, so the rings need not know which.
  */
 export function faces(single: boolean): PeopleFace[] {
   const words: Words = { label: site.about.label, lede: story.lede, para: story.paras[0] };
@@ -52,7 +53,7 @@ export function faces(single: boolean): PeopleFace[] {
     out.push({ kind: 'blank' }, { kind: 'logo' }, { kind: 'blank' });
     team.forEach((member, index) => {
       out.push(
-        { kind: 'member', member, index, label: memberLabel(index, team.length), portrait: true, folio: String(folio++) },
+        { kind: 'member', member, index, portrait: true, folio: String(folio++) },
         { kind: 'blank' },
       );
     });
@@ -61,16 +62,13 @@ export function faces(single: boolean): PeopleFace[] {
     team.forEach((member, index) => {
       out.push(
         { kind: 'portrait', index, folio: String(folio++) },
-        { kind: 'member', member, index, label: memberLabel(index, team.length), portrait: false, folio: String(folio++) },
+        { kind: 'member', member, index, portrait: false, folio: String(folio++) },
       );
     });
   }
   if (out.length % 2 === 1) out.push({ kind: 'blank' });
   return out;
 }
-
-/** «Teamet · 1 / 6» — the same words the band under the book shows. */
-export const memberLabel = (index: number, count: number) => `${site.people.teamLabel} · ${index + 1} / ${count}`;
 
 /** What the painter needs that is not content: the face, and the logo. */
 export type Assets = {
@@ -153,12 +151,9 @@ export function drawFace(face: PeopleFace, W: number, H: number, assets: Assets)
     return cv;
   }
 
-  // A member. The label at the top, then — one page at a time — the slot a landscape
-  // crop would fill, as the card had it on a phone; then the role, the name, the line.
+  // A member. One page at a time, the slot a landscape crop would fill, as the card had
+  // it on a phone; then the role, the name, the line.
   const m = face.member;
-  c.fillStyle = INK;
-  c.font = font(500, 21);
-  c.fillText(face.label, M, M + px(20));
   /*
    * The rhythm under the role's baseline: the two names, then the line. One page at a
    * time carries the slot as well, so it sets everything a step smaller and closer, or

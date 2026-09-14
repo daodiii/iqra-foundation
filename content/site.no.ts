@@ -192,7 +192,8 @@ export const site = {
       },
       how: {
         label: 'Slik jobber vi',
-        items: ['Stand i byen', 'Åpne kvelder i moskeen', 'Svar på e-post', 'Besøk der vi blir invitert'],
+        /** Four points, each the paragraph («just write [it] the [same] way in all 4 pointers», 2026-09-14). */
+        items: [paragraph, paragraph, paragraph, paragraph],
       },
       contact: {
         label: 'Kontakt',
