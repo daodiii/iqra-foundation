@@ -255,6 +255,17 @@ test('desktop: misjon does not pin, the copy arrives and the wordmark stays navy
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
   await expect(page.locator('.pin-spacer')).toHaveCount(1); // only the hero
   await boxIsPainted(page, 'misjon', film.mission.ground);
+
+  // The film is half the wall's height («half the size in height», 2026-09-14), at the
+  // top of its column, the ink open under it; it used to run the full height.
+  const wall = await page.evaluate(() => {
+    const grid = document.querySelector('#misjon [data-tile]')!.parentElement!.getBoundingClientRect();
+    const filmTile = document.querySelector('#misjon [data-tile="vid"]')!.getBoundingClientRect();
+    return { ratio: filmTile.height / grid.height, top: filmTile.top - grid.top };
+  });
+  expect(wall.ratio, 'the film is not half the wall').toBeGreaterThan(0.45);
+  expect(wall.ratio, 'the film is not half the wall').toBeLessThan(0.52);
+  expect(Math.abs(wall.top), 'the film does not sit at the top of its column').toBeLessThan(2);
 });
 
 /**
