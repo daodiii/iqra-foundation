@@ -21,8 +21,11 @@ test('the whole book exists as real text, not only on the canvas', () => {
   expect(q.getByRole('heading', { level: 1 })).toHaveTextContent(site.about.cover.title);
   for (const ch of site.about.chapters) {
     expect(q.getByRole('heading', { level: 2, name: new RegExp(ch.title) })).toBeInTheDocument();
-    for (const p of ch.paras) expect(q.getByText(p)).toBeInTheDocument();
+    for (const p of ch.paras) expect(q.getAllByText(p).length).toBeGreaterThan(0);
   }
+  // Every chapter's paragraphs, counted: the chapters share one stand-in paragraph today.
+  const paras = site.about.chapters.flatMap((ch) => ch.paras);
+  expect(q.getAllByText(paras[0]).length).toBeGreaterThanOrEqual(paras.filter((p) => p === paras[0]).length);
   expect(q.getByRole('heading', { level: 2, name: site.about.ask.title })).toBeInTheDocument();
   expect(q.getByRole('link', { name: site.hero.cta }))
     .toHaveAttribute('href', `mailto:${site.contact.email}`);

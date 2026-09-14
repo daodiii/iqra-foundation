@@ -28,6 +28,9 @@ const pinOf = (page: Page, id: string) => page.evaluate((sel) => {
   return spacer.getBoundingClientRect().height - section.getBoundingClientRect().height;
 }, id);
 
+/** The mission's last hand-set line, without its full stop: the stop is set in its own span. */
+const lastStanzaLine = site.mission.stanzas[site.mission.stanzas.length - 1].at(-1)!.replace(/\.$/, '');
+
 const docTop = (page: Page, sel: string) => page.evaluate((s) => {
   const el = document.querySelector(s)!;
   return el.getBoundingClientRect().top + window.scrollY;
@@ -237,7 +240,7 @@ test('desktop: misjon does not pin, the copy arrives and the wordmark stays navy
   const stanza = page.locator('#misjon p[data-rise]').nth(1);
   await expect(stanza).toHaveCSS('opacity', '1', { timeout: 5_000 });
   const mission = page.locator('[data-mission-text]');
-  await expect(mission).toContainText('bygger vi broer');
+  await expect(mission).toContainText(lastStanzaLine);
   // The frame closes, the label sits on its top line, and the button sits over the bottom
   // edge — its middle on the card's bottom line, the line running on beneath; no rule.
   await expect(mission).toHaveAttribute('data-frame-drawn', 'true', { timeout: 5_000 });
@@ -375,12 +378,11 @@ test('desktop: om oss · teamet is the book on the water, the rings turning its 
   // The words are the book's own chapters, so this is also the check that the landing page
   // and /om-oss cannot drift. Presence, not visibility: while the book runs the readable
   // copy is clipped out of sight and stays in the DOM, which is the whole point of it.
-  await expect(section.getByText(story.lede)).toHaveCount(1);
-  await expect(section.getByText(story.paras[0])).toHaveCount(1);
-  await expect(section.getByText(menneskene.paras[0])).toHaveCount(1);
-  // Held back on purpose: the link is only an offer if something was not said here.
-  await expect(section.getByText(story.paras[1])).toHaveCount(0);
-  await expect(section.getByText(story.paras[2])).toHaveCount(0);
+  // `exact`: the lede is the paragraph's first sentence, and a substring match would find it there too.
+  await expect(section.getByText(story.lede, { exact: true })).toHaveCount(1);
+  // Once: the chapters share one stand-in paragraph, and the count line that used to
+  // follow it would have been the same paragraph again.
+  await expect(section.getByText(story.paras[0], { exact: true })).toHaveCount(1);
   await expect(section.getByRole('link', { name: new RegExp(site.people.more) }))
     .toHaveAttribute('href', '/om-oss');
 
@@ -430,6 +432,47 @@ test('desktop: om oss · teamet is the book on the water, the rings turning its 
   await press(prev);
   await expect(where).toHaveText(teamLabel(n), { timeout: 5_000 });
   await expect(card).toHaveAttribute('data-index', String(n - 1));
+});
+
+/**
+ * The buttons on to the next section («after each section make a button like Vår visjon»,
+ * 2026-09-14): one under the hero's paragraph and one seated on each box's bottom line,
+ * and each press lands the page on the section it names — through the page's own scroll
+ * setter, so the normaliser and the tween agree about where the page is. Pressed through
+ * the DOM rather than the pointer: Playwright's click scrolls the button into view first,
+ * which is the very motion being tested. The last section has no button.
+ */
+test('every button on to the next section lands the page on it, in order', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the phone layout is stacked; the desktop run covers the buttons');
+  await pastHero(page);
+  const chain = ['visjon', 'misjon', 'arrangementer', 'om-oss-teamet', 'stott-oss'] as const;
+  // Start at the hero's end, where its button is.
+  const pin = await pinOf(page, 'hero');
+  await page.evaluate((y) => window.scrollTo(0, y), pin);
+  await page.waitForTimeout(600);
+  for (const id of chain) {
+    const button = page.locator(`[data-onward="${id}"]`);
+    await expect(button).toHaveCount(1);
+    await expect(button).toHaveText(site.next[id]);
+    await expect(button).toHaveAttribute('href', `#${id}`);
+    await button.evaluate((el: HTMLAnchorElement) => el.click());
+    await page.waitForTimeout(1400);
+    const [top, y] = await Promise.all([docTop(page, `#${id}`), page.evaluate(() => window.scrollY)]);
+    expect(Math.abs(y - top), `the page did not land on #${id}`).toBeLessThan(4);
+  }
+  await expect(page.locator('#stott-oss [data-onward]')).toHaveCount(0);
+  // And the seated ones stand on their box's bottom line: the button's middle on the edge.
+  for (const id of ['misjon', 'arrangementer', 'om-oss-teamet', 'stott-oss'] as const) {
+    const seat = await page.evaluate((target) => {
+      const a = document.querySelector(`[data-onward="${target}"]`)!;
+      const section = a.closest('section')!;
+      const box = section.querySelector('[class*="box"]')!.getBoundingClientRect();
+      const r = a.getBoundingClientRect();
+      return { mid: r.top + r.height / 2 - box.bottom, centre: r.left + r.width / 2 - (box.left + box.width / 2) };
+    }, id);
+    expect(Math.abs(seat.mid), `the button on to #${id} is not on its box's bottom line`).toBeLessThan(2);
+    expect(Math.abs(seat.centre), `the button on to #${id} is not centred`).toBeLessThan(2);
+  }
 });
 
 /**
@@ -533,7 +576,7 @@ test('phone: no pins after the hero; the tree grows and every section stays legi
   await page.waitForTimeout(800);
   await expect(wordmark(page)).toHaveAttribute('data-on-dark', 'false');
   await expect(page.locator('#misjon p[data-rise]').nth(1)).toHaveCSS('opacity', '1', { timeout: 8_000 });
-  await expect(page.locator('[data-mission-text]')).toContainText('bygger vi broer');
+  await expect(page.locator('[data-mission-text]')).toContainText(lastStanzaLine);
 
   const stop = await docTop(page, '#stott-oss');
   await page.evaluate((y) => window.scrollTo(0, y + 10), stop);

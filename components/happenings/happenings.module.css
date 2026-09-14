@@ -20,13 +20,6 @@
   margin-bottom: clamp(18px, 2.4vh, 30px);
 }
 
-.label {
-  margin: 0 0 12px;
-  font: 500 12px/1 var(--font-sans);
-  letter-spacing: 0.03em;
-  color: var(--color-ink-soft);
-}
-
 .line {
   margin: 0;
   font-size: clamp(24px, 2.3vw, 34px);
@@ -47,6 +40,8 @@
 .pool {
   position: relative;
   isolation: isolate;
+  /* The box's bottom edge is the pool's own, so the button on to the next section seats there. */
+  --onward-bottom: 0px;
 }
 
 .pool > .box {

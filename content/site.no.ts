@@ -1,21 +1,40 @@
 /**
- * Misjon is set as three stanzas with the line breaks chosen by hand, so each line is a
- * phrase rather than wherever the browser ran out of room. `text` is derived from them
- * rather than written twice: it is what a screen reader and the e2e see, and deriving it
- * means an edit to the stanzas cannot leave a second copy of the sentence behind.
+ * Misjon is set as stanzas with the line breaks chosen by hand, so each line is a phrase
+ * rather than wherever the browser ran out of room. `text` is derived from them rather than
+ * written twice: it is what a screen reader and the e2e see, and deriving it means an edit
+ * to the stanzas cannot leave a second copy of the sentence behind. The stanzas are THE
+ * PARAGRAPH (below), one sentence to a stanza, broken so no line runs past 24 characters —
+ * the phone's box is 360px and the type there is 19px.
  */
 const missionStanzas = [
-  ['Vi forteller om islam', 'på en vennlig og ærlig måte.'],
-  ['Vi inviterer til samtaler,', 'svarer på spørsmål,', 'og møter folk der de er.'],
-  ['Slik bygger vi broer,', 'og lærer av hverandre.'],
+  ['Iqra er det første ordet', 'i Koranen.'],
+  ['Det kan bety å lese,', 'lære eller resitere.'],
+  ['Vårt fundament', 'bygger nettopp på dette.'],
+  ['At alle lærer', 'hva islam faktisk er.'],
 ] as const;
 
 /**
- * The hero's words, hoisted so the four boxes below can carry them too: «Iqra betyr les»
- * is the h1, the lede the line under it.
+ * THE PARAGRAPH. The user's own words (2026-09-14), and the one piece of prose on the site:
+ * «take away all AI slop on the site … the paragraph I gave you, make that in every place
+ * where you would write stuff … it's just to see how text looks on the page.» So every slot
+ * that holds prose holds this, until real copy arrives — the hero's lede, the three values,
+ * Misjon's stanzas and tiles, the four boxes, the book's chapters, the contact lines. A slot
+ * that holds a headline or a lede holds its first sentence, so the paragraph never stands
+ * twice on one page. Names, labels, buttons, the question and the list are not prose and
+ * stay. Written once here and read everywhere, so the real text drops in in one place.
+ *
+ * `islam` in lower case, as the site has it everywhere (Bokmål); the user wrote it with a
+ * capital and can have it back with one edit here.
  */
-const heroLines = ['Iqra betyr', 'les'] as const;
-const heroLede = 'Det er det første ordet i Koranen. For oss betyr det å lese, å lære, og å snakke med folk som lurer på noe.';
+const paragraph = 'Iqra er det første ordet i Koranen. Det kan bety å lese, lære eller resitere. Vårt fundament bygger nettopp på dette. At alle lærer hva islam faktisk er.';
+/** Its first sentence: what a headline or a lede slot shows. */
+const firstLine = 'Iqra er det første ordet i Koranen.';
+/** The rest, for a tile that shows the first sentence as its headline and wants no repeat. */
+const restLines = 'Det kan bety å lese, lære eller resitere. Vårt fundament bygger nettopp på dette. At alle lærer hva islam faktisk er.';
+
+/** The hero's h1 after the scroll: the name, in two lines like the lockup (2026-09-14). */
+const heroLines = ['Iqra', 'Foundation'] as const;
+const heroLede = paragraph;
 
 /**
  * Arrangementer and Nyheter: four boxes, each a picture, a date and a paragraph.
@@ -50,7 +69,7 @@ const heroLede = 'Det er det første ordet i Koranen. For oss betyr det å lese,
  * arrive without the words that describe it — and so there is no empty `alt` sitting in the
  * content for the gate to trip over, which is exactly what it did when they were separate.
  */
-const iqraWords = `${heroLines.join(' ')}. ${heroLede}`;
+const iqraWords = paragraph;
 
 const eventItems = [
   {
@@ -94,13 +113,13 @@ export const site = {
   name: 'Iqra Foundation',
   meta: {
     title: 'Iqra Foundation',
-    description: 'Iqra betyr les. Vi snakker gjerne med deg om islam.',
+    description: paragraph,
     /** What a shared link shows. The poster is the film's first frame. */
     imageAlt: 'Fjell i dis, i lyset før soloppgang.',
   },
   /** The organisation number is `support.orgnr`: one gift, one number, one place. */
   footer: { place: 'Oslo' },
-  header: { wordmark: 'IQRA', homeLabel: 'Iqra Foundation, til toppen', navLabel: 'Hovedmeny' },
+  header: { wordmark: 'IQRA FOUNDATION', homeLabel: 'Iqra Foundation, til toppen', navLabel: 'Hovedmeny' },
   hero: {
     /**
      * The lockup the mask cuts out of the white. Two lines, because the name is the
@@ -113,32 +132,31 @@ export const site = {
     cta: 'Still et spørsmål',
     hint: 'Bla nedover',
   },
+  /**
+   * The button on to the next section, one per section, named for where it goes — «after
+   * each section make a button like Vår visjon» (2026-09-14). Keyed by the section's id,
+   * which is what the button links to. Støtt oss is last and has none.
+   */
+  next: {
+    visjon: 'Vår visjon',
+    misjon: 'Vår misjon',
+    arrangementer: 'Arrangementer og nyheter',
+    'om-oss-teamet': 'Om oss',
+    'stott-oss': 'Støtt oss',
+  },
   vision: {
     label: 'Visjon',
     /*
-     * The hand-set headline. Off the section since the arch (2026-09-11) and used by
-     * nothing; kept because whether it moves to Misjon is not decided, and deleting it
-     * would hide that there is a decision to make.
+     * The hand-set headline, shown on Misjon's Visjon tile (off Visjon itself since the
+     * arch, 2026-09-11): the paragraph's first sentence, and the rest under it.
      */
-    lines: ['Vi vil ha et Norge', 'der folk kjenner islam', 'fra ekte møter,', 'ikke fra overskrifter.'],
-    sub: 'Der det er lett å spørre, og lett å få et ærlig svar.',
+    lines: ['Iqra er det første ordet', 'i Koranen.'],
+    sub: restLines,
     /** The three values, in the order they stand around the tree: left, top, right. */
     values: [
-      {
-        key: 'dialog',
-        name: 'Dialog',
-        text: 'Vi liker å snakke med folk. Om islam, om tro, og om det som er vanskelig å spørre om. Du kan komme med det du lurer på, og vi svarer så ærlig vi kan. Vi lærer like mye av samtalen som du gjør.',
-      },
-      {
-        key: 'trygghet',
-        name: 'Trygghet',
-        text: 'Det skal være trygt å lure på ting. Ingen spørsmål er dumme, og ingen blir dømt for å stille dem. Det du sier holder vi for oss selv, og du bestemmer selv hvor langt samtalen skal gå.',
-      },
-      {
-        key: 'inkludering',
-        name: 'Inkludering',
-        text: 'Alle er velkomne hos oss. Du trenger ikke være muslim, og du trenger ikke kunne noe fra før. Vi møter folk der de er, med den bakgrunnen de har. Det er sånn vi selv vil bli møtt.',
-      },
+      { key: 'dialog', name: 'Dialog', text: paragraph },
+      { key: 'trygghet', name: 'Trygghet', text: paragraph },
+      { key: 'inkludering', name: 'Inkludering', text: paragraph },
     ],
     tree: {
       label: 'Et tre under en bue. Greinene er Dialog, Trygghet og Inkludering, og under røttene står Iqra Foundation.',
@@ -178,17 +196,20 @@ export const site = {
       },
       contact: {
         label: 'Kontakt',
-        line: 'Skriv til oss, så svarer et menneske. Vanligvis samme uka.',
+        line: paragraph,
       },
     },
   },
   /**
-   * The two lists are one row of boxes under one heading: what is coming and what was,
-   * side by side, which is why they share a heading instead of holding a column each.
+   * The two lists are one row of boxes under one heading, which is why they share a
+   * heading instead of holding a column each. `line` is the heading — the section's name,
+   * since 2026-09-14; the line it used to be («Det som kommer, og det som var.») went with
+   * the rest of the written copy — and `label` is what the section is called to a screen
+   * reader.
    */
   happenings: {
-    label: 'Arrangementer · Nyheter',
-    line: 'Det som kommer, og det som var.',
+    label: 'Arrangementer og nyheter',
+    line: 'Arrangementer og nyheter',
     /** What each box is, on the frame's line. */
     kinds: { event: 'Arrangement', news: 'Nyhet' },
     /** The label in an empty picture frame. Bracketed, like every other thing we lack. */
@@ -221,7 +242,7 @@ export const site = {
     /** Chapter II is «Menneskene» inside the book; on the landing page it is the team,
      *  and «Teamet · 1 / 6» is what the band under the book says on a member's page. */
     teamLabel: 'Teamet',
-    more: 'Les hele historien',
+    more: 'Les mer om oss',
     /** The two round arrows under the book: the small one turns back, the large one on. */
     prev: 'Forrige',
     next: 'Neste',
@@ -231,30 +252,26 @@ export const site = {
     label: 'Om oss',
     meta: {
       title: 'Om oss — Iqra Foundation',
-      description: 'Fire kapitler om hvem vi er, hvorfor vi begynte, og hva vi holder på med.',
+      description: paragraph,
     },
     hint: 'Bla for å bla om',
     cover: {
       title: 'Om oss',
-      sub: 'Fire kapitler om hvem vi er, hvorfor vi begynte, og hva vi holder på med.',
+      sub: paragraph,
     },
     openerLabel: 'Kapittel',
     chapters: [
       {
         num: 'I',
         title: 'Historien',
-        lede: 'Det begynte rundt et kjøkkenbord, med en samtale som ikke ville ta slutt.',
-        paras: [
-          'Vi startet i 2019, i Oslo. Noen få folk som var lei av at islam bare dukket opp i nyhetene når noe var galt.',
-          'Navnet kommer fra det første ordet som ble åpenbart i Koranen. Iqra. Les.',
-          'Vi ville lage et sted der folk kunne spørre om hva som helst, og få et ærlig svar.',
-        ],
+        lede: firstLine,
+        paras: [paragraph],
       },
       {
         num: 'II',
         title: 'Menneskene',
-        lede: 'Ingen av oss gjør dette på heltid. Vi gjør det fordi vi liker samtalene.',
-        paras: ['Rundt tjue stykker. Studenter, lærere, en snekker, to sykepleiere.'],
+        lede: firstLine,
+        paras: [paragraph],
         /*
          * Every slot is still a bracket: no name, no face, no sentence about anyone has been
          * invented. The landing page sets these as one card per person, which is why the name
@@ -272,11 +289,8 @@ export const site = {
       {
         num: 'III',
         title: 'Arbeidet',
-        lede: 'Vi møter folk der de er. Som regel betyr det på gata, eller over en kopp te.',
-        paras: [
-          'Vi står på stand i byen. Vi holder åpne kvelder i moskeen.',
-          'Vi svarer på e-post, og vi drar dit vi blir invitert.',
-        ],
+        lede: firstLine,
+        paras: [paragraph],
         figures: [
           { value: '[N]', label: 'samtaler i året' },
           { value: '[N]', label: 'åpne kvelder' },
@@ -285,11 +299,11 @@ export const site = {
     ],
     ask: {
       title: 'Har du et spørsmål?',
-      lede: 'Vi svarer på alt. Også det du tror er dumt.',
+      lede: paragraph,
     },
     contact: {
       label: 'Kontakt',
-      para: 'Skriv til oss, så svarer et menneske. Vanligvis samme uka.',
+      para: paragraph,
       place: 'Iqra Foundation, Oslo',
     },
   },

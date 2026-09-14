@@ -16,7 +16,7 @@ import { site } from '@/content/site.no';
 
 const [story, menneskene] = site.about.chapters;
 
-export type Words = { label: string; lede: string; para: string; count: string };
+export type Words = { label: string; lede: string; para: string };
 
 export type PeopleFace =
   /** The film's end card: the logo on pure white. The left page of the first spread. */
@@ -42,9 +42,7 @@ export const indexAt = (p: number) => Math.max(-1, Math.round(p) - 2);
  * words are at 1 and member k at k + 2, so the rings and the label need not know which.
  */
 export function faces(single: boolean): PeopleFace[] {
-  const words: Words = {
-    label: site.about.label, lede: story.lede, para: story.paras[0], count: menneskene.paras[0],
-  };
+  const words: Words = { label: site.about.label, lede: story.lede, para: story.paras[0] };
   const team = menneskene.team;
   // The front of leaf 0: never seen, since the book is never closed.
   const out: PeopleFace[] = [{ kind: 'blank' }];
@@ -140,13 +138,10 @@ export function drawFace(face: PeopleFace, W: number, H: number, assets: Assets)
     c.fillText(w.label, M, M + px(20));
     c.fillStyle = NAVY;
     c.font = font(600, 58);
-    let y = wrap(c, w.lede, M, Math.round(H * 0.3), W - M * 2, px(64)) + px(26);
+    const y = wrap(c, w.lede, M, Math.round(H * 0.3), W - M * 2, px(64)) + px(26);
     c.fillStyle = INK;
     c.font = font(400, 30);
-    y = wrap(c, w.para, M, y, W - M * 2, px(44)) + px(30);
-    c.fillStyle = NAVY;
-    c.font = font(500, 34);
-    wrap(c, w.count, M, y, W - M * 2, px(46));
+    wrap(c, w.para, M, y, W - M * 2, px(44));
     folio(face.folio);
     return cv;
   }

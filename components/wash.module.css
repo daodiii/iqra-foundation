@@ -282,6 +282,40 @@
 }
 
 /*
+ * The button on to the next section (`components/Onward.tsx`): Misjon's crimson pill, and
+ * when seated, standing on the section's box's bottom line, centred — half above the line,
+ * half below, the way that button stands on its tile. `--onward-bottom` is where the box's
+ * bottom edge is, measured from the positioned ancestor: the box's own inset by default,
+ * and a section whose box sits elsewhere sets it.
+ */
+.onward {
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 999px;
+  background: var(--color-crimson);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 160ms var(--ease-out-expo);
+}
+
+.onward:hover {
+  background: #96475a;
+}
+
+.seated {
+  position: absolute;
+  left: 50%;
+  bottom: var(--onward-bottom, var(--box-inset-y));
+  transform: translate(-50%, 50%);
+  z-index: 2;
+}
+
+/*
  * A device without backdrop-filter gets an opaque inside rather than a transparent one. The
  * failure being avoided is navy type sitting straight on a moving simulation.
  */

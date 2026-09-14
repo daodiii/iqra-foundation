@@ -24,10 +24,20 @@ const EVENTS = [
 
 const both = () => render(<Happenings events={{ ...site.events, items: EVENTS }} news={{ ...site.news, items: NEWS }} />);
 
-test('the section carries one heading for both lists, not one each', () => {
+test('the section carries one heading for both lists, not one each, and nothing above it', () => {
   const section = mount();
   expect(within(section).getByRole('heading', { level: 2 })).toHaveTextContent(site.happenings.line);
   expect(within(section).getAllByRole('heading', { level: 2 })).toHaveLength(1);
+  // The heading is the section's name now; the small label that stood over the old line is gone.
+  expect(section.querySelector('h2')!.previousElementSibling).toBeNull();
+});
+
+/** The button on to Om oss, seated on the water's bottom line. */
+test('the section ends with the button on to Om oss', () => {
+  const section = mount();
+  const link = section.querySelector('a[href="#om-oss-teamet"]') as HTMLElement;
+  expect(link).not.toBeNull();
+  expect(link).toHaveTextContent(site.next['om-oss-teamet']);
 });
 
 /**
@@ -143,7 +153,7 @@ test('the content file holds four filled boxes with the hero’s words, four dat
   expect(new Set(items.map((i) => i.date)).size).toBe(4);
   for (const item of items) {
     expect(item.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(item.note).toBe(`${site.hero.h1Lines.join(' ')}. ${site.hero.lede}`);
+    expect(item.note).toBe(site.hero.lede);
     expect(item.image).not.toBeNull();
     expect(item.image!.src).toMatch(/^\/media\/midlertidig-/);
     expect(item.image!.alt).toMatch(/^\[Midlertidig bilde\] /);
@@ -154,7 +164,9 @@ test('the content file holds four filled boxes with the hero’s words, four dat
  *  the one thing on the page that would answer a click by doing nothing. */
 test('no «alle» link is rendered while the content file has no route for it', () => {
   const section = mount();
-  expect(within(section).queryByRole('link')).toBeNull();
+  // The one link is the button on to the next section.
+  expect(within(section).getAllByRole('link')).toHaveLength(1);
+  expect(within(section).queryByRole('link', { name: new RegExp(site.events.more) })).toBeNull();
 });
 
 test('an «alle» link is rendered as soon as the content file has a route', () => {

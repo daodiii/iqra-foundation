@@ -33,8 +33,9 @@ test('the first spread is the logo facing the words, and nothing stands before i
   expect(left(f, 1)).toMatchObject({ kind: 'logo' });
   expect(right(f, 1)).toMatchObject({
     kind: 'story',
-    words: { label: site.about.label, lede: story.lede, para: story.paras[0], count: menneskene.paras[0] },
+    words: { label: site.about.label, lede: story.lede, para: story.paras[0] },
   });
+  expect((right(f, 1) as { words: object }).words).not.toHaveProperty('count');
 });
 
 /** Every member is a spread of their own: the portrait slot left, the words right. */

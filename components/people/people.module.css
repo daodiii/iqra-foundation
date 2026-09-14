@@ -11,8 +11,10 @@
   background: transparent;
   /* One screen: the box is the screen and the book lies in it. */
   min-height: 100svh;
-  /* The band under the book, on a desktop; the book canvas fills the rest of the box. */
-  --band: 104px;
+  /* The band under the book, on a desktop; the book canvas fills the rest of the box.
+     132, not 104, since the button on to Støtt oss took the box's bottom line (2026-09-14)
+     and the band moved up off it. */
+  --band: 132px;
 }
 
 /* The stage is the box's own rectangle, so the book and the band sit inside the water's edge. */
@@ -20,6 +22,8 @@
   position: absolute;
   inset: var(--box-inset-y) var(--box-inset-x);
   z-index: 1;
+  /* The box's bottom edge is the stage's own, so the button on to the next section seats there. */
+  --onward-bottom: 0px;
 }
 
 .book {
@@ -30,12 +34,13 @@
   display: block;
 }
 
-/* The band: the offer at the left, where you are in the middle, the rings at the right. */
+/* The band: the offer at the left, where you are in the middle, the rings at the right.
+   56px up from the box's bottom line, where the button on to the next section stands. */
 .controls {
   position: absolute;
   left: clamp(32px, 4vw, 56px);
   right: clamp(32px, 4vw, 56px);
-  bottom: 28px;
+  bottom: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -155,7 +160,8 @@
 /*
  * The readable layout: no book. The stage flows instead of filling the box — the words,
  * the member card, then the band, which steps the card. Stepped in from the box's edge by
- * what the copy has always sat inside it.
+ * what the copy has always sat inside it; 52px at the foot, where the button on to Støtt
+ * oss stands on the box's bottom line with half of itself above it.
  */
 .people[data-book='off'] .book {
   display: none;
@@ -164,7 +170,7 @@
 .people[data-book='off'] .stage {
   position: relative;
   inset: auto;
-  padding: calc(var(--box-inset-y) + 88px) calc(var(--box-inset-x) + 16px) calc(var(--box-inset-y) + 24px);
+  padding: calc(var(--box-inset-y) + 88px) calc(var(--box-inset-x) + 16px) calc(var(--box-inset-y) + 52px);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -227,15 +233,6 @@
   line-height: 1.55;
   max-width: 460px;
   color: var(--color-ink-soft);
-}
-
-/* «Rundt tjue stykker. Studenter, lærere, en snekker, to sykepleiere.» — the sentence the
-   whole ask below rests on, so it is set a step above the paragraph around it. */
-.count {
-  margin: 0;
-  font-size: clamp(17px, 1.4vw, 21px);
-  line-height: 1.45;
-  color: var(--color-navy);
 }
 
 /*
@@ -337,7 +334,7 @@
   .people[data-book='on'] .stage {
     position: relative;
     inset: auto;
-    padding: calc(var(--box-inset-y) + 88px) calc(var(--box-inset-x) + 16px) calc(var(--box-inset-y) + 24px);
+    padding: calc(var(--box-inset-y) + 88px) calc(var(--box-inset-x) + 16px) calc(var(--box-inset-y) + 52px);
     display: flex;
     flex-direction: column;
     gap: 14px;

@@ -293,12 +293,15 @@
       'kon kon';
   }
 
-  .words {
-    padding: 34px 22px 50px;
-  }
-
   .text {
     padding: 26px 18px 18px;
+  }
+
+  /* After `.text`, which it also is: the mission tile keeps 50px at its foot for the button
+     seated on its bottom line — before the order was the other way and the button stood on
+     the last stanza line. */
+  .words {
+    padding: 34px 22px 50px;
   }
 
   .stanza {

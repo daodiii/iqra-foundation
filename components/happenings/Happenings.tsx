@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useRef } from 'react';
+import { Onward } from '@/components/Onward';
 import wash from '@/components/wash.module.css';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
@@ -168,7 +169,6 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
   return (
     <section ref={root} id="arrangementer" className={styles.happenings} aria-label={happenings.label}>
       <div className={styles.head} data-rise>
-        <p className={styles.label}>{happenings.label}</p>
         <h2 className={styles.line}>{happenings.line}</h2>
       </div>
 
@@ -207,6 +207,8 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
             {news.href && <a className={styles.more} href={news.href}>{news.more} →</a>}
           </p>
         )}
+        {/* On the water's bottom line, which is the pool's, not the section's. */}
+        <Onward to="om-oss-teamet" />
       </div>
     </section>
   );

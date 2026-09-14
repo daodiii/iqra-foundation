@@ -71,10 +71,6 @@
   display: block;
 }
 
-.dot {
-  color: var(--color-crimson);
-}
-
 .lede {
   margin: 0;
   font-size: 21px;

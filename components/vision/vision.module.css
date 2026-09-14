@@ -217,7 +217,9 @@
     --box-inset-y: 14px;
     height: auto;
     min-height: 0;
-    padding: 14px 10px 26px;
+    /* 52px at the foot, not 26: the button on to Misjon stands on the box's bottom line,
+       half above it, and the last card has to stop short of it. */
+    padding: 14px 10px 52px;
   }
 
   .figure {

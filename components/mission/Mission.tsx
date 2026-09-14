@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import wash from '@/components/wash.module.css';
+import { Onward } from '@/components/Onward';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
@@ -206,8 +207,8 @@ export function Mission() {
             <p className={styles.capLine}>{wall.film.line}</p>
           </div>
         </div>
-
       </div>
+      <Onward to="arrangementer" />
     </section>
   );
 }
