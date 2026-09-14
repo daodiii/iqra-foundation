@@ -37,12 +37,19 @@ test('a click is taken over when the section is on the page, and left alone when
   target.remove();
 });
 
-/** A seated button sits on its box's bottom line; the hero's stands in the copy instead. */
-test('seated by default, in the flow when asked, and the caller can add a class', () => {
+/**
+ * Between two sections the button stands in a band of its own, centred on the page's
+ * white; the hero's stands bare in its copy, with the hero's own class.
+ */
+test('in a band by default, bare when asked, and the caller can add a class', () => {
   const { container, rerender } = render(<Onward to="misjon" />);
-  expect((container.firstChild as HTMLElement).className).toMatch(/seated/);
-  rerender(<Onward to="misjon" seated={false} className="hero-pill" />);
+  const band = container.firstChild as HTMLElement;
+  expect(band.tagName).toBe('P');
+  expect(band.className).toMatch(/onwardBand/);
+  expect(band.querySelector('a')?.className).toMatch(/onward/);
+  rerender(<Onward to="misjon" band={false} className="hero-pill" />);
   const a = container.firstChild as HTMLElement;
-  expect(a.className).not.toMatch(/seated/);
+  expect(a.tagName).toBe('A');
+  expect(a.className).not.toMatch(/onwardBand/);
   expect(a.className).toMatch(/hero-pill/);
 });

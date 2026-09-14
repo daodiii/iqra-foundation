@@ -40,8 +40,6 @@
 .pool {
   position: relative;
   isolation: isolate;
-  /* The box's bottom edge is the pool's own, so the button on to the next section seats there. */
-  --onward-bottom: 0px;
 }
 
 .pool > .box {

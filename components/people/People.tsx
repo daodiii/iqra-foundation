@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { type BookHandle, createBook, pagePixels } from '@/components/about/book';
-import { Onward } from '@/components/Onward';
 import wash from '@/components/wash.module.css';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
@@ -347,9 +346,6 @@ export function People() {
             </div>
           </div>
         </div>
-
-        {/* On the water's bottom line, under the band: on to Støtt oss. */}
-        <Onward to="stott-oss" />
 
         {/* Under the book, inside the box: the offer, where you are, and the two rings. */}
         <div className={styles.controls} data-controls>

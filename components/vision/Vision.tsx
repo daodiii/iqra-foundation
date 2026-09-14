@@ -2,7 +2,6 @@
 
 import { useRef } from 'react';
 import wash from '@/components/wash.module.css';
-import { Onward } from '@/components/Onward';
 import { site } from '@/content/site.no';
 import { film } from '@/lib/film';
 import { EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
@@ -282,7 +281,6 @@ export function Vision() {
           </div>
         ))}
       </div>
-      <Onward to="misjon" />
     </section>
   );
 }

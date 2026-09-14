@@ -29,14 +29,6 @@ test('the words are the first chapter’s lede and paragraph, once', () => {
   expect(words.querySelectorAll('p')).toHaveLength(3); // the legend, the lede, the paragraph
 });
 
-/** The button on to Støtt oss, seated on the water's bottom line under the band. */
-test('the section ends with the button on to Støtt oss', () => {
-  const section = mount();
-  const link = section.querySelector('a[href="#stott-oss"]') as HTMLElement;
-  expect(link).not.toBeNull();
-  expect(link).toHaveTextContent(site.next['stott-oss']);
-});
-
 test('the link to the chapter is in the band under the book, once', () => {
   const section = mount();
   const links = within(section).getAllByRole('link', { name: new RegExp(site.people.more) });

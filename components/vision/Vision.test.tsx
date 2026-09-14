@@ -51,11 +51,3 @@ test('each card carries a frame canvas, its name as the legend, and its paragrap
     expect(card.querySelector('p[data-words]')).not.toBeNull();
   }
 });
-
-/** The button on to Misjon, seated on the box's bottom line. */
-test('the section ends with the button on to Misjon', () => {
-  const { container } = render(<Vision />);
-  const link = container.querySelector('#visjon a[href="#misjon"]') as HTMLElement;
-  expect(link).not.toBeNull();
-  expect(link).toHaveTextContent(site.next.misjon);
-});

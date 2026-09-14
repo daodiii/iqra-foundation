@@ -32,14 +32,6 @@ test('the section carries one heading for both lists, not one each, and nothing 
   expect(section.querySelector('h2')!.previousElementSibling).toBeNull();
 });
 
-/** The button on to Om oss, seated on the water's bottom line. */
-test('the section ends with the button on to Om oss', () => {
-  const section = mount();
-  const link = section.querySelector('a[href="#om-oss-teamet"]') as HTMLElement;
-  expect(link).not.toBeNull();
-  expect(link).toHaveTextContent(site.next['om-oss-teamet']);
-});
-
 /**
  * The row is the boxes and nothing else: the events in the order they are listed, then
  * the news. There is no «i dag» standing between them and no date to sort them by — the
@@ -164,9 +156,7 @@ test('the content file holds four filled boxes with the hero’s words, four dat
  *  the one thing on the page that would answer a click by doing nothing. */
 test('no «alle» link is rendered while the content file has no route for it', () => {
   const section = mount();
-  // The one link is the button on to the next section.
-  expect(within(section).getAllByRole('link')).toHaveLength(1);
-  expect(within(section).queryByRole('link', { name: new RegExp(site.events.more) })).toBeNull();
+  expect(within(section).queryByRole('link')).toBeNull();
 });
 
 test('an «alle» link is rendered as soon as the content file has a route', () => {

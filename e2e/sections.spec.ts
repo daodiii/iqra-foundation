@@ -461,17 +461,27 @@ test('every button on to the next section lands the page on it, in order', async
     expect(Math.abs(y - top), `the page did not land on #${id}`).toBeLessThan(4);
   }
   await expect(page.locator('#stott-oss [data-onward]')).toHaveCount(0);
-  // And the seated ones stand on their box's bottom line: the button's middle on the edge.
-  for (const id of ['misjon', 'arrangementer', 'om-oss-teamet', 'stott-oss'] as const) {
-    const seat = await page.evaluate((target) => {
+  // And the four between the sections stand on the page's white — under the box above,
+  // above the box below, centred, and inside neither section («take the buttons under
+  // their sections», 2026-09-14).
+  const before = { misjon: 'visjon', arrangementer: 'misjon', 'om-oss-teamet': 'arrangementer', 'stott-oss': 'om-oss-teamet' } as const;
+  for (const [id, prev] of Object.entries(before)) {
+    const place = await page.evaluate(([target, above]) => {
       const a = document.querySelector(`[data-onward="${target}"]`)!;
-      const section = a.closest('section')!;
-      const box = section.querySelector('[class*="box"]')!.getBoundingClientRect();
       const r = a.getBoundingClientRect();
-      return { mid: r.top + r.height / 2 - box.bottom, centre: r.left + r.width / 2 - (box.left + box.width / 2) };
-    }, id);
-    expect(Math.abs(seat.mid), `the button on to #${id} is not on its box's bottom line`).toBeLessThan(2);
-    expect(Math.abs(seat.centre), `the button on to #${id} is not centred`).toBeLessThan(2);
+      const boxOf = (s: string) => document.querySelector(`#${s} [class*="box"]`)!.getBoundingClientRect();
+      const up = boxOf(above), down = boxOf(target);
+      return {
+        inSection: a.closest('section') !== null,
+        underAbove: r.top - up.bottom,
+        aboveBelow: down.top - r.bottom,
+        centre: r.left + r.width / 2 - window.innerWidth / 2,
+      };
+    }, [id, prev]);
+    expect(place.inSection, `the button on to #${id} is inside a section`).toBe(false);
+    expect(place.underAbove, `the button on to #${id} is not under the box above it`).toBeGreaterThan(8);
+    expect(place.aboveBelow, `the button on to #${id} is not above the box below it`).toBeGreaterThan(8);
+    expect(Math.abs(place.centre), `the button on to #${id} is not centred`).toBeLessThan(2);
   }
 });
 

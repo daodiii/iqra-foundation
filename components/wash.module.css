@@ -282,11 +282,10 @@
 }
 
 /*
- * The button on to the next section (`components/Onward.tsx`): Misjon's crimson pill, and
- * when seated, standing on the section's box's bottom line, centred — half above the line,
- * half below, the way that button stands on its tile. `--onward-bottom` is where the box's
- * bottom edge is, measured from the positioned ancestor: the box's own inset by default,
- * and a section whose box sits elsewhere sets it.
+ * The button on to the next section (`components/Onward.tsx`): Misjon's crimson pill, in a
+ * band of its own between two sections — centred on the page's white, between the box
+ * above and the box below, each keeping its own inset from it. The band adds no height of
+ * its own beyond the button: the insets are the air.
  */
 .onward {
   display: inline-flex;
@@ -307,12 +306,11 @@
   background: #96475a;
 }
 
-.seated {
-  position: absolute;
-  left: 50%;
-  bottom: var(--onward-bottom, var(--box-inset-y));
-  transform: translate(-50%, 50%);
-  z-index: 2;
+.onwardBand {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
 }
 
 /*

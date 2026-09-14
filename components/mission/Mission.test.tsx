@@ -163,12 +163,3 @@ test('the label is the legend, the button sits in a seat, and there is no rule',
   const link = within(card).getByRole('link', { name: site.hero.cta });
   expect(link.parentElement).toHaveAttribute('data-seat');
 });
-
-/** The button on to the row, seated on the box's bottom line; the mailto stays on the mission tile. */
-test('the section ends with the button on to Arrangementer og nyheter', () => {
-  const { container } = render(<Mission />);
-  const link = container.querySelector('#misjon a[href="#arrangementer"]') as HTMLElement;
-  expect(link).not.toBeNull();
-  expect(link).toHaveTextContent(site.next.arrangementer);
-  expect(container.querySelector('#misjon a[href^="mailto:"]')).not.toBeNull();
-});

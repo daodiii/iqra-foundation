@@ -316,7 +316,7 @@ export function Hero() {
         </h1>
         <p className={styles.lede}>{site.hero.lede}</p>
         {/* On to Visjon. The mailto that stood here lives on Misjon's tile and on /om-oss. */}
-        <Onward to="visjon" seated={false} className={styles.cta} />
+        <Onward to="visjon" band={false} className={styles.cta} />
       </div>
     </section>
   );
