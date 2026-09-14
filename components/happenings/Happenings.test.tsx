@@ -13,13 +13,13 @@ const boxes = (section: HTMLElement) =>
   Array.from(section.querySelectorAll('li')).map((li) => li.textContent ?? '');
 
 const NEWS = [
-  { note: 'Første etasje fra august.', image: null },
-  { note: 'Den svarer på det folk spør om.', image: null },
+  { date: '2026-09-06', note: 'Første etasje fra august.', image: null },
+  { date: '2026-08-30', note: 'Den svarer på det folk spør om.', image: null },
 ];
 
 const EVENTS = [
-  { note: 'Kom med spørsmål.', image: null },
-  { note: 'En time om det grunnleggende.', image: null },
+  { date: '2026-09-24', note: 'Kom med spørsmål.', image: null },
+  { date: '2026-10-08', note: 'En time om det grunnleggende.', image: null },
 ];
 
 const both = () => render(<Happenings events={{ ...site.events, items: EVENTS }} news={{ ...site.news, items: NEWS }} />);
@@ -50,21 +50,39 @@ test('the row is the boxes in the order they are listed, the events then the new
 });
 
 /**
- * A box is the picture over one sentence: the kind as the legend on the frame's line,
- * the picture, the sentence, and nothing else — no title, no date, no line under it.
+ * A box is the picture, the date and the words: the kind as the legend on the frame's
+ * line, the picture on top, the date written out under it, the paragraph, and nothing
+ * else — no title, no line under it. The date is one thing to type, ISO, and is read
+ * back as a Norwegian date.
  */
-test('a box is its kind, the picture, and one sentence', () => {
-  const item = { note: 'Kom med spørsmål.', image: { src: '/media/kveld.jpg', alt: 'Folk rundt et bord' } };
+test('a box is its kind, the picture, the date written out, and the words', () => {
+  const item = { date: '2026-09-24', note: 'Kom med spørsmål.', image: { src: '/media/kveld.jpg', alt: 'Folk rundt et bord' } };
   const { container } = render(
     <Happenings events={{ ...site.events, items: [item] }} news={{ ...site.news, items: [] }} />,
   );
   const section = container.querySelector('#arrangementer') as HTMLElement;
   const card = section.querySelector('article') as HTMLElement;
-  expect(card.textContent).toBe(`${site.happenings.kinds.event}${item.note}`);
+  expect(card.textContent).toBe(`${site.happenings.kinds.event}24. september 2026${item.note}`);
   const picture = within(card).getByAltText(item.image.alt);
-  const sentence = within(card).getByText(item.note);
-  // The picture is on top: it comes first in the box, and the sentence sits under it.
-  expect(picture.compareDocumentPosition(sentence) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  const date = within(card).getByText('24. september 2026');
+  const words = within(card).getByText(item.note);
+  // The picture is on top, the date under it, the words under that.
+  expect(picture.compareDocumentPosition(date) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(date.compareDocumentPosition(words) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
+/** «8. oktober 2026», not «08. Okt»: a day without its zero, the month in full and in lower case. */
+test('the date is read off the ISO date as a plain Norwegian one', () => {
+  const items = [
+    { date: '2026-10-08', note: 'a', image: null },
+    { date: '2027-01-01', note: 'b', image: null },
+    { date: '2026-12-31', note: 'c', image: null },
+  ];
+  const { container } = render(<Happenings events={{ ...site.events, items }} news={{ ...site.news, items: [] }} />);
+  const section = container.querySelector('#arrangementer') as HTMLElement;
+  expect(within(section).getByText('8. oktober 2026')).toBeInTheDocument();
+  expect(within(section).getByText('1. januar 2027')).toBeInTheDocument();
+  expect(within(section).getByText('31. desember 2026')).toBeInTheDocument();
 });
 
 test('every box says which list it came from', () => {
@@ -113,16 +131,19 @@ test('a box with a photograph shows it, with the alt text from the content file'
 
 /**
  * The four boxes in the content file are filled, so the section can be seen with something
- * in it («fill them with some stock pictures and just a random sentence», 2026-09-14): the
- * sentences are the site's own lines, so nothing on the page is invented, and the pictures
- * are stand-ins whose alt carries a bracket, so `check-content` reports them with
- * everything else the site still lacks.
+ * in it («fill them with some stock pictures … different dates on all of them so I get the
+ * complete look», 2026-09-14): the words are the site's own — the hero's, «Iqra betyr les»
+ * — in every box, so nothing on the page is invented; every box has a date of its own; and
+ * the pictures are stand-ins whose alt carries a bracket, so `check-content` reports them
+ * with everything else the site still lacks.
  */
-test('the content file holds four filled boxes, the pictures marked as stand-ins', () => {
+test('the content file holds four filled boxes with the hero’s words, four dates, the pictures marked as stand-ins', () => {
   const items = [...site.events.items, ...site.news.items];
   expect(items).toHaveLength(4);
+  expect(new Set(items.map((i) => i.date)).size).toBe(4);
   for (const item of items) {
-    expect(item.note).not.toMatch(/\[[^\]]+\]/);
+    expect(item.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(item.note).toBe(`${site.hero.h1Lines.join(' ')}. ${site.hero.lede}`);
     expect(item.image).not.toBeNull();
     expect(item.image!.src).toMatch(/^\/media\/midlertidig-/);
     expect(item.image!.alt).toMatch(/^\[Midlertidig bilde\] /);

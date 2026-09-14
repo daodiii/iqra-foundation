@@ -11,7 +11,14 @@ const missionStanzas = [
 ] as const;
 
 /**
- * Arrangementer and Nyheter: four boxes, each a picture and one sentence.
+ * The hero's words, hoisted so the four boxes below can carry them too: «Iqra betyr les»
+ * is the h1, the lede the line under it.
+ */
+const heroLines = ['Iqra betyr', 'les'] as const;
+const heroLede = 'Det er det første ordet i Koranen. For oss betyr det å lese, å lære, og å snakke med folk som lurer på noe.';
+
+/**
+ * Arrangementer and Nyheter: four boxes, each a picture, a date and a paragraph.
  *
  * They have no content yet, and until 2026-09-14 every row here was a bracketed
  * placeholder — a title, a date, a line — because an invented event is the one kind of
@@ -21,42 +28,52 @@ const missionStanzas = [
  * production build, plausible sentences are not.
  *
  * Then: «take away today … let it just be four boxes, and fill them with some stock
- * pictures and just a random sentence, just so you could see how it looks.» So the boxes
- * are filled, and the way Misjon's wall is filled: the sentences are the site's own lines
- * (Om oss chapter III, the contact line), which are true of the foundation and invent
- * nothing, so the gate has nothing to refuse and nothing false is on the page meanwhile.
- * The pictures are stock stand-ins, and a stand-in photograph is exactly the placeholder a
- * visitor cannot tell from the real thing — which is why each alt carries `[Midlertidig
- * bilde]`: the gate reports it with everything else the site still lacks. Replace the file
- * and the alt together.
+ * pictures … write the iqra-is-the-first-word-in-the-Quran paragraph in all four, and
+ * different dates on all of them so I get the complete look.» So the boxes are filled,
+ * and the way Misjon's wall is filled: the words are the site's own — the hero's, in every
+ * box — which are true of the foundation and invent nothing, so the gate has nothing to
+ * refuse and nothing false is on the page meanwhile. The DATES are invented, four of them
+ * round the day this was asked, and they are the one thing here a visitor could take for
+ * real; they are for the look, and go the day there is a real one to type. The pictures
+ * are stock stand-ins, and a stand-in photograph is exactly the placeholder a visitor
+ * cannot tell from the real thing — which is why each alt carries `[Midlertidig bilde]`:
+ * the gate reports it with everything else the site still lacks. Replace the file and the
+ * alt together.
  *
- * The two lists are shown as one row, the events first and then the news, in this order.
- * There is no date on a box and no «i dag» between them any more; the timeline they used
- * to stand on went with the brackets. The section disappears entirely when both arrays
- * are emptied, so deleting these is also a way to ship.
+ * The two lists are shown as one row, the events first and then the news, in this order —
+ * nothing sorts, and there is no «i dag» between them any more. `date` is ISO
+ * `YYYY-MM-DD`, one thing to type; the box writes it out as «24. september 2026». The
+ * section disappears entirely when both arrays are emptied, so deleting these is also a
+ * way to ship.
  *
  * `image` is `{ src, alt }` or null. One field rather than two, so a photograph cannot
  * arrive without the words that describe it — and so there is no empty `alt` sitting in the
  * content for the gate to trip over, which is exactly what it did when they were separate.
  */
+const iqraWords = `${heroLines.join(' ')}. ${heroLede}`;
+
 const eventItems = [
   {
-    note: 'Vi står på stand i byen.',
+    date: '2026-09-24',
+    note: iqraWords,
     image: { src: '/media/midlertidig-gata.jpg', alt: '[Midlertidig bilde] En mann går over en gate, sett ovenfra.' },
   },
   {
-    note: 'Vi holder åpne kvelder i moskeen.',
+    date: '2026-10-08',
+    note: iqraWords,
     image: { src: '/media/midlertidig-kafe.jpg', alt: '[Midlertidig bilde] To kopper på et langbord i en kafé.' },
   },
 ] as const;
 
 const newsItems = [
   {
-    note: 'Vi svarer på e-post, og vi drar dit vi blir invitert.',
+    date: '2026-09-06',
+    note: iqraWords,
     image: { src: '/media/midlertidig-notatbok.jpg', alt: '[Midlertidig bilde] En hånd skriver i en notatbok ved siden av en laptop.' },
   },
   {
-    note: 'Skriv til oss, så svarer et menneske.',
+    date: '2026-08-30',
+    note: iqraWords,
     image: { src: '/media/midlertidig-bok.jpg', alt: '[Midlertidig bilde] En åpen bok på et bord.' },
   },
 ] as const;
@@ -91,8 +108,8 @@ export const site = {
      * width. The sizes live in Hero.tsx, because they are drawing, not copy.
      */
     wordLines: ['IQRA', 'FOUNDATION'],
-    h1Lines: ['Iqra betyr', 'les'],
-    lede: 'Det er det første ordet i Koranen. For oss betyr det å lese, å lære, og å snakke med folk som lurer på noe.',
+    h1Lines: heroLines,
+    lede: heroLede,
     cta: 'Still et spørsmål',
     hint: 'Bla nedover',
   },
@@ -178,6 +195,8 @@ export const site = {
     imageLabel: '[Bilde]',
     /** Read on the phone by a screen reader, which cannot see that the row runs sideways. */
     railLabel: 'Arrangementer og nyheter. Bla sidelengs.',
+    /** The months, in full and in order — a box writes its date as «24. september 2026». */
+    months: ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'],
   },
   events: {
     label: 'Arrangementer',

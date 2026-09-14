@@ -11,7 +11,9 @@ import { createWaterWhenNear, type WaterHandle } from '@/lib/water';
 import styles from './happenings.module.css';
 
 type Item = {
-  /** The one sentence in the box. */
+  /** ISO `YYYY-MM-DD`; the box writes it out. */
+  date: string;
+  /** The words in the box. */
   note: string;
   /**
    * The photograph and the words for it, together or not at all — null where there is
@@ -36,14 +38,21 @@ const { happenings } = site;
 
 type Kind = 'news' | 'event';
 
+/** «24. september 2026» from `2026-09-24`: the day without its zero, the month in full. */
+function dateText(date: string): string {
+  const [year, month, day] = date.split('-');
+  return `${Number(day)}. ${happenings.months[Number(month) - 1] ?? month} ${year}`;
+}
+
 /**
  * Arrangementer · Nyheter: four boxes on ink in lit water.
  *
  * The two lists are one row, the events in the order they are listed and then the news.
- * Each box is its kind on the frame's line, a picture, and one sentence under it. It used
- * to be a timeline — one row in date order with «i dag» standing where today fell, and
- * the rail opening on it — until 2026-09-14: «take away today … let it just be four
- * boxes». So there is no date, nothing sorts, and nothing here is placed on the client.
+ * Each box is its kind on the frame's line, a picture, its date written out, and the words
+ * under it. It used to be a timeline — one row in date order with «i dag» standing where
+ * today fell, and the rail opening on it — until 2026-09-14: «take away today … let it
+ * just be four boxes». So nothing sorts, and nothing here is placed on the client; the
+ * date is printed on the box and decides nothing.
  *
  * On a desktop the boxes share the row's width; below that they keep their width and the
  * rail scrolls sideways, which on a phone is what it is for. Behind the row, still water:
@@ -184,6 +193,7 @@ export function Happenings({ events = site.events, news = site.news }: Props) {
                   {/* The kind is the legend, on the frame's top line. */}
                   <p className={`${wash.legend} ${styles.kind}`} data-legend>{kind === 'event' ? happenings.kinds.event : happenings.kinds.news}</p>
                   <Frame item={item} />
+                  <p className={styles.when}><time dateTime={item.date}>{dateText(item.date)}</time></p>
                   <p className={styles.note}>{item.note}</p>
                 </article>
               </li>

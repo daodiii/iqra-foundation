@@ -155,11 +155,19 @@
   color: var(--color-ink-soft);
 }
 
-/* The one sentence, under the picture. It is the box's whole text, so it is set in navy
-   like a line that carries something, not as a note under a title. */
+/* The date, written out, under the picture: small and quiet, the way the legend is set. */
+.when {
+  margin: 0 0 -6px;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: var(--color-ink-soft);
+}
+
+/* The words, under the date. They are the box's whole text, so they are set in navy like
+   a line that carries something, not as a note under a title. */
 .note {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--color-navy);
   text-wrap: pretty;
