@@ -77,9 +77,14 @@ test('the wall’s boxes and the film’s caption come from the content file', (
   expect(q.getByText(wall.question.q)).toBeInTheDocument();
   expect(q.getByText(wall.question.a)).toBeInTheDocument();
   expect(q.getByText(wall.how.label)).toBeInTheDocument();
-  wall.how.items.forEach((item) => expect(q.getByText(item)).toBeInTheDocument());
+  // The four points are the paragraph, four times («just write [it] the [same] way in all 4
+  // pointers», 2026-09-14), so they are counted inside their own tile.
+  expect(wall.how.items).toHaveLength(4);
+  for (const item of wall.how.items) expect(item).toBe(site.hero.lede);
+  const slk = within(section.querySelector('[data-tile="slk"]')!);
+  expect(slk.getAllByText(wall.how.items[0])).toHaveLength(4);
   expect(q.getByText(wall.contact.label)).toBeInTheDocument();
-  expect(q.getByText(wall.contact.line)).toBeInTheDocument();
+  expect(within(section.querySelector('[data-tile="kon"]')!).getByText(wall.contact.line)).toBeInTheDocument();
   expect(q.getByText(wall.film.title)).toBeInTheDocument();
   expect(q.getByText(wall.film.line)).toBeInTheDocument();
   expect(section.textContent).not.toMatch(/\[[^\]]+\]/);

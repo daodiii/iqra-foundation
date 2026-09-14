@@ -1,9 +1,9 @@
 /*
  * Om oss · Teamet. The box behind this is sage water (`wash.people`); on it lies the book
- * from /om-oss, and under the book, inside the box, the band: the offer, where you are,
- * the two rings. The readable copy — the words in a frame, the member card — is what a
- * phone shows under the book, and the whole layout when the book cannot run
- * (`data-book="off"`).
+ * from /om-oss, centred in the box, and at the box's foot the band: the offer at the
+ * left, the two rings at the right, in the corners the pages leave free. The readable
+ * copy — the words in a frame, the member card — is what a phone shows under the book,
+ * and the whole layout when the book cannot run (`data-book="off"`).
  */
 .people {
   position: relative;
@@ -11,8 +11,6 @@
   background: transparent;
   /* One screen: the box is the screen and the book lies in it. */
   min-height: 100svh;
-  /* The band under the book, on a desktop; the book canvas fills the rest of the box. */
-  --band: 104px;
 }
 
 /* The stage is the box's own rectangle, so the book and the band sit inside the water's edge. */
@@ -22,35 +20,29 @@
   z-index: 1;
 }
 
+/* The whole box, so the book stands centred in it; the band lies over its foot. */
 .book {
   position: absolute;
-  inset: 0 0 var(--band);
+  inset: 0;
   width: 100%;
-  height: calc(100% - var(--band));
+  height: 100%;
   display: block;
 }
 
-/* The band: the offer at the left, where you are in the middle, the rings at the right. */
+/*
+ * The band: the offer at the left, the rings at the right, hugging the box's corners —
+ * the book at 86% of the box's height leaves 7% under it and a margin either side that
+ * a 120px link and two rings fit inside on any desktop width the book runs at.
+ */
 .controls {
   position: absolute;
-  left: clamp(32px, 4vw, 56px);
-  right: clamp(32px, 4vw, 56px);
-  bottom: 28px;
+  left: 24px;
+  right: 24px;
+  bottom: 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-}
-
-/* «OM OSS», then «TEAMET · 1 / 6»: small tracked caps, tabular so the digit does not shuffle. */
-.where {
-  margin: 0 auto;
-  font: 500 12px/1 var(--font-sans);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-ink-soft);
-  white-space: nowrap;
 }
 
 .more {
@@ -194,9 +186,9 @@
 }
 
 /* Everything the cards hold sits above the pen's canvas — but not the legends, which
-   `wash.legend` positions, and not the count, which sits in the corner on its own. */
+   `wash.legend` positions. */
 .card > :not(canvas, [data-legend]),
-.row > :not(canvas, [data-legend], [data-counter]) {
+.row > :not(canvas, [data-legend]) {
   position: relative;
   z-index: 1;
 }
@@ -252,16 +244,6 @@
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--color-muted);
-}
-
-/* «1 / 6», inside the card at the top right. Tabular so it does not shuffle as the digit changes. */
-.counter {
-  position: absolute;
-  z-index: 1;
-  top: 18px;
-  right: clamp(32px, 3.4vw, 52px);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.12em;
 }
 
 .body {
@@ -406,10 +388,6 @@
 
   .para {
     font-size: 15px;
-  }
-
-  .counter {
-    right: 22px;
   }
 
   .body {

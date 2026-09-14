@@ -14,15 +14,15 @@
 }
 
 /*
- * Six columns, three rows. The film is the one in the middle, half the wall's height at
- * the top of its column; the mission two columns and two rows at the left with how to
- * reach us under it; Visjon, the question and how we work at the right; and the bottom
- * right is left open, two columns of the ink with nothing on them — and under the film
- * the same ink, since the film was halved («half the size in height», 2026-09-14; it ran
- * the full height before). 52px on top of the box's inset: the legend stands half above
- * the first row's top line and would otherwise sit under the header's haze, which runs
- * out at 104px. The rows get a little more air than the columns for the same reason —
- * every legend stands half above its box.
+ * Six columns, three rows. The mission two columns and two rows at the left with how to
+ * reach us under it; the film in the middle at half the wall's height with the question
+ * under it; Visjon at the top right and how we work under it, two columns and two rows,
+ * since its four points became four paragraphs (2026-09-14) and a single column spilled
+ * them over the tiles above and below. That filled the ink the wall used to leave open at
+ * the bottom right. 52px on top of the box's inset: the legend stands half above the
+ * first row's top line and would otherwise sit under the header's haze, which runs out at
+ * 104px. The rows get a little more air than the columns for the same reason — every
+ * legend stands half above its box.
  */
 .grid {
   position: absolute;
@@ -34,8 +34,8 @@
   grid-template-rows: repeat(3, minmax(0, 1fr));
   grid-template-areas:
     'mis mis vid vid vis vis'
-    'mis mis vid vid spm slk'
-    'kon kon vid vid .   .  ';
+    'mis mis vid vid slk slk'
+    'kon kon spm spm slk slk';
 }
 
 .tile {
@@ -183,17 +183,24 @@
   color: var(--color-ink-soft);
 }
 
+/* Four points, each a paragraph now: a step smaller than the other tiles' copy, and the
+   tile's inside starts at the top rather than centring, so what does not fit on a short
+   screen runs out at the foot and never over the tile above. */
 .list {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 14px;
-  line-height: 1.3;
+  font-size: 13px;
+  line-height: 1.35;
   color: var(--color-navy);
 }
 
+.tile[data-tile='slk'] .body {
+  justify-content: flex-start;
+}
+
 .list li {
-  padding: 7px 0;
+  padding: 6px 0;
   border-top: 1px solid var(--color-hairline);
 }
 
@@ -212,10 +219,11 @@
 /* ---- the film: the night in a tile, the word written on it, its meaning at the foot ---- */
 
 .film {
-  /* Half the column it is given, from the top; the ink shows under it. The area still
-     spans the three rows, so the tiles either side keep their places. */
+  /* Half the wall's height, from the top of its two-row area: three quarters of two rows
+     is the one and a half the user asked for («half the size in height»), and the
+     question stands in the row under it. */
   align-self: start;
-  height: 50%;
+  height: 75%;
   overflow: hidden;
   border-radius: 16px;
   /* The film's own ground at its edges — rgb(6, 9, 17), read off a settled frame — so the
@@ -265,8 +273,9 @@
 
 /*
  * A phone: the section flows and the grid is one column — the mission, then the film,
- * then the boxes two abreast — on the box, which the section's padding keeps the grid
- * 12px inside. 124px on top, not the inset: the legend stands on the first box's
+ * then the boxes one under the other (how we work is four paragraphs tall, and the
+ * question would have stood in an empty column beside it) — on the box, which the
+ * section's padding keeps the grid 12px inside. 124px on top, not the inset: the legend stands on the first box's
  * top edge and would otherwise sit under the header's haze. The type shrinks faster than
  * the desktop clamp does, or «på en vennlig og ærlig måte.» runs out of a 360px box and the
  * hand-set breaks stop meaning anything.
@@ -289,7 +298,8 @@
       'mis mis'
       'vid vid'
       'vis vis'
-      'spm slk'
+      'spm spm'
+      'slk slk'
       'kon kon';
   }
 

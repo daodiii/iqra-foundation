@@ -2,7 +2,6 @@ import { fireEvent, render, within } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import { site } from '@/content/site.no';
 import { People } from './People';
-import { memberLabel } from './pages';
 
 const [story, menneskene] = site.about.chapters;
 const team = menneskene.team;
@@ -54,26 +53,26 @@ test('without WebGL the section is the readable layout: the words and the card, 
   expect(card).toHaveTextContent(team[0].first);
   expect(card).toHaveTextContent(team[0].last);
   expect(card).toHaveTextContent(team[0].bio);
-  expect(card).toHaveTextContent(`1 / ${n}`);
 });
 
 /**
- * The rings turn the book; without one they step the card, and the label says where you
- * are either way. After the last member the large ring comes round to the first: a button
- * that stopped working on the sixth press would look broken, not finished.
+ * The rings turn the book; without one they step the card, and the section says which
+ * spread it is on (`data-spread`, the state the tests and the e2e read now that the band
+ * no longer says «Teamet · 1 / 6»). After the last member the large ring comes round to
+ * the first: a button that stopped working on the sixth press would look broken, not
+ * finished. Without a book the first member is the first stop, at spread 2.
  */
-test('the large ring steps the label and the card through every member and wraps', () => {
+test('the large ring steps the card through every member and wraps', () => {
   const section = mount();
   const next = within(section).getByRole('button', { name: site.people.next });
-  const where = section.querySelector('[data-where]') as HTMLElement;
   const card = section.querySelector('[data-row]') as HTMLElement;
   team.forEach((member, i) => {
-    expect(where).toHaveTextContent(memberLabel(i, n));
+    expect(section).toHaveAttribute('data-spread', String(i + 2));
     expect(card).toHaveAttribute('data-index', String(i));
     expect(card).toHaveTextContent(member.role);
     fireEvent.click(next);
   });
-  expect(where).toHaveTextContent(memberLabel(0, n));
+  expect(section).toHaveAttribute('data-spread', '2');
   expect(card).toHaveAttribute('data-index', '0');
 });
 
@@ -81,20 +80,35 @@ test('the small ring steps back, and from the first member goes to the last', ()
   const section = mount();
   const back = within(section).getByRole('button', { name: site.people.prev });
   const card = section.querySelector('[data-row]') as HTMLElement;
-  const where = section.querySelector('[data-where]') as HTMLElement;
   fireEvent.click(back);
   expect(card).toHaveAttribute('data-index', String(n - 1));
-  expect(where).toHaveTextContent(memberLabel(n - 1, n));
+  expect(section).toHaveAttribute('data-spread', String(n + 1));
   fireEvent.click(back);
   expect(card).toHaveAttribute('data-index', String(n - 2));
   fireEvent.click(within(section).getByRole('button', { name: site.people.next }));
   expect(card).toHaveAttribute('data-index', String(n - 1));
 });
 
-/** What a press changed is where you are and who is on the page; a screen reader hears both. */
-test('the label and the member’s name and line are live regions', () => {
+/**
+ * The band under the book is the offer and the two rings, nothing between them: the
+ * «Teamet · 1 / 6» that stood in the middle went («take away team 01/06», 2026-09-14),
+ * and so did the count in the card's corner. What a press changed is who is on the page,
+ * and a screen reader still hears that from the card.
+ */
+test('the band is the offer and the rings; the count is gone from the band and the card', () => {
   const section = mount();
-  expect(section.querySelector('[data-where]')).toHaveAttribute('aria-live', 'polite');
+  expect(section.querySelector('[data-where]')).toBeNull();
+  expect(section.querySelector('[data-counter]')).toBeNull();
+  const band = section.querySelector('[data-controls]') as HTMLElement;
+  expect(within(band).getByRole('link', { name: new RegExp(site.people.more) })).toBeInTheDocument();
+  expect(within(band).getAllByRole('button')).toHaveLength(2);
+  expect(band.textContent).not.toMatch(/\d\s*\/\s*\d/);
+  expect(section.textContent).not.toContain(`${site.people.teamLabel} ·`);
+});
+
+/** What a press changed is who is on the page; a screen reader hears it from the card. */
+test('the member’s name and line are a live region', () => {
+  const section = mount();
   const info = section.querySelector('[data-part="info"]');
   expect(info).toHaveAttribute('aria-live', 'polite');
   expect(info).toHaveTextContent(team[0].first);
@@ -134,5 +148,4 @@ test('the book canvas is decorative; the words and the card are frames with lege
   expect(legends).toEqual([site.about.label, team[0].role]);
   const card = section.querySelector('[data-row]') as HTMLElement;
   expect(card.querySelector('[data-legend]')).toHaveAttribute('data-part', 'role');
-  expect(card.querySelector('[data-counter]')).toHaveTextContent(`1 / ${n}`);
 });

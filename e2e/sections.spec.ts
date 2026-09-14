@@ -361,7 +361,6 @@ test('the page walks from ink through ink-in-water into water, in that order', a
  * run sees the book; a browser with no WebGL at all sees the readable layout, which is
  * asserted on its own terms below rather than skipped — it is what such a visitor gets.
  */
-const teamLabel = (k: number) => `${site.people.teamLabel} · ${k} / ${site.about.chapters[1].team!.length}`;
 
 test('desktop: om oss · teamet is the book on the water, the rings turning its pages', async ({ page, isMobile }) => {
   test.skip(isMobile, 'the phone layout has its own test');
@@ -386,7 +385,9 @@ test('desktop: om oss · teamet is the book on the water, the rings turning its 
   await expect(section.getByRole('link', { name: new RegExp(site.people.more) }))
     .toHaveAttribute('href', '/om-oss');
 
-  const where = section.locator('[data-where]');
+  // Which spread the book is on is read off the section (`data-spread`): the band no
+  // longer says «Teamet · 1 / 6» («take away team 01/06», 2026-09-14).
+  await expect(section.locator('[data-where]')).toHaveCount(0);
   const card = section.locator('[data-row]');
   const next = section.locator('[data-controls]').getByRole('button', { name: site.people.next });
   const prev = section.locator('[data-controls]').getByRole('button', { name: site.people.prev });
@@ -398,9 +399,16 @@ test('desktop: om oss · teamet is the book on the water, the rings turning its 
     const backing = await section.locator('canvas[data-book]').evaluate((c: HTMLCanvasElement) => [c.width, c.height]);
     expect(backing[0], 'the book canvas never got a real backing store').toBeGreaterThan(600);
     expect(backing[1]).toBeGreaterThan(300);
-    // The book opens onto the words; the band says so, and the readable copy is out of
-    // sight — clipped to a pixel, which Playwright still calls visible, so it is measured.
-    await expect(where).toHaveText(site.about.label);
+    // The canvas is the whole box, so the book stands centred in it («make the book
+    // bigger and in the centre», 2026-09-14); the band lies over its foot, at the corners.
+    const [cv, stage] = await Promise.all([
+      section.locator('canvas[data-book]').boundingBox(), section.locator('[data-stage]').boundingBox(),
+    ]);
+    expect(Math.abs(cv!.height - stage!.height), 'the canvas does not span the box').toBeLessThan(2);
+    expect(Math.abs(cv!.y - stage!.y), 'the canvas does not start at the box top').toBeLessThan(2);
+    // The book opens onto the words, and the readable copy is out of sight — clipped to
+    // a pixel, which Playwright still calls visible, so it is measured.
+    await expect(section).toHaveAttribute('data-spread', '1');
     const clip = (await section.locator('[data-readable]').boundingBox())!;
     expect(Math.max(clip.width, clip.height), 'the readable copy is not clipped while the book runs').toBeLessThanOrEqual(1);
   } else {
@@ -409,28 +417,28 @@ test('desktop: om oss · teamet is the book on the water, the rings turning its 
     expect(mode).toBe('off');
     await expect(section.getByText(story.lede)).toBeVisible();
     await expect(card).toBeVisible();
-    await expect(where).toHaveText(teamLabel(1));
+    await expect(section).toHaveAttribute('data-spread', '2');
     await expect(card).toHaveAttribute('data-index', '0');
   }
 
-  // The large ring turns to the next member; a turn takes a second, so the label is
+  // The large ring turns to the next member; a turn takes a second, so the spread is
   // waited for. Clicked through the DOM rather than the pointer: Playwright's click
   // scrolls the button into view, which moves the page and everything measured on it.
   const press = (b: typeof next) => b.evaluate((el: HTMLButtonElement) => el.click());
   const n = menneskene.team.length;
   for (let k = 1; k <= n; k++) {
-    // Without a book the first press already stands on member 1.
+    // Without a book the first press already stands on member 1. Member k is spread k + 1.
     if (!(mode === 'off' && k === 1)) await press(next);
-    await expect(where).toHaveText(teamLabel(k), { timeout: 4_000 });
+    await expect(section).toHaveAttribute('data-spread', String(k + 1), { timeout: 4_000 });
     await expect(card).toHaveAttribute('data-index', String(k - 1));
     await expect(card).toContainText(menneskene.team[k - 1].role);
   }
   // After the last, the long way round to the first — a ring that stopped on the sixth
   // press would look broken, not finished. Then back from the first is the last again.
   await press(next);
-  await expect(where).toHaveText(mode === 'on' ? site.about.label : teamLabel(1), { timeout: 5_000 });
+  await expect(section).toHaveAttribute('data-spread', mode === 'on' ? '1' : '2', { timeout: 5_000 });
   await press(prev);
-  await expect(where).toHaveText(teamLabel(n), { timeout: 5_000 });
+  await expect(section).toHaveAttribute('data-spread', String(n + 1), { timeout: 5_000 });
   await expect(card).toHaveAttribute('data-index', String(n - 1));
 });
 

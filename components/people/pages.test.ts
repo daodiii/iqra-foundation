@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { site } from '@/content/site.no';
-import { leafCount } from '@/components/about/pages';
+import { leafCount, STOCK } from '@/components/about/pages';
 import { drawFace, faces, indexAt, progressFor } from './pages';
 
 const [story, menneskene] = site.about.chapters;
@@ -75,15 +75,18 @@ test('a member’s progress is the same on both layouts, and reads back', () => 
   expect(indexAt(1.6)).toBe(0);
 });
 
-/** «Teamet · 1 / 6» on every member page, from the content file, not written twice. */
-test('every member page is labelled with the team and its place in it', () => {
+/** «Teamet · 1 / 6» used to head every member page; it went («take away team 01/06», 2026-09-14). */
+test('no member page carries the team count', () => {
   for (const single of [false, true]) {
     const members = faces(single).filter((f) => f.kind === 'member');
     expect(members).toHaveLength(team.length);
-    members.forEach((f, k) => {
-      if (f.kind === 'member') expect(f.label).toBe(`${site.people.teamLabel} · ${k + 1} / ${team.length}`);
-    });
+    for (const f of members) expect(f).not.toHaveProperty('label');
   }
+});
+
+/** The paper is white («make the book white», 2026-09-14), not the cream stock it was. */
+test('the pages are white', () => {
+  expect(STOCK).toBe('#ffffff');
 });
 
 /** Folios run in reading order; a duplicate means two pages claim the same number. */
