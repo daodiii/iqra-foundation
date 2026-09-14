@@ -22,10 +22,15 @@ test('the faces pair evenly onto sheets, on a spread and one page at a time', ()
   }
 });
 
-test('the book starts closed on the cover and opens onto the photograph and the words', () => {
+/**
+ * There is no cover: the book stands open from the start («you should never see the
+ * cover», 2026-09-14), so the front of the first leaf is never turned to the eye and is
+ * left blank, and the first spread is the logo on white facing the words.
+ */
+test('the first spread is the logo facing the words, and nothing stands before it', () => {
   const f = faces(false);
-  expect(f[0].kind).toBe('cover');
-  expect(left(f, 1)).toMatchObject({ kind: 'photo' });
+  expect(f[0].kind).toBe('blank');
+  expect(left(f, 1)).toMatchObject({ kind: 'logo' });
   expect(right(f, 1)).toMatchObject({
     kind: 'story',
     words: { label: site.about.label, lede: story.lede, para: story.paras[0], count: menneskene.paras[0] },
@@ -48,8 +53,8 @@ test('member k is the spread after the words, portrait left and words right', ()
  */
 test('one page at a time: the same pages on the right, blank backs, the portrait on the page', () => {
   const f = faces(true);
-  expect(f[0].kind).toBe('cover');
-  expect(right(f, 1)).toMatchObject({ kind: 'photo' });
+  expect(f[0].kind).toBe('blank');
+  expect(right(f, 1)).toMatchObject({ kind: 'logo' });
   team.forEach((m, k) => {
     expect(right(f, progressFor(k))).toMatchObject({ kind: 'member', member: m, index: k, portrait: true });
   });
@@ -92,7 +97,7 @@ test('the folios are unique', () => {
 
 /** jsdom has a stubbed 2D context: every face still comes back as a canvas of the size asked. */
 test('every face paints to a canvas of the size asked for', () => {
-  const assets = { family: 'Geist', logo: null, photo: null, focus: 0.5 };
+  const assets = { family: 'Geist', logo: null };
   for (const single of [false, true]) {
     for (const face of faces(single)) {
       const cv = drawFace(face, 384, 520, assets);

@@ -21,13 +21,16 @@ import styles from './people.module.css';
 const [story, menneskene] = site.about.chapters;
 const team = menneskene.team;
 const count = team.length;
-const image = site.about.image;
 
-/** Progress through the book: 0 the closed cover, 1 the photograph and the words, k + 2 member k. */
+/**
+ * Progress through the book: 1 the logo and the words, k + 2 member k. 0 would be the
+ * closed book, and the book is never there — it stands open on the first spread from the
+ * first frame («you should never see the cover», 2026-09-14).
+ */
 const WORDS = 1;
 const LAST = progressFor(count - 1);
 
-/** A white cover on water: transparent round the pages, more light, a softer spine. */
+/** White pages on water: transparent round the pages, more light, a softer spine. */
 const LOOK = { alpha: true, ambient: 0.84, gutter: 0.5 } as const;
 /**
  * The camera, nearer than on `/om-oss` — the book fills its box rather than a screen. At
@@ -44,12 +47,10 @@ const DIST = { spread: 2.28, single: 2.35 } as const;
 const TEX_W = { min: 384, max: 768 } as const;
 const TEX_RATIO = 1040 / 768;
 const LOGO = '/media/iqra-logo.png';
-/** The cover is held for a beat when the section is reached, then the book opens. */
-const HOLD = 1.0, OPEN = 1.5;
 /** One turn, and the long way round — from the last spread back to the first, every leaf turning. */
 const TURN = 0.95, WRAP = 1.6;
 
-/** A picture that fails to load is a page with nothing on it, not a book that never opens. */
+/** A logo that fails to load is a white page, not a book that never shows. */
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -85,20 +86,20 @@ function Arrow() {
 /**
  * Om oss · Teamet: the book from `/om-oss`, lying on the section's water.
  *
- * It starts closed — the cover is the film's end card, the logo on white — and when the
- * section is reached it is held for a beat and opens onto the photograph facing the
+ * It lies open from the start, on the logo — the film's end card, on white — facing the
  * words: the chapter's first line and paragraph, and the count line the ask below rests
- * on. The team is the pages after, one person to a spread, the portrait slot facing the
- * name; the two rings under the book turn them, and after the last the large one comes
- * all the way round to the first. On a phone the book shows one page at a time and the
- * words are set in a frame under it, since a phone has no room for a spread.
+ * on. It used to start closed on that logo as its cover and open when the section was
+ * reached; the cover went on 2026-09-14 («don't have a front page … you should never see
+ * the cover»). The team is the pages after, one person to a spread, the portrait slot
+ * facing the name; the two rings under the book turn them, and after the last the large
+ * one comes all the way round to the first. On a phone the book shows one page at a time
+ * and the words are set in a frame under it, since a phone has no room for a spread.
  *
- * The book is a canvas, so everything on its pages is also in the DOM under it: the
- * words in a frame, the member card with its parts, and the photograph. That copy is
- * hidden from sight while the book runs — clipped, never `display:none`, so it stays in
- * the accessibility tree — and is the section's whole layout when the renderer declines,
- * which is a device without WebGL. Under reduced motion the book stands open at the first
- * spread and the rings jump rather than turn.
+ * The book is a canvas, so everything its pages say is also in the DOM under it: the
+ * words in a frame, and the member card with its parts. That copy is hidden from sight
+ * while the book runs — clipped, never `display:none`, so it stays in the accessibility
+ * tree — and is the section's whole layout when the renderer declines, which is a device
+ * without WebGL. Under reduced motion the rings jump rather than turn.
  */
 export function People() {
   const root = useRef<HTMLElement>(null);
@@ -151,7 +152,7 @@ export function People() {
         let book: BookHandle | null = null;
         let gone = false;
         let run: gsap.core.Animation | null = null;
-        const at = { p: 0 };
+        const at = { p: WORDS };
         let shown = -1;
 
         /** The renderer draws, and the label and the card follow the rounded progress. */
@@ -188,8 +189,8 @@ export function People() {
          * nothing. Back to `off` if the renderer declines — a device without WebGL, or a
          * driver that will not compile the shaders — and the readable copy is the layout,
          * opening on the first member. The context is asked for here so a decline costs
-         * no picture loads, and with the renderer's own attributes, so it is the context
-         * the renderer then gets.
+         * no logo load, and with the renderer's own attributes, so it is the context the
+         * renderer then gets.
          */
         section.dataset.book = 'on';
         const gl = canvas?.getContext('webgl', { antialias: true, alpha: LOOK.alpha }) ?? null;
@@ -208,7 +209,7 @@ export function People() {
            */
           const family = getComputedStyle(document.body).fontFamily || 'sans-serif';
           await Promise.all([200, 400, 500, 600].map((w) => document.fonts.load(`${w} 40px ${family}`)));
-          const [logo, photo] = await Promise.all([loadImage(LOGO), image ? loadImage(image.src) : null]);
+          const logo = await loadImage(LOGO);
           if (gone) return;
           // The renderer draws at the device's pixels (to 2×), so the page is measured in
           // those. A canvas with no size yet — a tab that has never been shown — gets full
@@ -217,7 +218,7 @@ export function People() {
           const seen = pagePixels(canvas.clientHeight * Math.min(window.devicePixelRatio || 1, 2), dist) || TEX_W.max;
           const W = Math.round(Math.min(TEX_W.max, Math.max(TEX_W.min, seen)));
           const H = Math.round(W * TEX_RATIO);
-          const assets = { family, logo, photo, focus: image?.focus ?? 0.5 };
+          const assets = { family, logo };
           const painted = faces(single).map((face) => drawFace(face, W, H, assets));
           book = createBook(canvas, { ...LOOK, faces: painted, single, dist });
           if (!book) { decline(); return; }
@@ -229,7 +230,7 @@ export function People() {
         /**
          * A press: on to the next spread, or back — and past either end, the long way
          * round to the other. Without a book the same press steps the card, and the
-         * cover and the words are not stops: the first member is.
+         * words are not a stop: the first member is.
          */
         turn.current = (dir) => {
           const first = book ? WORDS : WORDS + 1;
@@ -245,9 +246,9 @@ export function People() {
 
         /*
          * The arrival, when the section is reached: the pen draws the frames as the words
-         * rise, and the closed book — the logo on white — is held for a beat and opens.
-         * Once: a book that shut itself when you scrolled away would be a book that had
-         * not been read.
+         * rise. The book itself does nothing here — it is already open on its first
+         * spread, and has been since it was painted. Once: frames drawn a second time on
+         * the way back up would be a page redrawing itself.
          */
         const rise = section.querySelectorAll<HTMLElement>('[data-rise]');
         if (!reduced) gsap.set(rise, { opacity: 0, y: 22 });
@@ -256,12 +257,6 @@ export function People() {
           const tl = gsap.timeline();
           frames.forEach((f) => tl.to(f, { p: 1, duration: 1.1, ease: EASE.none, onUpdate: () => f.draw() }, 0));
           tl.to(rise, { opacity: 1, y: 0, duration: 0.95, ease: EASE.out, stagger: 0.105 }, 0.3);
-          if (!book) return;
-          if (reduced) { apply(WORDS); return; }
-          // Unless a ring was pressed before the book was reached: then it is already open.
-          if (at.p > 0) return;
-          run?.kill();
-          run = tl.to(at, { p: WORDS, duration: OPEN, ease: EASE.inOut, onUpdate: () => apply(at.p) }, HOLD);
         };
         if (reduced) ready.then(() => { frames.forEach((f) => { f.p = 1; f.draw(); }); arrive(); });
         const entrance = ScrollTrigger.create({
@@ -314,23 +309,11 @@ export function People() {
         <canvas className={styles.book} data-book aria-hidden="true" />
 
         {/*
-          * The readable copy. Everything the pages show, as text: hidden while the book
+          * The readable copy. Everything the pages say, as text: hidden while the book
           * runs, the layout when it does not — and on a phone the words are shown under
           * the book either way, since one page at a time leaves them no page.
           */}
         <div className={styles.readable} data-readable>
-          {image && (
-            <figure className={styles.photo} data-photo>
-              <img
-                src={image.src}
-                alt={image.alt}
-                loading="lazy"
-                decoding="async"
-                style={{ objectPosition: `50% ${Math.round(image.focus * 100)}%` }}
-              />
-            </figure>
-          )}
-
           <div className={`${wash.frameOnWater} ${styles.card}`} data-words>
             <canvas className={wash.frameCanvas} data-frame-canvas aria-hidden="true" />
             <p className={`${wash.legend} ${styles.label}`} data-legend>{site.about.label}</p>

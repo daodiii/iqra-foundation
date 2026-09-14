@@ -40,15 +40,15 @@ test('the link to the chapter is in the band under the book, once', () => {
 
 /**
  * jsdom has no WebGL, so the renderer declines and the section is its readable layout —
- * which is also what a visitor without WebGL gets: the photograph, the words, the member
- * card. Everything the book shows exists as real text under it.
+ * which is also what a visitor without WebGL gets: the words, then the member card.
+ * Everything the book shows as text exists as real text under it; the logo page is
+ * decoration, like the cover was, and has no copy to keep.
  */
-test('without WebGL the section is the readable layout: the photograph, the words, the card', () => {
+test('without WebGL the section is the readable layout: the words and the card, no picture', () => {
   const section = mount();
   expect(section.dataset.book).toBe('off');
-  const img = section.querySelector('[data-photo] img');
-  expect(img).toHaveAttribute('alt', site.about.image!.alt);
-  expect(img).toHaveAttribute('src', site.about.image!.src);
+  expect(section.querySelector('[data-photo]')).toBeNull();
+  expect(section.querySelector('img')).toBeNull();
   const card = section.querySelector('[data-row]') as HTMLElement;
   expect(card).toHaveAttribute('data-index', '0');
   expect(card).toHaveTextContent(team[0].role);
@@ -56,19 +56,6 @@ test('without WebGL the section is the readable layout: the photograph, the word
   expect(card).toHaveTextContent(team[0].last);
   expect(card).toHaveTextContent(team[0].bio);
   expect(card).toHaveTextContent(`1 / ${n}`);
-});
-
-/**
- * The picture is generated, a stand-in until the foundation has a real one — and a
- * generated kitchen table is exactly the kind of placeholder a visitor cannot tell from
- * the real thing. Its alt carries a bracket so `check-content` reports it like every
- * other thing the site still lacks.
- */
-test('the photograph is a stand-in, and says so where the content gate can see it', () => {
-  expect(site.about.image).not.toBeNull();
-  expect(site.about.image!.alt).toMatch(/\[[^\]]+\]/);
-  expect(site.about.image!.focus).toBeGreaterThan(0);
-  expect(site.about.image!.focus).toBeLessThan(1);
 });
 
 /**

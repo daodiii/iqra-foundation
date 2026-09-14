@@ -11,40 +11,71 @@ const missionStanzas = [
 ] as const;
 
 /**
- * Arrangementer and Nyheter, which have no content yet.
+ * The hero's words, hoisted so the four boxes below can carry them too: «Iqra betyr les»
+ * is the h1, the lede the line under it.
+ */
+const heroLines = ['Iqra betyr', 'les'] as const;
+const heroLede = 'Det er det første ordet i Koranen. For oss betyr det å lese, å lære, og å snakke med folk som lurer på noe.';
+
+/**
+ * Arrangementer and Nyheter: four boxes, each a picture, a date and a paragraph.
  *
- * Every row here is a bracketed placeholder, and that is deliberate rather than lazy: the
- * mockup these came from was filled with invented events — an open evening in the mosque, a
- * stand on Karl Johan — and an invented event is the one kind of placeholder a visitor
- * cannot tell from the real thing. They would have walked into a mosque on a Thursday.
- * Brackets are caught by `scripts/check-content.mjs` before a production build, plausible
- * sentences are not, which is the whole argument.
+ * They have no content yet, and until 2026-09-14 every row here was a bracketed
+ * placeholder — a title, a date, a line — because an invented event is the one kind of
+ * placeholder a visitor cannot tell from the real thing: the mockup these came from had an
+ * open evening in the mosque and a stand on Karl Johan, and someone would have walked into
+ * a mosque on a Thursday. Brackets are caught by `scripts/check-content.mjs` before a
+ * production build, plausible sentences are not.
  *
- * Two rows each: enough for the row to show its rhythm, few enough that two identical rows
- * read as a template waiting to be filled rather than as a rendering fault. The section
- * disappears entirely when both arrays are emptied, so deleting these is also a way to ship.
+ * Then: «take away today … let it just be four boxes, and fill them with some stock
+ * pictures … write the iqra-is-the-first-word-in-the-Quran paragraph in all four, and
+ * different dates on all of them so I get the complete look.» So the boxes are filled,
+ * and the way Misjon's wall is filled: the words are the site's own — the hero's, in every
+ * box — which are true of the foundation and invent nothing, so the gate has nothing to
+ * refuse and nothing false is on the page meanwhile. The DATES are invented, four of them
+ * round the day this was asked, and they are the one thing here a visitor could take for
+ * real; they are for the look, and go the day there is a real one to type. The pictures
+ * are stock stand-ins, and a stand-in photograph is exactly the placeholder a visitor
+ * cannot tell from the real thing — which is why each alt carries `[Midlertidig bilde]`:
+ * the gate reports it with everything else the site still lacks. Replace the file and the
+ * alt together.
  *
- * Every entry carries a `date`, ISO `YYYY-MM-DD`, or null while it is a placeholder. The two
- * lists are shown as ONE ROW sorted by that date, news and events mixed — «published by the
- * date; news or arrangement doesn't matter» (2026-09-12) — with «i dag» set where the
- * visitor's today falls. The day set large and the month beside it are both read off the
- * date, so there is one thing to type and nothing to keep in step. A null date shows the
- * bracketed `[00]` and `[mnd]` from `happenings.undated` and sorts as its list would —
- * news before today, events after — because a real date on a placeholder would be an
- * invented date, the one bracket a visitor could not see.
+ * The two lists are shown as one row, the events first and then the news, in this order —
+ * nothing sorts, and there is no «i dag» between them any more. `date` is ISO
+ * `YYYY-MM-DD`, one thing to type; the box writes it out as «24. september 2026». The
+ * section disappears entirely when both arrays are emptied, so deleting these is also a
+ * way to ship.
  *
  * `image` is `{ src, alt }` or null. One field rather than two, so a photograph cannot
  * arrive without the words that describe it — and so there is no empty `alt` sitting in the
  * content for the gate to trip over, which is exactly what it did when they were separate.
  */
+const iqraWords = `${heroLines.join(' ')}. ${heroLede}`;
+
 const eventItems = [
-  { date: null, title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]', image: null },
-  { date: null, title: '[Tittel]', meta: '[Ukedag kl. 00.00 · Sted]', note: '[Én setning om hva det er.]', image: null },
+  {
+    date: '2026-09-24',
+    note: iqraWords,
+    image: { src: '/media/midlertidig-gata.jpg', alt: '[Midlertidig bilde] En mann går over en gate, sett ovenfra.' },
+  },
+  {
+    date: '2026-10-08',
+    note: iqraWords,
+    image: { src: '/media/midlertidig-kafe.jpg', alt: '[Midlertidig bilde] To kopper på et langbord i en kafé.' },
+  },
 ] as const;
 
 const newsItems = [
-  { date: null, title: '[Tittel]', note: '[Én setning om hva som skjedde.]', image: null },
-  { date: null, title: '[Tittel]', note: '[Én setning om hva som skjedde.]', image: null },
+  {
+    date: '2026-09-06',
+    note: iqraWords,
+    image: { src: '/media/midlertidig-notatbok.jpg', alt: '[Midlertidig bilde] En hånd skriver i en notatbok ved siden av en laptop.' },
+  },
+  {
+    date: '2026-08-30',
+    note: iqraWords,
+    image: { src: '/media/midlertidig-bok.jpg', alt: '[Midlertidig bilde] En åpen bok på et bord.' },
+  },
 ] as const;
 
 /**
@@ -57,25 +88,6 @@ const newsItems = [
  */
 const eventsHref: string | null = null;
 const newsHref: string | null = null;
-
-/**
- * The photograph on the landing page's book — the left page of the first spread, and the
- * picture in the readable layout under it. `{ src, alt, focus }` or null, one field like the
- * happenings' pictures, so a photograph cannot arrive without the words that describe it.
- * `focus` is where the subject sits, as a fraction of the picture's height from the top:
- * the page crops to it, and so does the readable layout's `object-position`.
- *
- * The picture here is GENERATED (2026-09-13, a kitchen table in Oslo light), a stand-in
- * until the foundation has a photograph of its own — and a plausible kitchen table is
- * exactly the kind of placeholder a visitor cannot tell from the real thing, which is why
- * the alt carries a bracket: `scripts/check-content.mjs` reports it with everything else
- * the site still lacks. Replace the file and the alt together.
- */
-const aboutImage: { src: string; alt: string; focus: number } | null = {
-  src: '/media/om-oss-kjokken.jpg',
-  alt: '[Midlertidig bilde] Et kjøkkenbord ved vinduet, med te, en åpen notatbok og en avis.',
-  focus: 0.56,
-};
 
 export const site = {
   lang: 'nb',
@@ -96,8 +108,8 @@ export const site = {
      * width. The sizes live in Hero.tsx, because they are drawing, not copy.
      */
     wordLines: ['IQRA', 'FOUNDATION'],
-    h1Lines: ['Iqra betyr', 'les'],
-    lede: 'Det er det første ordet i Koranen. For oss betyr det å lese, å lære, og å snakke med folk som lurer på noe.',
+    h1Lines: heroLines,
+    lede: heroLede,
     cta: 'Still et spørsmål',
     hint: 'Bla nedover',
   },
@@ -171,26 +183,20 @@ export const site = {
     },
   },
   /**
-   * The two lists are one row in date order, news and events mixed, with «i dag» where
-   * today falls. That is not a layout, it is what they are — the same line read each way —
-   * and it is why they share a heading instead of holding a column each.
+   * The two lists are one row of boxes under one heading: what is coming and what was,
+   * side by side, which is why they share a heading instead of holding a column each.
    */
   happenings: {
     label: 'Arrangementer · Nyheter',
     line: 'Det som kommer, og det som var.',
-    today: 'I dag',
-    /** What each stop is, said once above its date. */
+    /** What each box is, on the frame's line. */
     kinds: { event: 'Arrangement', news: 'Nyhet' },
-    /** What a stop shows for its date while it has none. Bracketed, like everything we lack. */
-    undated: { day: '[00]', month: '[mnd]' },
     /** The label in an empty picture frame. Bracketed, like every other thing we lack. */
     imageLabel: '[Bilde]',
-    /** Read on the phone by a screen reader, which cannot see that the axis runs sideways. */
-    railLabel: 'Tidslinje. Bla sidelengs for det som kommer og det som var.',
-    back: 'Bakover i tid',
-    forward: 'Framover i tid',
-    /** The months, short, in order — what a date's month is shown as beside the day. */
-    months: ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'],
+    /** Read on the phone by a screen reader, which cannot see that the row runs sideways. */
+    railLabel: 'Arrangementer og nyheter. Bla sidelengs.',
+    /** The months, in full and in order — a box writes its date as «24. september 2026». */
+    months: ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'],
   },
   events: {
     label: 'Arrangementer',
@@ -206,7 +212,7 @@ export const site = {
   },
   /**
    * Om oss · Teamet on the landing page: the `/om-oss` book lying on the section's water,
-   * the photograph facing the words, the team as the pages after. The words themselves
+   * open on the logo facing the words, the team as the pages after. The words themselves
    * come from `about.chapters` — chapter I for the story, chapter II for the people — so
    * they are written once and the landing page and `/om-oss` cannot drift. Only what the
    * landing page adds is here.
@@ -223,7 +229,6 @@ export const site = {
   },
   about: {
     label: 'Om oss',
-    image: aboutImage,
     meta: {
       title: 'Om oss — Iqra Foundation',
       description: 'Fire kapitler om hvem vi er, hvorfor vi begynte, og hva vi holder på med.',
