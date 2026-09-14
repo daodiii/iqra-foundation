@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import ReactDOM from 'react-dom';
+import { Onward } from '@/components/Onward';
 import { site } from '@/content/site.no';
 import { ACT_SNAP, EASE, gsap, reducedMotion, ScrollTrigger, useGSAP } from '@/lib/gsap';
 import { pickSource } from '@/lib/media';
@@ -272,7 +273,6 @@ export function Hero() {
     { scope: root },
   );
 
-  const last = site.hero.h1Lines.length - 1;
   return (
     <section ref={root} id="hero" className={styles.hero} aria-labelledby="hero-title">
       <div className={styles.stage}>
@@ -308,16 +308,15 @@ export function Hero() {
         <p className={styles.hint} data-hint aria-hidden="true">{site.hero.hint}</p>
       </div>
       <div className={styles.copy} data-copy>
+        {/* The name, two lines like the lockup, and no crimson full stop: a name does not end. */}
         <h1 id="hero-title" className={styles.h1}>
-          {site.hero.h1Lines.map((line, i) => (
-            <span key={line} className={styles.line}>
-              {line}
-              {i === last && <span className={styles.dot}>.</span>}
-            </span>
+          {site.hero.h1Lines.map((line) => (
+            <span key={line} className={styles.line}>{line}</span>
           ))}
         </h1>
         <p className={styles.lede}>{site.hero.lede}</p>
-        <a className={styles.cta} href={`mailto:${site.contact.email}`}>{site.hero.cta}</a>
+        {/* On to Visjon. The mailto that stood here lives on Misjon's tile and on /om-oss. */}
+        <Onward to="visjon" band={false} className={styles.cta} />
       </div>
     </section>
   );

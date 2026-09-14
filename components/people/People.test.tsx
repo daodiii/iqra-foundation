@@ -15,19 +15,18 @@ const mount = () => {
 };
 
 /**
- * The words are the book's own first chapter and the count line its second, read from the
- * same place `/om-oss` reads them, so the landing page and the book cannot drift. One
- * paragraph, not the chapter: the link is only an offer if something was held back.
+ * The words are the book's own first chapter, read from the same place `/om-oss` reads
+ * them, so the landing page and the book cannot drift: the lede and its paragraph, once.
+ * The second chapter's count line used to follow; with every paragraph on the site the
+ * same stand-in (2026-09-14) it would be the paragraph printed twice, so it went.
  */
-test('the words are the first chapter’s lede and paragraph, and the second’s count line', () => {
+test('the words are the first chapter’s lede and paragraph, once', () => {
   const section = mount();
   const words = section.querySelector('[data-words]') as HTMLElement;
   expect(within(words).getByText(site.about.label)).toBeInTheDocument();
   expect(within(words).getByText(story.lede)).toBeInTheDocument();
-  expect(within(words).getByText(story.paras[0])).toBeInTheDocument();
-  expect(within(words).getByText(menneskene.paras[0])).toBeInTheDocument();
-  expect(within(section).queryByText(story.paras[1])).toBeNull();
-  expect(within(section).queryByText(story.paras[2])).toBeNull();
+  expect(within(words).getAllByText(story.paras[0])).toHaveLength(1);
+  expect(words.querySelectorAll('p')).toHaveLength(3); // the legend, the lede, the paragraph
 });
 
 test('the link to the chapter is in the band under the book, once', () => {

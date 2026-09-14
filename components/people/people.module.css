@@ -229,15 +229,6 @@
   color: var(--color-ink-soft);
 }
 
-/* «Rundt tjue stykker. Studenter, lærere, en snekker, to sykepleiere.» — the sentence the
-   whole ask below rests on, so it is set a step above the paragraph around it. */
-.count {
-  margin: 0;
-  font-size: clamp(17px, 1.4vw, 21px);
-  line-height: 1.45;
-  color: var(--color-navy);
-}
-
 /*
  * The member card: one person at a time, the role on the line with the count beside it,
  * the portrait with the name block overlapping its inner edge. The card the book's team

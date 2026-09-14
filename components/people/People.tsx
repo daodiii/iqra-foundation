@@ -87,8 +87,7 @@ function Arrow() {
  * Om oss · Teamet: the book from `/om-oss`, lying on the section's water.
  *
  * It lies open from the start, on the logo — the film's end card, on white — facing the
- * words: the chapter's first line and paragraph, and the count line the ask below rests
- * on. It used to start closed on that logo as its cover and open when the section was
+ * words: the chapter's first line and its paragraph. It used to start closed on that logo as its cover and open when the section was
  * reached; the cover went on 2026-09-14 («don't have a front page … you should never see
  * the cover»). The team is the pages after, one person to a spread, the portrait slot
  * facing the name; the two rings under the book turn them, and after the last the large
@@ -319,7 +318,6 @@ export function People() {
             <p className={`${wash.legend} ${styles.label}`} data-legend>{site.about.label}</p>
             <p className={styles.lede} data-rise>{story.lede}</p>
             <p className={styles.para} data-rise>{story.paras[0]}</p>
-            <p className={styles.count} data-rise>{menneskene.paras[0]}</p>
           </div>
 
           <div

@@ -8,15 +8,21 @@ beforeEach(() => {
   vi.mocked(HTMLMediaElement.prototype.play).mockClear();
 });
 
-test('the letters, the headline and the lede come from the content file', () => {
+/**
+ * After the scroll the hero says the name — «IQRA FOUNDATION», 2026-09-14 — over the
+ * paragraph the user wrote, and the one button under them goes on to Visjon; the mailto
+ * moved out of the hero (Misjon and /om-oss keep it). The name gets no crimson full stop.
+ */
+test('the letters, the name and the lede come from the content file, and the button goes on to Visjon', () => {
   render(<Hero />);
   const lines = [...document.querySelectorAll('#hero-lockup text')].map((t) => t.textContent);
   expect(lines).toEqual(['IQRA', 'FOUNDATION']);
   const h1 = screen.getByRole('heading', { level: 1 });
-  expect(h1.textContent).toBe('Iqra betyrles.');
-  expect(screen.getByText(/første ordet i Koranen/)).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: site.hero.cta }))
-    .toHaveAttribute('href', `mailto:${site.contact.email}`);
+  expect(h1.textContent).toBe('IqraFoundation');
+  expect(h1.querySelector('[class*="dot"]')).toBeNull();
+  expect(screen.getByText(site.hero.lede)).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: site.next.visjon })).toHaveAttribute('href', '#visjon');
+  expect(document.querySelector('#hero a[href^="mailto:"]')).toBeNull();
 });
 
 test('the video is decorative, looped, muted, and gets the webm loop at desktop width', () => {

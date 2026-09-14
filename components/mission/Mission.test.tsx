@@ -13,11 +13,13 @@ const mount = () => {
 const stanzaEls = (section: HTMLElement) =>
   section.querySelectorAll('p[data-rise]:not([id])');
 
+const lastLine = site.mission.stanzas[site.mission.stanzas.length - 1].at(-1)!.replace(/\.$/, '');
+
 test('label, the mission copy and the call to action come from the content file', () => {
   const section = mount();
   expect(section).toHaveAttribute('aria-labelledby', 'misjon-label');
   expect(within(section).getByText(site.mission.label)).toHaveAttribute('id', 'misjon-label');
-  expect(within(section).getByText(/bygger vi broer/)).toBeInTheDocument();
+  expect(within(section.querySelector('[data-mission-text]')!).getByText(lastLine)).toBeInTheDocument();
   expect(within(section).getByRole('link', { name: site.hero.cta }))
     .toHaveAttribute('href', `mailto:${site.contact.email}`);
 });
@@ -68,8 +70,9 @@ test('the wall’s boxes and the film’s caption come from the content file', (
   const { wall } = site.mission;
   const q = within(section);
   expect(q.getByText(site.vision.label)).toBeInTheDocument();
-  site.vision.lines.forEach((line) => expect(q.getByText(line)).toBeInTheDocument());
-  expect(q.getByText(site.vision.sub)).toBeInTheDocument();
+  const vis = within(section.querySelector('[data-tile="vis"]')!);
+  site.vision.lines.forEach((line) => expect(vis.getByText(line)).toBeInTheDocument());
+  expect(vis.getByText(site.vision.sub)).toBeInTheDocument();
   expect(q.getByText(wall.question.label)).toBeInTheDocument();
   expect(q.getByText(wall.question.q)).toBeInTheDocument();
   expect(q.getByText(wall.question.a)).toBeInTheDocument();
@@ -142,7 +145,7 @@ test('the ink is the cream box behind everything, decorative, and there is no ph
  */
 test('the copy renders even though the ink cannot start and the film cannot play', () => {
   const section = mount();
-  expect(within(section).getByText(/bygger vi broer/)).toBeInTheDocument();
+  expect(within(section.querySelector('[data-mission-text]')!).getByText(lastLine)).toBeInTheDocument();
   expect(within(section).getByRole('link', { name: site.hero.cta })).toBeInTheDocument();
 });
 

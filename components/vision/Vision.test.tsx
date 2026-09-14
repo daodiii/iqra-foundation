@@ -8,7 +8,9 @@ test('three cards carry the values, the name stands under the roots, the headlin
   const cards = [...document.querySelectorAll('[data-value]')];
   expect(cards.map((c) => c.getAttribute('data-value'))).toEqual(['dialog', 'trygghet', 'inkludering']);
   expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Dialog', 'Trygghet', 'Inkludering']);
-  for (const v of site.vision.values) expect(screen.getByText(v.text)).toBeInTheDocument();
+  for (const v of site.vision.values) {
+    expect(document.querySelector(`[data-value="${v.key}"] [data-words]`)).toHaveTextContent(v.text);
+  }
   expect(document.querySelector('[data-root]')?.textContent).toBe('IQRAFOUNDATION');
   expect(screen.getByRole('figure', { name: /Dialog, Trygghet og Inkludering/ })).toBeInTheDocument();
   expect(document.getElementById('visjon')).toHaveAttribute('aria-labelledby', 'visjon-label');

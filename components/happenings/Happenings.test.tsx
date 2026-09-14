@@ -24,10 +24,12 @@ const EVENTS = [
 
 const both = () => render(<Happenings events={{ ...site.events, items: EVENTS }} news={{ ...site.news, items: NEWS }} />);
 
-test('the section carries one heading for both lists, not one each', () => {
+test('the section carries one heading for both lists, not one each, and nothing above it', () => {
   const section = mount();
   expect(within(section).getByRole('heading', { level: 2 })).toHaveTextContent(site.happenings.line);
   expect(within(section).getAllByRole('heading', { level: 2 })).toHaveLength(1);
+  // The heading is the section's name now; the small label that stood over the old line is gone.
+  expect(section.querySelector('h2')!.previousElementSibling).toBeNull();
 });
 
 /**
@@ -143,7 +145,7 @@ test('the content file holds four filled boxes with the hero’s words, four dat
   expect(new Set(items.map((i) => i.date)).size).toBe(4);
   for (const item of items) {
     expect(item.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(item.note).toBe(`${site.hero.h1Lines.join(' ')}. ${site.hero.lede}`);
+    expect(item.note).toBe(site.hero.lede);
     expect(item.image).not.toBeNull();
     expect(item.image!.src).toMatch(/^\/media\/midlertidig-/);
     expect(item.image!.alt).toMatch(/^\[Midlertidig bilde\] /);

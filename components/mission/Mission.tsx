@@ -206,7 +206,6 @@ export function Mission() {
             <p className={styles.capLine}>{wall.film.line}</p>
           </div>
         </div>
-
       </div>
     </section>
   );
