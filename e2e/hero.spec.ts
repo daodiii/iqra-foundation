@@ -56,6 +56,16 @@ test.describe('hero', () => {
     await expect(page.locator('[data-copy]')).toHaveCSS('opacity', '1', { timeout: 5_000 });
     await expect(page.locator('#site-wordmark')).toHaveCSS('opacity', '1', { timeout: 5_000 });
     await expect(page.locator('#site-wordmark')).toHaveAttribute('data-on-dark', 'true');
+    // The name stands on one line, on a desktop and on a phone («a bit smaller so that it
+    // fits on one line», 2026-09-14): the heading is no taller than one line of its type,
+    // and no wider than the copy it stands in.
+    const line = await page.locator('#hero-title').evaluate((h) => {
+      const r = h.getBoundingClientRect();
+      const copy = h.parentElement!.getBoundingClientRect();
+      return { height: r.height, lineHeight: parseFloat(getComputedStyle(h).fontSize) * 1.3, overflow: r.right - copy.right };
+    });
+    expect(line.height, 'the name wrapped onto a second line').toBeLessThan(line.lineHeight);
+    expect(line.overflow, 'the name runs past the copy').toBeLessThanOrEqual(1);
     /*
      * Polled, and it reports what it saw. Every other assertion here retries; this one was a
      * single sample of the one thing on the page that depends on a multi-megabyte fetch
