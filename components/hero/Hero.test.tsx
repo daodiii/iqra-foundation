@@ -17,8 +17,11 @@ test('the letters, the name and the lede come from the content file, and the but
   render(<Hero />);
   const lines = [...document.querySelectorAll('#hero-lockup text')].map((t) => t.textContent);
   expect(lines).toEqual(['IQRA', 'FOUNDATION']);
+  // The name in caps, on one line («make the title IQRA FOUNDATION in caps … so that it
+  // fits on one line», 2026-09-14); no crimson full stop.
   const h1 = screen.getByRole('heading', { level: 1 });
-  expect(h1.textContent).toBe('IqraFoundation');
+  expect(h1.textContent).toBe('IQRA FOUNDATION');
+  expect(h1.querySelectorAll('[class*="line"]')).toHaveLength(1);
   expect(h1.querySelector('[class*="dot"]')).toBeNull();
   expect(screen.getByText(site.hero.lede)).toBeInTheDocument();
   expect(screen.getByRole('link', { name: site.next.visjon })).toHaveAttribute('href', '#visjon');

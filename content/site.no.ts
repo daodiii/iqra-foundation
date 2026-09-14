@@ -3,14 +3,13 @@
  * rather than wherever the browser ran out of room. `text` is derived from them rather than
  * written twice: it is what a screen reader and the e2e see, and deriving it means an edit
  * to the stanzas cannot leave a second copy of the sentence behind. The stanzas are THE
- * PARAGRAPH (below), one sentence to a stanza, broken so no line runs past 24 characters —
- * the phone's box is 360px and the type there is 19px.
+ * PARAGRAPH (below), one sentence to a stanza, broken so no line runs much past 24
+ * characters — the phone's box is 360px and the type there is 19px.
  */
 const missionStanzas = [
   ['Iqra er det første ordet', 'i Koranen.'],
-  ['Det kan bety å lese,', 'lære eller resitere.'],
-  ['Vårt fundament', 'bygger nettopp på dette.'],
-  ['At alle lærer', 'hva islam faktisk er.'],
+  ['Det kan bety å lese', 'eller resitere.'],
+  ['Vi vil at alle skal lese,', 'forstå og lære', 'hva islam faktisk er.'],
 ] as const;
 
 /**
@@ -26,14 +25,15 @@ const missionStanzas = [
  * `islam` in lower case, as the site has it everywhere (Bokmål); the user wrote it with a
  * capital and can have it back with one edit here.
  */
-const paragraph = 'Iqra er det første ordet i Koranen. Det kan bety å lese, lære eller resitere. Vårt fundament bygger nettopp på dette. At alle lærer hva islam faktisk er.';
+const paragraph = 'Iqra er det første ordet i Koranen. Det kan bety å lese eller resitere. Vi vil at alle skal lese, forstå og lære hva islam faktisk er.';
 /** Its first sentence: what a headline or a lede slot shows. */
 const firstLine = 'Iqra er det første ordet i Koranen.';
 /** The rest, for a tile that shows the first sentence as its headline and wants no repeat. */
-const restLines = 'Det kan bety å lese, lære eller resitere. Vårt fundament bygger nettopp på dette. At alle lærer hva islam faktisk er.';
+const restLines = 'Det kan bety å lese eller resitere. Vi vil at alle skal lese, forstå og lære hva islam faktisk er.';
 
-/** The hero's h1 after the scroll: the name, in two lines like the lockup (2026-09-14). */
-const heroLines = ['Iqra', 'Foundation'] as const;
+/** The hero's h1 after the scroll: the name, in caps, on one line («make the title IQRA
+ *  FOUNDATION in caps … so that it fits on one line», 2026-09-14). */
+const heroLines = ['IQRA FOUNDATION'] as const;
 const heroLede = paragraph;
 
 /**

@@ -59,12 +59,15 @@
   opacity: 0; /* the timeline brings it in over the full film; it is in the DOM from the start */
 }
 
+/* The name, in caps, on one line: sized from the width so it never wraps (~830px at 1440,
+   ~590px at 1024), and tracked less tightly than the two-line headline was, as caps want. */
 .h1 {
   margin: 0;
-  font-size: 120px;
+  font-size: clamp(40px, 6.2vw, 90px);
   line-height: 0.94;
   font-weight: 600;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .line {
@@ -113,8 +116,9 @@
     bottom: 64px;
   }
 
+  /* One line on a phone too: ~330px of the 342 a 390px screen has inside the margins. */
   .h1 {
-    font-size: 60px;
+    font-size: clamp(28px, 8.6vw, 44px);
   }
 
   .lede {
