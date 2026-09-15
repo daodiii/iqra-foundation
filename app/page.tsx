@@ -1,51 +1,45 @@
-import { Footer } from '@/components/Footer';
-import { Happenings } from '@/components/happenings/Happenings';
-import { Header } from '@/components/Header';
-import { Hero } from '@/components/hero/Hero';
-import { Mission } from '@/components/mission/Mission';
-import { Onward } from '@/components/Onward';
-import { People } from '@/components/people/People';
-import { Support } from '@/components/support/Support';
-import { Vision } from '@/components/vision/Vision';
-import wash from '@/components/wash.module.css';
+import Link from 'next/link';
+import styles from '@/components/site/page.module.css';
+import { brief } from '@/content/brief.no';
+import { site } from '@/content/site.no';
 
-export default function Page() {
+/**
+ * Hjem: the brief's main text (2) with its two buttons, Visjon and Misjon (3, 4), and the
+ * four areas as the through-line. Short, by the brief's own instruction; the menu does
+ * the rest.
+ */
+export default function Home() {
   return (
     <>
-      <Header />
-      <main>
-        <Hero />
-        {/*
-          * The boxes share one element because they share the geometry that puts them on
-          * the page — the inset, the radius, the margin the copy sits inside — and that is
-          * written once, here, so they cannot drift apart. Arrangementer · Nyheter has no
-          * box at all and still belongs inside: it takes the same margin, which is what
-          * keeps its two columns on the same measure as everything above and below them.
-          *
-          * What the boxes no longer share is a material. The film runs down them and thins
-          * as it goes: the cave and the mosque in ink, then the page's own white, then
-          * Arafat under clear water and the ask in green water, with the night on the card
-          * at the foot of it. Everything after the hero belongs inside this.
-          *
-          * Between each section and the next, the button on to it («after each section
-          * make a button like Vår visjon … take the buttons under their sections»,
-          * 2026-09-14), on the page's white between the two boxes. Here rather than inside
-          * the sections: every one of them clips its overflow, and the order is the page's
-          * to keep. The hero holds its own under its paragraph; Støtt oss is last.
-          */}
-        <div className={wash.field}>
-          <Vision />
-          <Onward to="misjon" />
-          <Mission />
-          <Onward to="arrangementer" />
-          <Happenings />
-          <Onward to="om-oss-teamet" />
-          <People />
-          <Onward to="stott-oss" />
-          <Support />
-        </div>
-      </main>
-      <Footer />
+      <section className={styles.page} aria-labelledby="hovedtekst">
+        <h1 id="hovedtekst" className={styles.title}>{brief.home.headline}</h1>
+        <p className={styles.lede}>{brief.home.paragraph}</p>
+        <p className={styles.buttons}>
+          <Link href={site.cta.work.href} prefetch={false} className={styles.button}>{site.cta.work.label}</Link>
+          <Link href={site.cta.support.href} prefetch={false} className={styles.buttonSecondary}>{site.cta.support.label}</Link>
+        </p>
+      </section>
+      <section className={`${styles.page} ${styles.section}`} aria-labelledby="visjon" id="visjon">
+        <p className={styles.eyebrow}>{site.pages.home.visionLabel}</p>
+        <h2 id="visjon-tittel">{brief.vision.headline}</h2>
+        <p>{brief.vision.paragraph}</p>
+      </section>
+      <section className={`${styles.page} ${styles.section}`} aria-labelledby="misjon-tittel" id="misjon">
+        <p className={styles.eyebrow}>{site.pages.home.missionLabel}</p>
+        <h2 id="misjon-tittel">{brief.mission.headline}</h2>
+        <p>{brief.mission.paragraph}</p>
+      </section>
+      <section className={`${styles.page} ${styles.section}`} aria-labelledby="omrader-tittel" id="omrader">
+        <h2 id="omrader-tittel">{site.pages.home.areasLabel}</h2>
+        <ul className={styles.areas}>
+          {brief.areas.map((a) => (
+            <li key={a.key} className={styles.area}>
+              <h3><Link href={`/vart-arbeid#${a.key}`} prefetch={false}>{a.name}</Link></h3>
+              <p>{a.text}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
     </>
   );
 }

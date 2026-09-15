@@ -1,0 +1,295 @@
+/*
+ * The shell: header, menu, footer. Plain on purpose — the directions restyle it — but
+ * complete: the nine items are visible on a desktop, a drawer on a phone, and the footer
+ * carries the logo, the links, the red thread and the facts.
+ */
+
+.skip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--color-navy);
+  color: var(--color-white);
+  font: 500 14px/1 var(--font-sans);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: var(--header-h);
+  padding: 0 var(--margin);
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.home {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 6px;
+  margin: -8px -6px;
+  border-radius: var(--radius);
+}
+
+.home img {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+.nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.menuButton {
+  display: none;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-pill);
+  background: var(--color-white);
+  color: var(--color-ink);
+  font: 500 14px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link,
+.support {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  font: 500 14px/1 var(--font-sans);
+  letter-spacing: 0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--color-ink);
+  transition: background-color var(--dur-s) var(--ease-out), color var(--dur-s) var(--ease-out);
+}
+
+.link:hover {
+  background: var(--color-light);
+}
+
+.link[aria-current='page'] {
+  color: var(--color-crimson);
+}
+
+.support {
+  margin-left: 8px;
+  padding: 0 18px;
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+.support:hover {
+  background: var(--color-crimson);
+}
+
+.scrim {
+  display: none;
+}
+
+/* Between a laptop and a phone: the menu on a row of its own under the logo, still all nine. */
+@media (max-width: 1179px) and (min-width: 900px) {
+  :root {
+    --header-h: 118px;
+  }
+
+  .header {
+    flex-wrap: wrap;
+    align-content: center;
+    row-gap: 6px;
+  }
+
+  .nav {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+
+  .link,
+  .support {
+    height: 36px;
+    padding: 0 9px;
+    font-size: 13px;
+  }
+}
+
+/* The phone: one button, a drawer that covers the page under the header. */
+@media (max-width: 899px) {
+  .menuButton {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .panel {
+    position: fixed;
+    top: var(--header-h);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 61;
+    overflow-y: auto;
+    padding: 16px var(--margin) 40px;
+    background: var(--color-white);
+    display: none;
+  }
+
+  .nav[data-open] .panel {
+    display: block;
+  }
+
+  .list {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .link,
+  .support {
+    height: 52px;
+    padding: 0 14px;
+    font-size: 18px;
+    border-radius: var(--radius);
+  }
+
+  .support {
+    margin: 12px 0 0;
+    justify-content: center;
+  }
+}
+
+/* ----- the footer ----- */
+
+.footer {
+  margin-top: 96px;
+  padding: 56px var(--margin) 40px;
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-family: var(--font-sans);
+}
+
+.footerTop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px 64px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.footerHome {
+  display: inline-block;
+}
+
+.footerHome img {
+  display: block;
+  height: 44px;
+  width: auto;
+}
+
+.footerList {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 8px 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footerLink {
+  display: inline-block;
+  padding: 6px 0;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--color-white);
+  opacity: 0.86;
+}
+
+.footerLink:hover {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.thread {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 48px 0 0;
+  padding-top: 24px;
+  border-top: 1px solid color-mix(in srgb, #ffffff 18%, transparent);
+}
+
+.threadName {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-size: 13px;
+}
+
+.threadLine {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--color-turquoise);
+  letter-spacing: 0.02em;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 48px;
+  margin: 28px 0 0;
+  font-size: 13px;
+}
+
+.facts dt {
+  opacity: 0.6;
+  margin-bottom: 2px;
+}
+
+.facts dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.facts a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.facts a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 899px) {
+  .footerList {
+    grid-template-columns: repeat(2, auto);
+  }
+}

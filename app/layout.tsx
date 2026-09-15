@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import { Footer } from '@/components/site/Footer';
+import { Header } from '@/components/site/Header';
 import { site } from '@/content/site.no';
+import { generalSans, supreme } from './fonts';
 import './globals.css';
-
-const geist = Geist({ subsets: ['latin'], variable: '--font-geist' });
 
 /**
  * Absolute URLs for the share card. Read from the environment rather than written down:
@@ -18,54 +18,38 @@ const siteUrl =
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : 'http://localhost:3000');
 
-/** The film's first frame, and the only image the site has that is not the film itself. */
-const shareImage = {
-  url: '/media/iqra-poster.jpg',
-  width: 1920,
-  height: 1080,
-  alt: site.meta.imageAlt,
-};
-
 /**
- * The page is live while the copy is still filler — bank account, Vipps number and the
- * contact address are all placeholders — so it is kept out of search rather than left to
- * be indexed as it stands. `noindex` is the tag that actually removes a page from the
- * index, and it only works if crawlers may fetch the page, so there is deliberately no
- * robots.txt disallowing them.
+ * One title pattern on every page — «Om oss – Iqra Foundation» — and the name alone on
+ * the home page. Pages set only their own part.
  *
- * Delete `robots` here when the real content lands, alongside `build.env.ALLOW_PLACEHOLDERS`
- * in vercel.json. `content/site.no.ts` shows what is still bracketed.
+ * The site is live while the facts are still bracketed — the Vipps number, the account,
+ * the address, the organisation number — so it is kept out of search rather than indexed
+ * as it stands. `noindex` only works if crawlers may fetch the page, so there is
+ * deliberately no robots.txt disallowing them. Delete `robots` here when the real values
+ * land, alongside `build.env.ALLOW_PLACEHOLDERS` in vercel.json; `node
+ * scripts/check-content.mjs` lists what is still bracketed.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: site.meta.title,
-  description: site.meta.description,
+  title: { default: site.name, template: `%s – ${site.name}` },
+  description: site.pages.home.description,
   robots: { index: false, follow: false },
-  /*
-   * `noindex` keeps the page out of search; it does nothing to a link pasted into a
-   * chat, which is how most people will first meet this site. Without these the card is
-   * a bare title on a grey rectangle.
-   */
   openGraph: {
     type: 'website',
     locale: 'nb_NO',
     siteName: site.name,
-    title: site.meta.title,
-    description: site.meta.description,
-    images: [shareImage],
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: site.meta.title,
-    description: site.meta.description,
-    images: [shareImage],
-  },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={site.lang} className={geist.variable}>
-      <body>{children}</body>
+    <html lang={site.lang} className={`${generalSans.variable} ${supreme.variable}`}>
+      <body>
+        <Header />
+        <main id="innhold">{children}</main>
+        <Footer />
+      </body>
     </html>
   );
 }

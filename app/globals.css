@@ -1,43 +1,102 @@
 @import "tailwindcss";
 
+/*
+ * The design system, as tokens. Every colour on the site is one of the brand guide's five
+ * or a tint of one, named here; every face and weight is one of the guide's two families;
+ * space, radius and motion have one scale each. Components read these and never write a
+ * literal — that is how the identity stays the same on the ninth page as on the first.
+ */
 @theme {
-  --color-navy: #2a394b;
-  --color-crimson: #ab5263;
-  --color-night: #0e1620;
-  --color-film-black: #0b1118;
-  --color-ink-soft: #4b586a;
-  --color-muted: #8a94a3;
-  --color-hairline: #e3e7ec;
-  /* The warm ground Om oss sits on, so the cream stock of the book reads as cream. */
-  --color-paper: #eae8e4;
-  --font-sans: var(--font-geist), "Segoe UI", system-ui, sans-serif;
+  /* The guide's palette, as it prints them. PRIMARY */
+  --color-navy: #2c394b;
+  --color-turquoise: #67c1bf;
+  /* SECONDARY */
+  --color-light: #f0f0f1;
+  --color-dark: #393e46;
+  --color-crimson: #ab5261;
+  --color-white: #ffffff;
+
+  /*
+   * Tints, each mixed from one of the five with white or with navy, so it is traceable.
+   * `ink` is the body text colour: navy is the brand's dark and reads as black at text
+   * sizes; `ink-soft` is navy lifted for secondary lines; the hairline is navy at 12%.
+   */
+  --color-ink: #2c394b;
+  --color-ink-soft: color-mix(in srgb, #2c394b 72%, #ffffff);
+  --color-hairline: color-mix(in srgb, #2c394b 12%, #ffffff);
+  --color-turquoise-pale: color-mix(in srgb, #67c1bf 18%, #ffffff);
+  --color-turquoise-deep: color-mix(in srgb, #67c1bf 70%, #2c394b);
+  --color-crimson-deep: color-mix(in srgb, #ab5261 85%, #2c394b);
+
+  --font-sans: var(--font-general-sans), "Segoe UI", system-ui, sans-serif;
+  --font-text: var(--font-supreme), "Segoe UI", system-ui, sans-serif;
+
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 :root {
   --header-h: 72px;
-  --margin: 80px;
-}
-
-@media (max-width: 767px) {
-  :root {
-    --margin: 24px;
-  }
+  --margin: clamp(20px, 5vw, 80px);
+  --measure: 62ch;
+  --radius: 10px;
+  --radius-pill: 999px;
+  --dur-s: 160ms;
+  --dur-m: 320ms;
 }
 
 html {
-  background: #ffffff;
-  color: var(--color-navy);
+  background: var(--color-white);
+  color: var(--color-ink);
+  scroll-padding-top: calc(var(--header-h) + 16px);
 }
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: var(--font-text);
+  font-size: 17px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+}
+
+/* The page is a document under a fixed header, so it starts below it. */
+main {
+  padding-top: var(--header-h);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
 }
 
 :focus-visible {
   outline: 2px solid var(--color-crimson);
   outline-offset: 3px;
+}
+
+/* A page with the drawer open does not scroll behind it. */
+body[data-scroll-locked] {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
