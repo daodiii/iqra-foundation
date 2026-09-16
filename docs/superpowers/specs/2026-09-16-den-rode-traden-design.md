@@ -53,7 +53,7 @@ A added (`ink-soft`, `hairline`, `turquoise-mid` #a3dad8, `water-pale` #e6f4f3,
 | Kunnskap | `--color-area-kunnskap` = navy | night: ground navy, pools turquoise-mid and light | white heading, light text | `on-navy` | light |
 | Dialog | `--color-area-dialog` = turquoise | the brand's water: pale #e6f4f3 to deep turquoise at depth 0.45, pools light / navy / turquoise-mid / navy | navy | `iqra-logo.svg` | turquoise |
 | Møteplasser | `--color-area-moteplasser` = light | pale mix(white, light, 0.16) to deep light at 0.45, the same pools | navy | `iqra-logo.svg` | white |
-| Samfunnsdeltakelse | `--color-area-samfunnsdeltakelse` = crimson | night: ground crimson, pools light | white heading, light text | `on-crimson` | `--color-crimson-lift` (crimson 55% into white, 5.2:1) |
+| Samfunnsdeltakelse | `--color-area-samfunnsdeltakelse` = crimson | night: ground crimson, pools light | white heading, white text (the light is 4.4:1 on crimson; white is 5.1:1) | `on-crimson` | `--color-crimson-lift` (crimson 55% into white, 5.2:1) |
 
 The night scenes have no depth ramp (`night: true` in `lib/water.ts`); the pale ones take the
 page's `WATER_DEPTH` 0.45. Pool geometry is the brand water's: `[x, y, r, a]` =
