@@ -50,8 +50,9 @@ const frost = (hex: string, alpha: number) => toHex(rgb(hex).map((v) => 255 * al
 
 const every = () => [brand.ink.ground, ...brand.ink.ink.map(([h]) => h), brand.water.pale, brand.water.deep, ...brand.water.pools.map(([h]) => h)];
 
-test('the draft’s five scenes are gone: one ink, one water, and the water’s floor', () => {
-  expect(Object.keys(brand)).toEqual(['ink', 'water', 'floor']);
+test('one ink, one water, its floor, and the four areas’ water', () => {
+  expect(Object.keys(brand)).toEqual(['ink', 'water', 'floor', 'areaWater', 'areaFloor']);
+  expect(Object.keys(brand.areaWater)).toEqual(['navy', 'turquoise', 'light', 'crimson']);
 });
 
 test('every colour is a full six-digit hex, so the shader parse cannot half-succeed', () => {
@@ -158,4 +159,58 @@ test('navy type clears 4.5:1 on the frosted card over the darkest pool', () => {
   const shade = brand.floor.pools.filter(([h]) => h === FIVE.navy).sort((a, b) => b[4] - a[4])[0];
   const darkest = toHex(ground.map((v, i) => v * (1 - shade[4]) + rgb(FIVE.navy)[i] * shade[4]));
   expect(contrast(FIVE.navy, frost(darkest, 0.5)), darkest).toBeGreaterThanOrEqual(4.5);
+});
+
+/* ----- the areas’ water ----- */
+
+/** The veil under a field's words: the ground at this alpha over the water (fields.module.css). */
+const VEIL = 0.82;
+const over = (top: string, alpha: number, under: string) => toHex(rgb(top).map((v, i) => v * alpha + rgb(under)[i] * (1 - alpha)));
+
+test('Dialog’s water is the brand’s water itself', () => {
+  expect(brand.areaWater.turquoise).toBe(brand.water);
+  expect(brand.areaFloor.turquoise.ground).toBe(brand.floor.ground);
+});
+
+test('navy and crimson are night water: the ground is the colour itself, the pools add light', () => {
+  for (const g of ['navy', 'crimson'] as const) {
+    expect(brand.areaWater[g].night).toBe(true);
+    expect(brand.areaWater[g].pale).toBe(FIVE[g]);
+    expect(brand.areaWater[g].deep).toBe(FIVE[g]);
+    expect(brand.areaFloor[g].ground).toBe(FIVE[g]);
+    for (const [hex] of brand.areaWater[g].pools) expect(lum(hex), hex).toBeGreaterThan(190);
+  }
+});
+
+test('light is pale water: the floor at the page’s depth is #f7f7f8, and the token carries it', () => {
+  expect(brand.areaWater.light.night).toBeFalsy();
+  expect(brand.areaWater.light.deep).toBe(FIVE.light);
+  expect(brand.areaFloor.light.ground).toBe('#f7f7f8');
+  expect(floorAt(brand.areaWater.light, WATER_DEPTH).ground).toBe('#f7f7f8');
+  expect(GLOBALS).toContain(`--color-water-floor-light: ${brand.areaFloor.light.ground};`);
+});
+
+test('every colour in the areas’ water is one of the five or a tint of one, and no scene holds more pools than the shader', () => {
+  for (const scene of Object.values(brand.areaWater)) {
+    for (const h of [scene.pale, scene.deep, ...scene.pools.map(([h]) => h)]) expect(traceable(h), h).toBe(true);
+    expect(scene.pools.length).toBeLessThanOrEqual(POOL_LIMIT);
+  }
+});
+
+/**
+ * The words sit on the veil (the ground at 0.82 over the water); the darkest point under
+ * them is the floor with the strongest pool over it. Light type on navy and crimson, navy
+ * type on turquoise and light: each clears 4.5:1 there. Without the veil, the raw floor
+ * still clears 3:1, so a device that paints the still and no veil is readable.
+ */
+test('the fields’ type clears 4.5:1 on the veil and 3:1 on the raw floor', () => {
+  // White on crimson, not the light: the light is 4.4:1 on crimson and white 5.1:1 (materials.module.css sets it).
+  const type = { navy: '#f0f0f1', crimson: '#ffffff', turquoise: FIVE.navy, light: FIVE.navy } as const;
+  for (const g of ['navy', 'turquoise', 'light', 'crimson'] as const) {
+    const floor = brand.areaFloor[g];
+    const strongest = [...floor.pools].sort((a, b) => b[4] - a[4])[0];
+    const darkest = over(strongest[0], strongest[4], floor.ground);
+    expect(contrast(type[g], over(floor.ground, VEIL, darkest)), `${g} on the veil`).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(type[g], darkest), `${g} raw`).toBeGreaterThanOrEqual(3);
+  }
 });

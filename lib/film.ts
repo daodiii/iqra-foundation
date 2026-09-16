@@ -1,19 +1,21 @@
 import type { InkPalette } from './ink';
-import { floorAt, type WaterScene } from './water';
+import { floorAt, type WaterFloor, type WaterScene } from './water';
 
 /**
  * The materials, in the brand's colours.
  *
  * The draft's five scenes — a sky and a cream in ink, Arafat's stone, sage and a green in
  * water — were sampled off the hero film and then chosen by eye, before the guide existed.
- * They are gone. What is left is one palette per material, both written from the guide's
- * five values, so the ink and the water are the brand's ground and not a second palette
- * standing beside it. `lib/ink.ts` and `lib/water.ts` are unchanged; they are given these.
+ * They are gone. What is left is one ink, one water, and the four areas' water: every one
+ * written from the guide's five values, so the ink and the water are the brand's ground
+ * and not a second palette standing beside it. `lib/ink.ts` and `lib/water.ts` are
+ * unchanged; they are given these.
  *
  * The same hexes are tokens in `app/globals.css` (`--color-light`, `--color-turquoise`,
- * `--color-turquoise-mid`, `--color-navy`, `--color-water-pale`, `--color-water-floor`):
- * a box carries its colour in CSS before any script runs, and on a device that declines
- * WebGL2 the CSS still is the whole answer. `film.test.ts` holds the two sides together.
+ * `--color-turquoise-mid`, `--color-navy`, `--color-water-pale`, `--color-water-floor`,
+ * `--color-water-floor-light`): a box carries its colour in CSS before any script runs,
+ * and on a device that declines WebGL2 the CSS still is the whole answer. `film.test.ts`
+ * holds the two sides together.
  */
 
 /**
@@ -62,9 +64,60 @@ const WATER: WaterScene = {
  */
 export const WATER_DEPTH = 0.45;
 
+/** The four grounds an area can own: the tokens `--color-area-*` in globals.css, by name. */
+export type AreaGround = 'navy' | 'turquoise' | 'light' | 'crimson';
+
+/**
+ * Water in the four areas' colours, keyed by the ground the area owns
+ * (`components/home/areas.ts` says which area owns which). Navy and crimson are night
+ * water: the ground is the colour itself, the depth ramp does not run, and the pools add
+ * light (turquoise-mid and the light on navy; the light on crimson). Turquoise is the
+ * brand's water. Light is the palest: white a sixth into the light, deepening to the light
+ * itself, the brand water's pools. The pool geometry is the brand water's, so four fields
+ * side by side read as one body of water in four colours.
+ */
+const AREA_WATER: Record<AreaGround, WaterScene> = {
+  navy: {
+    pale: '#2c394b',
+    deep: '#2c394b',
+    night: true,
+    pools: [
+      ['#a3dad8', 0.2, 0.82, 0.5, 0.35],
+      ['#f0f0f1', 0.8, 0.22, 0.42, 0.14],
+      ['#a3dad8', 0.58, 0.62, 0.5, 0.28],
+    ],
+  },
+  turquoise: WATER,
+  light: {
+    pale: '#fdfdfd',
+    deep: '#f0f0f1',
+    pools: WATER.pools,
+  },
+  crimson: {
+    pale: '#ab5261',
+    deep: '#ab5261',
+    night: true,
+    // The first pool a seventh dimmer than navy's: at 0.35 white type on the raw floor under it is 2.9:1, at 0.30 it is 3.1:1.
+    pools: [
+      ['#f0f0f1', 0.2, 0.82, 0.5, 0.3],
+      ['#f0f0f1', 0.8, 0.22, 0.42, 0.14],
+      ['#f0f0f1', 0.58, 0.62, 0.5, 0.28],
+    ],
+  },
+};
+
+const AREA_FLOOR: Record<AreaGround, WaterFloor> = {
+  navy: floorAt(AREA_WATER.navy, WATER_DEPTH),
+  turquoise: floorAt(AREA_WATER.turquoise, WATER_DEPTH),
+  light: floorAt(AREA_WATER.light, WATER_DEPTH),
+  crimson: floorAt(AREA_WATER.crimson, WATER_DEPTH),
+};
+
 export const brand = {
   ink: INK,
   water: WATER,
   /** The water resolved at the page's depth: what `createWater` is handed. */
   floor: floorAt(WATER, WATER_DEPTH),
+  areaWater: AREA_WATER,
+  areaFloor: AREA_FLOOR,
 } as const;

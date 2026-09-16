@@ -44,6 +44,8 @@
   --color-turquoise-mid: #a3dad8;
   --color-water-pale: #e6f4f3;
   --color-water-floor: #addddc;
+  /* The light area's water at the page's depth: white a sixth into the light, then 45% towards it (`brand.areaFloor.light`). */
+  --color-water-floor-light: #f7f7f8;
 
   /*
    * The four areas' colours, in the brief's order (direction C's mapping, which the shell

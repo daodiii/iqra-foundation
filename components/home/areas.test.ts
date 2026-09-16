@@ -5,7 +5,8 @@ import { createElement } from 'react';
 import { describe, expect, test } from 'vitest';
 import { Logo } from '@/components/site/Logo';
 import { brief } from '@/content/brief.no';
-import { AREA_LOOK, areas, fieldVars } from './areas';
+import { brand } from '@/lib/film';
+import { AREA_LOOK, areaFloor, areas, fieldVars } from './areas';
 
 /**
  * The mapping is the direction: every area of the brief has a colour and a logo variant,
@@ -50,5 +51,13 @@ describe('every area of the brief has a colour and a logo variant', () => {
     expect(vars['--field-text']).toBe('var(--color-navy)');
     expect(vars['--field-heading']).toBe('var(--color-navy)');
     expect(vars['--field-ring']).toBe('var(--color-navy)');
+  });
+
+  test('every area has a water scene and a tone that matches its ground', () => {
+    for (const a of areas) {
+      expect(brand.areaWater[a.ground]).toBeDefined();
+      expect(areaFloor(a).ground).toMatch(/^#[0-9a-f]{6}$/);
+      expect(a.tone).toBe(a.ground === 'navy' || a.ground === 'crimson' ? 'dark' : 'light');
+    }
   });
 });

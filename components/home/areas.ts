@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
-import type { Ground } from '@/components/site/Logo';
 import { brief } from '@/content/brief.no';
+import { type AreaKey } from '@/lib/content';
+import { brand, type AreaGround } from '@/lib/film';
 
 /**
  * The four areas as the site's architecture.
@@ -10,15 +11,12 @@ import { brief } from '@/content/brief.no';
  * guide's colours and wears it wherever it appears — the fields on the home page, the
  * bands of Vårt arbeid, its word in the red thread — so a visitor can tell which one they
  * are looking at without reading. This is the one place the mapping lives: the key gives
- * the ground, the ground gives the logo variant the guide draws for it, and the type
- * colours are the ones that read on it (checked by computation, see the contrast table in
- * the direction's report). The colours themselves are the `--color-area-*` tokens in
- * `app/globals.css`; nothing here or in a component is a literal.
+ * the ground, the ground gives the logo variant the guide draws for it and the water
+ * `lib/film.ts` writes for it, and the type colours are the ones that read on it (checked
+ * by computation in `lib/film.test.ts`). The colours themselves are the `--color-area-*`
+ * tokens in `app/globals.css`; nothing here or in a component is a literal.
  */
-export type AreaKey = (typeof brief.areas)[number]['key'];
-
-/** The four grounds an area can own, named as `Logo` names them. */
-export type AreaGround = Extract<Ground, 'navy' | 'turquoise' | 'light' | 'crimson'>;
+export type { AreaKey, AreaGround };
 
 type Token = `--color-${string}`;
 
@@ -82,6 +80,8 @@ export type Area = (typeof brief.areas)[number] & AreaLook & {
   number: string;
   /** Where the area is read in full. */
   href: `/vart-arbeid#${AreaKey}`;
+  /** A navy or a crimson field is dark: light type, navy frost, the light pen. */
+  tone: 'light' | 'dark';
 };
 
 /** The brief's four areas, in its order, each with its look. */
@@ -90,7 +90,13 @@ export const areas: readonly Area[] = brief.areas.map((a, i) => ({
   ...AREA_LOOK[a.key],
   number: String(i + 1).padStart(2, '0'),
   href: `/vart-arbeid#${a.key}`,
+  tone: AREA_LOOK[a.key].ground === 'navy' || AREA_LOOK[a.key].ground === 'crimson' ? 'dark' : 'light',
 }));
+
+/** The area's water, resolved at the page's depth. */
+export function areaFloor(area: Area) {
+  return brand.areaFloor[area.ground];
+}
 
 /**
  * The look as custom properties on the field's element, so one stylesheet paints all

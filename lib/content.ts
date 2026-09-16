@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { brief } from '@/content/brief.no';
 import { COLLECTIONS, type CollectionName } from '@/content/collections';
 
 /**
@@ -19,6 +20,10 @@ import { COLLECTIONS, type CollectionName } from '@/content/collections';
 
 /** One picture with its words: one field, so a photograph cannot arrive without an alt. */
 export type Picture = { src: string; alt: string };
+
+/** The four areas' keys, from the brief; an event or a resource may carry one. */
+export const AREA_KEYS = brief.areas.map((a) => a.key) as readonly AreaKey[];
+export type AreaKey = (typeof brief.areas)[number]['key'];
 
 export type Event = {
   slug: string;
