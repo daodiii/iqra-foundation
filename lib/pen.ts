@@ -78,11 +78,28 @@ export const PEN = {
   tipGlowEnd: 'rgba(171,82,97,0)',
 } as const;
 
+export type PenColours = { [K in keyof typeof PEN]: string };
+const PEN_DEFAULT: PenColours = PEN;
+
+/**
+ * The same pen on a dark ground (navy, crimson), where a navy line would vanish: the line
+ * is the guide's light (#f0f0f1), the haze stays turquoise, the tip is crimson lifted
+ * towards white (the thread's `--color-crimson-lift`, #d1a0a8).
+ */
+export const PEN_LIGHT: PenColours = {
+  haze: 'rgba(103,193,191,0.4)',
+  hazeShadow: 'rgba(103,193,191,0.55)',
+  line: 'rgba(240,240,241,0.8)',
+  tip: 'rgba(209,160,168,0.98)',
+  tipGlow: 'rgba(209,160,168,0.6)',
+  tipGlowEnd: 'rgba(209,160,168,0)',
+};
+
 /**
  * The stroke: a turquoise haze under a navy line, and while it is still being drawn, the
  * pen itself — the logo's crimson. The caller clears the canvas.
  */
-export function drawStroke(ctx: CanvasRenderingContext2D, path: ArchPath, p: number): void {
+export function drawStroke(ctx: CanvasRenderingContext2D, path: ArchPath, p: number, PEN: PenColours = PEN_DEFAULT): void {
   if (p <= 0) return;
   ctx.lineCap = 'round';
   ctx.shadowColor = PEN.hazeShadow;
@@ -202,7 +219,8 @@ export function createFrame(card: HTMLElement): FrameHandle | null {
     draw() {
       if (!path) return;
       ctx.clearRect(-FRAME_PAD, -FRAME_PAD, W + 2 * FRAME_PAD, H + 2 * FRAME_PAD);
-      drawStroke(ctx, path, frame.p);
+      // A card on a dark box (`data-tone="dark"` on the box, see materials.module.css) takes the light pen.
+      drawStroke(ctx, path, frame.p, card.closest('[data-tone="dark"]') ? PEN_LIGHT : PEN);
       const now = frame.p >= 1;
       if (now !== closed) {
         closed = now;

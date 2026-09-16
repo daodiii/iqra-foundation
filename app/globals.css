@@ -45,6 +45,18 @@
   --color-water-pale: #e6f4f3;
   --color-water-floor: #addddc;
 
+  /*
+   * The four areas' colours, in the brief's order (direction C's mapping, which the shell
+   * and the flat fields read): Kunnskap navy, Dialog turquoise, Møteplasser light,
+   * Samfunnsdeltakelse crimson. `components/home/areas.ts` is the one map onto these.
+   */
+  --color-area-kunnskap: var(--color-navy);
+  --color-area-dialog: var(--color-turquoise);
+  --color-area-moteplasser: var(--color-light);
+  --color-area-samfunnsdeltakelse: var(--color-crimson);
+  /* Crimson lifted towards white for its word in the thread on navy: 5.2:1 where crimson itself is 2.3:1. */
+  --color-crimson-lift: color-mix(in srgb, #ab5261 55%, #ffffff);
+
   --font-sans: var(--font-general-sans), "Segoe UI", system-ui, sans-serif;
   --font-text: var(--font-supreme), "Segoe UI", system-ui, sans-serif;
 
@@ -84,6 +96,17 @@
   --dot: 10px;
   /* The footer keeps its breath on a page of text; a page of plates closes the gap to one gutter. */
   --footer-gap: 96px;
+}
+
+/*
+ * Between a laptop and a phone the header is two rows (the logo, then the nine items; see
+ * site.module.css), so the page starts lower. Declared here, after the `:root` above, so
+ * source order cannot hand the narrower value the win.
+ */
+@media (max-width: 1179px) and (min-width: 900px) {
+  :root {
+    --header-h: 118px;
+  }
 }
 
 /* A page built of plates (the home page, Vårt arbeid) says so, and the footer becomes the last plate. */

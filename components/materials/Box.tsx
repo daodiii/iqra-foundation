@@ -1,17 +1,29 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { brand } from '@/lib/film';
-import { createInk, type InkHandle } from '@/lib/ink';
+import { createInk, type InkHandle, type InkPalette } from '@/lib/ink';
 import { buildWhenQuietNear } from '@/lib/near';
-import { createWater, type WaterHandle } from '@/lib/water';
+import { createWater, type WaterFloor, type WaterHandle } from '@/lib/water';
 import styles from './materials.module.css';
 
 export type Material = 'ink' | 'water';
 
+/** Which pen and which frost a card on this box takes: navy on a pale box, light on a dark one. */
+export type Tone = 'light' | 'dark';
+
 type Props = {
   material: Material;
+  /** The ink's palette; the brand's turquoise ink unless said otherwise. */
+  palette?: InkPalette;
+  /** The water's floor; the brand's turquoise floor unless said otherwise. */
+  floor?: WaterFloor;
+  tone?: Tone;
+  /** The name of the ground, for CSS that keys on it (the dot on crimson). */
+  ground?: string;
   className?: string;
+  /** `--ground` and `--still` for a box whose colour is not the stylesheet's. */
+  style?: CSSProperties;
   children: ReactNode;
 };
 
@@ -29,7 +41,7 @@ type Props = {
  * The pointer is tracked on the box, not on the canvas, so a hand moving over the copy
  * stirs the material behind it: the frames are lines drawn on the water, not lids on it.
  */
-export function Box({ material, className, children }: Props) {
+export function Box({ material, palette, floor, tone = 'light', ground, className, style, children }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const paint = useRef<HTMLCanvasElement>(null);
 
@@ -41,17 +53,24 @@ export function Box({ material, className, children }: Props) {
     let live: InkHandle | WaterHandle | null = null;
     const cancel = buildWhenQuietNear(canvas, () => {
       live = material === 'ink'
-        ? createInk(canvas, { reduced: false, palette: brand.ink, host })
-        : createWater(canvas, { reduced: false, floor: brand.floor, host });
+        ? createInk(canvas, { reduced: false, palette: palette ?? brand.ink, host })
+        : createWater(canvas, { reduced: false, floor: floor ?? brand.floor, host });
     });
     return () => {
       cancel();
       live?.destroy();
     };
-  }, [material]);
+  }, [material, palette, floor]);
 
   return (
-    <div ref={root} className={`${styles.box} ${styles[material]} ${className ?? ''}`} data-material={material}>
+    <div
+      ref={root}
+      className={`${styles.box} ${styles[material]} ${className ?? ''}`}
+      style={style}
+      data-material={material}
+      data-tone={tone}
+      data-ground={ground}
+    >
       <canvas ref={paint} className={styles.paint} data-paint aria-hidden="true" />
       <div className={styles.inner}>{children}</div>
     </div>

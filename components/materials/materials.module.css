@@ -13,6 +13,16 @@
  */
 
 .box {
+  /*
+   * The tone of the cards on this box: the frost's colour (as an rgb triplet, so the alpha
+   * can be applied to it), the ink of the legend and the title, the ink of the copy, and
+   * the dot. A pale box takes white frost and navy type; a dark box (`data-tone="dark"`:
+   * navy, crimson) takes navy frost and light type, and the pen draws in light (lib/pen.ts).
+   */
+  --frost-rgb: 255 255 255;
+  --card-ink: var(--color-navy);
+  --card-text: var(--color-ink);
+  --dot-color: var(--color-crimson);
   position: relative;
   isolation: isolate;
   display: grid;
@@ -20,6 +30,17 @@
   border-radius: var(--box-radius);
   background-color: var(--ground);
   background-image: var(--still);
+}
+
+.box[data-tone="dark"] {
+  --frost-rgb: 44 57 75;
+  --card-ink: var(--color-white);
+  --card-text: var(--color-light);
+}
+
+/* On crimson the crimson dot would vanish: it goes light, as the pen's tip does. */
+.box[data-tone="dark"][data-ground="crimson"] {
+  --dot-color: var(--color-light);
 }
 
 /*
@@ -108,7 +129,7 @@
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background: rgb(255 255 255 / var(--frost));
+  background: rgb(var(--frost-rgb) / var(--frost));
   /*
    * The UNPREFIXED property only — the build adds the prefix. Declaring the prefixed form
    * beside it makes Lightning CSS keep the prefixed one alone, which Blink does not
@@ -149,10 +170,10 @@
   margin: -0.5em 0 0 calc(var(--legend-x) - var(--card-x));
   padding: 0 8px;
   border-radius: 6px 6px 0 0;
-  background: linear-gradient(rgb(255 255 255 / calc(var(--frost) * var(--frame-in, 1))) 0 50%, transparent 50% 100%);
+  background: linear-gradient(rgb(var(--frost-rgb) / calc(var(--frost) * var(--frame-in, 1))) 0 50%, transparent 50% 100%);
   font: 500 16px/1 var(--font-sans);
   letter-spacing: var(--tracking-label);
-  color: var(--color-navy);
+  color: var(--card-ink);
   white-space: nowrap;
 }
 
@@ -162,7 +183,7 @@
   width: var(--dot);
   height: var(--dot);
   border-radius: 50%;
-  background: var(--color-crimson);
+  background: var(--dot-color);
 }
 
 /*
@@ -190,7 +211,7 @@
 
 .frame:has(.legendLink:hover)::before,
 .frame:has(.legendLink:focus-visible)::before {
-  background: rgb(255 255 255 / calc(var(--frost) + 0.15));
+  background: rgb(var(--frost-rgb) / calc(var(--frost) + 0.15));
 }
 
 .copy {
@@ -207,7 +228,7 @@
   font-size: var(--text-card-title);
   line-height: 1.15;
   letter-spacing: var(--tracking-tight);
-  color: var(--color-navy);
+  color: var(--card-ink);
   text-wrap: balance;
 }
 
@@ -217,7 +238,7 @@
   font-family: var(--font-text);
   font-size: 16px;
   line-height: 1.55;
-  color: var(--color-ink);
+  color: var(--card-text);
   text-wrap: pretty;
 }
 
@@ -227,11 +248,11 @@
  */
 @supports not (backdrop-filter: blur(1px)) {
   .frame::before {
-    background: rgb(255 255 255 / 0.9);
+    background: rgb(var(--frost-rgb) / 0.9);
   }
 
   .legend {
-    background: linear-gradient(rgb(255 255 255 / 0.9) 0 50%, transparent 50% 100%);
+    background: linear-gradient(rgb(var(--frost-rgb) / 0.9) 0 50%, transparent 50% 100%);
   }
 }
 

@@ -33,9 +33,12 @@ export function Nav() {
   useEffect(() => {
     if (!open) {
       delete document.body.dataset.scrollLocked;
+      delete document.body.dataset.menuOpen;
       return;
     }
     document.body.dataset.scrollLocked = '';
+    // The header reads this to turn navy under the open drawer.
+    document.body.dataset.menuOpen = '';
     const first = panel.current?.querySelector<HTMLElement>('a, button');
     first?.focus();
     const onKey = (e: KeyboardEvent) => {
@@ -59,9 +62,16 @@ export function Nav() {
       }
     };
     document.addEventListener('keydown', onKey);
+    // A window widened past the drawer's breakpoint shows the row instead; the drawer's
+    // state must not outlive it, or the page stays locked with no button to unlock it.
+    const wide = window.matchMedia('(min-width: 900px)');
+    const onWide = (e: MediaQueryListEvent) => { if (e.matches) setOpen(false); };
+    wide.addEventListener('change', onWide);
     return () => {
       document.removeEventListener('keydown', onKey);
+      wide.removeEventListener('change', onWide);
       delete document.body.dataset.scrollLocked;
+      delete document.body.dataset.menuOpen;
     };
   }, [open, close]);
 
@@ -81,20 +91,23 @@ export function Nav() {
       </button>
       <div ref={panel} id={id} className={styles.panel} data-panel>
         <ul className={styles.list}>
-          {site.nav.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                prefetch={false}
-                className={'button' in item && item.button ? styles.support : styles.link}
-                aria-current={current(item.href) ? 'page' : undefined}
-                // A chosen link closes the drawer: it has done its work.
-                onClick={() => setOpen(false)}
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
+          {site.nav.map((item) => {
+            const isButton = 'button' in item && item.button;
+            return (
+              <li key={item.href} className={isButton ? styles.supportItem : undefined}>
+                <Link
+                  href={item.href}
+                  prefetch={false}
+                  className={isButton ? styles.support : styles.link}
+                  aria-current={current(item.href) ? 'page' : undefined}
+                  // A chosen link closes the drawer: it has done its work.
+                  onClick={() => setOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </div>
       {/* The scrim behind the open drawer: a tap on the page closes the menu. */}

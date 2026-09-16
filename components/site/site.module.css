@@ -1,9 +1,10 @@
 /*
- * The shell: header, menu, footer. A white bar with a hairline under it, the guide's logo
- * at 40px, the nine items in General Sans 500 with the current page marked by the i's
- * dot, and Støtt oss a crimson pill — the one button on the site that is always crimson.
- * The footer is the last plate: navy, the logo reversed, the nine links, the red thread
- * with a crimson dot for each full stop, and the facts.
+ * The shell of direction C. A white header with a hairline and the nine items in General
+ * Sans; under the current page's label a 4px square of navy — the square is this
+ * direction's mark, the field made small — and Støtt oss a crimson pill. Under 900px the
+ * menu is a drawer: a navy plate with the reversed logo at its top (the header itself
+ * turns navy while it is open), light text, and Støtt oss as a crimson plate at its
+ * foot. The footer is navy, and its red thread wears the four areas' colours.
  */
 
 .skip {
@@ -12,7 +13,6 @@
   left: 8px;
   z-index: 100;
   padding: 10px 14px;
-  border-radius: var(--radius);
   background: var(--color-navy);
   color: var(--color-white);
   font: 500 14px/1 var(--font-sans);
@@ -44,13 +44,20 @@
   align-items: center;
   padding: 8px 6px;
   margin: -8px -6px;
-  border-radius: var(--radius);
 }
 
 .home img {
-  display: block;
   height: 40px;
   width: auto;
+}
+
+/* The guide's logo on white; the reversed one waits for the navy header behind the open drawer. */
+.logoOnWhite {
+  display: block;
+}
+
+.logoOnNavy {
+  display: none;
 }
 
 .nav {
@@ -62,11 +69,11 @@
 .menuButton {
   display: none;
   height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--color-hairline);
+  padding: 0 16px;
+  border: 1px solid var(--color-navy);
   border-radius: var(--radius-pill);
-  background: var(--color-white);
-  color: var(--color-ink);
+  background: transparent;
+  color: var(--color-navy);
   font: 500 14px/1 var(--font-sans);
   cursor: pointer;
 }
@@ -82,37 +89,46 @@
 
 .link,
 .support {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
   height: 40px;
-  padding: 0 10px;
-  border-radius: var(--radius-pill);
+  padding: 0 11px;
   font: 500 14px/1 var(--font-sans);
   letter-spacing: 0.005em;
   text-decoration: none;
   white-space: nowrap;
   color: var(--color-navy);
-  transition: background-color var(--dur-s) var(--ease-out), color var(--dur-s) var(--ease-out);
+  transition: color var(--dur-s) var(--ease-out), background-color var(--dur-s) var(--ease-out);
 }
 
-.link:hover {
-  background: var(--color-light);
-}
-
-/* The current page: the i's dot before its label — one gesture, used everywhere. */
-.link[aria-current='page']::before {
+/* The mark under a label: turquoise when pointed at, navy under the current page. */
+.link::after {
   content: '';
-  flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-crimson);
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  background: var(--color-turquoise);
+  opacity: 0;
+  transition: opacity var(--dur-s) var(--ease-out);
+}
+
+.link:hover::after {
+  opacity: 1;
+}
+
+.link[aria-current='page']::after {
+  opacity: 1;
+  background: var(--color-navy);
 }
 
 .support {
-  margin-left: 8px;
+  margin-left: 10px;
   padding: 0 18px;
+  border-radius: var(--radius-pill);
   background: var(--color-crimson);
   color: var(--color-white);
 }
@@ -125,12 +141,12 @@
   display: none;
 }
 
-/* Between a laptop and a phone: the menu on a row of its own under the logo, still all nine. */
+/*
+ * Between a laptop and a phone: the menu on a row of its own under the logo, still all
+ * nine. The header's height for this range is `--header-h` in globals.css: a `:root` rule
+ * here lost to the one in globals on source order and left the two rows squeezed into 72px.
+ */
 @media (max-width: 1179px) and (min-width: 900px) {
-  :root {
-    --header-h: 118px;
-  }
-
   .header {
     flex-wrap: wrap;
     align-content: center;
@@ -148,13 +164,40 @@
     padding: 0 9px;
     font-size: 13px;
   }
+
+  .link::after {
+    bottom: 3px;
+  }
+
+  .support {
+    padding: 0 16px;
+  }
 }
 
-/* The phone: one button, a drawer that covers the page under the header. */
+/* The phone: one button, a navy drawer that covers the page under the header. */
 @media (max-width: 899px) {
   .menuButton {
     display: inline-flex;
     align-items: center;
+  }
+
+  /* While the drawer is open the header is the top of the same navy plate. */
+  :global(body[data-menu-open]) .header {
+    background: var(--color-navy);
+    border-bottom-color: color-mix(in srgb, var(--color-light) 16%, transparent);
+  }
+
+  :global(body[data-menu-open]) .logoOnWhite {
+    display: none;
+  }
+
+  :global(body[data-menu-open]) .logoOnNavy {
+    display: block;
+  }
+
+  :global(body[data-menu-open]) .menuButton {
+    border-color: color-mix(in srgb, var(--color-light) 40%, transparent);
+    color: var(--color-light);
   }
 
   .panel {
@@ -164,49 +207,74 @@
     right: 0;
     bottom: 0;
     z-index: 61;
-    overflow-y: auto;
-    padding: 16px var(--margin) 40px;
-    background: var(--color-white);
     display: none;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 8px var(--margin) 0;
+    background: var(--color-navy);
+    color: var(--color-light);
   }
 
   .nav[data-open] .panel {
-    display: block;
+    display: flex;
   }
 
   .list {
+    flex: 1 0 auto;
     flex-direction: column;
     align-items: stretch;
-    gap: 4px;
+    gap: 0;
   }
 
-  .link,
-  .support {
-    height: 52px;
-    padding: 0 14px;
-    gap: 10px;
+  /* Block-level, so the row and its hairline run the plate's width. */
+  .link {
+    display: flex;
+    height: 54px;
+    padding: 0 0 0 18px;
     font-size: 18px;
-    border-radius: var(--radius);
+    color: var(--color-light);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-light) 14%, transparent);
   }
 
-  .link[aria-current='page']::before {
-    width: var(--dot);
-    height: var(--dot);
+  .link:hover {
+    color: var(--color-white);
+  }
+
+  /* In the drawer the square sits before the label, on the line's left edge. */
+  .link::after {
+    left: 0;
+    top: 50%;
+    bottom: auto;
+    margin: -2px 0 0;
+  }
+
+  .link[aria-current='page']::after {
+    background: var(--color-light);
+  }
+
+  /* Støtt oss at the foot of the plate, edge to edge. */
+  .supportItem {
+    margin: auto calc(-1 * var(--margin)) 0;
+    padding-top: 24px;
   }
 
   .support {
-    margin: 12px 0 0;
+    display: flex;
+    margin: 0;
+    height: 64px;
     justify-content: center;
+    border-radius: 0;
+    font-size: 18px;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
 /* ----- the footer ----- */
 
 .footer {
-  margin-top: var(--footer-gap);
   padding: 56px var(--margin) 40px;
   background: var(--color-navy);
-  color: var(--color-white);
+  color: var(--color-light);
   font-family: var(--font-sans);
 }
 
@@ -243,56 +311,62 @@
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
-  color: var(--color-white);
-  opacity: 0.86;
+  color: var(--color-light);
 }
 
 .footerLink:hover {
-  opacity: 1;
+  color: var(--color-white);
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration-color: var(--color-turquoise);
+  text-underline-offset: 4px;
 }
 
-/* The red thread: the name, then the four areas with the i's dot for each full stop. */
+/*
+ * The red thread: the name, then the four words, each in its area's colour — Kunnskap
+ * light, Dialog turquoise, Møteplasser white, Samfunnsdeltakelse the lifted crimson —
+ * and each full stop drawn as a dot in the same colour. The text underneath is the
+ * brief's line, character for character.
+ */
 .thread {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 28px;
+  align-items: baseline;
+  gap: 8px 28px;
   margin: 48px 0 0;
   padding-top: 24px;
-  border-top: 1px solid color-mix(in srgb, var(--color-white) 18%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--color-light) 18%, transparent);
 }
 
 .threadName {
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   font-size: 13px;
+  color: var(--color-white);
 }
 
 .threadLine {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 16px;
-  font-weight: 500;
-  font-size: 13px;
-  letter-spacing: var(--tracking-label);
-  color: var(--color-turquoise);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.02em;
 }
 
 .threadWord {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  white-space: nowrap;
 }
 
 .stop {
+  font-size: 0;
+}
+
+.stop::before {
+  content: '';
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
+  margin-left: 4px;
   border-radius: 50%;
-  background: var(--color-crimson);
+  background: currentColor;
+  vertical-align: baseline;
 }
 
 .facts {
@@ -304,13 +378,14 @@
 }
 
 .facts dt {
-  opacity: 0.6;
+  opacity: 0.72;
   margin-bottom: 2px;
 }
 
 .facts dd {
   margin: 0;
   font-weight: 500;
+  color: var(--color-white);
 }
 
 .facts a {
@@ -320,7 +395,8 @@
 
 .facts a:hover {
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration-color: var(--color-turquoise);
+  text-underline-offset: 4px;
 }
 
 @media (max-width: 899px) {
