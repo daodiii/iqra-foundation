@@ -1,0 +1,222 @@
+/*
+ * The four fields: one plate holding a grid of water, each cell its area's colour. The
+ * stills (`--ground`, `--still`) are mixed from the tokens the scenes in lib/film.ts are
+ * written from, in the same places as the pools (`.field.<ground>` outranks `.water` in
+ * materials.module.css). The veil under the words is the field's own colour fading out
+ * towards the logo: calm where it is read, alive where it is looked at.
+ */
+
+.plate {
+  overflow: hidden;
+  border-radius: var(--box-radius);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+}
+
+/* A field's box: no corner of its own (the plate clips the grid's), C's cell padding. */
+.field {
+  --box-radius: 0;
+  --box-pad-y: 30px;
+  --box-pad-x: clamp(24px, 3vw, 44px);
+  --frost: var(--frost-water);
+  min-height: 220px;
+}
+
+/* Night water on navy: turquoise-mid and the light as pools of light. */
+.field.navy {
+  --ground: var(--color-area-kunnskap);
+  --still:
+    radial-gradient(45% 50% at 58% 38%, color-mix(in srgb, var(--color-turquoise-mid) 25%, transparent) 0%, transparent 70%),
+    radial-gradient(38% 42% at 80% 78%, color-mix(in srgb, var(--color-light) 13%, transparent) 0%, transparent 70%),
+    radial-gradient(45% 50% at 20% 18%, color-mix(in srgb, var(--color-turquoise-mid) 32%, transparent) 0%, transparent 70%);
+}
+
+/* The brand's water: the same still as `.water` in materials.module.css. */
+.field.turquoise {
+  --ground: var(--color-water-floor);
+  --still:
+    radial-gradient(33% 36% at 10% 84%, color-mix(in srgb, var(--color-navy) 9%, transparent) 0%, transparent 70%),
+    radial-gradient(48% 53% at 58% 38%, color-mix(in srgb, var(--color-turquoise-mid) 41%, transparent) 0%, transparent 70%),
+    radial-gradient(40% 45% at 80% 78%, color-mix(in srgb, var(--color-navy) 15%, transparent) 0%, transparent 70%),
+    radial-gradient(48% 53% at 20% 18%, color-mix(in srgb, var(--color-light) 50%, transparent) 0%, transparent 70%);
+}
+
+/* Pale water on the light: the same pools over a near-white floor. */
+.field.light {
+  --ground: var(--color-water-floor-light);
+  --still:
+    radial-gradient(33% 36% at 10% 84%, color-mix(in srgb, var(--color-navy) 9%, transparent) 0%, transparent 70%),
+    radial-gradient(48% 53% at 58% 38%, color-mix(in srgb, var(--color-turquoise-mid) 41%, transparent) 0%, transparent 70%),
+    radial-gradient(40% 45% at 80% 78%, color-mix(in srgb, var(--color-navy) 15%, transparent) 0%, transparent 70%),
+    radial-gradient(48% 53% at 20% 18%, color-mix(in srgb, var(--color-light) 50%, transparent) 0%, transparent 70%);
+}
+
+/* Night water on crimson: the light as pools of light; the first a seventh dimmer than navy's (lib/film.ts). */
+.field.crimson {
+  --ground: var(--color-area-samfunnsdeltakelse);
+  --still:
+    radial-gradient(45% 50% at 58% 38%, color-mix(in srgb, var(--color-light) 25%, transparent) 0%, transparent 70%),
+    radial-gradient(38% 42% at 80% 78%, color-mix(in srgb, var(--color-light) 13%, transparent) 0%, transparent 70%),
+    radial-gradient(45% 50% at 20% 18%, color-mix(in srgb, var(--color-light) 27%, transparent) 0%, transparent 70%);
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  color: var(--card-text);
+  text-decoration: none;
+}
+
+/*
+ * The veil: the field's own colour under the words, from the corner the text starts in,
+ * fading out towards the logo. Above the canvas (the box's inner is a stacking context)
+ * and under the type. The alphas are the ones lib/film.test.ts computes contrast with.
+ */
+.cell::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--box-pad-y)) calc(-1 * var(--box-pad-x));
+  z-index: -1;
+  background: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--ground) 82%, transparent) 0%,
+    color-mix(in srgb, var(--ground) 58%, transparent) 38%,
+    color-mix(in srgb, var(--ground) 0%, transparent) 72%
+  );
+  pointer-events: none;
+}
+
+.cell:hover .name {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+.cell:focus-visible {
+  outline: 3px solid var(--card-ink);
+  outline-offset: 4px;
+}
+
+.name {
+  margin: 0;
+  font: 700 clamp(30px, 3vw, 46px) / 1.04 var(--font-sans);
+  letter-spacing: -0.02em;
+  color: var(--card-ink);
+  text-wrap: balance;
+}
+
+.text {
+  margin: 14px 0 0;
+  max-width: 40ch;
+  font-family: var(--font-text);
+  font-weight: 500;
+  font-size: clamp(17px, 1.2vw, 18.5px);
+  line-height: 1.5;
+  color: var(--card-text);
+  text-wrap: pretty;
+}
+
+/* Light type on dark water: a breath of shadow keeps it clear of the glints. */
+.field[data-tone="dark"] .name,
+.field[data-tone="dark"] .text {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.28);
+}
+
+.logo {
+  display: block;
+  margin-top: auto;
+  padding-top: 24px;
+  align-self: flex-end;
+  line-height: 0;
+  opacity: 0.8;
+  transition: opacity var(--dur-s) var(--ease-out);
+}
+
+.cell:hover .logo,
+.cell:focus-visible .logo {
+  opacity: 1;
+}
+
+/* ----- the bands of Vårt arbeid: a field opened out ----- */
+
+.band {
+  --box-pad-y: clamp(40px, 6vh, 64px);
+  --box-pad-x: 5%;
+  --frost: var(--frost-water);
+  min-height: min(56vh, 560px);
+}
+
+.bandBody {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  color: var(--card-text);
+}
+
+.bandBody::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--box-pad-y)) calc(-1 * var(--box-pad-x));
+  z-index: -1;
+  background: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--ground) 82%, transparent) 0%,
+    color-mix(in srgb, var(--ground) 58%, transparent) 38%,
+    color-mix(in srgb, var(--ground) 0%, transparent) 72%
+  );
+  pointer-events: none;
+}
+
+.band .text {
+  max-width: 60ch;
+}
+
+/* On a band the logo stands top-right, the words at the left, as the spec draws it. */
+.band .logo {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .field {
+    min-height: max(280px, 34vh);
+  }
+}
+
+@media (max-width: 699px) {
+  .plate {
+    border-radius: 20px;
+  }
+
+  .band {
+    --box-pad-y: 36px;
+    --box-pad-x: 14px;
+    min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo {
+    transition: none;
+  }
+}

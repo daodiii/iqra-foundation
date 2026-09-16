@@ -5,7 +5,7 @@ import { site } from '@/content/site.no';
 import Home from './page';
 
 describe('Hjem', () => {
-  test('one h1, the brief’s; Visjon and Misjon as sections on ink; the four areas on water, each a link to its section of Vårt arbeid', () => {
+  test('one h1, the brief’s; Visjon and Misjon as sections on ink; the four areas as four fields of water, each a link to its section of Vårt arbeid', () => {
     const { container } = render(<Home />);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
 
@@ -18,16 +18,16 @@ describe('Hjem', () => {
       expect(screen.getByText(text.paragraph)).toBeInTheDocument();
     }
 
-    const areas = screen.getByRole('heading', { level: 2, name: site.pages.home.areasLabel }).closest('section')!;
-    expect(areas.querySelector('[data-material]')).toHaveAttribute('data-material', 'water');
+    const areas = screen.getByRole('region', { name: site.pages.home.areasLabel });
+    expect(areas.querySelectorAll('[data-material="water"]')).toHaveLength(4);
     for (const a of brief.areas) {
       const link = screen.getByRole('link', { name: a.name });
       expect(link).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
       expect(areas).toContainElement(link);
       expect(screen.getByText(a.text)).toBeInTheDocument();
     }
-    // Three plates and nothing else: the hero, the ink, the water.
-    expect(container.querySelectorAll('[data-material]')).toHaveLength(2);
+    // The hero, the ink, and four fields of water; nothing else.
+    expect(container.querySelectorAll('[data-material]')).toHaveLength(5);
     expect(container.querySelector('[data-plates]')).not.toBeNull();
   });
 });

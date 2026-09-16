@@ -38,9 +38,10 @@
   --card-text: var(--color-light);
 }
 
-/* On crimson the crimson dot would vanish: it goes light, as the pen's tip does. */
+/* On crimson the crimson dot would vanish, and the light falls short of 4.5:1 (4.4): both go white. */
 .box[data-tone="dark"][data-ground="crimson"] {
-  --dot-color: var(--color-light);
+  --dot-color: var(--color-white);
+  --card-text: var(--color-white);
 }
 
 /*

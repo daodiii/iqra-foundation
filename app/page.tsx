@@ -1,3 +1,4 @@
+import { Fields } from '@/components/home/Fields';
 import { Hero } from '@/components/home/Hero';
 import styles from '@/components/home/home.module.css';
 import { Box } from '@/components/materials/Box';
@@ -9,8 +10,9 @@ import { site } from '@/content/site.no';
 /**
  * Hjem, in three plates and nothing else: the film inside the mark with the brief's main
  * text (2) and its two buttons; Visjon and Misjon (3, 4) as two pen-framed cards on one
- * box of ink; the four areas (6) as four framed cards on one box of water, each a link to
- * its section of Vårt arbeid. Short, by the brief's own instruction; the menu does the rest.
+ * box of the brand's ink; the four areas (6) as four fields of water, each in its own
+ * colour, each a link to its section of Vårt arbeid. Short, by the brief's own
+ * instruction; the menu does the rest.
  */
 export default function Home() {
   return (
@@ -33,20 +35,7 @@ export default function Home() {
             </section>
           </div>
         </Box>
-        <section aria-labelledby="omrader-tittel" id="omrader">
-          <Box material="water" className={styles.waterBox}>
-            <h2 id="omrader-tittel" className="visually-hidden">{site.pages.home.areasLabel}</h2>
-            <ul className={styles.areas}>
-              {brief.areas.map((a) => (
-                <li key={a.key}>
-                  <Frame legend={a.name} level="h3" href={`/vart-arbeid#${a.key}`} dot>
-                    <p className={mat.text}>{a.text}</p>
-                  </Frame>
-                </li>
-              ))}
-            </ul>
-          </Box>
-        </section>
+        <Fields />
       </div>
     </>
   );
