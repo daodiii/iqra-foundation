@@ -51,7 +51,8 @@ export function makePath(segs: Seg[]): ArchPath {
         const s = segs[i];
         const f = Math.min(1, d / len[i]);
         ctx.beginPath();
-        if (s.type === 'arc') ctx.arc(s.cx, s.cy, s.r, s.a0, s.a0 + (s.a1 - s.a0) * f);
+        // An arc written with a falling angle runs anticlockwise; without the flag the canvas would take the long way round.
+        if (s.type === 'arc') ctx.arc(s.cx, s.cy, s.r, s.a0, s.a0 + (s.a1 - s.a0) * f, s.a1 < s.a0);
         else {
           const [x, y] = segPoint(s, f);
           ctx.moveTo(s.x0, s.y0);

@@ -19,7 +19,9 @@ test('the home page is the name alone, and carries the brief’s main text, Visj
   await expect(page.getByText(brief.home.paragraph, { exact: true })).toBeVisible();
   const main = page.getByRole('main');
   await expect(main.getByRole('link', { name: site.cta.work.label })).toHaveAttribute('href', site.cta.work.href);
-  await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', site.cta.support.href);
+  // Støtt oss is a button twice on the page: under the hero's text and in its own section at the foot.
+  await expect(main.getByRole('link', { name: site.cta.support.label }).first()).toHaveAttribute('href', site.cta.support.href);
+  await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveCount(2);
   await expect(main.getByText(brief.vision.headline, { exact: true })).toBeVisible();
   await expect(main.getByText(brief.vision.paragraph, { exact: true })).toBeVisible();
   await expect(main.getByText(brief.mission.headline, { exact: true })).toBeVisible();
@@ -32,6 +34,19 @@ test('the home page is the name alone, and carries the brief’s main text, Visj
   await expect(fields).toHaveCount(4);
   await expect(fields.nth(0)).toHaveAttribute('data-ground', 'navy');
   await expect(fields.nth(3)).toHaveAttribute('data-ground', 'crimson');
+  // then the rest of the site: five sections in order, each the way on to its page, the lists honest while empty
+  const ids = await main.locator('section[id]').evaluateAll((els) => els.map((e) => e.id));
+  expect(ids.slice(-5)).toEqual(['om-oss', 'arrangementer', 'ressurser', 'menneskene-bak', 'stott-oss']);
+  const more = site.pages.home.more;
+  for (const [name, href] of [[more.about, '/om-oss'], [more.events, '/arrangementer'], [more.resources, '/ressurser'], [more.people, '/menneskene-bak']] as const) {
+    await expect(main.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
+  }
+  await expect(main.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeVisible();
+  await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeVisible();
+  // the thread's canvas, sized to the screen once the script has run
+  const thread = main.locator('canvas[data-thread-canvas]');
+  await expect(thread).toHaveCount(1);
+  expect(await thread.evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(300);
   await main.getByRole('link', { name: brief.areas[1].name, exact: true }).click();
   await expect(page).toHaveURL(/\/vart-arbeid#dialog$/);
   await expect(page.locator('#dialog')).toBeInViewport();
