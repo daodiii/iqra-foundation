@@ -27,9 +27,17 @@ test('the home page is the name alone, and carries the brief’s main text, Visj
   for (const a of brief.areas) {
     await expect(main.getByRole('link', { name: a.name, exact: true }).first()).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
   }
+  // four fields of water, each on its area's ground; the first one's link lands on its band
+  const fields = main.locator('[data-fields] [data-material="water"]');
+  await expect(fields).toHaveCount(4);
+  await expect(fields.nth(0)).toHaveAttribute('data-ground', 'navy');
+  await expect(fields.nth(3)).toHaveAttribute('data-ground', 'crimson');
+  await main.getByRole('link', { name: brief.areas[1].name, exact: true }).click();
+  await expect(page).toHaveURL(/\/vart-arbeid#dialog$/);
+  await expect(page.locator('#dialog')).toBeInViewport();
 });
 
-test('vårt arbeid: the four areas, each its own section, each reachable by its anchor', async ({ page }) => {
+test('vårt arbeid: the four areas, each its own section of water, each reachable by its anchor', async ({ page }) => {
   await page.goto('/vart-arbeid');
   await expect(page).toHaveTitle(T(site.pages.work.title));
   await expect(page.locator('h1')).toHaveText(site.pages.work.title);
@@ -37,6 +45,7 @@ test('vårt arbeid: the four areas, each its own section, each reachable by its 
     const section = page.locator(`#${a.key}`);
     await expect(section).toContainText(a.name);
     await expect(section).toContainText(a.text);
+    await expect(section.locator('[data-material="water"]')).toHaveCount(1);
   }
   await page.goto('/vart-arbeid#samfunnsdeltakelse');
   await expect(page.locator('#samfunnsdeltakelse')).toBeInViewport();
@@ -49,6 +58,8 @@ test('om oss: the brief’s text and the story of the name', async ({ page }) =>
   await expect(page.locator('h1')).toHaveText(brief.about.title);
   for (const p of brief.about.paragraphs) await expect(page.getByText(p, { exact: true })).toBeVisible();
   await expect(page.getByText(site.pages.about.story.text, { exact: true })).toBeVisible();
+  // the four names in the «skjæringspunktet» line each carry their area's mark (the footer's thread has its own four)
+  await expect(page.getByRole('main').locator('[data-area]')).toHaveCount(4);
 });
 
 test.describe('the collections are honest while empty', () => {

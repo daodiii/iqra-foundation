@@ -19,7 +19,9 @@ test('the header carries the logo home and the brief’s nine items in order', a
   await page.goto('/om-oss');
   const home = page.getByRole('banner').getByRole('link', { name: site.header.homeLabel });
   await expect(home).toHaveAttribute('href', '/');
-  const logo = home.locator('img');
+  // Two logos are in the link (the reversed one waits for the navy drawer); one is shown, the guide's for the ground.
+  const logo = home.locator('img:visible');
+  await expect(logo).toHaveCount(1);
   await expect(logo).toHaveAttribute('src', /\/brand\/iqra-logo(-on-[a-z]+)?\.svg/);
   // On a phone the items are behind the button; open it so they are in the accessibility tree.
   const button = page.getByRole('button', { name: site.header.open });
@@ -144,4 +146,11 @@ test('no page logs a console error', async ({ page }) => {
   }
   // The 404 route is not here: its own document request is logged as a failed resource, by design.
   expect(errors).toEqual([]);
+});
+
+test('the thread’s four words each carry their area', async ({ page }) => {
+  await page.goto('/kontakt');
+  const words = page.getByRole('contentinfo').locator('[data-thread] [data-area]');
+  await expect(words).toHaveCount(4);
+  await expect(words).toHaveText(brief.areas.map((a) => new RegExp(`^${a.name}`)));
 });
