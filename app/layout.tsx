@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { Footer } from '@/components/site/Footer';
-import { Header } from '@/components/site/Header';
 import { site } from '@/content/site.no';
 import { generalSans, supreme } from './fonts';
 import './globals.css';
@@ -42,14 +40,11 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image' },
 };
 
+/** html, body and the fonts only: the site's shell is `app/(site)/layout.tsx`, so the admin under /keystatic is not wrapped in it. */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang={site.lang} className={`${generalSans.variable} ${supreme.variable}`}>
-      <body>
-        <Header />
-        <main id="innhold">{children}</main>
-        <Footer />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

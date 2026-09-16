@@ -2,7 +2,7 @@ import { Box } from '@/components/materials/Box';
 import { areaFloor, areas } from './areas';
 import { FieldBody } from './Fields';
 import styles from './fields.module.css';
-import work from '@/app/vart-arbeid/work.module.css';
+import work from '@/app/(site)/vart-arbeid/work.module.css';
 
 /**
  * The four areas down Vårt arbeid: the home page's fields opened out, one plate of water

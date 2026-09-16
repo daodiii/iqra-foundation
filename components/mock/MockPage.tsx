@@ -11,7 +11,7 @@ import mat from '@/components/materials/materials.module.css';
 import { Logo, type Ground as LogoGround } from '@/components/site/Logo';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
-import work from '@/app/vart-arbeid/work.module.css';
+import work from '@/app/(site)/vart-arbeid/work.module.css';
 import styles from './mock.module.css';
 import {
   GROUNDS, MATERIALS, PIGMENTS, PLATE_MATERIALS, fieldPigment, inkPaletteFor, lookFromString, lookToString, stillFor, toneOf, waterFloorFor,
