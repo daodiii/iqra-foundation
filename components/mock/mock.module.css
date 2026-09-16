@@ -253,3 +253,50 @@
     transform: none;
   }
 }
+
+/* ----- the four fields as four inks ----- */
+
+.inkItem {
+  display: grid;
+}
+
+/* A field's box: no corner of its own (the wrapper clips the grid's), C's cell padding, the box's tone for the type. */
+.inkField {
+  --box-radius: 0;
+  --box-pad-y: 30px;
+  --box-pad-x: clamp(24px, 3vw, 44px);
+  min-height: 220px;
+}
+
+.inkCell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  color: var(--card-text);
+  text-decoration: none;
+}
+
+.inkCell:focus-visible {
+  outline: 3px solid var(--card-ink);
+  outline-offset: 4px;
+}
+
+.inkName {
+  font: 700 clamp(26px, 2.6vw, 40px) / 1.06 var(--font-sans);
+  letter-spacing: -0.02em;
+  color: var(--card-ink);
+}
+
+.inkText {
+  margin-top: 12px;
+  max-width: 44ch;
+  font-size: clamp(16px, 1.1vw, 17px);
+  line-height: 1.5;
+  color: var(--card-text);
+}
+
+@media (min-width: 900px) {
+  .inkField {
+    min-height: max(280px, 34vh);
+  }
+}

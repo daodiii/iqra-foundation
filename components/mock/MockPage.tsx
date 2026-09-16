@@ -14,7 +14,7 @@ import { site } from '@/content/site.no';
 import work from '@/app/vart-arbeid/work.module.css';
 import styles from './mock.module.css';
 import {
-  GROUNDS, MATERIALS, PIGMENTS, inkPaletteFor, lookFromString, lookToString, stillFor, toneOf, waterFloorFor,
+  GROUNDS, MATERIALS, PIGMENTS, PLATE_MATERIALS, fieldPigment, inkPaletteFor, lookFromString, lookToString, stillFor, toneOf, waterFloorFor,
   type GroundName, type Look, type MaterialName, type PigmentName,
 } from './palettes';
 
@@ -51,6 +51,12 @@ const PRESETS: readonly { key: string; name: string; note: string; state: State 
     state: { vm: L('ink', 'light', 'turquoise'), areas: L('flat', 'white', 'turquoise'), w1: L('ink', 'navy', 'light'), w2: L('water', 'turquoise', 'turquoise'), w3: L('water', 'light', 'turquoise'), w4: L('ink', 'crimson', 'light') },
   },
   {
+    key: 'firevann',
+    name: 'Fire felt i vann',
+    note: 'De fire feltene som fire bokser vann, hver over sin farge; resten som «Farge per område». Chipen har også «blekk ×4».',
+    state: { vm: L('ink', 'light', 'turquoise'), areas: L('waterFields', 'white', 'mixed'), w1: L('ink', 'navy', 'light'), w2: L('water', 'turquoise', 'turquoise'), w3: L('water', 'light', 'turquoise'), w4: L('ink', 'crimson', 'light') },
+  },
+  {
     key: 'blandet',
     name: 'To materialer, alle fargene',
     note: 'Bare blekk og vann, men marine, turkis og burgunder sammen i samme grunn.',
@@ -61,7 +67,7 @@ const PRESETS: readonly { key: string; name: string; note: string; state: State 
 const KEYS: readonly SectionKey[] = ['vm', 'areas', 'w1', 'w2', 'w3', 'w4'];
 
 const NB: { material: Record<MaterialName, string>; ground: Record<GroundName, string>; pigment: Record<PigmentName, string> } = {
-  material: { ink: 'blekk', water: 'vann', flat: 'flate' },
+  material: { ink: 'blekk', water: 'vann', flat: 'flate', inkFields: 'blekk ×4', waterFields: 'vann ×4' },
   ground: { white: 'hvit', light: 'lys', navy: 'marine', turquoise: 'turkis', crimson: 'burgunder' },
   pigment: { navy: 'marine', turquoise: 'turkis', crimson: 'burgunder', light: 'lys', mixed: 'blandet' },
 };
@@ -161,8 +167,8 @@ export function MockPage() {
           </Plate>
         </Section>
 
-        <Section label="Fire hovedområder" k="areas" look={state.areas} set={set} flatFixed>
-          <Plate look={state.areas} className={home.waterBox} flat={<Fields />}>
+        <Section label="Fire hovedområder" k="areas" look={state.areas} set={set} flatFixed materials={MATERIALS}>
+          <Plate look={state.areas} className={home.waterBox} flat={state.areas.material === 'inkFields' || state.areas.material === 'waterFields' ? <MaterialFields look={state.areas} /> : <Fields />}>
             <h2 className="visually-hidden">{site.pages.home.areasLabel}</h2>
             <ul className={home.areas}>
               {brief.areas.map((a) => (
@@ -203,16 +209,17 @@ export function MockPage() {
 }
 
 /** A section of the mock: its chip of controls, then the box. */
-function Section({ label, k, look, set, flatFixed = false, children }: {
-  label: string; k: SectionKey; look: Look; set: (k: SectionKey, patch: Partial<Look>) => void; flatFixed?: boolean; children: ReactNode;
+function Section({ label, k, look, set, flatFixed = false, materials = PLATE_MATERIALS, children }: {
+  label: string; k: SectionKey; look: Look; set: (k: SectionKey, patch: Partial<Look>) => void; flatFixed?: boolean; materials?: readonly MaterialName[]; children: ReactNode;
 }) {
   const flat = look.material === 'flat';
+  const fields = flat || look.material === 'inkFields' || look.material === 'waterFields';
   return (
     <div className={styles.section}>
       <div className={styles.chip}>
         <span className={styles.chipLabel}>{label}</span>
-        <Select id={`${k}-m`} label="Materiale" value={look.material} options={MATERIALS} names={NB.material} onChange={(v) => set(k, { material: v as MaterialName })} />
-        <Select id={`${k}-g`} label="Grunn" value={look.ground} options={GROUNDS} names={NB.ground} onChange={(v) => set(k, { ground: v as GroundName })} disabled={flat && flatFixed} />
+        <Select id={`${k}-m`} label="Materiale" value={look.material} options={materials} names={NB.material} onChange={(v) => set(k, { material: v as MaterialName })} />
+        <Select id={`${k}-g`} label="Grunn" value={look.ground} options={GROUNDS} names={NB.ground} onChange={(v) => set(k, { ground: v as GroundName })} disabled={fields && flatFixed} />
         <Select id={`${k}-p`} label="Pigment" value={look.pigment} options={PIGMENTS} names={NB.pigment} onChange={(v) => set(k, { pigment: v as PigmentName })} disabled={flat} />
       </div>
       {children}
@@ -242,7 +249,7 @@ function Plate({ look, className, flat, children }: { look: Look; className?: st
   const palette = useMemo(() => inkPaletteFor(look.ground, look.pigment), [look.ground, look.pigment]);
   const floor = useMemo(() => waterFloorFor(look.ground, look.pigment), [look.ground, look.pigment]);
   const style = useMemo(() => stillFor(look), [look]);
-  if (look.material === 'flat') return <>{flat}</>;
+  if (look.material === 'flat' || look.material === 'inkFields' || look.material === 'waterFields') return <>{flat}</>;
   return (
     <Box
       key={lookToString(look)}
@@ -296,6 +303,47 @@ function Fields() {
             </Link>
           </li>
         ))}
+      </ul>
+    </section>
+  );
+}
+
+/**
+ * The four fields with a material in them: C's grid, edge to edge, each field a box of ink
+ * on its area's ground, or of water over a floor in its area's colour; the pigment by
+ * `fieldPigment` («blandet» on the chip means each field's own; any other pigment goes in
+ * all four). The type is C's, straight on the material.
+ */
+function MaterialFields({ look }: { look: Look }) {
+  const material = look.material === 'waterFields' ? 'water' : 'ink';
+  return (
+    <section aria-label={site.pages.home.areasLabel} className={styles.fieldsWrap}>
+      <ul className={styles.fields} data-fields>
+        {areas.map((a) => {
+          const ground = a.ground as GroundName;
+          const pigment = fieldPigment(ground, look.pigment, material);
+          const one: Look = { material, ground, pigment };
+          return (
+            <li key={a.key} className={styles.inkItem} data-ground={a.ground}>
+              <Box
+                key={lookToString(one)}
+                material={material}
+                palette={inkPaletteFor(ground, pigment)}
+                floor={waterFloorFor(ground, pigment)}
+                tone={toneOf(ground)}
+                ground={ground}
+                className={styles.inkField}
+                style={stillFor(one)}
+              >
+                <Link href={a.href} prefetch={false} className={styles.inkCell} aria-labelledby={`blekkfelt-${a.key}`}>
+                  <h3 id={`blekkfelt-${a.key}`} className={styles.inkName}>{a.name}</h3>
+                  <p className={styles.inkText}>{a.text}</p>
+                  <span className={styles.logo}><Logo ground={a.ground} height={28} decorative /></span>
+                </Link>
+              </Box>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

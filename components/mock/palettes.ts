@@ -14,13 +14,15 @@ import type { Tone } from '@/components/materials/Box';
 
 export type GroundName = 'white' | 'light' | 'navy' | 'turquoise' | 'crimson';
 export type PigmentName = 'navy' | 'turquoise' | 'crimson' | 'light' | 'mixed';
-export type MaterialName = 'ink' | 'water' | 'flat';
+export type MaterialName = 'ink' | 'water' | 'flat' | 'inkFields' | 'waterFields';
 
 export type Look = { material: MaterialName; ground: GroundName; pigment: PigmentName };
 
 export const GROUNDS: readonly GroundName[] = ['white', 'light', 'navy', 'turquoise', 'crimson'];
 export const PIGMENTS: readonly PigmentName[] = ['navy', 'turquoise', 'crimson', 'light', 'mixed'];
-export const MATERIALS: readonly MaterialName[] = ['ink', 'water', 'flat'];
+export const MATERIALS: readonly MaterialName[] = ['ink', 'water', 'flat', 'inkFields', 'waterFields'];
+/** The materials a section other than the four areas can take: the `*Fields` ones are the four fields' own. */
+export const PLATE_MATERIALS: readonly MaterialName[] = ['ink', 'water', 'flat'];
 
 /** The guide's five, as `app/globals.css` prints them. */
 export const HEX: Record<GroundName, string> = {
@@ -125,6 +127,24 @@ export function waterSceneFor(ground: GroundName, pigment: PigmentName): WaterSc
 
 export function waterFloorFor(ground: GroundName, pigment: PigmentName): WaterFloor {
   return floorAt(waterSceneFor(ground, pigment), WATER_DEPTH);
+}
+
+/**
+ * The pigment each field takes when the chip says «blandet» (auto). Ink: light glowing in
+ * navy, navy ink on turquoise, turquoise ink on light, light glowing in burgundy. Water:
+ * turquoise light in the navy night, the brand's water on turquoise and on light, light
+ * pools in the burgundy night.
+ */
+export function fieldPigment(ground: GroundName, chosen: PigmentName, material: 'ink' | 'water' = 'ink'): PigmentName {
+  if (chosen !== 'mixed') return chosen;
+  if (material === 'water') return ground === 'crimson' ? 'light' : 'turquoise';
+  switch (ground) {
+    case 'navy': return 'light';
+    case 'turquoise': return 'navy';
+    case 'light': return 'turquoise';
+    case 'crimson': return 'light';
+    case 'white': return 'turquoise';
+  }
 }
 
 /** `color-mix` of a hex at an alpha, for the CSS stills. */
