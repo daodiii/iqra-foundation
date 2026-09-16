@@ -1,0 +1,176 @@
+/*
+ * The hero band: the mark with the film in it, centred on the page's white, and the
+ * brief's headline under it where «Foundation» would stand. About 78vh on a desktop and
+ * 70vh on a phone, never under 560px; the content sets the height where it needs more.
+ */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 3.6vh, 40px);
+  min-height: max(560px, 78vh);
+  padding: clamp(20px, 3vh, 36px) var(--margin) clamp(32px, 5vh, 56px);
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+/*
+ * The mark's box: about 62vw on a desktop, held back on a short screen so the headline
+ * and the buttons stay on the first screen with it. The aspect is the art's own viewBox.
+ */
+.stage {
+  --mark-w: min(62vw, 36vh * 2.419);
+  position: relative;
+  width: var(--mark-w);
+  aspect-ratio: 728.806 / 301.27;
+  /* The mask's rect bleeds a hair past the box; nothing of it may reach the copy below. */
+  overflow: hidden;
+}
+
+.film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The mask is the page's white with the letters cut out, the size of the box and a hair over. */
+.mark {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.page {
+  fill: var(--color-white);
+}
+
+/* The pen's hairline round each letter, one device pixel whatever the size: the name reads when the film runs light. */
+.edge {
+  fill: none;
+  stroke: var(--color-navy);
+  stroke-width: 1px;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+
+.accent {
+  fill: var(--color-crimson);
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 780px;
+  text-align: center;
+}
+
+.title {
+  max-width: 18ch;
+  font-size: var(--text-hero);
+  color: var(--color-navy);
+}
+
+.lede {
+  max-width: 58ch;
+  font-size: clamp(18px, 1.4vw, 20px);
+  line-height: 1.5;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  font: 500 15px/1 var(--font-sans);
+  letter-spacing: 0.005em;
+  color: var(--color-white);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--dur-s) var(--ease-out);
+}
+
+.work {
+  background: var(--color-navy);
+}
+
+.work:hover {
+  background: var(--color-crimson);
+}
+
+/* Støtt oss is always crimson on this site: the brief's «tydelig knapp». */
+.support {
+  background: var(--color-crimson);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+/*
+ * A short screen — a 720p or 768p laptop — keeps the mark, the headline and both buttons
+ * on the first screen: the mark takes less of the height and the gaps close a little.
+ */
+@media (min-width: 768px) and (max-height: 800px) {
+  .hero {
+    gap: 22px;
+    padding-top: 16px;
+  }
+
+  .stage {
+    --mark-w: min(62vw, 30vh * 2.419);
+  }
+
+  .copy {
+    gap: 14px;
+  }
+
+  .lede {
+    font-size: 18px;
+  }
+
+  .buttons {
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero {
+    min-height: max(560px, 70vh);
+    gap: 24px;
+  }
+
+  .stage {
+    --mark-w: 88vw;
+  }
+
+  .copy {
+    gap: 16px;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-self: stretch;
+  }
+}

@@ -1,18 +1,31 @@
 /*
- * The subpages' one layout: a title, a lede in the brief's words, then sections. Plain,
- * so a direction can restyle it; complete, so every page reads without any of that.
+ * The subpages' one layout: a label with the i's dot, a title, a lede in the brief's words,
+ * then sections under hairlines. Plain, and complete: every page reads without anything
+ * the materials add.
  */
 .page {
   padding: 56px var(--margin) 0;
   max-width: calc(var(--measure) + 2 * var(--margin) + 160px);
 }
 
+/* The page's label: General Sans 500, tracked like a legend, the i's dot before it. */
 .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 12px;
-  font: 600 13px/1 var(--font-sans);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-crimson);
+  font: 500 14px/1 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-navy);
+}
+
+.eyebrow::before {
+  content: '';
+  flex: none;
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: 50%;
+  background: var(--color-crimson);
 }
 
 .title {
@@ -87,9 +100,8 @@
 }
 
 .facts dt {
-  font: 600 13px/1 var(--font-sans);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font: 500 13px/1 var(--font-sans);
+  letter-spacing: var(--tracking-label);
   color: var(--color-ink-soft);
 }
 
@@ -133,38 +145,4 @@
 
 .buttonSecondary:hover {
   background: var(--color-light);
-}
-
-.areas {
-  margin: 16px 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.area {
-  padding: 20px;
-  border-radius: var(--radius);
-  background: var(--color-light);
-}
-
-.area h3 {
-  font-size: 20px;
-}
-
-.area p {
-  margin-top: 10px;
-  font-size: 15px;
-}
-
-.area a {
-  text-decoration: none;
-  color: inherit;
-}
-
-.area a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }

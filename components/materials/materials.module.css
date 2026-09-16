@@ -1,0 +1,252 @@
+/*
+ * The materials, and the frame round a box of copy.
+ *
+ * A box is a rounded plate of ink or of water: a CSS still underneath — the colour the box
+ * has before any script runs, and the whole answer on a device that declines WebGL2 — and
+ * a canvas over it that `lib/ink.ts` or `lib/water.ts` paints once the box is near and the
+ * page is quiet. The stills are mixed from the same tokens the palettes in `lib/film.ts`
+ * are written from, so the swap from one to the other is not a jump.
+ *
+ * A frame is a LINE, not a pane: a hairline the pen draws round the copy (`lib/pen.ts`),
+ * the legend sitting on the top line with the pen leaving a gap for it, the inside barely
+ * frosted so the material stays visible and the words stay readable.
+ */
+
+.box {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  overflow: hidden;
+  border-radius: var(--box-radius);
+  background-color: var(--ground);
+  background-image: var(--still);
+}
+
+/*
+ * Ink on the light paper: the turquoise and its mid tint where the pigment has spread, one
+ * navy haze in a corner where the rare dark pigment settles — the still of `brand.ink`.
+ * The first gradient paints on top.
+ */
+.ink {
+  --ground: var(--color-light);
+  --frost: var(--frost-ink);
+  --still:
+    radial-gradient(58% 42% at 16% 20%, color-mix(in srgb, var(--color-turquoise) 42%, transparent) 0%, transparent 68%),
+    radial-gradient(62% 46% at 80% 30%, color-mix(in srgb, var(--color-turquoise-mid) 55%, transparent) 0%, transparent 70%),
+    radial-gradient(50% 40% at 42% 78%, color-mix(in srgb, var(--color-turquoise) 30%, transparent) 0%, transparent 68%),
+    radial-gradient(38% 32% at 86% 82%, color-mix(in srgb, var(--color-navy) 10%, transparent) 0%, transparent 70%);
+}
+
+/*
+ * Water over the turquoise floor at the page's depth: `brand.water`'s pools at that depth's
+ * gain — same colours, same places, same sizes, listed in reverse, because the shader mixes
+ * each pool over the ones before it and a CSS background list paints the first one on top.
+ */
+.water {
+  --ground: var(--color-water-floor);
+  --frost: var(--frost-water);
+  --still:
+    radial-gradient(33% 36% at 10% 84%, color-mix(in srgb, var(--color-navy) 9%, transparent) 0%, transparent 70%),
+    radial-gradient(48% 53% at 58% 38%, color-mix(in srgb, var(--color-turquoise-mid) 41%, transparent) 0%, transparent 70%),
+    radial-gradient(40% 45% at 80% 78%, color-mix(in srgb, var(--color-navy) 15%, transparent) 0%, transparent 70%),
+    radial-gradient(48% 53% at 20% 18%, color-mix(in srgb, var(--color-light) 50%, transparent) 0%, transparent 70%);
+}
+
+/*
+ * Transparent until the simulation has a first frame on it, so what shows until then is
+ * the still underneath rather than an empty black rectangle; `lib/ink.ts` and
+ * `lib/water.ts` each set it to 1 once they have painted, and this fades it in. On a device
+ * that declines, it never appears and the still is the whole answer.
+ */
+.paint {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity 520ms linear;
+  /* The copy sits above this; a canvas that swallowed pointer events would also swallow
+     text selection. The box itself listens for the pointer. */
+  pointer-events: none;
+}
+
+/* What the box holds, above the paint. The padding lives here so a percentage resolves against the inner width. */
+.inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: center;
+  padding: var(--box-pad-y, 72px) var(--box-pad-x, 5%);
+}
+
+/* ----- the frame ----- */
+
+.frame {
+  --card-x: 28px;
+  --card-y: 28px;
+  --legend-x: 22px;
+  position: relative;
+  z-index: 1;
+  /* A stacking context, so the inside and the line (`z-index: -1`) stay under the copy and above the box. */
+  isolation: isolate;
+  /* A flex column, so the legend's negative top margin cannot collapse through the card. */
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--card-x) var(--card-y);
+  border-radius: 10px;
+}
+
+/*
+ * The inside: barely frosted, so the material stays visible and the words stay readable.
+ * `--frame-in` fades it in with the line as the pen draws; with no script it is 1.
+ */
+.frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgb(255 255 255 / var(--frost));
+  /*
+   * The UNPREFIXED property only — the build adds the prefix. Declaring the prefixed form
+   * beside it makes Lightning CSS keep the prefixed one alone, which Blink does not
+   * implement, and the inside is silently a flat white rectangle.
+   */
+  backdrop-filter: blur(12px) saturate(1.4);
+  opacity: var(--frame-in, 1);
+  pointer-events: none;
+}
+
+/* The line: a canvas 32px larger than the card on every side (`FRAME_PAD`), room for the pen's haze and its tip. */
+.frameCanvas {
+  position: absolute;
+  inset: -32px;
+  z-index: -1;
+  width: calc(100% + 64px);
+  height: calc(100% + 64px);
+  display: block;
+  pointer-events: none;
+}
+
+/*
+ * The legend: the card's first line, sitting ON the top line — half above it, half below —
+ * with the pen leaving the line open behind it (`legendGap` in lib/pen.ts reads its
+ * offsets). In flow and pulled up by a negative margin rather than positioned or
+ * transformed: either would make it the containing block for the link's cover below, and
+ * the cover has to be the whole card.
+ *
+ * Its upper half carries a tab in the frame's own fill, so the name stands on a lighter
+ * plate where it crosses the raw material; below the line it is on the inside anyway.
+ */
+.legend {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% + 2 * var(--card-x) - 2 * var(--legend-x));
+  margin: -0.5em 0 0 calc(var(--legend-x) - var(--card-x));
+  padding: 0 8px;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(rgb(255 255 255 / calc(var(--frost) * var(--frame-in, 1))) 0 50%, transparent 50% 100%);
+  font: 500 16px/1 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-navy);
+  white-space: nowrap;
+}
+
+/* The i's dot before a name: the four areas carry it, wherever they are named. */
+.dot {
+  flex: none;
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: 50%;
+  background: var(--color-crimson);
+}
+
+/*
+ * A name that is a link takes the whole card with it: the link's cover is laid over the
+ * card, so the frame is what you press and the name is what a screen reader hears.
+ */
+.legendLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.legendLink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.legendLink:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--color-crimson);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+.frame:has(.legendLink:hover)::before,
+.frame:has(.legendLink:focus-visible)::before {
+  background: rgb(255 255 255 / calc(var(--frost) + 0.15));
+}
+
+.copy {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+/* The card's own heading, where it has one: the vision and the mission sentences. */
+.title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-card-title);
+  line-height: 1.15;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-navy);
+  text-wrap: balance;
+}
+
+/* The copy: the brief's text, in navy — it clears 4.5:1 on every ground the materials can reach. */
+.text {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+/*
+ * A device without backdrop-filter gets a nearly opaque inside rather than a transparent
+ * one. The failure being avoided is navy type sitting straight on a moving simulation.
+ */
+@supports not (backdrop-filter: blur(1px)) {
+  .frame::before {
+    background: rgb(255 255 255 / 0.9);
+  }
+
+  .legend {
+    background: linear-gradient(rgb(255 255 255 / 0.9) 0 50%, transparent 50% 100%);
+  }
+}
+
+@media (max-width: 699px) {
+  .frame {
+    --card-x: 20px;
+    --card-y: 22px;
+    --legend-x: 14px;
+  }
+
+  .legend {
+    font-size: 15px;
+  }
+
+  .text {
+    font-size: 15.5px;
+  }
+}

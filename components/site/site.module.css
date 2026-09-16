@@ -1,7 +1,9 @@
 /*
- * The shell: header, menu, footer. Plain on purpose — the directions restyle it — but
- * complete: the nine items are visible on a desktop, a drawer on a phone, and the footer
- * carries the logo, the links, the red thread and the facts.
+ * The shell: header, menu, footer. A white bar with a hairline under it, the guide's logo
+ * at 40px, the nine items in General Sans 500 with the current page marked by the i's
+ * dot, and Støtt oss a crimson pill — the one button on the site that is always crimson.
+ * The footer is the last plate: navy, the logo reversed, the nine links, the red thread
+ * with a crimson dot for each full stop, and the facts.
  */
 
 .skip {
@@ -82,6 +84,7 @@
 .support {
   display: inline-flex;
   align-items: center;
+  gap: 7px;
   height: 40px;
   padding: 0 10px;
   border-radius: var(--radius-pill);
@@ -89,7 +92,7 @@
   letter-spacing: 0.005em;
   text-decoration: none;
   white-space: nowrap;
-  color: var(--color-ink);
+  color: var(--color-navy);
   transition: background-color var(--dur-s) var(--ease-out), color var(--dur-s) var(--ease-out);
 }
 
@@ -97,19 +100,25 @@
   background: var(--color-light);
 }
 
-.link[aria-current='page'] {
-  color: var(--color-crimson);
+/* The current page: the i's dot before its label — one gesture, used everywhere. */
+.link[aria-current='page']::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-crimson);
 }
 
 .support {
   margin-left: 8px;
   padding: 0 18px;
-  background: var(--color-navy);
+  background: var(--color-crimson);
   color: var(--color-white);
 }
 
 .support:hover {
-  background: var(--color-crimson);
+  background: var(--color-crimson-deep);
 }
 
 .scrim {
@@ -175,8 +184,14 @@
   .support {
     height: 52px;
     padding: 0 14px;
+    gap: 10px;
     font-size: 18px;
     border-radius: var(--radius);
+  }
+
+  .link[aria-current='page']::before {
+    width: var(--dot);
+    height: var(--dot);
   }
 
   .support {
@@ -188,7 +203,7 @@
 /* ----- the footer ----- */
 
 .footer {
-  margin-top: 96px;
+  margin-top: var(--footer-gap);
   padding: 56px var(--margin) 40px;
   background: var(--color-navy);
   color: var(--color-white);
@@ -238,13 +253,15 @@
   text-underline-offset: 3px;
 }
 
+/* The red thread: the name, then the four areas with the i's dot for each full stop. */
 .thread {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 24px;
+  align-items: center;
+  gap: 10px 28px;
   margin: 48px 0 0;
   padding-top: 24px;
-  border-top: 1px solid color-mix(in srgb, #ffffff 18%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--color-white) 18%, transparent);
 }
 
 .threadName {
@@ -254,10 +271,28 @@
 }
 
 .threadLine {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
   font-weight: 500;
   font-size: 13px;
+  letter-spacing: var(--tracking-label);
   color: var(--color-turquoise);
-  letter-spacing: 0.02em;
+}
+
+.threadWord {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stop {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-crimson);
 }
 
 .facts {
