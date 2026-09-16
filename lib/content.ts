@@ -38,6 +38,8 @@ export type Event = {
   text: string;
   link: string | null;
   image: Picture | null;
+  /** One of the four areas, when the item belongs to one. */
+  area: AreaKey | null;
 };
 
 export type ResourceKind = 'publikasjon' | 'artikkel' | 'rapport' | 'presentasjon' | 'video' | 'annet';
@@ -51,6 +53,8 @@ export type Resource = {
   /** A file under `public/`, as its public path; or a URL elsewhere. One of the two. */
   file: string | null;
   url: string | null;
+  /** One of the four areas, when the item belongs to one. */
+  area: AreaKey | null;
 };
 
 export type DocumentKind = 'vedtekter' | 'arsrapport' | 'arsregnskap' | 'strategi' | 'annet';
@@ -149,6 +153,8 @@ const oneOf = <T extends string>(file: string, raw: Raw, key: string, kinds: rea
   if (!(kinds as readonly string[]).includes(v)) throw new RecordError(file, `«${key}» must be one of ${kinds.join(', ')}`);
   return v as T;
 };
+const optOneOf = <T extends string>(file: string, raw: Raw, key: string, kinds: readonly T[]): T | null =>
+  optStr(file, raw, key) === null ? null : oneOf(file, raw, key, kinds);
 /**
  * A file the CMS uploaded is stored by name; the public path is where it is served from.
  * A value that already starts with `/` is taken as the public path itself.
@@ -185,6 +191,7 @@ export function getEvents(dir?: string): Event[] {
       text: str(file, raw, 'text'),
       link: optStr(file, raw, 'link'),
       image: picture('arrangementer', file, raw, 'image'),
+      area: optOneOf(file, raw, 'area', AREA_KEYS),
     }))
     .sort((a, b) => a.start.localeCompare(b.start) || (a.time ?? '').localeCompare(b.time ?? ''));
 }
@@ -213,6 +220,7 @@ export function getResources(dir?: string): Resource[] {
         summary: str(file, raw, 'summary'),
         file: f === null ? null : publicPath('ressurser', 'file', f),
         url,
+        area: optOneOf(file, raw, 'area', AREA_KEYS),
       };
     })
     .sort((a, b) => b.date.localeCompare(a.date));

@@ -40,6 +40,18 @@ export default config({
         end: fields.date({ label: 'Sluttdato', description: 'Bare for arrangementer over flere dager.' }),
         place: fields.text({ label: 'Sted', validation: { isRequired: true } }),
         text: fields.text({ label: 'Tekst', multiline: true, validation: { isRequired: true } }),
+        area: fields.select({
+          label: 'Område',
+          description: 'Hvilket av de fire områdene dette hører til, om det hører til ett.',
+          options: [
+            { label: 'Ingen', value: '' },
+            { label: 'Kunnskap', value: 'kunnskap' },
+            { label: 'Dialog', value: 'dialog' },
+            { label: 'Møteplasser', value: 'moteplasser' },
+            { label: 'Samfunnsdeltakelse', value: 'samfunnsdeltakelse' },
+          ],
+          defaultValue: '',
+        }),
         link: fields.url({ label: 'Lenke', description: 'Påmelding eller mer informasjon. Kan stå tomt.' }),
         image: fields.object(
           {
@@ -76,6 +88,18 @@ export default config({
         }),
         date: fields.date({ label: 'Dato', validation: { isRequired: true } }),
         summary: fields.text({ label: 'Sammendrag', multiline: true, validation: { isRequired: true } }),
+        area: fields.select({
+          label: 'Område',
+          description: 'Hvilket av de fire områdene dette hører til, om det hører til ett.',
+          options: [
+            { label: 'Ingen', value: '' },
+            { label: 'Kunnskap', value: 'kunnskap' },
+            { label: 'Dialog', value: 'dialog' },
+            { label: 'Møteplasser', value: 'moteplasser' },
+            { label: 'Samfunnsdeltakelse', value: 'samfunnsdeltakelse' },
+          ],
+          defaultValue: '',
+        }),
         file: fields.file({
           label: 'Fil',
           description: 'En PDF eller annen fil. Enten fil eller lenke.',

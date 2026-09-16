@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { AreaMark } from '@/components/site/AreaMark';
 import styles from '@/components/site/page.module.css';
 import { site } from '@/content/site.no';
 import { getEvents, splitEvents, todayISO, type Event } from '@/lib/content';
@@ -13,6 +14,7 @@ function EventItem({ e }: { e: Event }) {
   return (
     <li className={styles.item}>
       <h3>{e.link ? <a href={e.link}>{e.title}</a> : e.title}</h3>
+      {e.area && <p className={styles.meta}><AreaMark area={e.area} /></p>}
       <p className={styles.meta}>
         <time dateTime={e.time ? `${e.start}T${e.time}` : e.start}>{writeDateTime(e.start, e.time)}</time>
         {' · '}

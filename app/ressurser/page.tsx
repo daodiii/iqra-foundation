@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { AreaMark } from '@/components/site/AreaMark';
 import styles from '@/components/site/page.module.css';
 import { site } from '@/content/site.no';
 import { getResources } from '@/lib/content';
@@ -26,6 +27,7 @@ export default function Ressurser() {
                 <h3>
                   <a href={r.file ?? r.url ?? '#'}>{r.title}</a>
                 </h3>
+                {r.area && <p className={styles.meta}><AreaMark area={r.area} /></p>}
                 <p className={styles.meta}>
                   {t.kinds[r.kind]} · <time dateTime={r.date}>{writeDate(r.date)}</time>
                 </p>

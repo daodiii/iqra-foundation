@@ -67,11 +67,13 @@ shapes (`lib/content.ts` checks them and names the field when something is wrong
   "place": "Oslo",
   "text": "…",
   "link": "https://…",          // optional
-  "image": { "src": "/media/arrangementer/apen-kveld.jpg", "alt": "…" }   // optional; alt required with a picture
+  "image": { "src": "/media/arrangementer/apen-kveld.jpg", "alt": "…" },  // optional; alt required with a picture
+  "area": "dialog"              // optional: kunnskap | dialog | moteplasser | samfunnsdeltakelse, or left out
 }
 // content/ressurser/rapport-2026.json
 { "title": "…", "kind": "rapport", "date": "2026-05-01", "summary": "…", "file": "/files/ressurser/rapport-2026.pdf" }
 // kind: publikasjon | artikkel | rapport | presentasjon | video | annet; "url" instead of "file" for something hosted elsewhere
+// "area" as on an event: one of the four areas, or left out; the card then carries the area's mark
 // content/styringsdokumenter/vedtekter.json
 { "title": "Vedtekter", "kind": "vedtekter", "year": 2025, "file": "/files/styringsdokumenter/vedtekter.pdf" }
 // kind: vedtekter | arsrapport | arsregnskap | strategi | annet

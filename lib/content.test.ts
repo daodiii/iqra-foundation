@@ -36,8 +36,18 @@ describe('arrangementer', () => {
   test('a record becomes an event, the slug from the file name, optional fields null', () => {
     write('apen-kveld.json', { title: 'Åpen kveld', start: '2027-01-20', place: 'Oslo', text: 'Tekst.' });
     expect(getEvents(dir)).toEqual([
-      { slug: 'apen-kveld', title: 'Åpen kveld', start: '2027-01-20', time: null, end: null, place: 'Oslo', text: 'Tekst.', link: null, image: null },
+      { slug: 'apen-kveld', title: 'Åpen kveld', start: '2027-01-20', time: null, end: null, place: 'Oslo', text: 'Tekst.', link: null, image: null, area: null },
     ]);
+  });
+  test('an area is carried when it is one of the four, null when absent or empty, refused otherwise', () => {
+    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', area: 'dialog' });
+    expect(getEvents(dir)[0].area).toBe('dialog');
+    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', area: '' });
+    expect(getEvents(dir)[0].area).toBeNull();
+    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T' });
+    expect(getEvents(dir)[0].area).toBeNull();
+    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', area: 'sport' });
+    expect(() => getEvents(dir)).toThrow(/«area» must be one of kunnskap, dialog, moteplasser, samfunnsdeltakelse/);
   });
   test('a picture carries its alt, and a file name gets the public path', () => {
     write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', image: { src: 'bilde.jpg', alt: 'Et bilde' } });
@@ -73,7 +83,7 @@ describe('arrangementer', () => {
 
 describe('splitEvents', () => {
   const ev = (title: string, start: string, end: string | null = null) =>
-    ({ slug: title, title, start, time: null, end, place: 'O', text: 'T', link: null, image: null });
+    ({ slug: title, title, start, time: null, end, place: 'O', text: 'T', link: null, image: null, area: null });
   test('kommende from today on, tidligere before it, the past newest first', () => {
     // In date order, as getEvents hands them over.
     const { upcoming, past } = splitEvents([ev('older', '2026-08-01'), ev('gone', '2026-09-01'), ev('today', '2026-09-15'), ev('soon', '2026-10-01')], '2026-09-15');
@@ -89,9 +99,19 @@ describe('splitEvents', () => {
 describe('ressurser', () => {
   test('a resource needs a file or a link, and the file gets its public path', () => {
     write('r.json', { title: 'Rapport', kind: 'rapport', date: '2026-05-01', summary: 'S', file: 'rapport.pdf' });
-    expect(getResources(dir)[0]).toMatchObject({ kind: 'rapport', file: '/files/ressurser/rapport.pdf', url: null });
+    expect(getResources(dir)[0]).toMatchObject({ kind: 'rapport', file: '/files/ressurser/rapport.pdf', url: null, area: null });
     write('r.json', { title: 'Rapport', kind: 'rapport', date: '2026-05-01', summary: 'S' });
     expect(() => getResources(dir)).toThrow(/needs either «file» or «url»/);
+  });
+  test('an area is carried when it is one of the four, null when absent or empty, refused otherwise', () => {
+    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: 'kunnskap' });
+    expect(getResources(dir)[0].area).toBe('kunnskap');
+    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: '' });
+    expect(getResources(dir)[0].area).toBeNull();
+    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y' });
+    expect(getResources(dir)[0].area).toBeNull();
+    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: 'sport' });
+    expect(() => getResources(dir)).toThrow(/«area» must be one of kunnskap, dialog, moteplasser, samfunnsdeltakelse/);
   });
   test('an unknown kind is refused', () => {
     write('r.json', { title: 'X', kind: 'podkast', date: '2026-05-01', summary: 'S', url: 'https://example.no' });
