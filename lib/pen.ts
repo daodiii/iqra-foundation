@@ -1,9 +1,9 @@
 /*
- * The pen. One hand draws the arch in Visjon and the frame round every box on the page:
- * a rose glow under a navy line and, while a stroke is still being drawn, the seed's
- * crimson at its tip. Paths are arcs and straight lines walked by length, so the pen and
- * the stroke come from one description. Geometry only, until `drawStroke`; the shapes are
- * tested where there is no canvas at all.
+ * The pen. One hand draws the frame round every box of copy on the site: a turquoise haze
+ * under a navy line and, while a stroke is still being drawn, the logo's crimson at its
+ * tip. Paths are arcs and straight lines walked by length, so the pen and the stroke come
+ * from one description. Geometry only, until `drawStroke`; the shapes are tested where
+ * there is no canvas at all.
  */
 
 export const TAU = Math.PI * 2;
@@ -65,31 +65,45 @@ export function makePath(segs: Seg[]): ArchPath {
 }
 
 /**
- * The stroke, in the tree's pen: a rose glow under a navy line, and while it is still being
- * drawn, the pen itself — the seed's crimson. The caller clears the canvas.
+ * The pen's three colours, the brand's. A canvas cannot read a CSS token, so they are
+ * written as rgba here: the haze is `--color-turquoise` (#67c1bf), the line `--color-navy`
+ * (#2c394b), the tip `--color-crimson` (#ab5261) — the same three the logo is drawn in.
+ */
+export const PEN = {
+  haze: 'rgba(103,193,191,0.35)',
+  hazeShadow: 'rgba(103,193,191,0.5)',
+  line: 'rgba(44,57,75,0.7)',
+  tip: 'rgba(171,82,97,0.95)',
+  tipGlow: 'rgba(171,82,97,0.55)',
+  tipGlowEnd: 'rgba(171,82,97,0)',
+} as const;
+
+/**
+ * The stroke: a turquoise haze under a navy line, and while it is still being drawn, the
+ * pen itself — the logo's crimson. The caller clears the canvas.
  */
 export function drawStroke(ctx: CanvasRenderingContext2D, path: ArchPath, p: number): void {
   if (p <= 0) return;
   ctx.lineCap = 'round';
-  ctx.shadowColor = 'rgba(196,122,156,0.5)';
+  ctx.shadowColor = PEN.hazeShadow;
   ctx.shadowBlur = 14;
-  ctx.strokeStyle = 'rgba(196,122,156,0.55)';
+  ctx.strokeStyle = PEN.haze;
   ctx.lineWidth = 1.6;
   path.trace(ctx, p);
   ctx.shadowBlur = 0;
-  ctx.strokeStyle = 'rgba(42,57,75,0.62)';
+  ctx.strokeStyle = PEN.line;
   ctx.lineWidth = 1.3;
   path.trace(ctx, p);
   if (p >= 1) return;
   const [x, y] = path.pointAt(p);
   const g = ctx.createRadialGradient(x, y, 0, x, y, 26);
-  g.addColorStop(0, 'rgba(171,82,99,0.55)');
-  g.addColorStop(1, 'rgba(171,82,99,0)');
+  g.addColorStop(0, PEN.tipGlow);
+  g.addColorStop(1, PEN.tipGlowEnd);
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(x, y, 26, 0, TAU);
   ctx.fill();
-  ctx.fillStyle = 'rgba(171,82,99,0.95)';
+  ctx.fillStyle = PEN.tip;
   ctx.beginPath();
   ctx.arc(x, y, 2.6, 0, TAU);
   ctx.fill();
@@ -151,14 +165,12 @@ export type FrameHandle = {
 
 /**
  * The frame round one box. Finds the box's canvas (`[data-frame-canvas]`) and its legend
- * (`[data-legend]`, optional) and draws the frame with the tree's pen: `p` is how far the
- * pen has come, and the section's own timeline moves it —
- *
- *   gsap.to(frame, { p: 1, duration: 1.1, ease: EASE.none, onUpdate: frame.draw })
- *
- * — so the pen is in step with everything else the section moves, and no frame ever reads
- * the clock or schedules a frame of its own. Null where there is no canvas or no 2D
- * context: the box is then a frosted rectangle with no line, which is a complete answer.
+ * (`[data-legend]`, optional) and draws the frame with the pen: `p` is how far the pen has
+ * come, and whoever owns the card moves it — a requestAnimationFrame loop in
+ * `components/materials/Frame.tsx`, or `p = 1` and one `draw()` where nothing animates —
+ * so no frame ever reads the clock or schedules a frame of its own. Null where there is
+ * no canvas or no 2D context: the box is then a frosted rectangle with no line, which is a
+ * complete answer.
  */
 export function createFrame(card: HTMLElement): FrameHandle | null {
   const canvas = card.querySelector<HTMLCanvasElement>('[data-frame-canvas]');
@@ -210,7 +222,7 @@ export function createFrame(card: HTMLElement): FrameHandle | null {
 /**
  * Frames are measured, and a measurement goes stale: on a resize, and when the web font
  * lands and every legend changes width. Lays each frame out again 300ms after the last
- * resize (the tree's own debounce) and once when the fonts are ready. Returns the release.
+ * resize and once when the fonts are ready. Returns the release.
  */
 export function keepFramesFitted(frames: FrameHandle[]): () => void {
   let timer = 0;

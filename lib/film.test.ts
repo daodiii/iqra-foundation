@@ -1,14 +1,19 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { expect, test } from 'vitest';
-import { film, type FilmInk, type FilmWater } from './film';
-import { deepest, type InkPalette } from './ink';
-import { POOL_LIMIT, type WaterFloor } from './water';
+import { brand, WATER_DEPTH } from './film';
+import { deepest } from './ink';
+import { floorAt, POOL_LIMIT } from './water';
 
-const INK: FilmInk[] = ['vision', 'mission'];
-const WATER: FilmWater[] = ['bridge', 'people', 'supportWater'];
+/** The guide's five, as `app/globals.css` prints them. */
+const FIVE = { navy: '#2c394b', turquoise: '#67c1bf', light: '#f0f0f1', dark: '#393e46', crimson: '#ab5261' };
+const GLOBALS = readFileSync(path.resolve(process.cwd(), 'app/globals.css'), 'utf8');
+
 const rgb = (hex: string) => [
   parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16),
 ] as const;
 const lum = (hex: string) => { const [r, g, b] = rgb(hex); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+const toHex = (c: readonly number[]) => '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
 
 /** Degrees round the wheel. Only meaningful for a colour with some saturation in it. */
 function hue(hex: string): number {
@@ -19,204 +24,138 @@ function hue(hex: string): number {
   return h * 60;
 }
 
-const paper: [FilmInk, InkPalette][] = [['vision', film.vision], ['mission', film.mission]];
-const water: [FilmWater, WaterFloor][] = WATER.map((k) => [k, film[k]]);
+/** Is `hex` one of the five, or one of them mixed some way towards white? (Within 2 per channel.) */
+function traceable(hex: string): boolean {
+  const c = rgb(hex);
+  return Object.values(FIVE).some((base) => {
+    if (base === hex) return true;
+    const b = rgb(base);
+    const t = c.map((v, i) => (255 - v) / Math.max(1, 255 - b[i])).reduce((a, v) => a + v, 0) / 3;
+    return t >= 0 && t <= 1 && c.every((v, i) => Math.abs(v - (b[i] * t + 255 * (1 - t))) <= 2);
+  });
+}
+
+/** WCAG contrast between two hexes. */
+function contrast(a: string, b: string): number {
+  const L = (hex: string) => {
+    const [r, g, b] = rgb(hex).map((v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const [x, y] = [L(a), L(b)].sort((p, q) => q - p);
+  return (x + 0.05) / (y + 0.05);
+}
+
+/** White at `alpha` over a colour: the frosted inside of a card. */
+const frost = (hex: string, alpha: number) => toHex(rgb(hex).map((v) => 255 * alpha + v * (1 - alpha)));
+
+const every = () => [brand.ink.ground, ...brand.ink.ink.map(([h]) => h), brand.water.pale, brand.water.deep, ...brand.water.pools.map(([h]) => h)];
+
+test('the draft’s five scenes are gone: one ink, one water, and the water’s floor', () => {
+  expect(Object.keys(brand)).toEqual(['ink', 'water', 'floor']);
+});
 
 test('every colour is a full six-digit hex, so the shader parse cannot half-succeed', () => {
-  const ink = INK.flatMap((s) => [film[s].ground, ...film[s].ink.map(([h]) => h)]);
-  const pools = WATER.flatMap((s) => [film[s].ground, ...film[s].pools.map(([h]) => h)]);
-  for (const h of ink.concat(pools)) expect(h).toMatch(/^#[0-9a-f]{6}$/);
+  for (const h of every()) expect(h).toMatch(/^#[0-9a-f]{6}$/);
 });
 
-/**
- * Nothing on the page is night any more: the Haram card went with the Støtt oss rebuild
- * (2026-09-12), and navy type sits on every ground that is left. A night floor or an
- * additive ink coming back would put white type's contrast in play again.
- */
-test('no ink is additive and no water is night', () => {
-  for (const [, p] of paper) expect(p.additive).toBeFalsy();
-  for (const [name, floor] of water) expect(floor.night, name).toBe(false);
+test('every colour is one of the guide’s five or a tint of one towards white', () => {
+  for (const h of every()) expect(traceable(h), h).toBe(true);
 });
 
-/*
- * The order the user chose — «To løp», 2026-09-13: after the sky, the warm run (cream, then the
- * stone shallow) and the green run (sage, then the green) — with a depth per box set on a
- * slider: 0.55 · 0.55 · 0.15 · 0.55 · 0.35. The page still thins as it goes down: the bridge
- * is the palest water, the ask the deepest.
- */
-test('the water gets deeper down the page: the bridge palest, the ask deepest', () => {
-  expect(lum(film.bridge.ground)).toBeLessThan(Math.min(lum(film.vision.ground), lum(film.mission.ground)));
-  expect(lum(film.bridge.ground)).toBeGreaterThan(lum(film.people.ground));
-  expect(lum(film.people.ground)).toBeGreaterThan(lum(film.supportWater.ground));
+test('no ink is additive or over a floor, and the water is not night: navy type sits on every ground', () => {
+  expect(brand.ink.additive).toBeFalsy();
+  expect(brand.ink.over).toBeFalsy();
+  expect(brand.floor.night).toBe(false);
 });
 
-/**
- * The user's picks, pinned — a scene AND a depth each, and the ground that comes out. These
- * exact hexes are also written into `wash.module.css`, because a box has to carry its colour
- * before any script runs; `ground.test.ts` holds the two together. A refactor that put the
- * boxes back on one shared depth would move all three and fail here.
- */
-test('the bridge is the stone, shallow: Arafat at 0.15', () => {
-  expect(film.bridge.ground).toBe('#cfc9bf');
-  const [r, g, b] = rgb(film.bridge.ground);
-  expect(Math.max(r, g, b) - Math.min(r, g, b), 'the stone has to stay nearly neutral').toBeLessThan(30);
+/* ----- the ink ----- */
+
+test('the ink’s paper is the guide’s light, and light', () => {
+  expect(brand.ink.ground).toBe(FIVE.light);
+  expect(lum(brand.ink.ground)).toBeGreaterThan(230);
 });
 
-test('the people are on sage: the sage scene at 0.55', () => {
-  expect(film.people.ground).toBe('#b3c3b7');
-  expect(hue(film.people.ground)).toBeGreaterThan(110);
-  expect(hue(film.people.ground)).toBeLessThan(150);
-});
-
-test('the ask is the green, lighter than it was: the green scene at 0.35', () => {
-  expect(film.supportWater.ground).toBe('#84b8a8');
-});
-
-/** The drops that used to fall into the bridge are gone, palette and all; nothing on the page rains ink now. */
-test('there is no drops ink any more', () => {
-  expect('drops' in film).toBe(false);
-});
-
-/**
- * Contrast, not taste. Navy copy sits on the paper grounds and on both water floors, so a
- * ground that drifted the wrong way would take the text with it.
- */
-test('the paper grounds are light', () => {
-  for (const [name, p] of paper) expect(lum(p.ground), name).toBeGreaterThan(200);
-});
-
-/**
- * The water is darker than the paper by design — it is water with depth in it — but the
- * white cards have to keep sitting ON it rather than disappearing into it, and the cards
- * are the page's whole shape.
- */
-test('the water floors are mid-tones, darker than the paper', () => {
-  for (const name of ['people', 'supportWater'] as const) {
-    expect(lum(film[name].ground), name).toBeGreaterThan(120);
-    expect(lum(film[name].ground), name).toBeLessThan(200);
+test('the pigments carrying the ink are the turquoise family, and the turquoise itself is one of them', () => {
+  const heavy = brand.ink.ink.filter(([, w]) => w >= 2);
+  expect(heavy.length).toBeGreaterThan(1);
+  expect(heavy.map(([h]) => h)).toContain(FIVE.turquoise);
+  for (const [h] of heavy) {
+    expect(hue(h), h).toBeGreaterThan(170);
+    expect(hue(h), h).toBeLessThan(190);
   }
 });
 
 /**
- * The shader holds `POOL_LIMIT` pools and its loop is unrolled at compile time, so a scene
- * with more would not fail — the extra ones would simply never be drawn, and the floor would
- * quietly be missing a colour.
+ * The mud lesson, kept as a test. Pigment mixes subtractively, so the darkest ink in a
+ * palette has by far the most power to swallow the others; the dark is allowed in — it is
+ * the brand's navy — but only as rarely as anything in the palette ever appears.
  */
-test('no floor asks for more pools than the shader can hold', () => {
-  for (const [name, floor] of water) expect(floor.pools.length, name).toBeLessThanOrEqual(POOL_LIMIT);
+test('the darkest pigment is the navy, and it is the rarest', () => {
+  const darkest = [...brand.ink.ink].sort((a, b) => lum(a[0]) - lum(b[0]))[0];
+  expect(darkest[0]).toBe(FIVE.navy);
+  expect(darkest[1]).toBe(Math.min(...brand.ink.ink.map(([, w]) => w)));
 });
 
-/** A pool outside the box is a colour nobody sees and a slot the shader still pays for. */
-test('every pool sits inside its box', () => {
-  for (const [name, floor] of water) {
-    for (const [hex, x, y] of floor.pools) {
-      expect(x, `${name} ${hex}`).toBeGreaterThanOrEqual(0);
-      expect(x, `${name} ${hex}`).toBeLessThanOrEqual(1);
-      expect(y, `${name} ${hex}`).toBeGreaterThanOrEqual(0);
-      expect(y, `${name} ${hex}`).toBeLessThanOrEqual(1);
-    }
+test('the load and the ceiling keep the user’s slider: 0.55 of the 0.7 tuning', () => {
+  expect(brand.ink.strength).toBeCloseTo(0.9 * (0.55 / 0.7), 4);
+  expect(brand.ink.peak).toBeCloseTo(0.3 * (0.55 / 0.7), 4);
+});
+
+/**
+ * What a hand can do. The pointer lays pigment on pigment and the display is Beer-Lambert,
+ * so without a ceiling a slow finger would run the box to navy. With `peak`, `deepest` is
+ * the darkest tone the box can ever show; it has to stay a light mid-tone, and navy type
+ * on the frosted card has to clear 4.5:1 on it — the same number the report quotes.
+ */
+test('nothing a hand does makes the ink darker than a mid blue-grey, and navy still reads on it under the frost', () => {
+  const dark = toHex(deepest(brand.ink));
+  expect(lum(dark), dark).toBeGreaterThan(150);
+  expect(contrast(FIVE.navy, frost(dark, 0.3)), dark).toBeGreaterThanOrEqual(4.5);
+});
+
+/* ----- the water ----- */
+
+test('the water is the turquoise: the deep end is the turquoise itself, the pale end a tint of it', () => {
+  expect(brand.water.deep).toBe(FIVE.turquoise);
+  expect(traceable(brand.water.pale)).toBe(true);
+  expect(lum(brand.water.pale)).toBeGreaterThan(225);
+  expect(hue(brand.water.pale)).toBeGreaterThan(170);
+  expect(hue(brand.water.pale)).toBeLessThan(190);
+});
+
+test('the floor at the page’s depth is #addddc, and the CSS tokens carry the same values', () => {
+  expect(WATER_DEPTH).toBe(0.45);
+  expect(brand.floor.ground).toBe('#addddc');
+  expect(floorAt(brand.water, WATER_DEPTH).ground).toBe(brand.floor.ground);
+  expect(GLOBALS).toContain(`--color-water-floor: ${brand.floor.ground};`);
+  expect(GLOBALS).toContain(`--color-water-pale: ${brand.water.pale};`);
+  expect(GLOBALS).toContain(`--color-turquoise-mid: ${brand.ink.ink[1][0]};`);
+  expect(GLOBALS).toContain(`--color-light: ${brand.ink.ground};`);
+});
+
+test('the floor is a mid-tone: darker than the paper, light enough for navy type', () => {
+  expect(lum(brand.floor.ground)).toBeLessThan(lum(brand.ink.ground));
+  expect(lum(brand.floor.ground)).toBeGreaterThan(190);
+});
+
+test('the pools are light and navy at low alpha, no more than the shader can hold, and inside the box', () => {
+  expect(brand.water.pools.length).toBeLessThanOrEqual(POOL_LIMIT);
+  for (const [hex, x, y, , a] of brand.water.pools) {
+    expect(x, hex).toBeGreaterThanOrEqual(0);
+    expect(x, hex).toBeLessThanOrEqual(1);
+    expect(y, hex).toBeGreaterThanOrEqual(0);
+    expect(y, hex).toBeLessThanOrEqual(1);
+    if (hex === FIVE.navy) expect(a, 'navy is shade, not a colour').toBeLessThanOrEqual(0.2);
   }
 });
 
 /**
- * Støtt oss departs from the film here, and it is the user's departure: «make the last one
- * a green color that looks like green water». Everything else on the page walks the film's
- * own scenes in order, so this one is worth a test that says out loud that it is meant.
+ * The darkest point of the water's still is the deepest navy pool at full strength on the
+ * floor; navy type on a half-frosted card there is the number the report quotes.
  */
-test('the ask is green water rather than the film’s gold', () => {
-  const h = hue(film.supportWater.ground);
-  expect(h).toBeGreaterThan(120);
-  expect(h).toBeLessThan(190);
-});
-
-/**
- * The two ink boxes were set to 0.55 on the same slider — a little paler than the stills
- * they were tuned as — and on the ink that is the load and the ceiling scaled by 0.55/0.7.
- * Pinned so the number is not lost: the stills in `wash.module.css` carry the same factor.
- */
-test('the ink boxes are lighter by the slider: load and ceiling scaled by 0.55/0.7', () => {
-  expect(film.vision.strength).toBeCloseTo(0.9 * (0.55 / 0.7), 2);
-  expect(film.vision.peak).toBeCloseTo(0.3 * (0.55 / 0.7), 2);
-  expect(film.mission.strength).toBeCloseTo(0.7 * (0.55 / 0.7), 2);
-  expect(film.mission.peak).toBeCloseTo(0.12 * (0.55 / 0.7), 2);
-});
-
-/**
- * The mud lesson, as a test. Pigment mixes subtractively, so the darkest ink in a palette
- * has by far the most power to swallow the others; the first version of this palette gave
- * every ink equal weight and both boxes came out the same grey-brown. The dark is allowed
- * in, but only as rarely as anything in the palette ever appears.
- */
-test('the darkest pigment in each paper palette is also the rarest', () => {
-  for (const [name, p] of paper) {
-    const darkest = [...p.ink].sort((a, b) => lum(a[0]) - lum(b[0]))[0];
-    const lightest = Math.min(...p.ink.map(([, w]) => w));
-    expect(darkest[1], `${name}: ${darkest[0]}`).toBe(lightest);
-  }
-});
-
-/**
- * The other half of the same lesson: two inks from opposite sides of the wheel make mud
- * rather than a gradient. Each section holds to one scene's hue family, which is measured
- * here on the pigments that actually carry the box — the rare ones are the accents.
- */
-test('the pigments carrying each paper palette sit in one hue family', () => {
-  for (const [name, p] of paper) {
-    const heavy = p.ink.filter(([, w]) => w >= 2).map(([h]) => hue(h));
-    expect(heavy.length, name).toBeGreaterThan(1);
-    expect(Math.max(...heavy) - Math.min(...heavy), name).toBeLessThan(30);
-  }
-});
-
-/** Visjon is the cool box and Misjon the warm one, in that order, so the page cools and
- *  then warms as the film does from the cave into the mosque. A swap would read as the
- *  wrong scene. */
-test('the sections follow the film from the cold cave into the warm mosque', () => {
-  const heaviest = (p: InkPalette) => [...p.ink].sort((a, b) => b[1] - a[1])[0][0];
-  expect(hue(heaviest(film.vision))).toBeGreaterThan(180);
-  expect(hue(heaviest(film.vision))).toBeLessThan(260);
-  expect(hue(heaviest(film.mission))).toBeLessThan(60);
-});
-
-/*
- * The user's call, 2026-09-12: «make the first one light blue like the sky, the other one
- * make it like cream». Neither box is a scene lifted from the film any more — Visjon is the
- * sky the cave opens onto and Misjon is the mosque's light without its amber — and what
- * that takes is pigments that stay LIGHT. A single dark ink in either palette would drift
- * the box straight back to the slate or the tan it used to be, so the floor is on every
- * pigment, not on the average.
- */
-test('Visjon is the sky: every pigment light, and the ones carrying the box plainly blue', () => {
-  for (const [hex] of film.vision.ink) expect(lum(hex), hex).toBeGreaterThan(140);
-  for (const [hex, w] of film.vision.ink) {
-    if (w < 2) continue;
-    expect(hue(hex), hex).toBeGreaterThan(185);
-    expect(hue(hex), hex).toBeLessThan(225);
-    // blue rather than a blue-grey haze: the sky has chroma in it
-    const [r, g, b] = rgb(hex);
-    expect(Math.max(r, g, b) - Math.min(r, g, b), hex).toBeGreaterThan(50);
-  }
-});
-
-test('Misjon is cream: no pigment as dark as the mosque’s amber', () => {
-  for (const [hex] of film.mission.ink) expect(lum(hex), hex).toBeGreaterThan(180);
-});
-
-/*
- * What a hand can do. The pointer lays pigment on pigment, and the display is Beer-Lambert,
- * so with no ceiling a slow finger ran the sky to navy and the cream to brown — «when you
- * touch the screen the color that comes out is waaay too dark. want it to be sky blue and
- * white cream color» (2026-09-12). Each paper palette now carries a `peak`, and `deepest`
- * is the darkest tone that box can ever show, whatever anyone does to it. Held in
- * luminance, where the words «light blue» and «white cream» actually live.
- */
-test('nothing a hand does makes the sky darker than sky blue, or the cream darker than cream', () => {
-  const toHex = (c: readonly number[]) => '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
-  const sky = toHex(deepest(film.vision));
-  const cream = toHex(deepest(film.mission));
-  expect(lum(sky), sky).toBeGreaterThan(170);
-  expect(hue(sky), sky).toBeGreaterThan(190);
-  expect(hue(sky), sky).toBeLessThan(225);
-  expect(lum(cream), cream).toBeGreaterThan(210);
-  expect(hue(cream), cream).toBeLessThan(60);
+test('navy type clears 4.5:1 on the frosted card over the darkest pool', () => {
+  const ground = rgb(brand.floor.ground);
+  const shade = brand.floor.pools.filter(([h]) => h === FIVE.navy).sort((a, b) => b[4] - a[4])[0];
+  const darkest = toHex(ground.map((v, i) => v * (1 - shade[4]) + rgb(FIVE.navy)[i] * shade[4]));
+  expect(contrast(FIVE.navy, frost(darkest, 0.5)), darkest).toBeGreaterThanOrEqual(4.5);
 });
