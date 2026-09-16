@@ -1,7 +1,7 @@
 /*
- * The home page below the hero: two plates of material, stacked with one gutter of white
- * between them and one before the footer — the guide's own plates, with the same thin
- * white between.
+ * The home page below the hero: two plates, the ink and the four fields of water
+ * (fields.module.css), stacked with one gutter of white between them and one before the
+ * footer — the guide's own plates, with the same thin white between.
  */
 .plates {
   display: grid;
@@ -28,33 +28,6 @@
   display: grid;
 }
 
-/* The four areas on water: a row at a desktop, two by two on a laptop, stacked on a phone. */
-.waterBox {
-  --box-pad-y: clamp(64px, 9vh, 96px);
-  --box-pad-x: 5%;
-  min-height: min(60vh, 640px);
-}
-
-.areas {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 44px 24px;
-}
-
-.areas > li {
-  display: grid;
-}
-
-@media (max-width: 1179px) {
-  .areas {
-    grid-template-columns: 1fr 1fr;
-    gap: 44px 32px;
-  }
-}
-
 @media (max-width: 899px) {
   .pair {
     grid-template-columns: 1fr;
@@ -62,8 +35,7 @@
 }
 
 @media (max-width: 699px) {
-  .inkBox,
-  .waterBox {
+  .inkBox {
     --box-pad-y: 40px;
     --box-pad-x: 14px;
     min-height: 0;
@@ -71,10 +43,5 @@
 
   .pair {
     row-gap: 36px;
-  }
-
-  .areas {
-    grid-template-columns: 1fr;
-    gap: 36px;
   }
 }
