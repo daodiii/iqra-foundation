@@ -151,7 +151,9 @@
 
 /* ----- the bands of Vårt arbeid: a field opened out ----- */
 
+/* A band is its own plate, so it takes the plate's corner back from `.field`. */
 .band {
+  --box-radius: 30px;
   --box-pad-y: clamp(40px, 6vh, 64px);
   --box-pad-x: 5%;
   --frost: var(--frost-water);
@@ -209,6 +211,7 @@
   }
 
   .band {
+    --box-radius: 20px;
     --box-pad-y: 36px;
     --box-pad-x: 14px;
     min-height: 0;
