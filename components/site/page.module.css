@@ -4,7 +4,8 @@
  * the materials add.
  */
 .page {
-  padding: 56px var(--margin) 0;
+  /* The same breath below the last line as above the label, so the page does not sit on the footer. */
+  padding: 56px var(--margin) 64px;
   max-width: calc(var(--measure) + 2 * var(--margin) + 160px);
 }
 

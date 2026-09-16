@@ -25,7 +25,8 @@ const NAMES = new RegExp(`(${areas.map((a) => a.name).join('|')})`, 'gi');
 /**
  * A sentence with each area's name marked where it stands — «i skjæringspunktet mellom
  * kunnskap, dialog, møteplasser og samfunnsdeltakelse» — the text itself untouched, so the
- * brief's verbatim test and a screen reader both read the sentence as written.
+ * brief's verbatim test and a screen reader both read the sentence as written. The square
+ * and its word are one unbreakable piece, or a line could end on the square alone.
  */
 export function MarkedLine({ text }: { text: string }) {
   const parts = text.split(NAMES);
@@ -34,10 +35,10 @@ export function MarkedLine({ text }: { text: string }) {
       {parts.map((part, i) => {
         const a = areas.find((x) => x.name.toLowerCase() === part.toLowerCase());
         return a ? (
-          <Fragment key={i}>
+          <span key={i} className={styles.marked}>
             <span className={styles.square} data-area={a.key} aria-hidden="true" />
             {part}
-          </Fragment>
+          </span>
         ) : (
           <Fragment key={i}>{part}</Fragment>
         );

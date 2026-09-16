@@ -26,3 +26,8 @@
 .mark .square {
   margin-right: 0;
 }
+
+/* A marked word in running text: the square stays on the word's line. */
+.marked {
+  white-space: nowrap;
+}

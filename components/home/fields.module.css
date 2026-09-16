@@ -216,6 +216,13 @@
     --box-pad-x: 14px;
     min-height: 0;
   }
+
+  /* On a phone the band's logo drops under the words, as on the fields: top-right, «Samfunnsdeltakelse» ran into it. */
+  .band .logo {
+    position: static;
+    margin-top: auto;
+    padding-top: 24px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
