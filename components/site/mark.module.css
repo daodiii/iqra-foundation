@@ -1,0 +1,28 @@
+/* The area mark: a square of the area's colour, then the name. */
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 14px/1 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-navy);
+}
+
+.square {
+  display: inline-block;
+  width: var(--dot);
+  height: var(--dot);
+  margin-right: 0.35em;
+  vertical-align: 0.05em;
+  background: var(--color-navy);
+  box-sizing: border-box;
+}
+
+.square[data-area="kunnskap"] { background: var(--color-area-kunnskap); }
+.square[data-area="dialog"] { background: var(--color-area-dialog); }
+.square[data-area="moteplasser"] { background: var(--color-area-moteplasser); border: 1px solid var(--color-navy); }
+.square[data-area="samfunnsdeltakelse"] { background: var(--color-area-samfunnsdeltakelse); }
+
+.mark .square {
+  margin-right: 0;
+}
