@@ -5,12 +5,13 @@ import { site } from '@/content/site.no';
 import Home from './page';
 
 describe('Hjem', () => {
-  test('one h1, the brief’s; the four fields of water first, each a link to its section of Vårt arbeid; then Visjon and Misjon as a seal on navy', () => {
+  test('one h1, the brief’s; the four fields on one sea first, each a link to its section of Vårt arbeid; then Visjon and Misjon as a seal on navy', () => {
     const { container } = render(<Home />);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
 
     const areas = screen.getByRole('region', { name: site.pages.home.areasLabel });
-    expect(areas.querySelectorAll('[data-material="water"]')).toHaveLength(4);
+    expect(areas.querySelectorAll('[data-material="water"]')).toHaveLength(1);
+    expect(areas.querySelectorAll('[data-field]')).toHaveLength(4);
     for (const a of brief.areas) {
       const link = screen.getByRole('link', { name: a.name });
       expect(link).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
@@ -27,12 +28,12 @@ describe('Hjem', () => {
       expect(within(section).getByText(text.paragraph)).toBeInTheDocument();
       expect(section.closest('[data-material]')).toHaveAttribute('data-material', 'flat');
     }
-    // The fields come before the seal.
+    // The sea comes before the seal.
     const order = [...container.querySelectorAll('[data-fields], section#visjon')];
     expect(order[0]).toHaveAttribute('data-fields');
 
-    // Four waters, three flat navy plates: the seal, Arrangementer, Støtt oss. No ink anywhere.
-    expect(container.querySelectorAll('[data-material="water"]')).toHaveLength(4);
+    // One water, three flat navy plates: the seal, Arrangementer, Støtt oss. No ink anywhere.
+    expect(container.querySelectorAll('[data-material="water"]')).toHaveLength(1);
     const flats = container.querySelectorAll('[data-material="flat"]');
     expect(flats).toHaveLength(3);
     flats.forEach((f) => expect(f).toHaveAttribute('data-ground', 'navy'));
@@ -76,7 +77,7 @@ describe('Hjem', () => {
     // Nothing of the thread or its knots, no eyebrow labels.
     expect(container.querySelector('canvas[data-thread-canvas]')).toBeNull();
     expect(container.querySelectorAll('[data-knot], [data-knot-at]')).toHaveLength(0);
-    // Every section after the hero arrives: the white ones are arrivals themselves, the plates hold one.
-    expect(container.querySelectorAll('[data-arrive]').length).toBeGreaterThanOrEqual(6);
+    // Every section after the sea arrives: the white ones are arrivals themselves, the plates hold one.
+    expect(container.querySelectorAll('[data-arrive]').length).toBeGreaterThanOrEqual(5);
   });
 });

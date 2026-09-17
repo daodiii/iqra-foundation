@@ -10,7 +10,7 @@ import { site } from '../content/site.no';
 
 const T = (page: string) => `${page} – ${site.name}`;
 
-test('the home page is the name alone, and carries the brief’s main text, the four areas, Visjon and Misjon as a seal, and the rest of the site', async ({ page }) => {
+test('the home page is the name alone, and carries the brief’s main text, the four areas as one sea, Visjon and Misjon as a seal, and the rest of the site', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(site.name);
   expect(await page.locator('html').getAttribute('lang')).toBe('nb');
@@ -22,11 +22,16 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   // Støtt oss is a button twice on the page: under the hero's text and in its own section at the foot.
   await expect(main.getByRole('link', { name: site.cta.support.label }).first()).toHaveAttribute('href', site.cta.support.href);
   await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveCount(2);
-  // four fields of water first, each on its area's ground
-  const fields = main.locator('[data-fields] [data-material="water"]');
-  await expect(fields).toHaveCount(4);
-  await expect(fields.nth(0)).toHaveAttribute('data-ground', 'navy');
-  await expect(fields.nth(3)).toHaveAttribute('data-ground', 'crimson');
+  // the four fields on one sea first: one water, four layers of words, the first's on the water at the top
+  const sea = main.locator('[data-fields]');
+  await expect(sea).toHaveAttribute('data-live', '');
+  await expect(sea.locator('[data-material="water"]')).toHaveCount(1);
+  const words = sea.locator('[data-field]');
+  await expect(words).toHaveCount(4);
+  await expect(words.nth(0)).toHaveAttribute('data-tone', 'dark');
+  await expect(words.nth(1)).toHaveAttribute('data-tone', 'light');
+  await expect(words.nth(0)).toHaveAttribute('data-on', '');
+  await expect(words.nth(1)).not.toHaveAttribute('data-on');
   for (const a of brief.areas) {
     await expect(main.getByRole('link', { name: a.name, exact: true }).first()).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
   }
@@ -49,6 +54,37 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeAttached();
   // nothing of the thread
   await expect(main.locator('canvas[data-thread-canvas]')).toHaveCount(0);
+  // the act: a jump 0.4 of a step into the first tide settles forward to the second field —
+  // its words up and on the water, the first's gone, the CSS ground wholly the second area's
+  const jumpTo = (u: number) => sea.evaluate((el, u) => {
+    const r = el.getBoundingClientRect();
+    const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
+    const start = window.scrollY + r.top - header;
+    const end = window.scrollY + r.bottom - window.innerHeight;
+    window.scrollTo(0, start + ((end - start) * u) / 3);
+  }, u);
+  const onOf = (k: number) => words.nth(k).evaluate((el) => (el as HTMLElement).style.getPropertyValue('--on'));
+  await jumpTo(0.4);
+  await expect.poll(() => onOf(1), { timeout: 3000 }).toBe('1.000');
+  await expect(words.nth(1)).toHaveAttribute('data-on', '');
+  await expect(words.nth(0)).not.toHaveAttribute('data-on');
+  expect(await onOf(0)).toBe('0.000');
+  // once the settle has finished, the CSS ground is wholly the second area's — as the end of
+  // the first tide (dialog at ~100% over kunnskap) or the start of the second (moteplasser at
+  // ~0% over dialog): the browser rounds the settled scroll to a pixel, so u lands a hair
+  // either side of 1. The words are up a fifth of a step before that, so this is polled.
+  const groundIs = (area: string) => async () => {
+    const ground = await sea.locator('[data-sea]').evaluate((el) => (el as HTMLElement).style.getPropertyValue('--ground'));
+    const m = ground.match(/^color-mix\(in srgb, var\((--color-area-\w+)\) ([\d.]+)%, var\((--color-area-\w+)\)\)$/);
+    if (!m) return `unparsed: ${ground}`;
+    const [, to, pct, from] = m;
+    return (to === area && Number(pct) >= 99.5) || (from === area && Number(pct) <= 0.5) ? area : ground;
+  };
+  await expect.poll(groundIs('--color-area-dialog'), { timeout: 3000 }).toBe('--color-area-dialog');
+  // and back: a jump to 0.9 of the way back to the first field returns to it
+  await jumpTo(0.1);
+  await expect.poll(() => onOf(0), { timeout: 3000 }).toBe('1.000');
+  await expect(words.nth(0)).toHaveAttribute('data-on', '');
   // the seal's plate opens as it passes the middle of the screen, and Om oss arrives as the tip line reaches it
   const plate = main.locator('section#visjon').locator('xpath=ancestor::*[@data-material][1]');
   await plate.evaluate((el) => {
@@ -59,8 +95,9 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   expect(await plate.evaluate((el) => getComputedStyle(el).clipPath)).toMatch(/inset\(0(px)? 0px round 0px\)|inset\(0px\)|none/);
   await main.locator('section#om-oss').evaluate((el) => window.scrollTo(0, window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.5));
   await expect(main.locator('section#om-oss')).toHaveAttribute('data-arrived', '');
-  // the first field's link lands on its band
-  await page.evaluate(() => window.scrollTo(0, 0));
+  // a field's link lands on its band: the second field's, with its words on the water
+  await jumpTo(1);
+  await expect.poll(() => onOf(1), { timeout: 3000 }).toBe('1.000');
   await main.getByRole('link', { name: brief.areas[1].name, exact: true }).click();
   await expect(page).toHaveURL(/\/vart-arbeid#dialog$/);
   await expect(page.locator('#dialog')).toBeInViewport();
@@ -189,6 +226,9 @@ test('with JavaScript off every page is complete: the text, the menu, the footer
   }
   await page.goto('/');
   await expect(page.getByText(brief.home.paragraph, { exact: true })).toBeVisible();
+  // the sea is a column without script: nothing live, all four fields' words visible
+  await expect(page.locator('[data-fields]')).not.toHaveAttribute('data-live');
+  for (const a of brief.areas) await expect(page.getByText(a.text, { exact: true })).toBeVisible();
   await nothingHidden(page);
   expect(['', '0']).toContain(await sealOpen(page));
   await context.close();
@@ -200,6 +240,12 @@ test('reduced motion: the pages render and nothing is hidden waiting for an anim
   await page.goto('/');
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.getByText(brief.mission.paragraph, { exact: true })).toBeVisible();
+  // the sea under reduced motion: no act, the four fields one under the other, all visible
+  const sea = page.locator('[data-fields]');
+  await expect(sea).not.toHaveAttribute('data-live');
+  for (const a of brief.areas) await expect(page.getByText(a.text, { exact: true })).toBeVisible();
+  const tops = await sea.locator('[data-field]').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
+  for (let i = 1; i < tops.length; i++) expect(tops[i]).toBeGreaterThan(tops[i - 1]);
   // once the script has run (the sections are live), everything stands: nothing hidden, the ring drawn, no listener on the scene
   await expect(page.locator('section#om-oss')).toHaveAttribute('data-live', '');
   await nothingHidden(page);

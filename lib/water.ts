@@ -133,6 +133,12 @@ export type WaterHandle = {
   destroy(): void;
   /** Drop something heavy in. Coordinates are 0-1, y up. */
   stir(x: number, y: number): void;
+  /**
+   * The tide (Havet, 2026-09-17): the floor becomes `to` from the left, `t` of the way
+   * across — a soft band whose edge the surface refracts. At 0 the floor is `from` alone,
+   * at 1 `to` alone. The height field is untouched: one water, a new floor.
+   */
+  retune(from: WaterFloor, to: WaterFloor, t: number): void;
 };
 
 export type WaterOptions = {
@@ -190,27 +196,35 @@ const FRAG = {
    * The dither is not decoration: across a floor this smooth an 8-bit framebuffer bands
    * visibly, and half an LSB of noise costs nothing and removes it.
    */
-  show: `${H}uniform sampler2D uH; uniform float aspect; uniform float t; uniform float night;
-    uniform float refr; uniform float caus; uniform float spec; uniform float slope;
-    uniform vec3 ground; uniform int np; uniform vec4 pools[${POOL_LIMIT}]; uniform vec3 pcol[${POOL_LIMIT}];
+  show: `${H}uniform sampler2D uH; uniform float aspect; uniform float t; uniform float night; uniform float nightB;
+    uniform float refr; uniform float caus; uniform float causB; uniform float spec; uniform float specB; uniform float slope;
+    uniform vec3 ground; uniform vec3 groundB; uniform float tide; uniform float band;
+    uniform int np; uniform vec4 pools[${POOL_LIMIT}]; uniform vec3 pcol[${POOL_LIMIT}]; uniform float pside[${POOL_LIMIT}];
     float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
-    vec3 floorAt(vec2 p){ vec2 q = vec2(p.x * aspect, p.y); vec3 c = ground;
+    /* How far the second floor has come at this point of the bottom: a soft band sweeping left to right with the tide. The twin of tideMix(). */
+    float mixAt(vec2 p){ float e = -band * .5 + tide * (1. + band); return 1. - smoothstep(e - band * .5, e + band * .5, p.x); }
+    vec3 floorAt(vec2 p, float m){ vec2 q = vec2(p.x * aspect, p.y); vec3 c = mix(ground, groundB, m); float nt = mix(night, nightB, m);
       for (int i = 0; i < ${POOL_LIMIT}; i++) { if (i >= np) break;
         vec2 d = q - vec2(pools[i].x * aspect, pools[i].y);
         /* Wider than they are tall. A circular pool on a box this shape reads as a ball
            rather than as something lying on the bottom. */
         d.y *= 1.35;
-        float a = pools[i].w * exp(-dot(d, d) / (pools[i].z * pools[i].z));
-        c = night > .5 ? c + pcol[i] * a : mix(c, pcol[i], a); }
+        float a = pools[i].w * mix(1. - m, m, pside[i]) * exp(-dot(d, d) / (pools[i].z * pools[i].z));
+        /* Night pools add light; day pools stain. Between two floors, the mix of both. With
+           tide 0 and every pool on side A this is the old shader exactly: m is 0 everywhere. */
+        c = mix(mix(c, pcol[i], a), c + pcol[i] * a, nt); }
       return c; }
     void main(){ float h = texture(uH, vUv).r;
       float L = texture(uH, vL).r, R = texture(uH, vR).r, T = texture(uH, vT).r, B = texture(uH, vB).r;
       vec2 g = vec2(R - L, T - B); float lap = L + R + T + B - 4. * h;
       vec3 n = normalize(vec3(-g * slope, 1.));
-      vec3 col = floorAt(clamp(vUv + n.xy * refr, 0., 1.));
-      col *= 1. + clamp(-lap * caus, -.55, 1.4);
+      /* The floor point is the REFRACTED one, so the surface bends the tide's edge. */
+      vec2 fp = clamp(vUv + n.xy * refr, 0., 1.);
+      float m = mixAt(fp);
+      vec3 col = floorAt(fp, m);
+      col *= 1. + clamp(-lap * mix(caus, causB, m), -.55, 1.4);
       vec3 Ld = normalize(vec3(-.4, .6, .7));
-      col += pow(max(reflect(-Ld, n).z, 0.), 70.) * spec * (night > .5 ? vec3(1., .88, .7) : vec3(1.));
+      col += pow(max(reflect(-Ld, n).z, 0.), 70.) * mix(spec, specB, m) * mix(vec3(1.), vec3(1., .88, .7), mix(night, nightB, m));
       col += (hash(gl_FragCoord.xy + fract(t)) - .5) * (2. / 255.);
       o = vec4(col, 1.); }`,
 } as const;
@@ -221,6 +235,47 @@ type FragName = keyof typeof FRAG;
 const DAMP = 0.988;
 /** The canvas is drawn at half CSS resolution and scaled up; water has no hard edges. */
 const DRAW_SCALE = 0.5;
+
+/** The tide's edge: how much of the box's width the second floor takes to arrive at one point. */
+export const TIDE_BAND = 0.08;
+/** Pools of each floor while a tide runs: the shader holds six, and a floor's fourth pool is its faintest. */
+export const TIDE_POOLS = 3;
+
+const smoothstep = (a: number, b: number, x: number) => {
+  const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+/**
+ * How far the second floor has come at `x` (0–1 across the bottom) with the tide `tide` of
+ * the way in: 0 is the first floor, 1 the second. The band starts wholly off the left edge
+ * at 0 and ends wholly off the right at 1, so both ends are exact. This is the JS twin of
+ * the shader's `mixAt` — jsdom has no WebGL2, so the invariant is tested here — and the
+ * GLSL line in `FRAG.show` must stay this expression.
+ */
+export function tideMix(tide: number, x: number, band = TIDE_BAND): number {
+  const e = -band * 0.5 + tide * (1 + band);
+  return 1 - smoothstep(e - band * 0.5, e + band * 0.5, x);
+}
+
+export type TidePool = { x: number; y: number; r: number; a: number; colour: RGB; phase: number; side: 0 | 1 };
+
+/** The first `limit` pools of a floor as the shader takes them, on one side of the tide. */
+function poolsOf(f: WaterFloor, side: 0 | 1, limit: number): TidePool[] {
+  return f.pools.slice(0, limit).map(([hex, x, y, r, a], i) => ({
+    x, y, r, a, side,
+    colour: hexToRgb(hex).map((v) => v / 255) as RGB,
+    // A different phase each, so the pools wander independently instead of sliding about in
+    // formation; the second floor's are offset by three so they do not pair up with the
+    // first's. Any irrational-ish spacing does; this one was picked and left alone.
+    phase: (i + side * 3) * 1.9,
+  }));
+}
+
+/** The pools while a tide runs: three of `from` on side A, three of `to` on side B. */
+export function tidePools(from: WaterFloor, to: WaterFloor): TidePool[] {
+  return [...poolsOf(from, 0, TIDE_POOLS), ...poolsOf(to, 1, TIDE_POOLS)];
+}
 /**
  * The height field, as a fraction of the box in CSS pixels, and its longest side.
  *
@@ -368,16 +423,21 @@ export function createWater(canvas: HTMLCanvasElement, opts: WaterOptions): Wate
   const floor = opts.floor;
   const night = floor.night;
   const ground = hexToRgb(floor.ground).map((v) => v / 255) as RGB;
-  const pools = floor.pools.slice(0, POOL_LIMIT).map(([hex, x, y, r, a], i) => ({
-    x, y, r, a,
-    colour: hexToRgb(hex).map((v) => v / 255) as RGB,
-    // A different phase each, so the pools wander independently instead of sliding about
-    // in formation. Any irrational-ish spacing does; this one was picked and left alone.
-    phase: i * 1.9,
-  }));
+  let pools = poolsOf(floor, 0, POOL_LIMIT);
   const poolArr = new Float32Array(POOL_LIMIT * 4);
   const colourArr = new Float32Array(POOL_LIMIT * 3);
-  pools.forEach((p, i) => colourArr.set(p.colour, i * 3));
+  const sideArr = new Float32Array(POOL_LIMIT);
+  const setPools = () => {
+    colourArr.fill(0);
+    sideArr.fill(0);
+    pools.forEach((p, i) => { colourArr.set(p.colour, i * 3); sideArr[i] = p.side; });
+  };
+  setPools();
+  // The tide: a second floor and how far across it has come. Until `retune` is called the second floor is the first.
+  let floorA: WaterFloor = floor;
+  let floorB: WaterFloor = floor;
+  let groundB = ground;
+  let tide = 0;
   const refr = night ? REFR_NIGHT : REFR;
   const slope = night ? SLOPE_NIGHT : SLOPE;
   const calm = opts.calm ? { gap: 2.5, amp: 0.55, stir: 0.5 } : { gap: 1, amp: 1, stir: 1 };
@@ -484,15 +544,23 @@ export function createWater(canvas: HTMLCanvasElement, opts: WaterOptions): Wate
     gl.uniform1i(uniform('show', 'uH'), field.read.bind(0));
     gl.uniform1f(uniform('show', 'aspect'), aspect);
     gl.uniform1f(uniform('show', 't'), t);
-    gl.uniform1f(uniform('show', 'night'), night ? 1 : 0);
+    gl.uniform1f(uniform('show', 'night'), floorA.night ? 1 : 0);
+    gl.uniform1f(uniform('show', 'nightB'), floorB.night ? 1 : 0);
+    // The refraction and the slope are the water's, not the floor's: they stay the first floor's through a tide.
     gl.uniform1f(uniform('show', 'refr'), refr);
-    gl.uniform1f(uniform('show', 'caus'), floor.caus);
-    gl.uniform1f(uniform('show', 'spec'), floor.spec);
+    gl.uniform1f(uniform('show', 'caus'), floorA.caus);
+    gl.uniform1f(uniform('show', 'causB'), floorB.caus);
+    gl.uniform1f(uniform('show', 'spec'), floorA.spec);
+    gl.uniform1f(uniform('show', 'specB'), floorB.spec);
     gl.uniform1f(uniform('show', 'slope'), slope);
     gl.uniform3f(uniform('show', 'ground'), ground[0], ground[1], ground[2]);
+    gl.uniform3f(uniform('show', 'groundB'), groundB[0], groundB[1], groundB[2]);
+    gl.uniform1f(uniform('show', 'tide'), tide);
+    gl.uniform1f(uniform('show', 'band'), TIDE_BAND);
     gl.uniform1i(uniform('show', 'np'), pools.length);
     gl.uniform4fv(uniform('show', 'pools'), poolArr);
     gl.uniform3fv(uniform('show', 'pcol'), colourArr);
+    gl.uniform1fv(uniform('show', 'pside'), sideArr);
     blit(null);
   }
 
@@ -611,6 +679,19 @@ export function createWater(canvas: HTMLCanvasElement, opts: WaterOptions): Wate
   host?.addEventListener('pointerleave', onLeave, { passive: true });
 
   return {
+    retune(from, to, t) {
+      if (broken) return;
+      const changed = from !== floorA || to !== floorB;
+      floorA = from;
+      floorB = to;
+      tide = Math.max(0, Math.min(1, t));
+      if (!changed) return;
+      pools = tidePools(from, to);
+      setPools();
+      groundB = hexToRgb(to.ground).map((v) => v / 255) as RGB;
+      const g = hexToRgb(from.ground).map((v) => v / 255) as RGB;
+      ground[0] = g[0]; ground[1] = g[1]; ground[2] = g[2];
+    },
     stir(x: number, y: number) {
       if (broken) return;
       // Deeper and wider than rain by a long way: this answers a press, and a press that
@@ -668,6 +749,7 @@ export function createWaterWhenNear(canvas: HTMLCanvasElement, opts: WaterOption
     return {
       destroy() { destroyed = true; live?.destroy(); live = null; },
       stir(x, y) { live?.stir(x, y); },
+      retune(a, b, t) { live?.retune(a, b, t); },
     };
   }
 
@@ -686,5 +768,6 @@ export function createWaterWhenNear(canvas: HTMLCanvasElement, opts: WaterOption
       live = null;
     },
     stir(x, y) { live?.stir(x, y); },
+    retune(a, b, t) { live?.retune(a, b, t); },
   };
 }

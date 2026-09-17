@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest';
-import { createWater, createWaterWhenNear, DEPTH, floorAt, type WaterScene } from './water';
+import { describe, expect, test } from 'vitest';
+import { createWater, createWaterWhenNear, DEPTH, floorAt, TIDE_BAND, tideMix, tidePools, type WaterFloor, type WaterScene } from './water';
 
 /** A scene with round numbers in it, so a wrong lerp shows up as a wrong hex rather than
  *  as a plausible one. Not one of the film's — those are asserted in `film.test.ts`. */
@@ -103,4 +103,60 @@ test('stirring a deferred water that has not built yet does nothing rather than 
 test('calm water is an option, and declines where there is no WebGL2 like any other', () => {
   const canvas = document.createElement('canvas');
   expect(createWater(canvas, { reduced: false, floor: floorAt(SCENE, DEPTH), calm: true })).toBeNull();
+});
+
+/*
+ * The tide (Havet, 2026-09-17): the JS twins of the shader's `mixAt` and of its pool list,
+ * tested here because jsdom has no WebGL2. The GLSL is the same expression and says so. The
+ * invariant every other box of water on the site rests on — tide 0, every pool on side A,
+ * is the old shader — is `tideMix(0, x) = 0` everywhere.
+ */
+describe('the tide', () => {
+  test('at 0 the first floor is the whole floor, at 1 the second is, edge to edge', () => {
+    for (const x of [0, 0.25, 0.5, 0.75, 1]) {
+      expect(tideMix(0, x)).toBe(0);
+      expect(tideMix(1, x)).toBe(1);
+    }
+  });
+
+  test('halfway in, the edge stands at the middle of the width and is one band wide', () => {
+    expect(tideMix(0.5, 0.5)).toBeCloseTo(0.5, 10);
+    expect(tideMix(0.5, 0.5 - TIDE_BAND / 2)).toBe(1);
+    expect(tideMix(0.5, 0.5 + TIDE_BAND / 2)).toBe(0);
+    expect(tideMix(0.5, 0.49)).toBeGreaterThan(tideMix(0.5, 0.51));
+  });
+
+  test('the band is 0.08 of the width: soft enough to be water, sharp enough to read as a line', () => {
+    expect(TIDE_BAND).toBe(0.08);
+  });
+
+  const ALPHA = [0.4, 0.5, 0.6, 0.7];
+  const floorWith = (n: number, hex: string): WaterFloor => ({
+    ...floorAt(SCENE, DEPTH),
+    pools: Array.from({ length: n }, (_, i) => [hex, 0.1 * i, 0.2, 0.3, ALPHA[i]] as const),
+  });
+
+  test('three pools of each floor, the first three, each on its side; a fourth is dropped', () => {
+    const pools = tidePools(floorWith(4, '#ff0000'), floorWith(4, '#0000ff'));
+    expect(pools).toHaveLength(6);
+    expect(pools.map((p) => p.side)).toEqual([0, 0, 0, 1, 1, 1]);
+    expect(pools.map((p) => p.a)).toEqual([0.4, 0.5, 0.6, 0.4, 0.5, 0.6]);
+    expect(pools[0].colour).toEqual([1, 0, 0]);
+    expect(pools[3].colour).toEqual([0, 0, 1]);
+  });
+
+  test('a floor with fewer pools keeps them all', () => {
+    expect(tidePools(floorWith(2, '#ff0000'), floorWith(4, '#0000ff'))).toHaveLength(5);
+  });
+
+  test('the second floor’s pools wander on phases of their own, not in step with the first’s', () => {
+    const pools = tidePools(floorWith(3, '#ff0000'), floorWith(3, '#0000ff'));
+    expect(new Set(pools.map((p) => p.phase)).size).toBe(6);
+  });
+
+  test('retuning a deferred water that has not built yet does nothing rather than throwing', () => {
+    const water = createWaterWhenNear(document.createElement('canvas'), { reduced: false, floor: floorAt(SCENE, DEPTH) });
+    expect(() => water.retune(floorAt(SCENE, 0), floorAt(SCENE, 1), 0.5)).not.toThrow();
+    water.destroy();
+  });
 });
