@@ -31,6 +31,10 @@ water (`Box`, `calm`) the size of the view, and over the water the four fields' 
 four layers standing in the same place. The scroll is the playhead: `u` runs 0 → 3 down the
 stage, and settles at the four whole numbers.
 
+**The order** (the owner, 2026-09-17, after seeing it live: «navy, burgundy, turquoise and
+then end with white»): Kunnskap, Samfunnsdeltakelse, Dialog, Møteplasser — `SEA_ORDER` in
+`tide.ts`. The brief's order stands everywhere else; each area keeps its own colour.
+
 **The tide.** Between field `i` and field `i + 1` (for `i = min(2, ⌊u⌋)`, `t = u − i`) the
 water's floor is retuned from the one area's water to the next: `WaterHandle.retune(from,
 to, t)`. The second floor comes in from the left, `t` of the way across, as a soft band

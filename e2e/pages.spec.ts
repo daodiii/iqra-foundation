@@ -23,14 +23,16 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   // Støtt oss is a button twice on the page: under the hero's text and in its own section at the foot.
   await expect(main.getByRole('link', { name: site.cta.support.label }).first()).toHaveAttribute('href', site.cta.support.href);
   await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveCount(2);
-  // the four fields on one sea first: one water, four layers of words, the first's on the water at the top
+  // the four fields on one sea first — in the sea's order, navy · burgundy · turquoise · white: one water, four layers of words, the first's on the water at the top
   const sea = main.locator('[data-fields]');
   await expect(sea).toHaveAttribute('data-live', '');
   await expect(sea.locator('[data-material="water"]')).toHaveCount(1);
   const words = sea.locator('[data-field]');
   await expect(words).toHaveCount(4);
   await expect(words.nth(0)).toHaveAttribute('data-tone', 'dark');
-  await expect(words.nth(1)).toHaveAttribute('data-tone', 'light');
+  await expect(words.nth(1)).toHaveAttribute('data-tone', 'dark');
+  await expect(words.nth(2)).toHaveAttribute('data-tone', 'light');
+  await expect(words.nth(3)).toHaveAttribute('data-tone', 'light');
   await expect(words.nth(0)).toHaveAttribute('data-on', '');
   await expect(words.nth(1)).not.toHaveAttribute('data-on');
   for (const a of brief.areas) {
@@ -59,7 +61,7 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   // nothing of the thread
   await expect(main.locator('canvas[data-thread-canvas]')).toHaveCount(0);
   // the act: a jump 0.4 of a step into the first tide settles forward to the second field —
-  // its words up and on the water, the first's gone, the CSS ground wholly the second area's
+  // its words up and on the water, the first's gone, the CSS ground wholly the second area's (Samfunnsdeltakelse)
   const jumpTo = (u: number) => sea.evaluate((el, u) => {
     const r = el.getBoundingClientRect();
     const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
@@ -74,8 +76,8 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   await expect(words.nth(0)).not.toHaveAttribute('data-on');
   expect(await onOf(0)).toBe('0.000');
   // once the settle has finished, the CSS ground is wholly the second area's — as the end of
-  // the first tide (dialog at ~100% over kunnskap) or the start of the second (moteplasser at
-  // ~0% over dialog): the browser rounds the settled scroll to a pixel, so u lands a hair
+  // the first tide (samfunnsdeltakelse at ~100% over kunnskap) or the start of the second (dialog
+  // at ~0% over samfunnsdeltakelse): the browser rounds the settled scroll to a pixel, so u lands a hair
   // either side of 1. The words are up a fifth of a step before that, so this is polled.
   const groundIs = (area: string) => async () => {
     const ground = await sea.locator('[data-sea]').evaluate((el) => (el as HTMLElement).style.getPropertyValue('--ground'));
@@ -84,7 +86,7 @@ test('the home page is the name alone, and carries the brief’s main text, the 
     const [, to, pct, from] = m;
     return (to === area && Number(pct) >= 99.5) || (from === area && Number(pct) <= 0.5) ? area : ground;
   };
-  await expect.poll(groundIs('--color-area-dialog'), { timeout: 3000 }).toBe('--color-area-dialog');
+  await expect.poll(groundIs('--color-area-samfunnsdeltakelse'), { timeout: 3000 }).toBe('--color-area-samfunnsdeltakelse');
   // and back: a jump to 0.9 of the way back to the first field returns to it
   await jumpTo(0.1);
   await expect.poll(() => onOf(0), { timeout: 3000 }).toBe('1.000');
@@ -99,12 +101,12 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   expect(await plate.evaluate((el) => getComputedStyle(el).clipPath)).toMatch(/inset\(0(px)? 0px round 0px\)|inset\(0px\)|none/);
   await main.locator('section#om-oss').evaluate((el) => window.scrollTo(0, window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.5));
   await expect(main.locator('section#om-oss')).toHaveAttribute('data-arrived', '');
-  // a field's link lands on its band: the second field's, with its words on the water
+  // a field's link lands on its band: the second field's (Samfunnsdeltakelse), with its words on the water
   await jumpTo(1);
   await expect.poll(() => onOf(1), { timeout: 3000 }).toBe('1.000');
-  await main.getByRole('link', { name: brief.areas[1].name, exact: true }).click();
-  await expect(page).toHaveURL(/\/vart-arbeid#dialog$/);
-  await expect(page.locator('#dialog')).toBeInViewport();
+  await main.getByRole('link', { name: brief.areas[3].name, exact: true }).click();
+  await expect(page).toHaveURL(/\/vart-arbeid#samfunnsdeltakelse$/);
+  await expect(page.locator('#samfunnsdeltakelse')).toBeInViewport();
 });
 
 test('vårt arbeid: the four areas, each its own section of water, each reachable by its anchor', async ({ page }) => {

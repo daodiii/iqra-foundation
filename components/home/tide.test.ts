@@ -1,13 +1,21 @@
 import { describe, expect, test } from 'vitest';
 import { areas } from './areas';
-import { groundAt, seaAt, settle, STEPS } from './tide';
+import { groundAt, SEA_ORDER, seaAreas, seaAt, settle, STEPS } from './tide';
 
 const at = (progress: number, direction: 1 | -1) => settle(progress, { progress, direction });
 
 describe('settle', () => {
   test('three steps between the four fields, and the stage is built for exactly that', () => {
     expect(STEPS).toBe(3);
-    expect(STEPS).toBe(areas.length - 1);
+    expect(STEPS).toBe(seaAreas.length - 1);
+  });
+});
+
+describe('the order on the sea', () => {
+  test('the owner’s: navy, burgundy, turquoise, and white last — every area once, each in its own colour', () => {
+    expect(SEA_ORDER).toEqual(['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser']);
+    expect(seaAreas.map((a) => a.ground)).toEqual(['navy', 'crimson', 'turquoise', 'light']);
+    expect([...seaAreas].sort((a, b) => a.key.localeCompare(b.key))).toEqual([...areas].sort((a, b) => a.key.localeCompare(b.key)));
   });
 
   test('forward, anything past an eighth of a step completes it; short of that, it returns', () => {
@@ -81,8 +89,8 @@ describe('seaAt', () => {
 
 describe('groundAt', () => {
   test('the CSS ground is the next area’s token over the current one’s, the tide as a percentage', () => {
-    expect(groundAt(0)).toBe('color-mix(in srgb, var(--color-area-dialog) 0.0%, var(--color-area-kunnskap))');
-    expect(groundAt(1.25)).toBe('color-mix(in srgb, var(--color-area-moteplasser) 25.0%, var(--color-area-dialog))');
-    expect(groundAt(3)).toBe('color-mix(in srgb, var(--color-area-samfunnsdeltakelse) 100.0%, var(--color-area-moteplasser))');
+    expect(groundAt(0)).toBe('color-mix(in srgb, var(--color-area-samfunnsdeltakelse) 0.0%, var(--color-area-kunnskap))');
+    expect(groundAt(1.25)).toBe('color-mix(in srgb, var(--color-area-dialog) 25.0%, var(--color-area-samfunnsdeltakelse))');
+    expect(groundAt(3)).toBe('color-mix(in srgb, var(--color-area-moteplasser) 100.0%, var(--color-area-dialog))');
   });
 });

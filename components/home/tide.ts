@@ -1,10 +1,23 @@
-import { areas } from './areas';
+import type { AreaKey } from '@/lib/content';
+import { areas, type Area } from './areas';
 
 /**
  * The playhead of Havet (Sea.tsx): `u` runs 0 to STEPS down the stage, one whole number per
  * field, and these are the numbers that turn it into a frame — pure, so they are tested
  * here and applied there.
  */
+
+/**
+ * The order the four come in on the sea — the owner's, given 2026-09-17 after seeing it
+ * live: «navy, burgundy, turquoise and then end with white». The brief's order (Kunnskap,
+ * Dialog, Møteplasser, Samfunnsdeltakelse) stands everywhere else — the bands, the seal's
+ * ring, the footer's line; here the tides run from the hero's white through the dark pair
+ * and out to white again, above the seal's navy. Each area keeps its own colour.
+ */
+export const SEA_ORDER = ['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser'] as const satisfies readonly AreaKey[];
+
+/** The areas in the sea's order, each with its look. */
+export const seaAreas: readonly Area[] = SEA_ORDER.map((key) => areas.find((a) => a.key === key)!);
 
 /** The act's stops: the four fields at u = 0, 1, 2, 3. `sea.module.css` sizes the stage as `100vh + STEPS × 100vh`. */
 export const STEPS = 3;
@@ -52,7 +65,7 @@ export function seaAt(u: number): SeaFrame {
   return {
     i,
     t,
-    words: areas.map((_, k) => {
+    words: seaAreas.map((_, k) => {
       const d = Math.abs(u - k);
       // Gone before the tide is halfway, up once it has passed: two fields' words never share the water.
       return { on: clamp01((WORD_REACH - d) / WORD_FADE), live: d < WORD_REACH };
@@ -63,5 +76,5 @@ export function seaAt(u: number): SeaFrame {
 /** The CSS ground under the canvas at `u`: the two areas' tokens mixed straight, for a device without WebGL2. */
 export function groundAt(u: number): string {
   const { i, t } = seaAt(u);
-  return `color-mix(in srgb, var(${areas[i + 1].token}) ${(t * 100).toFixed(1)}%, var(${areas[i].token}))`;
+  return `color-mix(in srgb, var(${seaAreas[i + 1].token}) ${(t * 100).toFixed(1)}%, var(${seaAreas[i].token}))`;
 }

@@ -9,10 +9,10 @@ import { Logo } from '@/components/site/Logo';
 import { site } from '@/content/site.no';
 import type { InkHandle } from '@/lib/ink';
 import type { WaterHandle } from '@/lib/water';
-import { AREA_LOOK, areaFloor, areas, type Area } from './areas';
+import { AREA_LOOK, areaFloor, type Area } from './areas';
 import fields from './fields.module.css';
 import styles from './sea.module.css';
-import { groundAt, LANDED, LEFT, seaAt, settle, STEPS } from './tide';
+import { groundAt, LANDED, LEFT, seaAreas, seaAt, settle, STEPS } from './tide';
 
 /** The plugin's static side, for `getScrollFunc` and the listeners; the instance type is `ScrollTrigger`. */
 type Plugin = typeof ScrollTrigger;
@@ -156,7 +156,8 @@ function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void
  * way across — the tide comes in from the left, its edge bent by the surface
  * (`WaterHandle.retune`) — and the CSS ground under the canvas mixes the same two colours
  * for a device without WebGL2. The four fields' words stand in the same place and cross as
- * the tide passes; a field's landing drops a stone under its name. The box's ground and
+ * the tide passes; a field's landing drops a stone under its name. The four come in the
+ * sea's own order (`SEA_ORDER`: navy, burgundy, turquoise, white). The box's ground and
  * tone are the first field's: the layers carry their own, and nothing on the box keys on
  * them once the act runs.
  */
@@ -164,7 +165,7 @@ export function Sea() {
   const stage = useRef<HTMLElement>(null);
   const live = useRef<WaterHandle | InkHandle | null>(null);
   // Which fields have had their stone this visit; the first has (the page opens on it).
-  const landed = useRef<boolean[]>(areas.map((_, k) => k === 0));
+  const landed = useRef<boolean[]>(seaAreas.map((_, k) => k === 0));
   useAct(stage, (u) => {
     const el = stage.current;
     const sea = el?.querySelector<HTMLElement>('[data-sea]');
@@ -172,7 +173,7 @@ export function Sea() {
     if (!el || !sea || !canvas) return;
     const frame = seaAt(u);
     const water = live.current;
-    if (water && 'retune' in water) water.retune(areaFloor(areas[frame.i]), areaFloor(areas[frame.i + 1]), frame.t);
+    if (water && 'retune' in water) water.retune(areaFloor(seaAreas[frame.i]), areaFloor(seaAreas[frame.i + 1]), frame.t);
     sea.style.setProperty('--ground', groundAt(u));
     el.querySelectorAll<HTMLElement>('[data-field]').forEach((word) => {
       const k = Number(word.dataset.field);
@@ -195,7 +196,7 @@ export function Sea() {
       }
     });
   });
-  const first = areas[0];
+  const first = seaAreas[0];
   return (
     <section ref={stage} aria-label={site.pages.home.areasLabel} className={styles.stage} data-fields>
       <div className={styles.view}>
@@ -209,7 +210,7 @@ export function Sea() {
             calm
             onMaterial={(w) => { live.current = w; }}
           >
-            {areas.map((a, k) => (
+            {seaAreas.map((a, k) => (
               <div key={a.key} data-field={k} data-tone={a.tone} className={styles.word} style={wordVars(a)}>
                 <FieldWords area={a} />
               </div>
