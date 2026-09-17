@@ -1209,7 +1209,8 @@ describe('Seal', () => {
     const vision = container.querySelector('section#visjon') as HTMLElement;
     const visionName = within(vision).getByRole('heading', { level: 2, name: site.pages.home.visionLabel });
     expect(vision).toHaveAttribute('aria-labelledby', visionName.id);
-    expect(within(vision).getByText(brief.vision.headline)).toBeInTheDocument();
+    // The statement is word by word (Words): getByText sees only a node's own text, so match the section's.
+    expect(vision).toHaveTextContent(brief.vision.headline);
     expect(within(vision).getByText(brief.vision.paragraph)).toBeInTheDocument();
 
     const mission = container.querySelector('section#misjon') as HTMLElement;
@@ -2153,7 +2154,8 @@ describe('Hjem', () => {
       const section = container.querySelector(`section#${id}`) as HTMLElement;
       const name = within(section).getByRole('heading', { level: 2, name: label });
       expect(section).toHaveAttribute('aria-labelledby', name.id);
-      expect(within(section).getByText(text.headline)).toBeInTheDocument();
+      // The vision's headline is word by word (Words): match the section's text, not a text node.
+      expect(section).toHaveTextContent(text.headline);
       expect(within(section).getByText(text.paragraph)).toBeInTheDocument();
       expect(section.closest('[data-material]')).toHaveAttribute('data-material', 'flat');
     }
