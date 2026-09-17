@@ -28,29 +28,6 @@
   justify-self: center;
 }
 
-/* The mosaic's fields keep their columns: the outer edge of each cell is the inset. */
-.mosaic [data-material] {
-  --box-radius: 0;
-}
-
-.mosaic li:nth-child(odd) [data-material] > div {
-  width: calc(100% - var(--box-inset));
-  justify-self: end;
-}
-
-.mosaic li:nth-child(even) [data-material] > div {
-  width: calc(100% - var(--box-inset));
-  justify-self: start;
-}
-
-@media (max-width: 899px) {
-  .mosaic li:nth-child(odd) [data-material] > div,
-  .mosaic li:nth-child(even) [data-material] > div {
-    width: calc(100% - 2 * var(--box-inset));
-    justify-self: center;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .scene {
     --open: 0;
