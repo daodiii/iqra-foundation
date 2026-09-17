@@ -1,0 +1,49 @@
+/*
+ * The arrival: when the tip line reaches a section, its title rises out of its own line,
+ * then its copy, then its cards one after another; scrolled back above, they go down
+ * again. Only when the section is live (script ran): otherwise everything stands.
+ */
+
+.arrive[data-live] :is([data-prose], [data-card]) {
+  transition: opacity 640ms var(--ease-out-expo), transform 760ms var(--ease-out-expo);
+}
+
+.arrive[data-live]:not([data-arrived]) :is([data-prose], [data-card]) {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: none;
+}
+
+/* A focused card must be seen: Chrome scrolls a focused element only as far as needed, so a card can be focused before it arrives. */
+.arrive[data-live]:not([data-arrived]) :is([data-prose], [data-card]):focus-within {
+  opacity: 1;
+  transform: none;
+}
+
+.arrive[data-live][data-arrived] [data-prose] {
+  transition-delay: 170ms;
+}
+
+.arrive[data-live][data-arrived] [data-card] {
+  transition-delay: calc(var(--i, 0) * 120ms);
+}
+
+/* The title rises out of its own line. */
+.arrive[data-live] [data-title] {
+  transition: clip-path 820ms var(--ease-out-expo), transform 820ms var(--ease-out-expo);
+  transition-delay: 60ms;
+}
+
+.arrive[data-live]:not([data-arrived]) [data-title] {
+  clip-path: inset(0 0 100% 0);
+  transform: translateY(14px);
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrive [data-title],
+  .arrive [data-prose],
+  .arrive [data-card] {
+    transition: none;
+  }
+}

@@ -1,43 +1,193 @@
 @import "tailwindcss";
 
+/*
+ * The design system, as tokens. Every colour on the site is one of the brand guide's five
+ * or a tint of one, named here; every face and weight is one of the guide's two families;
+ * space, radius and motion have one scale each. Components read these and never write a
+ * literal — that is how the identity stays the same on the ninth page as on the first.
+ *
+ * This direction («Blekk og vann») keeps the draft's two materials, ink and water, and
+ * makes them the brand's ground: their palettes in `lib/film.ts` are written from the same
+ * five values, and the tints below are the ones the materials' CSS stills are mixed from.
+ */
 @theme {
-  --color-navy: #2a394b;
-  --color-crimson: #ab5263;
-  --color-night: #0e1620;
-  --color-film-black: #0b1118;
-  --color-ink-soft: #4b586a;
-  --color-muted: #8a94a3;
-  --color-hairline: #e3e7ec;
-  /* The warm ground Om oss sits on, so the cream stock of the book reads as cream. */
-  --color-paper: #eae8e4;
-  --font-sans: var(--font-geist), "Segoe UI", system-ui, sans-serif;
+  /* The guide's palette, as it prints them. PRIMARY */
+  --color-navy: #2c394b;
+  --color-turquoise: #67c1bf;
+  /* SECONDARY */
+  --color-light: #f0f0f1;
+  --color-dark: #393e46;
+  --color-crimson: #ab5261;
+  --color-white: #ffffff;
+
+  /*
+   * Tints, each mixed from one of the five with white or with navy, so it is traceable.
+   * `ink` is the body text colour: navy is the brand's dark and reads as black at text
+   * sizes; `ink-soft` is navy lifted for secondary lines — at 76% it still clears 4.5:1
+   * on the light ground (#f0f0f1), which 72% did not; the hairline is navy at 12%.
+   */
+  --color-ink: #2c394b;
+  --color-ink-soft: color-mix(in srgb, #2c394b 76%, #ffffff);
+  --color-hairline: color-mix(in srgb, #2c394b 12%, #ffffff);
+  --color-turquoise-pale: color-mix(in srgb, #67c1bf 18%, #ffffff);
+  --color-turquoise-deep: color-mix(in srgb, #67c1bf 70%, #2c394b);
+  --color-crimson-deep: color-mix(in srgb, #ab5261 85%, #2c394b);
+
+  /*
+   * The materials' tints, written as hexes because `lib/film.ts` hands the same values to
+   * the shaders and a shader needs a hex. `turquoise-mid` is the turquoise three fifths
+   * of the way into white (the ink's second pigment); `water-pale` is the turquoise about
+   * a sixth into white (the floor under the shallowest water); `water-floor` is that pale
+   * mixed 45% towards the turquoise itself — the floor at the page's depth, exactly as
+   * `floorAt` in `lib/water.ts` resolves it (`lib/film.test.ts` holds the two equal).
+   */
+  --color-turquoise-mid: #a3dad8;
+  --color-water-pale: #e6f4f3;
+  --color-water-floor: #addddc;
+  /* The light area's water at the page's depth: white a sixth into the light, then 45% towards it (`brand.areaFloor.light`). */
+  --color-water-floor-light: #f7f7f8;
+
+  /*
+   * The four areas' colours, in the brief's order (direction C's mapping, which the shell
+   * and the flat fields read): Kunnskap navy, Dialog turquoise, Møteplasser light,
+   * Samfunnsdeltakelse crimson. `components/home/areas.ts` is the one map onto these.
+   */
+  --color-area-kunnskap: var(--color-navy);
+  --color-area-dialog: var(--color-turquoise);
+  --color-area-moteplasser: var(--color-light);
+  --color-area-samfunnsdeltakelse: var(--color-crimson);
+  /* Crimson lifted towards white for its word in the thread on navy: 5.2:1 where crimson itself is 2.3:1. */
+  --color-crimson-lift: color-mix(in srgb, #ab5261 55%, #ffffff);
+
+  --font-sans: var(--font-general-sans), "Segoe UI", system-ui, sans-serif;
+  --font-text: var(--font-supreme), "Segoe UI", system-ui, sans-serif;
+
+  /* Type roles: headings tight, labels and legends tracked out a touch, as the guide tracks «Foundation». */
+  --tracking-tight: -0.015em;
+  --tracking-label: 0.02em;
+  --text-hero: clamp(30px, 3.6vw, 52px);
+  --text-card-title: clamp(24px, 2vw, 28px);
+
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 :root {
   --header-h: 72px;
-  --margin: 80px;
+  --margin: clamp(20px, 5vw, 80px);
+  --measure: 62ch;
+  --radius: 10px;
+  --radius-pill: 999px;
+  --dur-s: 160ms;
+  --dur-m: 320ms;
+  /* The pen draws a frame in this long, once, when its box comes on screen. */
+  --dur-pen: 800ms;
+
+  /*
+   * The boxes of material: their corner, how far they step in from the page's edge, and
+   * the white between one box and the next — the guide's own plates, stacked with a thin
+   * gutter, is the rhythm the page follows.
+   */
+  --box-radius: 30px;
+  --box-inset: var(--margin);
+  --gutter: clamp(12px, 1.6vw, 24px);
+  /* The frosted inside of a framed card: white at this alpha over ink, and over water. */
+  --frost-ink: 0.3;
+  --frost-water: 0.5;
+  /* The i's dot, the one gesture: 10px, in crimson, wherever a thing is marked. */
+  --dot: 10px;
+  /* The footer keeps its breath on a page of text; a page of plates closes the gap to one gutter. */
+  --footer-gap: 96px;
 }
 
-@media (max-width: 767px) {
+/*
+ * Between a laptop and a phone the header is two rows (the logo, then the nine items; see
+ * site.module.css), so the page starts lower. Declared here, after the `:root` above, so
+ * source order cannot hand the narrower value the win.
+ */
+@media (max-width: 1179px) and (min-width: 900px) {
   :root {
-    --margin: 24px;
+    --header-h: 118px;
   }
 }
 
+/* A page built of plates (the home page, Vårt arbeid) says so, and the footer becomes the last plate. */
+body:has([data-plates]) {
+  --footer-gap: var(--gutter);
+}
+
 html {
-  background: #ffffff;
-  color: var(--color-navy);
+  background: var(--color-white);
+  color: var(--color-ink);
+  scroll-padding-top: calc(var(--header-h) + 16px);
 }
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: var(--font-text);
+  font-size: 17px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+}
+
+/* The page is a document under a fixed header, so it starts below it. */
+main {
+  padding-top: var(--header-h);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: var(--tracking-tight);
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
 }
 
 :focus-visible {
   outline: 2px solid var(--color-crimson);
   outline-offset: 3px;
+}
+
+/* Text that is for a screen reader alone — the full stop a crimson dot stands in for. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* A page with the drawer open does not scroll behind it. */
+body[data-scroll-locked] {
+  overflow: hidden;
+}
+
+@media (max-width: 699px) {
+  :root {
+    --box-radius: 20px;
+    --box-inset: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

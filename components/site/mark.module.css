@@ -1,0 +1,43 @@
+/* The area mark: a square of the area's colour, then the name. */
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 14px/1 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-navy);
+}
+
+.square {
+  display: inline-block;
+  width: var(--dot);
+  height: var(--dot);
+  margin-right: 0.35em;
+  vertical-align: 0.05em;
+  background: var(--color-navy);
+  box-sizing: border-box;
+}
+
+.square[data-area="kunnskap"] { background: var(--color-area-kunnskap); }
+.square[data-area="dialog"] { background: var(--color-area-dialog); }
+.square[data-area="moteplasser"] { background: var(--color-area-moteplasser); border: 1px solid var(--color-navy); }
+.square[data-area="samfunnsdeltakelse"] { background: var(--color-area-samfunnsdeltakelse); }
+
+.mark .square {
+  margin-right: 0;
+}
+
+/* A marked word in running text: the square stays on the word's line. */
+.marked {
+  white-space: nowrap;
+}
+
+/* On a dark plate the mark takes the light, and the squares the colours the areas have on navy (areas.ts's `onNavy`). */
+[data-tone="dark"] .mark {
+  color: var(--color-light);
+}
+
+[data-tone="dark"] .square[data-area="kunnskap"] { background: var(--color-light); }
+[data-tone="dark"] .square[data-area="dialog"] { background: var(--color-turquoise); }
+[data-tone="dark"] .square[data-area="moteplasser"] { background: var(--color-white); border: 0; }
+[data-tone="dark"] .square[data-area="samfunnsdeltakelse"] { background: var(--color-crimson-lift); }

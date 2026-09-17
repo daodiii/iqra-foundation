@@ -59,12 +59,12 @@ export function contentProblems(site, { production, allowPlaceholders = false })
  * deliberately held open they are what the build log has to say out loud.
  */
 const PAYMENT = [
-  /** The Vipps number, which is the section. */
+  /** The Vipps number, which is the page. */
   /^support\.vipps\.value$/,
-  /** The sentence the account number lives in: a bracket anywhere in it is a number. */
-  /^support\.also$/,
-  /** The number the gift is reported on, in the footer. */
-  /^support\.orgnr$/,
+  /** The account number under it. */
+  /^support\.account\.value$/,
+  /** The number the gift is reported on, in the footer and on Kontakt. */
+  /^contact\.orgnr$/,
 ];
 
 export function paymentPlaceholders(site) {

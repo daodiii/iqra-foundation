@@ -143,6 +143,12 @@ export type WaterOptions = {
    * a hand moving over the copy as well as over the water. Omitted, it only rains.
    */
   host?: HTMLElement | null;
+  /**
+   * Calmer water (the owner's verdict of 2026-09-17: the rings had become the subject):
+   * rain two and a half times rarer and half as heavy, a stir half as deep. The surface
+   * still lives. Off, nothing changes.
+   */
+  calm?: boolean;
 };
 
 /*
@@ -374,7 +380,8 @@ export function createWater(canvas: HTMLCanvasElement, opts: WaterOptions): Wate
   pools.forEach((p, i) => colourArr.set(p.colour, i * 3));
   const refr = night ? REFR_NIGHT : REFR;
   const slope = night ? SLOPE_NIGHT : SLOPE;
-  const rain = night ? RAIN_NIGHT : RAIN;
+  const calm = opts.calm ? { gap: 2.5, amp: 0.55, stir: 0.5 } : { gap: 1, amp: 1, stir: 1 };
+  const rain = (night ? RAIN_NIGHT : RAIN).map((v) => v * calm.gap) as [number, number];
   const gust = night ? GUST_NIGHT : GUST;
 
   let field: Pair | null = null;
@@ -451,7 +458,7 @@ export function createWater(canvas: HTMLCanvasElement, opts: WaterOptions): Wate
   /** Rain falls INTO the water, so every drop is negative: a dent, not a bump. */
   const raindrop = () => drop(
     0.06 + Math.random() * 0.88, 0.08 + Math.random() * 0.84,
-    -(0.22 + Math.random() * 0.4), 0.004 + Math.random() * 0.005,
+    -(0.22 + Math.random() * 0.4) * calm.amp, 0.004 + Math.random() * 0.005,
   );
   const windGust = () => drop(
     Math.random(), Math.random(), (Math.random() - 0.5) * WIND, 0.03 + Math.random() * 0.05,
@@ -608,7 +615,7 @@ export function createWater(canvas: HTMLCanvasElement, opts: WaterOptions): Wate
       if (broken) return;
       // Deeper and wider than rain by a long way: this answers a press, and a press that
       // makes the same ring as a raindrop reads as a coincidence rather than an answer.
-      drop(x, y, -1.2, 0.016);
+      drop(x, y, -1.2 * calm.stir, 0.016 * (calm.stir < 1 ? 0.8 : 1));
       // Under reduced motion nothing is repainting, so the stir has to present itself.
       if (opts.reduced) { step(); present(0); }
     },

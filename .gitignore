@@ -49,3 +49,6 @@ scripts/.frames/
 # review and browser-tool artifacts
 .impeccable/
 .playwright-mcp/
+
+# helper scripts output
+.scratch/

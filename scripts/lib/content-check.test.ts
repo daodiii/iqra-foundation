@@ -8,18 +8,15 @@ describe('contentProblems', () => {
   });
 
   test('flags empty strings anywhere, with their path', () => {
-    const broken = { ...site, hero: { ...site.hero, lede: '   ' } };
-    expect(contentProblems(broken, { production: false })).toEqual(['hero.lede is empty']);
+    const broken = { ...site, header: { ...site.header, skip: '   ' } };
+    expect(contentProblems(broken, { production: false })).toEqual(['header.skip is empty']);
   });
 
   /**
-   * The email is not a special case any more: the roster, the figures and the account
-   * number are exactly as embarrassing to ship. Every placeholder in the content has to
-   * be reported, not a remembered list of the ones we happened to think of.
-   *
-   * Both sides are derived from the content rather than named here. Naming a token makes
-   * the test fail on the day someone supplies the real value — which is the one day it
-   * ought to stay quiet — and that is precisely how it broke when the email arrived.
+   * Every placeholder in the content has to be reported, not a remembered list of the ones
+   * we happened to think of. Both sides are derived from the content rather than named
+   * here: naming a token makes the test fail on the day someone supplies the real value,
+   * which is the one day it ought to stay quiet.
    */
   test('flags every placeholder, and only in production', () => {
     const found = contentPlaceholders(site);
@@ -35,16 +32,13 @@ describe('contentProblems', () => {
 
   /**
    * The escape hatch that puts the unfinished site on a public URL. It has to skip the
-   * placeholders and nothing else: an empty string is a bug in any environment, and a
-   * hatch that swallowed those too would turn a deliberate «ship it unfinished» into a
-   * blanket «stop checking».
+   * placeholders and nothing else: an empty string is a bug in any environment.
    */
   test('allowPlaceholders opens the gate in production, but only for placeholders', () => {
     expect(contentProblems(site, { production: true, allowPlaceholders: true })).toEqual([]);
 
-    const broken = { ...site, hero: { ...site.hero, lede: '  ' } };
-    expect(contentProblems(broken, { production: true, allowPlaceholders: true }))
-      .toEqual(['hero.lede is empty']);
+    const broken = { ...site, header: { ...site.header, skip: '  ' } };
+    expect(contentProblems(broken, { production: true, allowPlaceholders: true })).toEqual(['header.skip is empty']);
   });
 
   test('the gate still refuses by default, so the hatch has to be asked for', () => {
@@ -53,9 +47,8 @@ describe('contentProblems', () => {
 
   test('content with nothing left to fill in passes a production build', () => {
     const done = {
-      hero: { lede: 'Ferdig tekst.' },
-      team: [{ name: 'Aisha', role: 'Leder' }],
-      contact: { email: 'hei@example.no' },
+      contact: { email: 'hei@example.no', orgnr: '000 000 000' },
+      support: { vipps: { value: '123456' } },
     };
     expect(contentProblems(done, { production: true })).toEqual([]);
   });
@@ -64,26 +57,14 @@ describe('contentProblems', () => {
 describe('paymentPlaceholders', () => {
   /**
    * These are the reason the loud warning exists: the numbers a visitor would try to send
-   * money to. If the set ever drifts — a field renamed, another one added — the build log
-   * would go quiet about exactly the thing it is there to shout.
+   * money to, and the number a gift is reported on. If the set ever drifts — a field
+   * renamed, another one added — the build log would go quiet about exactly the thing it
+   * is there to shout.
    */
   test('finds the payment details, and nothing that is merely unfinished', () => {
     const paths = paymentPlaceholders(site).map((p) => p.path);
-    expect(paths).toEqual([
-      'support.vipps.value',
-      'support.also',
-      'support.orgnr',
-    ]);
-    expect(paths.some((p) => p.startsWith('about.'))).toBe(false);
-  });
-
-  /**
-   * The account number lives inside a sentence now, not in a field of its own, so the check
-   * has to read the sentence: a bracket anywhere in it is a number someone would try to use.
-   */
-  test('the account number is caught inside its sentence', () => {
-    const paths = paymentPlaceholders(site);
-    expect(paths.find((p) => p.path === 'support.also')?.token).toBe('[KONTO]');
+    expect(paths).toEqual(['contact.orgnr', 'support.vipps.value', 'support.account.value']);
+    expect(paths).not.toContain('contact.email');
   });
 
   test('it is a subset of every placeholder, not a separate list that can drift', () => {
@@ -104,19 +85,14 @@ describe('contentPlaceholders', () => {
     ]);
   });
 
-  test('the whole roster and both figures are found in the real content', () => {
-    const paths = contentPlaceholders(site).map((p) => p.path);
-    const team = site.about.chapters.find((c) => 'team' in c)!.team!;
-    // Three brackets per person — both names and the line about them — so the gate
-    // cannot pass with a name filled in and an invented sentence left under it.
-    team.forEach((_, i) => {
-      for (const slot of ['first', 'last', 'bio']) {
-        expect(paths).toContain(`about.chapters[1].team[${i}].${slot}`);
-      }
-    });
-    const figures = site.about.chapters.find((c) => 'figures' in c)!.figures!;
-    figures.forEach((_, i) => {
-      expect(paths).toContain(`about.chapters[2].figures[${i}].value`);
-    });
+  /**
+   * What the site still lacks, exactly: the address, the organisation number, the Vipps
+   * number and the account. Nothing else on the site is a stand-in — the collections ship
+   * empty and the prose is the brief's — so anything more here is a placeholder someone
+   * added and should account for.
+   */
+  test('the four facts the foundation has not supplied are the only placeholders', () => {
+    const paths = contentPlaceholders(site).map((p) => p.path).sort();
+    expect(paths).toEqual(['contact.email', 'contact.orgnr', 'support.account.value', 'support.vipps.value']);
   });
 });

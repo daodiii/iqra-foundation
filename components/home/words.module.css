@@ -1,0 +1,37 @@
+/*
+ * A statement word by word: each word rises into place a little after the one before,
+ * once the section it stands in has arrived (`Arrive`). Live and not arrived, the words
+ * wait; without script they stand. The full stop is the logo's dot.
+ */
+
+.word {
+  display: inline-block;
+}
+
+[data-live]:not([data-arrived]) .word {
+  opacity: 0;
+  transform: translateY(0.35em);
+  transition: none;
+}
+
+[data-live][data-arrived] .word {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 520ms var(--ease-out) calc(var(--w, 0) * 38ms),
+    transform 760ms var(--ease-out-expo) calc(var(--w, 0) * 38ms);
+}
+
+.stop {
+  color: var(--color-crimson);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word,
+  [data-live]:not([data-arrived]) .word,
+  [data-live][data-arrived] .word {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

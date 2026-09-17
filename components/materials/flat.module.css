@@ -1,0 +1,8 @@
+/*
+ * A flat plate: the Box's shell without a material. The frost is between the ink's and
+ * the water's; anything laid under the copy (`art`) sits where the paint would.
+ */
+
+.flat {
+  --frost: 0.35;
+}

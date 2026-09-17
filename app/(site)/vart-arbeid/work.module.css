@@ -1,0 +1,44 @@
+/*
+ * Vårt arbeid: the title and the lede on the page's white, then four plates of water,
+ * one area each in its own colour (the bands in components/home/fields.module.css).
+ */
+.work {
+  padding-bottom: 0;
+}
+
+.head {
+  padding: 56px var(--margin) 40px;
+  max-width: calc(var(--measure) + 2 * var(--margin) + 160px);
+}
+
+.title {
+  font-size: clamp(32px, 4.2vw, 52px);
+  max-width: 20ch;
+}
+
+.lede {
+  margin-top: 20px;
+  max-width: var(--measure);
+  font-size: clamp(18px, 1.6vw, 21px);
+  line-height: 1.5;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.plates {
+  display: grid;
+  gap: var(--gutter);
+  padding: 0 var(--box-inset) var(--gutter);
+}
+
+/* A section is an anchor: `#kunnskap` lands on it with the header's height and a breath above. */
+.area {
+  display: grid;
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+@media (max-width: 699px) {
+  .head {
+    padding: 40px var(--margin) 28px;
+  }
+}

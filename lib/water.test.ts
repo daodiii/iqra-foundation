@@ -99,3 +99,8 @@ test('stirring a deferred water that has not built yet does nothing rather than 
   expect(() => water.stir(0.5, 0.5)).not.toThrow();
   water.destroy();
 });
+
+test('calm water is an option, and declines where there is no WebGL2 like any other', () => {
+  const canvas = document.createElement('canvas');
+  expect(createWater(canvas, { reduced: false, floor: floorAt(SCENE, DEPTH), calm: true })).toBeNull();
+});

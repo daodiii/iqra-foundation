@@ -1,0 +1,265 @@
+/*
+ * The seal: Visjon inside the mark's ring on navy, the four areas' names in slow orbit,
+ * the crimson dot at twelve, Misjon beside. The ring draws itself from twelve as the
+ * section arrives, the names fade in, the dot pops; scrolled back above, it all resets.
+ * Live and not arrived, everything waits; without script it all stands.
+ */
+
+.plate {
+  --box-pad-y: clamp(64px, 9vh, 96px);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: clamp(32px, 5vw, 88px);
+  row-gap: 8px;
+  align-items: center;
+}
+
+/*
+ * The vision section spans the whole grid and is a subgrid of it, so the seal can stand in
+ * the first column across both rows and the paragraph in the second column's first row
+ * while the section keeps a real box — `display: contents` would give it none, and a
+ * section with no box fools everything that measures it.
+ */
+.vision {
+  grid-column: 1 / -1;
+  grid-row: 1 / span 2;
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-template-rows: subgrid;
+  align-items: center;
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+.seal {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  position: relative;
+  width: min(100%, 640px);
+  aspect-ratio: 1;
+  justify-self: center;
+}
+
+.lead {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  margin: 0;
+  max-width: 52ch;
+  font-family: var(--font-text);
+  font-size: clamp(17px, 1.35vw, 20px);
+  line-height: 1.55;
+  color: rgb(240 240 241 / 0.86);
+  text-wrap: pretty;
+}
+
+/* Misjon, beside: the second column's second row. It paints over the vision's empty corner there. */
+.mission {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+.rule {
+  margin: 26px 0;
+  border: 0;
+  height: 1px;
+  background: rgb(103 193 191 / 0.45);
+}
+
+/* The section's name: a small heading in the light. */
+.name {
+  margin: 0 0 18px;
+  font: 500 15px/1 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  color: rgb(240 240 241 / 0.72);
+}
+
+.headline {
+  margin: 0;
+  font: 600 clamp(21px, 1.9vw, 28px) / 1.25 var(--font-sans);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-white);
+  text-wrap: balance;
+}
+
+.text {
+  margin: 16px 0 0;
+  max-width: 54ch;
+  font-family: var(--font-text);
+  font-size: clamp(16px, 1.2vw, 18px);
+  line-height: 1.6;
+  color: rgb(240 240 241 / 0.88);
+  text-wrap: pretty;
+}
+
+/* ----- the ring ----- */
+
+.ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* The ring draws itself from the top, clockwise. */
+.line {
+  fill: none;
+  stroke: var(--color-turquoise);
+  stroke-width: 0.28;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+[data-live]:not([data-arrived]) .line {
+  stroke-dashoffset: 100;
+  transition: none;
+}
+
+[data-live][data-arrived] .line {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1500ms var(--ease-out-expo);
+}
+
+/* The four areas' names, twice round, turning once in eighty seconds. */
+.orbit {
+  transform-origin: 50% 50%;
+  animation: spin 80s linear infinite;
+}
+
+[data-live]:not([data-arrived]) .orbit {
+  opacity: 0;
+  transition: none;
+}
+
+[data-live][data-arrived] .orbit {
+  opacity: 1;
+  transition: opacity 900ms var(--ease-out) 900ms;
+}
+
+.inscription {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 3.05px;
+  letter-spacing: 0.06em;
+  fill: rgb(240 240 241 / 0.78);
+}
+
+/* The dot on the ring, at twelve. */
+.dot {
+  fill: var(--color-crimson);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+[data-live]:not([data-arrived]) .dot {
+  transform: scale(0);
+  transition: none;
+}
+
+[data-live][data-arrived] .dot {
+  transform: scale(1);
+  transition: transform 460ms cubic-bezier(0.34, 1.56, 0.64, 1) 1450ms;
+}
+
+/* ----- inside the ring ----- */
+
+.inside {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding: 19%;
+  text-align: center;
+}
+
+.inside .name {
+  margin-bottom: 14px;
+}
+
+.statement {
+  margin: 0;
+  font: 600 clamp(19px, 1.8vw, 27px) / 1.22 var(--font-sans);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-white);
+  text-wrap: balance;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 899px) {
+  .row {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    row-gap: 28px;
+  }
+
+  .vision {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .seal {
+    grid-column: 1;
+    grid-row: 1;
+    width: min(100%, 440px);
+  }
+
+  .lead {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .mission {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .inside {
+    padding: 16%;
+  }
+
+  .statement {
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line,
+  .orbit,
+  .dot,
+  [data-live]:not([data-arrived]) .line,
+  [data-live]:not([data-arrived]) .orbit,
+  [data-live]:not([data-arrived]) .dot,
+  [data-live][data-arrived] .line,
+  [data-live][data-arrived] .orbit,
+  [data-live][data-arrived] .dot {
+    opacity: 1;
+    stroke-dashoffset: 0;
+    transition: none;
+    animation: none;
+  }
+
+  .line,
+  [data-live]:not([data-arrived]) .line,
+  [data-live][data-arrived] .line {
+    transform: rotate(-90deg);
+  }
+
+  .dot,
+  [data-live]:not([data-arrived]) .dot,
+  [data-live][data-arrived] .dot {
+    transform: scale(1);
+  }
+}
