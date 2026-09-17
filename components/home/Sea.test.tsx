@@ -3,12 +3,13 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import { Sea } from './Sea';
+import { seaAreas } from './tide';
 
 const realMatchMedia = window.matchMedia;
 afterEach(() => { window.matchMedia = realMatchMedia; });
 
 describe('Havet', () => {
-  test('one sea of water under the region’s label; the four fields’ words on it in the brief’s order, each one link to its section; no numbers', () => {
+  test('one sea of water under the region’s label; the four fields’ words on it in the sea’s order (navy, burgundy, turquoise, white), each one link to its section; no numbers', () => {
     const { container } = render(<Sea />);
     const region = screen.getByRole('region', { name: site.pages.home.areasLabel });
     expect(region).toHaveAttribute('data-fields');
@@ -20,7 +21,8 @@ describe('Havet', () => {
     const words = region.querySelectorAll<HTMLElement>('[data-field]');
     expect(words).toHaveLength(4);
     const tones = { kunnskap: 'dark', dialog: 'light', moteplasser: 'light', samfunnsdeltakelse: 'dark' };
-    brief.areas.forEach((a, k) => {
+    expect(seaAreas.map((a) => a.key)).toEqual(['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser']);
+    seaAreas.forEach((a, k) => {
       const word = words[k];
       expect(word).toHaveAttribute('data-field', String(k));
       expect(word).toHaveAttribute('data-tone', tones[a.key]);
@@ -33,6 +35,7 @@ describe('Havet', () => {
       expect(word.querySelectorAll('img[alt=""]')).toHaveLength(1);
       expect(word.style.getPropertyValue('--ground')).toBe(`var(--color-area-${a.key})`);
     });
+    for (const a of brief.areas) expect(within(region).getByRole('link', { name: a.name })).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/\b0[1-4]\b/);
   });
 
@@ -43,7 +46,7 @@ describe('Havet', () => {
     const words = [...region.querySelectorAll<HTMLElement>('[data-field]')];
     expect(words.map((w) => w.style.getPropertyValue('--on'))).toEqual(['1.000', '0.000', '0.000', '0.000']);
     expect(words.map((w) => w.hasAttribute('data-on'))).toEqual([true, false, false, false]);
-    expect((region.querySelector('[data-sea]') as HTMLElement).style.getPropertyValue('--ground')).toBe('color-mix(in srgb, var(--color-area-dialog) 0.0%, var(--color-area-kunnskap))');
+    expect((region.querySelector('[data-sea]') as HTMLElement).style.getPropertyValue('--ground')).toBe('color-mix(in srgb, var(--color-area-samfunnsdeltakelse) 0.0%, var(--color-area-kunnskap))');
   });
 
   test('under reduced motion nothing is live: no --on, no data-on, the four stand as the stylesheet’s column', () => {
