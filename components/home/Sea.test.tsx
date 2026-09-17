@@ -36,19 +36,14 @@ describe('Havet', () => {
     expect(container.textContent).not.toMatch(/\b0[1-4]\b/);
   });
 
-  test('with script the stage is live and the playhead has been written: every layer has an --on, at most one is on the water', () => {
+  test('with script the stage is live and opens on the first field: its words up and on the water, the others down, the ground its colour — before the plugin has even arrived', () => {
     render(<Sea />);
     const region = screen.getByRole('region', { name: site.pages.home.areasLabel });
     expect(region).toHaveAttribute('data-live');
     const words = [...region.querySelectorAll<HTMLElement>('[data-word]')];
-    for (const w of words) {
-      const on = Number(w.style.getPropertyValue('--on'));
-      expect(Number.isNaN(on)).toBe(false);
-      expect(on).toBeGreaterThanOrEqual(0);
-      expect(on).toBeLessThanOrEqual(1);
-    }
-    expect(words.filter((w) => w.hasAttribute('data-on')).length).toBeLessThanOrEqual(1);
-    expect((region.querySelector('[data-sea]') as HTMLElement).style.getPropertyValue('--ground')).toMatch(/^color-mix\(in srgb, var\(--color-area-/);
+    expect(words.map((w) => w.style.getPropertyValue('--on'))).toEqual(['1.000', '0.000', '0.000', '0.000']);
+    expect(words.map((w) => w.hasAttribute('data-on'))).toEqual([true, false, false, false]);
+    expect((region.querySelector('[data-sea]') as HTMLElement).style.getPropertyValue('--ground')).toBe('color-mix(in srgb, var(--color-area-dialog) 0.0%, var(--color-area-kunnskap))');
   });
 
   test('under reduced motion nothing is live: no --on, no data-on, the four stand as the stylesheet’s column', () => {

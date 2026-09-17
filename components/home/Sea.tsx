@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import type { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useEffect, useRef, type CSSProperties, type RefObject } from 'react';
 import { Box } from '@/components/materials/Box';
 import { Logo } from '@/components/site/Logo';
@@ -14,16 +14,8 @@ import fields from './fields.module.css';
 import styles from './sea.module.css';
 import { groundAt, LANDED, LEFT, seaAt, settle, STEPS } from './tide';
 
-/*
- * Registered here, not through lib/gsap.ts: nothing else on the site scrubs any more, and
- * `normalizeScroll` stays off (it swallowed nested touch for three days once). The mobile
- * address bar's resize is ignored as the site always had it, so the act's start and end do
- * not move under a thumb.
- */
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-  ScrollTrigger.config({ ignoreMobileResize: true });
-}
+/** The plugin's static side, for `getScrollFunc` and the listeners; the instance type is `ScrollTrigger`. */
+type Plugin = typeof ScrollTrigger;
 
 /** The snap is deaf for the first half second of ScrollTrigger's life (lib/gsap.ts has the measurements); the act looks once, after it. */
 const BOOT_SETTLE = 0.6;
@@ -62,7 +54,7 @@ function FieldWords({ area }: { area: Area }) {
  * lets go the moment anything else moves the page. `hold` is given the drive so an unmount
  * can kill it.
  */
-function settleNow(st: ScrollTrigger | undefined, hold: (drive: gsap.core.Tween) => void) {
+function settleNow(plugin: Plugin, st: ScrollTrigger | undefined, hold: (drive: gsap.core.Tween) => void) {
   if (!st || !st.isActive) return;
   const before = window.scrollY;
   requestAnimationFrame(() => {
@@ -73,7 +65,7 @@ function settleNow(st: ScrollTrigger | undefined, hold: (drive: gsap.core.Tween)
     if (tween && tween.isActive()) return;
     const to = settle(st.progress, st);
     if (Math.abs(to - st.progress) < 0.001) return;
-    const toScroll = ScrollTrigger.getScrollFunc(window);
+    const toScroll = plugin.getScrollFunc(window);
     const at = { y: window.scrollY };
     let wrote = at.y;
     const drive = gsap.to(at, {
@@ -97,6 +89,16 @@ function settleNow(st: ScrollTrigger | undefined, hold: (drive: gsap.core.Tween)
  * settling at the four stops once the scroll rests — and `write` puts each `u` on the
  * elements, once per change and once per refresh. Under reduced motion nothing is made and
  * the stage is never `data-live`.
+ *
+ * ScrollTrigger is loaded here, after hydration, not imported with the page: nothing else
+ * on the site uses it any more, and carried in the home page's chunk it cost the page's
+ * first load 28 KB and a longer hydration task (Lighthouse, 2026-09-17: 0.88 → 0.85 on
+ * the mobile throttle). The page opens on the first field, so that frame is written by
+ * hand the moment the stage is live, and the plugin takes over when it arrives — from the
+ * cache, a few frames; over a slow network, the sea stands still on Kunnskap until then.
+ * Registered here, not through lib/gsap.ts: `normalizeScroll` stays off (it swallowed
+ * nested touch for three days once). The mobile address bar's resize is ignored as the
+ * site always had it, so the act's start and end do not move under a thumb.
  */
 function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void) {
   const fn = useRef(write);
@@ -108,29 +110,41 @@ function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void
     if (!el) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     el.setAttribute('data-live', '');
-    const headerH = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: el,
-        start: () => `top ${headerH()}px`,
-        end: 'bottom bottom',
-        scrub: 0.4,
-        snap: { snapTo: settle, duration: { min: 0.25, max: 0.65 }, delay: 0.12, ease: 'power2.inOut', directional: false },
-      },
+    fn.current(0);
+    let gone = false;
+    let down: (() => void) | null = null;
+    void import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
+      if (gone) return;
+      gsap.registerPlugin(ScrollTrigger);
+      ScrollTrigger.config({ ignoreMobileResize: true });
+      const headerH = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: el,
+          start: () => `top ${headerH()}px`,
+          end: 'bottom bottom',
+          scrub: 0.4,
+          snap: { snapTo: settle, duration: { min: 0.25, max: 0.65 }, delay: 0.12, ease: 'power2.inOut', directional: false },
+        },
+      });
+      tl.to({}, { duration: 1 });
+      const put = () => fn.current(tl.progress() * STEPS);
+      tl.eventCallback('onUpdate', put);
+      ScrollTrigger.addEventListener('refresh', put);
+      put();
+      let drive: gsap.core.Tween | null = null;
+      const boot = gsap.delayedCall(BOOT_SETTLE, () => settleNow(ScrollTrigger, tl.scrollTrigger, (d) => { drive = d; }));
+      down = () => {
+        boot.kill();
+        drive?.kill();
+        ScrollTrigger.removeEventListener('refresh', put);
+        tl.scrollTrigger?.kill();
+        tl.kill();
+      };
     });
-    tl.to({}, { duration: 1 });
-    const put = () => fn.current(tl.progress() * STEPS);
-    tl.eventCallback('onUpdate', put);
-    ScrollTrigger.addEventListener('refresh', put);
-    put();
-    let drive: gsap.core.Tween | null = null;
-    const boot = gsap.delayedCall(BOOT_SETTLE, () => settleNow(tl.scrollTrigger, (d) => { drive = d; }));
     return () => {
-      boot.kill();
-      drive?.kill();
-      ScrollTrigger.removeEventListener('refresh', put);
-      tl.scrollTrigger?.kill();
-      tl.kill();
+      gone = true;
+      down?.();
       el.removeAttribute('data-live');
     };
   }, [stage]);
