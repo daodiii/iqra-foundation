@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
@@ -33,6 +33,8 @@ describe('Seal', () => {
     expect(svg).toHaveAttribute('aria-hidden', 'true');
     for (const a of brief.areas) expect(INSCRIPTION.split(a.name)).toHaveLength(3);
     expect(svg.querySelector('textPath')?.textContent).toBe(INSCRIPTION);
+    // the inscription's spaces kept: collapsed, the last dot sat on the first name where the text meets itself
+    expect(svg.querySelector('text')).toHaveAttribute('xml:space', 'preserve');
     const circles = svg.querySelectorAll('circle');
     expect(circles).toHaveLength(2);
     expect(circles[0]).toHaveAttribute('pathLength', '100');

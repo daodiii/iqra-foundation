@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { site } from '@/content/site.no';
 import type { Event } from '@/lib/content';
@@ -62,5 +62,18 @@ describe('Events', () => {
     const section = container.querySelector('section#arrangementer') as HTMLElement;
     expect(within(section).getByRole('heading', { level: 3, name: 'Arrangement 1' })).toBeInTheDocument();
     expect(section.querySelectorAll('li')).toHaveLength(0);
+  });
+
+  test('once the instant has passed the count stands at zeros and stops ticking', () => {
+    // 2026-09-24 18:00 in Oslo is 16:00Z: one second before it, the count reads a second
+    vi.setSystemTime(new Date('2026-09-24T15:59:59Z'));
+    const { container } = render(<Events upcoming={[three[0]]} />);
+    const count = container.querySelector('dl') as HTMLElement;
+    expect(within(count).getByText('01')).toBeInTheDocument();
+    expect(vi.getTimerCount()).toBe(1);
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(within(count).getAllByText('00')).toHaveLength(3);
+    expect(within(count).getByText('0')).toBeInTheDocument();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

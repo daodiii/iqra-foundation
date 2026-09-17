@@ -14,6 +14,12 @@
   transition: none;
 }
 
+/* A focused card must be seen: Chrome scrolls a focused element only as far as needed, so a card can be focused before it arrives. */
+.arrive[data-live]:not([data-arrived]) :is([data-prose], [data-card]):focus-within {
+  opacity: 1;
+  transform: none;
+}
+
 .arrive[data-live][data-arrived] [data-prose] {
   transition-delay: 170ms;
 }

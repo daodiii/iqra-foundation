@@ -17,12 +17,12 @@ describe('Havet', () => {
     expect(waters[0]).toHaveAttribute('data-ground', 'navy');
     expect(waters[0]).toHaveAttribute('data-tone', 'dark');
 
-    const words = region.querySelectorAll<HTMLElement>('[data-word]');
+    const words = region.querySelectorAll<HTMLElement>('[data-field]');
     expect(words).toHaveLength(4);
     const tones = { kunnskap: 'dark', dialog: 'light', moteplasser: 'light', samfunnsdeltakelse: 'dark' };
     brief.areas.forEach((a, k) => {
       const word = words[k];
-      expect(word).toHaveAttribute('data-word', String(k));
+      expect(word).toHaveAttribute('data-field', String(k));
       expect(word).toHaveAttribute('data-tone', tones[a.key]);
       expect(waters[0]).toContainElement(word);
       expect(within(word).getByRole('link', { name: a.name })).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
@@ -40,7 +40,7 @@ describe('Havet', () => {
     render(<Sea />);
     const region = screen.getByRole('region', { name: site.pages.home.areasLabel });
     expect(region).toHaveAttribute('data-live');
-    const words = [...region.querySelectorAll<HTMLElement>('[data-word]')];
+    const words = [...region.querySelectorAll<HTMLElement>('[data-field]')];
     expect(words.map((w) => w.style.getPropertyValue('--on'))).toEqual(['1.000', '0.000', '0.000', '0.000']);
     expect(words.map((w) => w.hasAttribute('data-on'))).toEqual([true, false, false, false]);
     expect((region.querySelector('[data-sea]') as HTMLElement).style.getPropertyValue('--ground')).toBe('color-mix(in srgb, var(--color-area-dialog) 0.0%, var(--color-area-kunnskap))');
@@ -51,7 +51,7 @@ describe('Havet', () => {
     render(<Sea />);
     const region = screen.getByRole('region', { name: site.pages.home.areasLabel });
     expect(region).not.toHaveAttribute('data-live');
-    region.querySelectorAll<HTMLElement>('[data-word]').forEach((w) => {
+    region.querySelectorAll<HTMLElement>('[data-field]').forEach((w) => {
       expect(w.style.getPropertyValue('--on')).toBe('');
       expect(w).not.toHaveAttribute('data-on');
     });

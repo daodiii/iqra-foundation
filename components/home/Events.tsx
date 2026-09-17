@@ -26,9 +26,10 @@ const t = site.pages.events;
 const ddmm = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
 
 /**
- * The time left to an event, ticking once a second. Nothing until mounted — the server
- * cannot know the visitor's now, and the two must agree at hydration. Under reduced
- * motion it is read once and stands.
+ * The time left to an event, ticking once a second until the instant has passed, when the
+ * count stands at zeros and the ticking stops. Nothing until mounted — the server cannot
+ * know the visitor's now, and the two must agree at hydration. Under reduced motion it is
+ * read once and stands.
  */
 function Count({ event }: { event: Event }) {
   const [left, setLeft] = useState<ReturnType<typeof timeLeft> | null>(null);
@@ -37,7 +38,10 @@ function Count({ event }: { event: Event }) {
     const tick = () => setLeft(timeLeft(at - Date.now()));
     tick();
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const id = window.setInterval(tick, 1000);
+    const id = window.setInterval(() => {
+      tick();
+      if (at <= Date.now()) window.clearInterval(id);
+    }, 1000);
     return () => window.clearInterval(id);
   }, [event.start, event.time]);
   if (!left) return <dl className={styles.count} aria-hidden="true" />;

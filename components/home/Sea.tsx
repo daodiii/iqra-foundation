@@ -174,8 +174,8 @@ export function Sea() {
     const water = live.current;
     if (water && 'retune' in water) water.retune(areaFloor(areas[frame.i]), areaFloor(areas[frame.i + 1]), frame.t);
     sea.style.setProperty('--ground', groundAt(u));
-    el.querySelectorAll<HTMLElement>('[data-word]').forEach((word) => {
-      const k = Number(word.dataset.word);
+    el.querySelectorAll<HTMLElement>('[data-field]').forEach((word) => {
+      const k = Number(word.dataset.field);
       const { on, live: isOn } = frame.words[k];
       word.style.setProperty('--on', on.toFixed(3));
       word.toggleAttribute('data-on', isOn);
@@ -210,7 +210,7 @@ export function Sea() {
             onMaterial={(w) => { live.current = w; }}
           >
             {areas.map((a, k) => (
-              <div key={a.key} data-word={k} data-tone={a.tone} className={styles.word} style={wordVars(a)}>
+              <div key={a.key} data-field={k} data-tone={a.tone} className={styles.word} style={wordVars(a)}>
                 <FieldWords area={a} />
               </div>
             ))}

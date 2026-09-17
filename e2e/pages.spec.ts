@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
 
@@ -26,7 +26,7 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   const sea = main.locator('[data-fields]');
   await expect(sea).toHaveAttribute('data-live', '');
   await expect(sea.locator('[data-material="water"]')).toHaveCount(1);
-  const words = sea.locator('[data-word]');
+  const words = sea.locator('[data-field]');
   await expect(words).toHaveCount(4);
   await expect(words.nth(0)).toHaveAttribute('data-tone', 'dark');
   await expect(words.nth(1)).toHaveAttribute('data-tone', 'light');
@@ -199,6 +199,23 @@ test('the share card is the logo, on every route', async ({ page }) => {
   await expect(icon).toHaveAttribute('href', /icon\.svg/);
 });
 
+/**
+ * What the home page hides until its arrival, read by computed style: Playwright's
+ * `toBeVisible` counts an element at opacity 0 as visible, so a hidden state has to be
+ * asserted by value. The statement's first word, Om oss's title, the Støtt oss card.
+ */
+async function nothingHidden(page: Page) {
+  const computed = (selector: string, property: string) =>
+    page.locator(selector).first().evaluate((el, p) => getComputedStyle(el).getPropertyValue(p), property);
+  expect(await computed('section#visjon [data-word]', 'opacity')).toBe('1');
+  expect(await computed('#om-oss [data-title]', 'clip-path')).toBe('none');
+  expect(await computed('section#stott-oss', 'opacity')).toBe('1');
+}
+
+/** The seal's scene — the element `Scene` sets `--open` on, the plate's parent — and what it reads there. */
+const sealOpen = (page: Page) =>
+  page.locator('section#visjon').evaluate((el) => ((el.closest('[data-material]') as HTMLElement).parentElement as HTMLElement).style.getPropertyValue('--open'));
+
 test('with JavaScript off every page is complete: the text, the menu, the footer', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
@@ -212,6 +229,8 @@ test('with JavaScript off every page is complete: the text, the menu, the footer
   // the sea is a column without script: nothing live, all four fields' words visible
   await expect(page.locator('[data-fields]')).not.toHaveAttribute('data-live');
   for (const a of brief.areas) await expect(page.getByText(a.text, { exact: true })).toBeVisible();
+  await nothingHidden(page);
+  expect(['', '0']).toContain(await sealOpen(page));
   await context.close();
 });
 
@@ -225,8 +244,13 @@ test('reduced motion: the pages render and nothing is hidden waiting for an anim
   const sea = page.locator('[data-fields]');
   await expect(sea).not.toHaveAttribute('data-live');
   for (const a of brief.areas) await expect(page.getByText(a.text, { exact: true })).toBeVisible();
-  const tops = await sea.locator('[data-word]').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
+  const tops = await sea.locator('[data-field]').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
   for (let i = 1; i < tops.length; i++) expect(tops[i]).toBeGreaterThan(tops[i - 1]);
+  // once the script has run (the sections are live), everything stands: nothing hidden, the ring drawn, no listener on the scene
+  await expect(page.locator('section#om-oss')).toHaveAttribute('data-live', '');
+  await nothingHidden(page);
+  expect(['0', '0px']).toContain(await page.locator('section#visjon circle').first().evaluate((el) => getComputedStyle(el).getPropertyValue('stroke-dashoffset')));
+  expect(await sealOpen(page)).toBe('');
   await page.goto('/vart-arbeid');
   for (const a of brief.areas) await expect(page.locator(`#${a.key}`)).toContainText(a.text);
   await context.close();
