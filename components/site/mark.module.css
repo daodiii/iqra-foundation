@@ -31,3 +31,13 @@
 .marked {
   white-space: nowrap;
 }
+
+/* On a dark plate the mark takes the light, and the squares the colours the areas have on navy (areas.ts's `onNavy`). */
+[data-tone="dark"] .mark {
+  color: var(--color-light);
+}
+
+[data-tone="dark"] .square[data-area="kunnskap"] { background: var(--color-light); }
+[data-tone="dark"] .square[data-area="dialog"] { background: var(--color-turquoise); }
+[data-tone="dark"] .square[data-area="moteplasser"] { background: var(--color-white); border: 0; }
+[data-tone="dark"] .square[data-area="samfunnsdeltakelse"] { background: var(--color-crimson-lift); }
