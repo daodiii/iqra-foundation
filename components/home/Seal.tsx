@@ -39,7 +39,8 @@ export function Seal() {
                   </defs>
                   <circle className={styles.line} cx="50" cy="50" r={R} pathLength="100" />
                   <g className={styles.orbit}>
-                    <text className={styles.inscription}>
+                    {/* The spaces kept: collapsed, the trailing «  ·  » loses them and the last dot sits on the first name where the text meets itself. */}
+                    <text className={styles.inscription} xmlSpace="preserve">
                       <textPath href="#segl-bane" textLength={(2 * Math.PI * R_TEXT).toFixed(2)} lengthAdjust="spacing">{INSCRIPTION}</textPath>
                     </text>
                   </g>
