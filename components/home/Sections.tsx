@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { Flat } from '@/components/materials/Flat';
 import { Frame } from '@/components/materials/Frame';
-import { MarkedLine } from '@/components/site/AreaMark';
 import page from '@/components/site/page.module.css';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
@@ -12,28 +11,17 @@ import styles from './sections.module.css';
 
 /**
  * The rest of the site on the home page, in the guide's rhythm of material and white by
- * turns: Om oss on white, Menneskene bak on white, Støtt oss as the pen-framed card on a
- * navy plate that opens. Each is the page's own words (the brief's) and its honest line
- * while a collection is empty; the title is the section's name and the menu is the way
- * on — no labels over the titles, no links under the sections. Each section arrives
- * (`Arrive`): the title rises out of its line, then the copy.
+ * turns: Menneskene bak on white, Støtt oss as the pen-framed card on a navy plate that
+ * opens (Om oss, the white plate with the doors, is About.tsx). Each is the page's own
+ * words (the brief's) and its honest line while a collection is empty; the title is the
+ * section's name and the menu is the way on — no labels over the titles, no links under
+ * the sections. Each section arrives (`Arrive`): the title rises out of its line, then
+ * the copy.
  */
 
 export type Collections = { upcoming: Event[]; resources: Resource[]; people: Person[] };
 
 const t = site.pages;
-
-export function OmOss() {
-  return (
-    <Arrive as="section" id="om-oss" className={styles.white} aria-labelledby="om-oss-tittel">
-      <h2 id="om-oss-tittel" className={styles.title} data-title>{brief.about.title}</h2>
-      <div className={styles.prose} data-prose>
-        <p>{brief.about.paragraphs[0]}</p>
-        <p><MarkedLine text={brief.about.paragraphs[1]} /></p>
-      </div>
-    </Arrive>
-  );
-}
 
 export function People({ people }: Pick<Collections, 'people'>) {
   return (
