@@ -38,7 +38,11 @@ describe('Scene', () => {
 
 describe('Scene, scrolled', () => {
   /** A 400px plate whose top sits 2000px down the page, read against a 900px window. */
+  let innerHeight: PropertyDescriptor | undefined;
+  let scrollY: PropertyDescriptor | undefined;
   beforeEach(() => {
+    innerHeight = Object.getOwnPropertyDescriptor(window, 'innerHeight');
+    scrollY = Object.getOwnPropertyDescriptor(window, 'scrollY');
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 });
     Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 });
     vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function () {
@@ -46,7 +50,16 @@ describe('Scene, scrolled', () => {
       return { top, bottom: top + 400, left: 0, right: 0, width: 0, height: 400, x: 0, y: top, toJSON() {} } as DOMRect;
     });
   });
-  afterEach(() => { vi.restoreAllMocks(); });
+  // The window's own values back, so whatever runs after this block reads jsdom's, not a stub's.
+  afterEach(() => {
+    vi.restoreAllMocks();
+    const restore = (name: 'innerHeight' | 'scrollY', was: PropertyDescriptor | undefined) => {
+      if (was) Object.defineProperty(window, name, was);
+      else delete (window as unknown as Record<string, unknown>)[name];
+    };
+    restore('innerHeight', innerHeight);
+    restore('scrollY', scrollY);
+  });
 
   const scrollTo = (y: number) => {
     Object.defineProperty(window, 'scrollY', { configurable: true, value: y });
