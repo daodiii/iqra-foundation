@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { brand } from '@/lib/film';
 import { Box } from './Box';
@@ -27,11 +27,11 @@ describe('Box', () => {
     expect(box.querySelector('canvas[data-paint]')).not.toBeNull();
   });
 
-  test('ink is built with the brand’s ink palette, the pointer tracked on the box', () => {
+  test('ink is built with the brand’s ink palette, the pointer tracked on the box — loaded only when asked for', async () => {
     render(<Box material="ink"><p>x</p></Box>);
     const box = screen.getByText('x').closest('[data-material]');
     expect(near).toHaveBeenCalledTimes(1);
-    expect(ink).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(ink).toHaveBeenCalledTimes(1));
     const [canvas, opts] = ink.mock.calls[0] as unknown as [HTMLCanvasElement, { palette: unknown; host: Element; reduced: boolean }];
     expect(canvas).toHaveAttribute('data-paint');
     expect(opts.palette).toBe(brand.ink);
@@ -46,6 +46,23 @@ describe('Box', () => {
     const [, opts] = water.mock.calls[0] as unknown as [HTMLCanvasElement, { floor: unknown }];
     expect(opts.floor).toBe(brand.floor);
     expect(ink).not.toHaveBeenCalled();
+  });
+
+  test('calm is passed to the water, and whoever asked is told the handle once it is built', () => {
+    const handle = { destroy: vi.fn(), stir: vi.fn() };
+    water.mockReturnValueOnce(handle as never);
+    const told = vi.fn();
+    render(<Box material="water" calm onMaterial={told}><p>x</p></Box>);
+    const [, opts] = water.mock.calls[0] as unknown as [HTMLCanvasElement, { calm: boolean }];
+    expect(opts.calm).toBe(true);
+    expect(told).toHaveBeenCalledWith(handle);
+  });
+
+  test('nobody is told about a water that declined', () => {
+    const told = vi.fn();
+    render(<Box material="water" onMaterial={told}><p>x</p></Box>);
+    expect(water).toHaveBeenCalledTimes(1);
+    expect(told).not.toHaveBeenCalled();
   });
 
   test('under reduced motion nothing is built: the still is the answer', () => {

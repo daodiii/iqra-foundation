@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { brand } from '@/lib/film';
-import { createInk, type InkHandle, type InkPalette } from '@/lib/ink';
+import type { InkHandle, InkPalette } from '@/lib/ink';
 import { buildWhenQuietNear } from '@/lib/near';
 import { createWater, type WaterFloor, type WaterHandle } from '@/lib/water';
 import styles from './materials.module.css';
@@ -24,6 +24,10 @@ type Props = {
   className?: string;
   /** `--ground` and `--still` for a box whose colour is not the stylesheet's. */
   style?: CSSProperties;
+  /** Calmer water: rarer, lighter rain and a shallower stir (`WaterOptions.calm`). */
+  calm?: boolean;
+  /** Told the handle once the simulation is built — for whoever wants to stir it. Never told about one that declined. */
+  onMaterial?: (live: InkHandle | WaterHandle) => void;
   children: ReactNode;
 };
 
@@ -38,12 +42,20 @@ type Props = {
  * device that declines WebGL2 (both simulations return null there and the canvas stays
  * transparent over the still).
  *
+ * The ink's code is loaded only by a box that asks for ink: no page uses it now, and it
+ * should cost the pages that do not nothing.
+ *
  * The pointer is tracked on the box, not on the canvas, so a hand moving over the copy
  * stirs the material behind it: the frames are lines drawn on the water, not lids on it.
  */
-export function Box({ material, palette, floor, tone = 'light', ground, className, style, children }: Props) {
+export function Box({ material, palette, floor, tone = 'light', ground, className, style, calm = false, onMaterial, children }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const paint = useRef<HTMLCanvasElement>(null);
+  const told = useRef(onMaterial);
+
+  useEffect(() => {
+    told.current = onMaterial;
+  }, [onMaterial]);
 
   useEffect(() => {
     const host = root.current;
@@ -51,16 +63,25 @@ export function Box({ material, palette, floor, tone = 'light', ground, classNam
     if (!host || !canvas) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     let live: InkHandle | WaterHandle | null = null;
+    let gone = false;
     const cancel = buildWhenQuietNear(canvas, () => {
-      live = material === 'ink'
-        ? createInk(canvas, { reduced: false, palette: palette ?? brand.ink, host })
-        : createWater(canvas, { reduced: false, floor: floor ?? brand.floor, host });
+      if (material === 'ink') {
+        void import('@/lib/ink').then(({ createInk }) => {
+          if (gone) return;
+          live = createInk(canvas, { reduced: false, palette: palette ?? brand.ink, host });
+          if (live) told.current?.(live);
+        });
+        return;
+      }
+      live = createWater(canvas, { reduced: false, floor: floor ?? brand.floor, host, calm });
+      if (live) told.current?.(live);
     });
     return () => {
+      gone = true;
       cancel();
       live?.destroy();
     };
-  }, [material, palette, floor]);
+  }, [material, palette, floor, calm]);
 
   return (
     <div

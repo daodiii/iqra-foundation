@@ -14,7 +14,7 @@ export function Bands() {
     <div className={work.plates}>
       {areas.map((a) => (
         <section key={a.key} id={a.key} className={work.area} aria-labelledby={`${a.key}-tittel`}>
-          <Box material="water" floor={areaFloor(a)} tone={a.tone} ground={a.ground} className={`${styles.field} ${styles.band} ${styles[a.ground]}`}>
+          <Box material="water" floor={areaFloor(a)} tone={a.tone} ground={a.ground} calm className={`${styles.field} ${styles.band} ${styles[a.ground]}`}>
             <div className={styles.bandBody}>
               <FieldBody area={a} headingId={`${a.key}-tittel`} level="h2" />
             </div>
