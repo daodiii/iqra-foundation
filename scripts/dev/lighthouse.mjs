@@ -20,7 +20,8 @@ for (const url of urls) {
   const c = j.categories;
   const cls = j.audits['cumulative-layout-shift']?.numericValue;
   const lcp = j.audits['largest-contentful-paint']?.numericValue;
-  console.log(`${url}: performance ${c.performance.score} · accessibility ${c.accessibility.score} · best-practices ${c['best-practices'].score} · CLS ${cls?.toFixed(3)} · LCP ${Math.round(lcp)}ms`);
+  const tbt = j.audits['total-blocking-time']?.numericValue;
+  console.log(`${url}: performance ${c.performance.score} · accessibility ${c.accessibility.score} · best-practices ${c['best-practices'].score} · CLS ${cls?.toFixed(3)} · LCP ${Math.round(lcp)}ms · TBT ${Math.round(tbt)}ms`);
   const a11y = Object.values(j.audits).filter((a) => a.score !== null && a.score < 1 && c.accessibility.auditRefs.some((r) => r.id === a.id)).map((a) => `  a11y: ${a.id} ${a.title}`);
   if (a11y.length) console.log(a11y.join('\n'));
 }
