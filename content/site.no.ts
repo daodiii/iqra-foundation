@@ -104,6 +104,8 @@ export const site = {
       place: 'Sted',
       time: 'Tid',
       more: 'Les mer',
+      /** The count on the home page, under the next event: how long until it starts. */
+      count: { days: 'dager', hours: 'timer', minutes: 'min', seconds: 'sek' },
     },
     resources: {
       label: brief.menu[4],
