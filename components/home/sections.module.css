@@ -8,14 +8,14 @@
 /* ----- a section on white ----- */
 
 .white {
-  padding: 64px var(--margin) 16px;
-  max-width: calc(var(--measure) + 2 * var(--margin) + 160px);
+  padding: 72px var(--margin) 24px;
+  max-width: calc(var(--measure) + 2 * var(--margin) + 200px);
   scroll-margin-top: calc(var(--header-h) + 16px);
 }
 
 .title {
-  font-size: clamp(30px, 3.6vw, 44px);
-  max-width: 20ch;
+  font-size: clamp(36px, 4.8vw, 62px);
+  max-width: 18ch;
 }
 
 .prose {
@@ -29,12 +29,6 @@
 }
 
 /* ----- plates ----- */
-
-.plates {
-  display: grid;
-  gap: var(--gutter);
-  padding: var(--gutter) var(--box-inset);
-}
 
 .plate {
   --box-pad-y: clamp(56px, 8vh, 80px);
@@ -55,14 +49,6 @@
 .centre .card {
   justify-self: center;
   max-width: 560px;
-}
-
-/* Two cards side by side on one plate, as Visjon and Misjon stand on the ink. */
-.pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 6%;
-  row-gap: 44px;
 }
 
 /* ----- inside a section or a card: the list, the facts, the way on ----- */
@@ -125,8 +111,6 @@
   margin-top: 24px;
 }
 
-.link,
-.linkOnCard,
 .buttonCrimson {
   display: inline-flex;
   align-items: center;
@@ -136,26 +120,6 @@
   font: 500 15px/1 var(--font-sans);
   text-decoration: none;
   transition: background-color var(--dur-s) var(--ease-out), color var(--dur-s) var(--ease-out);
-}
-
-.link {
-  border: 1px solid var(--color-navy);
-  color: var(--color-navy);
-}
-
-.link:hover {
-  background: var(--color-navy);
-  color: var(--color-white);
-}
-
-.linkOnCard {
-  border: 1px solid var(--card-ink, var(--color-navy));
-  color: var(--card-ink, var(--color-navy));
-}
-
-.linkOnCard:hover {
-  background: var(--card-ink, var(--color-navy));
-  color: var(--color-white);
 }
 
 /* Støtt oss stays the brand's burgundy pill, as in the header. */
@@ -168,15 +132,9 @@
   background: var(--color-navy);
 }
 
-@media (max-width: 899px) {
-  .pair {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 699px) {
   .white {
-    padding: 44px var(--margin) 8px;
+    padding: 48px var(--margin) 12px;
   }
 
   .plate {
@@ -192,8 +150,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .link,
-  .linkOnCard,
   .buttonCrimson {
     transition: none;
   }

@@ -1,7 +1,0 @@
-/* The thread's canvas: the viewport, fixed, under the header (z 100) and the drawer, over the plates, touching nothing. */
-.thread {
-  position: fixed;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-}

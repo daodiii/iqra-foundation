@@ -74,13 +74,6 @@ export const site = {
       visionLabel: 'Visjon',
       missionLabel: 'Misjon',
       areasLabel: 'Fire hovedområder',
-      /** The way on from each of the home page's sections to its page; Støtt oss keeps the brief's button. */
-      more: {
-        about: 'Les mer om oss',
-        events: 'Alle arrangementer',
-        resources: 'Alle ressurser',
-        people: 'Menneskene bak Iqra',
-      },
     },
     about: {
       label: brief.menu[1],

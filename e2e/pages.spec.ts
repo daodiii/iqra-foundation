@@ -37,10 +37,6 @@ test('the home page is the name alone, and carries the brief’s main text, Visj
   // then the rest of the site: five sections in order, each the way on to its page, the lists honest while empty
   const ids = await main.locator('section[id]').evaluateAll((els) => els.map((e) => e.id));
   expect(ids.slice(-5)).toEqual(['om-oss', 'arrangementer', 'ressurser', 'menneskene-bak', 'stott-oss']);
-  const more = site.pages.home.more;
-  for (const [name, href] of [[more.about, '/om-oss'], [more.events, '/arrangementer'], [more.resources, '/ressurser'], [more.people, '/menneskene-bak']] as const) {
-    await expect(main.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
-  }
   await expect(main.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeVisible();
   await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeVisible();
   // the thread's canvas, sized to the screen once the script has run
