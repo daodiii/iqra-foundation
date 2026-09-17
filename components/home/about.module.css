@@ -1,0 +1,222 @@
+/*
+ * Om oss: a white plate in the plates' column with two doors over its room. The plate
+ * carries the perspective (its own centre the vanishing point) and nothing that would
+ * flatten it — no overflow, opacity or filter — so the doors may turn; each door is hinged
+ * on its outer edge, holds its half of the name, and turns into the room by `--open`
+ * (0 closed, 1 open, About.tsx). The room is white and the plate's edge a hairline, so
+ * closed and open are both white on the white page: the doors read by their seam, their
+ * shadow and the shade of their turn. Without `data-doors` (no script, reduced motion)
+ * there are no doors, only the room.
+ */
+
+.section {
+  padding: 0 var(--box-inset) var(--gutter);
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+.plate {
+  --open: 1;
+  position: relative;
+  perspective: 2000px;
+  perspective-origin: 50% 50%;
+  border-radius: var(--box-radius);
+}
+
+.plate[data-doors] {
+  --open: 0;
+}
+
+.room {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  align-content: center;
+  min-height: min(82vh, 820px);
+  padding: clamp(40px, 6vw, 96px) clamp(28px, 6vw, 96px);
+  background: var(--color-white);
+  border: 1px solid var(--color-hairline);
+  border-radius: inherit;
+}
+
+/* ----- the doors ----- */
+
+.door {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  z-index: 2;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--color-white);
+  border: 1px solid var(--color-hairline);
+  backface-visibility: hidden;
+  opacity: calc(1 - clamp(0, (var(--open) - 0.62) / 0.28, 1));
+  will-change: transform;
+}
+
+.plate[data-doors] .door {
+  display: block;
+}
+
+.plate[data-open] .door {
+  visibility: hidden;
+}
+
+.left {
+  left: 0;
+  border-right: 0;
+  border-radius: var(--box-radius) 0 0 var(--box-radius);
+  transform-origin: 0 50%;
+  transform: rotateY(calc(var(--open) * 118deg));
+  box-shadow: 10px 0 44px rgb(44 57 75 / 0.1);
+}
+
+.right {
+  right: 0;
+  border-left: 0;
+  border-radius: 0 var(--box-radius) var(--box-radius) 0;
+  transform-origin: 100% 50%;
+  transform: rotateY(calc(var(--open) * -118deg));
+  box-shadow: -10px 0 44px rgb(44 57 75 / 0.1);
+}
+
+/* The seam: a hairline of the turquoise on the door that meets the other. */
+.left::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--color-turquoise) 70%, transparent);
+}
+
+/* The shade of the turn on a door's face: from the hinge, deepening as it turns. */
+.door::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to right, rgb(44 57 75 / 0.16), rgb(44 57 75 / 0.02));
+  opacity: calc(var(--open) * 0.9);
+  pointer-events: none;
+}
+
+.right::before {
+  background: linear-gradient(to left, rgb(44 57 75 / 0.16), rgb(44 57 75 / 0.02));
+}
+
+/* The name across both doors: each door holds the whole line, the width of the plate, and shows its half. It goes before the door does — a name on a door turned past sixty degrees is a squashed sliver. */
+.name {
+  position: absolute;
+  top: 34%;
+  width: 200%;
+  transform: translateY(-50%);
+  text-align: center;
+  font: 600 clamp(40px, 6.4vw, 96px) / 1 var(--font-sans);
+  letter-spacing: -0.025em;
+  color: var(--color-navy);
+  white-space: nowrap;
+  opacity: calc(1 - clamp(0, (var(--open) - 0.4) / 0.25, 1));
+}
+
+.left .name {
+  left: 0;
+}
+
+.right .name {
+  right: 0;
+}
+
+/* ----- the room ----- */
+
+.title {
+  font-size: clamp(36px, 4.6vw, 64px);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  max-width: 12ch;
+}
+
+.statement {
+  margin: 32px 0 0;
+  max-width: 28ch;
+  font: 500 clamp(24px, 2.4vw, 38px) / 1.2 var(--font-sans);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-navy);
+  text-wrap: pretty;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: clamp(24px, 3vw, 48px);
+  margin-top: clamp(40px, 5vw, 72px);
+  padding-top: 28px;
+  border-top: 1px solid rgb(44 57 75 / 0.14);
+}
+
+.col {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: clamp(16px, 1.2vw, 18px);
+  line-height: 1.55;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.story {
+  margin-top: clamp(32px, 4vw, 56px);
+  padding-top: 24px;
+  border-top: 1px solid rgb(44 57 75 / 0.14);
+  max-width: 62ch;
+  font-family: var(--font-text);
+  font-size: clamp(16px, 1.2vw, 18px);
+  line-height: 1.55;
+  color: var(--color-ink);
+}
+
+.story h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.story p {
+  margin: 0;
+}
+
+/* The room's words come up once the doors have turned — a beat after, so the reveal is the doors'. The title is the arrival's (Arrive), not the doors'. */
+.plate[data-doors] :is(.statement, .columns, .story) {
+  opacity: calc((var(--open) - 0.4) / 0.5);
+  transform: translateY(calc((1 - var(--open)) * 16px));
+}
+
+@media (max-width: 899px) {
+  .room {
+    min-height: 0;
+    padding: 32px 22px;
+  }
+
+  .name {
+    box-sizing: border-box;
+    padding: 0 10%;
+    font-size: 40px;
+    white-space: normal;
+  }
+
+  .title {
+    font-size: 36px;
+  }
+
+  .statement {
+    margin-top: 22px;
+    font-size: 23px;
+  }
+
+  .columns {
+    grid-template-columns: 1fr;
+    row-gap: 18px;
+    margin-top: 32px;
+  }
+}
