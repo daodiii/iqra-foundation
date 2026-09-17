@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
+import { getEvents, splitEvents, todayISO } from '../lib/content';
 
 /**
  * Every page of the brief's menu exists, has its own title in the one pattern and a
@@ -50,7 +51,10 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   expect(ids.slice(-4)).toEqual(['om-oss', 'arrangementer', 'menneskene-bak', 'stott-oss']);
   expect(ids).not.toContain('ressurser');
   await expect(main.locator('section#om-oss a, section#menneskene-bak a')).toHaveCount(0);
-  await expect(main.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeAttached();
+  // the next event as Neste's statement while one is coming, the honest line while not (the build reads the same collection)
+  const { upcoming } = splitEvents(getEvents(), todayISO());
+  if (upcoming.length) await expect(main.locator('section#arrangementer h3').first()).toHaveText(upcoming[0].title);
+  else await expect(main.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeAttached();
   await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeAttached();
   // nothing of the thread
   await expect(main.locator('canvas[data-thread-canvas]')).toHaveCount(0);
@@ -129,13 +133,16 @@ test('om oss: the brief’s text and the story of the name', async ({ page }) =>
 });
 
 test.describe('the collections are honest while empty', () => {
-  test('arrangementer: kommende and tidligere, each with its own line', async ({ page }) => {
+  test('arrangementer: kommende and tidligere, each with its own line while empty, each listing what is published', async ({ page }) => {
     await page.goto('/arrangementer');
     await expect(page).toHaveTitle(T(site.pages.events.title));
     await expect(page.getByRole('heading', { name: site.pages.events.upcoming })).toBeVisible();
     await expect(page.getByRole('heading', { name: site.pages.events.past })).toBeVisible();
-    await expect(page.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeVisible();
-    await expect(page.getByText(site.pages.events.emptyPast, { exact: true })).toBeVisible();
+    const { upcoming, past } = splitEvents(getEvents(), todayISO());
+    if (upcoming.length) for (const e of upcoming) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
+    else await expect(page.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeVisible();
+    if (past.length) for (const e of past) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
+    else await expect(page.getByText(site.pages.events.emptyPast, { exact: true })).toBeVisible();
   });
   test('ressurser', async ({ page }) => {
     await page.goto('/ressurser');
