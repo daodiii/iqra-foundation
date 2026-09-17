@@ -34,11 +34,16 @@ function wordVars(area: Area): CSSProperties {
   return { '--ground': `var(${look.token})`, '--card-ink': `var(${look.headingInk})`, '--card-text': `var(${look.ink})` } as CSSProperties;
 }
 
-/** What every field carries: the name, the brief's text, the guide's logo for its ground; the whole of it the link to its section. */
+/**
+ * What every field carries: the name, the brief's text, the guide's logo for its ground;
+ * the whole of it the link to its section. The sea stands first under the hero, so each
+ * name is an `h2`, a section of the page like Visjon and Om oss after it — an `h3`
+ * straight after the `h1` broke the page's heading order (Lighthouse, on the mosaic).
+ */
 function FieldWords({ area }: { area: Area }) {
   return (
     <Link href={area.href} prefetch={false} className={styles.cell} aria-labelledby={`felt-${area.key}`}>
-      <h3 id={`felt-${area.key}`} className={styles.name}>{area.name}</h3>
+      <h2 id={`felt-${area.key}`} className={styles.name}>{area.name}</h2>
       <div className={styles.foot}>
         <p className={styles.text}>{area.text}</p>
         <span className={styles.logo}>
@@ -165,7 +170,7 @@ export function Sea() {
       if (!had[k] && d < LANDED) {
         had[k] = true;
         // The stone drops under the NAME, not at the box's centre: the canvas's 0–1 coordinates, y up.
-        const name = word.querySelector('h3');
+        const name = word.querySelector('h2');
         const box = canvas.getBoundingClientRect();
         if (name && water && box.width && box.height) {
           const r = name.getBoundingClientRect();

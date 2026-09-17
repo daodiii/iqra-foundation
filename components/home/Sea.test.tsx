@@ -26,7 +26,8 @@ describe('Havet', () => {
       expect(word).toHaveAttribute('data-tone', tones[a.key]);
       expect(waters[0]).toContainElement(word);
       expect(within(word).getByRole('link', { name: a.name })).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
-      expect(within(word).getByRole('heading', { level: 3, name: a.name })).toBeInTheDocument();
+      // first under the hero, so a section of the page: an h2, never an h3 straight after the h1
+      expect(within(word).getByRole('heading', { level: 2, name: a.name })).toBeInTheDocument();
       expect(within(word).getByText(a.text)).toBeInTheDocument();
       // the guide's logo for the ground, decorative; the veil is the area's own colour
       expect(word.querySelectorAll('img[alt=""]')).toHaveLength(1);
