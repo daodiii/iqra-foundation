@@ -1747,8 +1747,9 @@ describe('Events', () => {
     expect(within(section).getByText(t.description)).toBeInTheDocument();
     // 2026-09-24 18:00 in Oslo is 16:00Z: seven days and six hours from 10:00Z on the 17th
     const count = section.querySelector('dl') as HTMLElement;
-    expect(within(count).getByText('7').nextElementSibling).toHaveTextContent(t.count.days);
-    expect(within(count).getByText('06').nextElementSibling).toHaveTextContent(t.count.hours);
+    expect(within(count).getByText('7').previousElementSibling).toHaveTextContent(t.count.days);
+    expect(within(count).getByText('06').previousElementSibling).toHaveTextContent(t.count.hours);
+    expect(count.querySelector('div')?.firstElementChild?.tagName).toBe('DT');
     expect(within(count).getAllByText('00')).toHaveLength(2);
     act(() => { vi.advanceTimersByTime(1000); });
     expect(within(count).getByText('05')).toBeInTheDocument();
@@ -1885,9 +1886,14 @@ Append to `components/site/mark.module.css`:
   min-height: 52px;
 }
 
+/* The label comes first in the markup (a dt before its dd) and second on the screen. */
 .count > div {
   display: grid;
   row-gap: 6px;
+}
+
+.count dt {
+  order: 2;
 }
 
 .count dd {
@@ -2039,8 +2045,8 @@ function Count({ event }: { event: Event }) {
     <dl className={styles.count}>
       {parts.map(([value, label]) => (
         <div key={label}>
-          <dd>{value}</dd>
           <dt>{label}</dt>
+          <dd>{value}</dd>
         </div>
       ))}
     </dl>
@@ -2216,6 +2222,7 @@ Expected: FAIL (the old page has ink, the thread, the links, `#ressurser`).
 Replace `components/home/Sections.tsx` with:
 
 ```tsx
+import Link from 'next/link';
 import { Flat } from '@/components/materials/Flat';
 import { Frame } from '@/components/materials/Frame';
 import { MarkedLine } from '@/components/site/AreaMark';
@@ -2294,7 +2301,7 @@ export function Support() {
                 </div>
               </dl>
               <p className={styles.more}>
-                <a href={site.cta.support.href} className={styles.buttonCrimson}>{site.cta.support.label}</a>
+                <Link href={site.cta.support.href} prefetch={false} className={styles.buttonCrimson}>{site.cta.support.label}</Link>
               </p>
             </Frame>
           </section>
@@ -2304,8 +2311,6 @@ export function Support() {
   );
 }
 ```
-
-Note: the button is a plain `<a>` here rather than `next/link` with `prefetch={false}` — keep `Link` if the rest of the site uses it for internal links; check `grep -rn "prefetch={false}" components/site/Header.tsx` and match: if the header's Støtt oss button is a `Link`, use `Link` here too (`import Link from 'next/link'`, `<Link href=… prefetch={false} className=…>`).
 
 In `components/home/sections.module.css`:
 - Replace the `.white` and `.title` rules with:
