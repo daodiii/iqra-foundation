@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
+import { getEvents, splitEvents, todayISO } from '@/lib/content';
 import Home from './page';
 
 describe('Hjem', () => {
@@ -40,7 +41,7 @@ describe('Hjem', () => {
     expect(container.querySelector('[data-material="ink"]')).toBeNull();
   });
 
-  test('then the rest of the site, in order: Om oss, Arrangementer, Menneskene bak, Støtt oss — no labels, no links under them, the lists honest while empty', () => {
+  test('then the rest of the site, in order: Om oss, Arrangementer, Menneskene bak, Støtt oss — no labels, no links under them, the lists honest while empty and the next event when there is one', () => {
     const { container } = render(<Home />);
     const t = site.pages;
     const ids = [...container.querySelectorAll('section[id]')].map((s) => s.id);
@@ -58,7 +59,10 @@ describe('Hjem', () => {
 
     const events = container.querySelector('section#arrangementer') as HTMLElement;
     expect(within(events).getByRole('heading', { level: 2, name: t.events.title })).toBeInTheDocument();
-    expect(events).toHaveTextContent(t.events.emptyUpcoming);
+    // The page renders the real collection: the next event as the statement while one is coming, the honest line while not.
+    const { upcoming } = splitEvents(getEvents(), todayISO());
+    if (upcoming.length) expect(events).toHaveTextContent(upcoming[0].title);
+    else expect(events).toHaveTextContent(t.events.emptyUpcoming);
     expect(events.closest('[data-material]')).toHaveAttribute('data-material', 'flat');
 
     const people = container.querySelector('section#menneskene-bak') as HTMLElement;

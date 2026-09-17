@@ -7,6 +7,14 @@ import { OmOss, People, Support } from '@/components/home/Sections';
 import { getEvents, getPeople, splitEvents, todayISO } from '@/lib/content';
 
 /**
+ * Neste is the next event by today's date, and the page is prerendered — so once an
+ * event's instant had passed it stayed «next» at a count of zeros until the next deploy.
+ * Regenerated at most once an hour, on the first visit after the hour; the records are read
+ * from disk then, so `next.config.ts` traces `content/` into this route's function.
+ */
+export const revalidate = 3600;
+
+/**
  * Hjem: the whole site in one page. The film inside the mark with the brief's main text
  * (2) and its two buttons; the four areas (6) as one sea straight under it, each a tide of
  * its colour the scroll pulls across (Havet); Visjon and Misjon (3, 4) as a seal on navy;

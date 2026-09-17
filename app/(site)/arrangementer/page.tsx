@@ -10,6 +10,15 @@ export const metadata: Metadata = {
   description: site.pages.events.description,
 };
 
+/**
+ * Kommende and tidligere are split on today's date when the page is rendered, and the page
+ * is prerendered — so without this an event stayed under Kommende from its day until the
+ * next deploy. Regenerated at most once an hour, on the first visit after the hour: the
+ * split moves within the hour of midnight. The records are read from disk at that moment,
+ * which is why `next.config.ts` traces `content/` into this route's function.
+ */
+export const revalidate = 3600;
+
 function EventItem({ e }: { e: Event }) {
   return (
     <li className={styles.item}>
@@ -27,8 +36,8 @@ function EventItem({ e }: { e: Event }) {
 }
 
 /**
- * Arrangementer: kommende and tidligere, split on today's date at build time, each with
- * its own honest empty line. The records are the `arrangementer` collection.
+ * Arrangementer: kommende and tidligere, split on today's date each time the page is
+ * rendered (see `revalidate`), each with its own honest empty line. The records are the `arrangementer` collection.
  */
 export default function Arrangementer() {
   const { upcoming, past } = splitEvents(getEvents(), todayISO());

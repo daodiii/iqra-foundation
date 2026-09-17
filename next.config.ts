@@ -2,6 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /*
+   * The home page and Arrangementer regenerate hourly (`revalidate`), and at that moment
+   * they read the collections from disk — `lib/content.ts` joins `process.cwd()` with the
+   * collection's folder, a path the file tracer cannot follow, so the records are named
+   * here or the regenerated page would find no files and quietly keep the stale one.
+   */
+  outputFileTracingIncludes: {
+    '/': ['./content/**/*'],
+    '/arrangementer': ['./content/**/*'],
+  },
+  /*
    * Everything under /media is a build artefact of the film and the stills, and it is
    * heavy: the 720p loop alone is 660KB. Vercel serves /public with
    * `max-age=0, must-revalidate`, so every visit re-validated all of it.
