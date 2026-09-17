@@ -83,6 +83,21 @@ describe('useArrive', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
+  test('the first screen is judged once, at mount: a viewport shrinking under the element (the address bar collapsing) does not clear it', () => {
+    // The phone's own numbers: the mosaic's top at 723 in an 844 window; the bar collapses to 700.
+    top = 723;
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 844 });
+    const onChange = vi.fn();
+    const { getByTestId } = render(<Probe onChange={onChange} />);
+    expect(getByTestId('el')).toHaveAttribute('data-arrived');
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 700 });
+    act(() => { window.dispatchEvent(new Event('resize')); });
+    expect(getByTestId('el')).toHaveAttribute('data-arrived');
+    scrollTo(0);
+    expect(getByTestId('el')).toHaveAttribute('data-arrived');
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
   test('below the first screen it waits for the tip', () => {
     top = 5000;
     const onChange = vi.fn();
