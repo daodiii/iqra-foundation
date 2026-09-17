@@ -10,7 +10,7 @@ import { site } from '../content/site.no';
 
 const T = (page: string) => `${page} – ${site.name}`;
 
-test('the home page is the name alone, and carries the brief’s main text, Visjon, Misjon and the four areas', async ({ page }) => {
+test('the home page is the name alone, and carries the brief’s main text, the four areas, Visjon and Misjon as a seal, and the rest of the site', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(site.name);
   expect(await page.locator('html').getAttribute('lang')).toBe('nb');
@@ -22,27 +22,45 @@ test('the home page is the name alone, and carries the brief’s main text, Visj
   // Støtt oss is a button twice on the page: under the hero's text and in its own section at the foot.
   await expect(main.getByRole('link', { name: site.cta.support.label }).first()).toHaveAttribute('href', site.cta.support.href);
   await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveCount(2);
-  await expect(main.getByText(brief.vision.headline, { exact: true })).toBeVisible();
-  await expect(main.getByText(brief.vision.paragraph, { exact: true })).toBeVisible();
-  await expect(main.getByText(brief.mission.headline, { exact: true })).toBeVisible();
-  await expect(main.getByText(brief.mission.paragraph, { exact: true })).toBeVisible();
-  for (const a of brief.areas) {
-    await expect(main.getByRole('link', { name: a.name, exact: true }).first()).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
-  }
-  // four fields of water, each on its area's ground; the first one's link lands on its band
+  // four fields of water first, each on its area's ground
   const fields = main.locator('[data-fields] [data-material="water"]');
   await expect(fields).toHaveCount(4);
   await expect(fields.nth(0)).toHaveAttribute('data-ground', 'navy');
   await expect(fields.nth(3)).toHaveAttribute('data-ground', 'crimson');
-  // then the rest of the site: five sections in order, each the way on to its page, the lists honest while empty
+  for (const a of brief.areas) {
+    await expect(main.getByRole('link', { name: a.name, exact: true }).first()).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
+  }
+  // Visjon and Misjon as a seal on a flat navy plate: the ring, the four names twice round it, the words verbatim
+  await expect(main.getByText(brief.vision.headline, { exact: true })).toBeAttached();
+  await expect(main.getByText(brief.vision.paragraph, { exact: true })).toBeAttached();
+  await expect(main.getByText(brief.mission.headline, { exact: true })).toBeAttached();
+  await expect(main.getByText(brief.mission.paragraph, { exact: true })).toBeAttached();
+  const seal = main.locator('section#visjon svg');
+  await expect(seal.locator('circle')).toHaveCount(2);
+  for (const a of brief.areas) expect(await seal.locator('textPath').textContent()).toContain(a.name);
+  await expect(main.locator('[data-material="flat"][data-ground="navy"]')).toHaveCount(3);
+  await expect(main.locator('[data-material="ink"]')).toHaveCount(0);
+  // then the rest of the site: four sections in order, no links under them, the lists honest while empty
   const ids = await main.locator('section[id]').evaluateAll((els) => els.map((e) => e.id));
-  expect(ids.slice(-5)).toEqual(['om-oss', 'arrangementer', 'ressurser', 'menneskene-bak', 'stott-oss']);
-  await expect(main.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeVisible();
-  await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeVisible();
-  // the thread's canvas, sized to the screen once the script has run
-  const thread = main.locator('canvas[data-thread-canvas]');
-  await expect(thread).toHaveCount(1);
-  expect(await thread.evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(300);
+  expect(ids.slice(-4)).toEqual(['om-oss', 'arrangementer', 'menneskene-bak', 'stott-oss']);
+  expect(ids).not.toContain('ressurser');
+  await expect(main.locator('section#om-oss a, section#menneskene-bak a')).toHaveCount(0);
+  await expect(main.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeAttached();
+  await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeAttached();
+  // nothing of the thread
+  await expect(main.locator('canvas[data-thread-canvas]')).toHaveCount(0);
+  // the seal's plate opens as it passes the middle of the screen, and Om oss arrives as the tip line reaches it
+  const plate = main.locator('section#visjon').locator('xpath=ancestor::*[@data-material][1]');
+  await plate.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    window.scrollTo(0, window.scrollY + r.top + r.height / 2 - window.innerHeight / 2);
+  });
+  await expect.poll(async () => Number(await plate.evaluate((el) => (el.parentElement as HTMLElement).style.getPropertyValue('--open')))).toBeGreaterThan(0.97);
+  expect(await plate.evaluate((el) => getComputedStyle(el).clipPath)).toMatch(/inset\(0(px)? 0px round 0px\)|inset\(0px\)|none/);
+  await main.locator('section#om-oss').evaluate((el) => window.scrollTo(0, window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.5));
+  await expect(main.locator('section#om-oss')).toHaveAttribute('data-arrived', '');
+  // the first field's link lands on its band
+  await page.evaluate(() => window.scrollTo(0, 0));
   await main.getByRole('link', { name: brief.areas[1].name, exact: true }).click();
   await expect(page).toHaveURL(/\/vart-arbeid#dialog$/);
   await expect(page.locator('#dialog')).toBeInViewport();
