@@ -87,8 +87,12 @@ is not `arrive.ts`: `arrive.ts` and `Arrive.tsx` resolve to the same module on W
 - `useArrive(ref, onChange?, after = 48)`: the tip is `scrollY + 0.66 · innerHeight`
   (`LEAD = 0.66`). The element is marked `data-arrived` when the tip passes its top + 48 px
   and unmarked when the tip goes back above its top − 120 px, so scrolling up and down
-  plays the arrival again. Under reduced motion it is arrived at once, once. Listeners:
-  scroll (passive) and resize; `check()` runs on mount.
+  plays the arrival again. What stands on the first screen is already there: an element
+  whose top is inside the viewport when the hook mounts is arrived at once, and one that
+  stands on the page's first screen (judged once, at mount — a phone's address bar
+  collapsing must not re-judge it) is never cleared, since the tip line sits above its
+  top. Under reduced motion it is arrived at once, once. Listeners: scroll (passive) and
+  resize; `check()` runs on mount.
 - `Arrive` renders `as` (`'div' | 'section'`, default div) with `data-arrive`, sets
   `data-live` on mount (removed on unmount), forwards every other attribute (`id`,
   `aria-labelledby`, `className`), and calls `onArrive(arrived)` both ways.
@@ -100,6 +104,9 @@ is not `arrive.ts`: `arrive.ts` and `Arrive.tsx` resolve to the same module on W
   - `[data-live][data-arrived]` → transitions `opacity 640ms / transform 760ms
     var(--ease-out-expo)`; `[data-prose]` delay 170 ms; `[data-card]` delay `calc(var(--i,
     0) * 120ms)`; `[data-title]` `clip-path 820ms, transform 820ms`, delay 60 ms.
+  - A card or prose that holds the focus is shown before it arrives (`:focus-within` →
+    `opacity: 1; transform: none`): the keyboard can land on a card the tip has not
+    reached, and Chrome scrolls a focused element only as far as needed.
   - Reduced motion: no transitions.
 - Every state a plate hides before its arrival (the seal's ring, orbit and dot, the
   statement's words, the count) is gated the same way, on `[data-live]:not([data-arrived])`
@@ -139,7 +146,11 @@ so the ink's code is not in any page's bundle while nothing uses it.
 
 ### The mosaic
 
-`components/home/Mosaic.tsx` (`'use client'`): `Scene` › `Arrive` › `Fields`. `Fields`
+`components/home/Mosaic.tsx` (`'use client'`): `Arrive` › `Scene` › `Fields` (the
+arrival outside the scene, so the scene's first child is the plate the clip works on).
+The fields' veil — the field's colour under the words, fading towards the logo — is drawn
+on the box (`.field::before`, edge to edge), not on the cell's inner: in an open cell the
+inner keeps the closed column and a veil on it stopped short of the water's edge. `Fields`
 gains `data-card` + `--i` on each `li` (harmless outside an `Arrive`) and props `calm` and
 `onMaterial(key, live)`. On `onOpen(true)` the mosaic stirs each field's water at its
 centre (`stir(0.5, 0.5)`) `i × 110 ms` apart, in the areas' order; nothing on close.
