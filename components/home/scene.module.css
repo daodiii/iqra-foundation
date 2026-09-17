@@ -1,0 +1,58 @@
+/*
+ * The scenes. Every plate is laid out at the page's full width and clipped to the guide's
+ * inset; `--open` (set per scroll frame by Scene) takes the clip to the edges and the
+ * corners square as the plate passes the middle of the screen, and back as it leaves. The
+ * content inside keeps the column it had, so only the plate grows. Nothing pins.
+ */
+
+/* The plates' column: full width, one gutter between, one before what follows. The clip does the inset. */
+.stage {
+  display: grid;
+  gap: var(--gutter);
+  padding: 0 0 var(--gutter);
+}
+
+.scene {
+  --open: 0;
+}
+
+/* The plate: clipped to the inset when closed, to the edges when open; the corners follow. */
+.scene > :first-child {
+  border-radius: 0;
+  clip-path: inset(0 calc(var(--box-inset) * (1 - var(--open))) round calc(var(--box-radius) * (1 - var(--open))));
+}
+
+/* A plate's content keeps the closed plate's column. */
+.scene > [data-material] > div {
+  width: calc(100% - 2 * var(--box-inset));
+  justify-self: center;
+}
+
+/* The mosaic's fields keep their columns: the outer edge of each cell is the inset. */
+.mosaic [data-material] {
+  --box-radius: 0;
+}
+
+.mosaic li:nth-child(odd) [data-material] > div {
+  width: calc(100% - var(--box-inset));
+  justify-self: end;
+}
+
+.mosaic li:nth-child(even) [data-material] > div {
+  width: calc(100% - var(--box-inset));
+  justify-self: start;
+}
+
+@media (max-width: 899px) {
+  .mosaic li:nth-child(odd) [data-material] > div,
+  .mosaic li:nth-child(even) [data-material] > div {
+    width: calc(100% - 2 * var(--box-inset));
+    justify-self: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene {
+    --open: 0;
+  }
+}
