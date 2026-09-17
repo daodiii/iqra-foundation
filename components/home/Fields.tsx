@@ -41,7 +41,9 @@ type Props = {
  * water is built when the field is near and the page is quiet (`Box`), and a field on a
  * dark ground takes light type and the light pen. Each field is a card in the arrival's
  * sense (`data-card`, its place in `--i`), so a page that wraps the fields in an
- * `Arrive` gets them one after another.
+ * `Arrive` gets them one after another. The fields stand first under the hero, so each
+ * name is an `h2`, a section of the page like Visjon and Om oss after it: an `h3` straight
+ * after the `h1` broke the page's heading order.
  */
 export function Fields({ calm = false, onMaterial }: Props = {}) {
   return (
@@ -59,7 +61,7 @@ export function Fields({ calm = false, onMaterial }: Props = {}) {
               className={`${styles.field} ${styles[a.ground]}`}
             >
               <Link href={a.href} prefetch={false} className={styles.cell} aria-labelledby={`felt-${a.key}`}>
-                <FieldBody area={a} headingId={`felt-${a.key}`} />
+                <FieldBody area={a} headingId={`felt-${a.key}`} level="h2" />
               </Link>
             </Box>
           </li>

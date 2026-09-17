@@ -18,7 +18,8 @@ describe('the four fields', () => {
       const link = screen.getByRole('link', { name: a.name });
       expect(link).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
       expect(boxes[i]).toContainElement(link);
-      expect(screen.getByRole('heading', { level: 3, name: a.name })).toBeInTheDocument();
+      // a section of the page, first under the hero: an h2, not an h3 straight after the h1
+      expect(screen.getByRole('heading', { level: 2, name: a.name })).toBeInTheDocument();
       expect(screen.getByText(a.text)).toBeInTheDocument();
     });
     expect(container.textContent).not.toMatch(/\b0[1-4]\b/);
