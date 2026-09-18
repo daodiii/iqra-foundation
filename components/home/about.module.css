@@ -83,8 +83,9 @@
   box-shadow: -10px 0 44px rgb(44 57 75 / 0.1);
 }
 
-/* The seam: a hairline of the turquoise on the door that meets the other. */
+/* The seam: a hairline of the turquoise on the door that meets the other, stopping short of the logo above and below it so nothing crosses it. The gap is the logo's height and a little: the logo is measured across the door's width, the seam along its height, so the gap is set by hand per size. */
 .left::after {
+  --seam-gap: 128px;
   content: '';
   position: absolute;
   top: 0;
@@ -92,6 +93,13 @@
   right: 0;
   width: 1px;
   background: color-mix(in srgb, var(--color-turquoise) 70%, transparent);
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(min(42%, 340px) - var(--seam-gap)),
+    transparent calc(min(42%, 340px) - var(--seam-gap)),
+    transparent calc(min(42%, 340px) + var(--seam-gap)),
+    #000 calc(min(42%, 340px) + var(--seam-gap))
+  );
 }
 
 /* The shade of the turn on a door's face: from the hinge, deepening as it turns. */
@@ -199,6 +207,10 @@
 
   .emblem {
     width: 200px;
+  }
+
+  .left::after {
+    --seam-gap: 72px;
   }
 
   .title {
