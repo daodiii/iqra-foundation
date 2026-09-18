@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { MarkedLine } from '@/components/site/AreaMark';
+import { Logo } from '@/components/site/Logo';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import styles from './about.module.css';
@@ -20,9 +21,10 @@ export function doorsOpen(centre: number): number {
 
 /**
  * Om oss (5): «Stiftelsen skal være en åpen og inkluderende arena». The section is one
- * white plate in the plates' column with the section's name printed across it; as it is
- * scrolled up to the middle of the screen its two doors swing open into the room, each
- * on its outer edge, the name parting with them, and the room is there behind: the title,
+ * white plate in the plates' column with the logo across it — the guide's for white, the
+ * one the header carries; as it is scrolled up to the middle of the screen its two doors
+ * swing open into the room, each on its outer edge, the logo parting at the seam with
+ * them, and the room is there behind, saying Om Iqra Foundation in words: the title,
  * the first paragraph as the statement, the other three in columns, and the story of the
  * name in the owner's words. All of it on one screen, in the page's flow — nothing pins,
  * and a reader passes it or reads it as they like. Open, it stays open; scrolled back
@@ -33,7 +35,7 @@ export function doorsOpen(centre: number): number {
  * opens while its top is still in view). The doors are marked by `data-doors` only once
  * the script runs and motion is wanted: without either the doors are not drawn and the
  * room simply stands, so nothing is ever hidden — the words are in the DOM either way,
- * and the doors' copies of the name are decoration.
+ * and the doors' two copies of the logo (each shows its half) are decoration.
  *
  * The doors turn away from the reader, so they only ever shrink toward their hinges and
  * never leave the plate. Seen from the middle of the plate (where the perspective is), a
@@ -92,10 +94,10 @@ export function About() {
           </div>
         </div>
         <div className={`${styles.door} ${styles.left}`} aria-hidden="true">
-          <span className={styles.name}>{brief.about.title}</span>
+          <Logo height={200} decorative className={styles.emblem} />
         </div>
         <div className={`${styles.door} ${styles.right}`} aria-hidden="true">
-          <span className={styles.name}>{brief.about.title}</span>
+          <Logo height={200} decorative className={styles.emblem} />
         </div>
       </div>
     </Arrive>

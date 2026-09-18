@@ -34,15 +34,20 @@ describe('About', () => {
     expect(within(section).queryAllByRole('link')).toHaveLength(0);
   });
 
-  test('the doors carry the name as decoration only, and are marked once the script runs', () => {
+  test('the doors carry the guide’s logo for white as decoration only, and are marked once the script runs', () => {
     const { container } = render(<About />);
     const plate = container.querySelector('section#om-oss > div') as HTMLElement;
     expect(plate).toHaveAttribute('data-doors');
     const doors = plate.querySelectorAll(':scope > [aria-hidden="true"]');
     expect(doors).toHaveLength(2);
-    for (const door of doors) expect(door).toHaveTextContent(brief.about.title);
-    // the name is on the doors twice and in the room once: the heading is the only one read
-    expect(within(plate).getAllByText(brief.about.title)).toHaveLength(3);
+    for (const door of doors) {
+      const logo = door.querySelector('img') as HTMLImageElement;
+      expect(logo).toHaveAttribute('src', '/brand/iqra-logo.svg');
+      expect(logo).toHaveAttribute('alt', '');
+      expect(door).toHaveTextContent('');
+    }
+    // the name is said once, in the room, by the heading
+    expect(within(plate).getAllByText(brief.about.title)).toHaveLength(1);
     expect(within(plate).getAllByRole('heading', { level: 2 })).toHaveLength(1);
   });
 
