@@ -2,7 +2,7 @@ import { act, render, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
-import { About, doorsOpen, OPEN_AT, OPEN_FROM } from './About';
+import { About, doorsOpen, OPEN_AT, OPEN_FROM, splitSentences } from './About';
 
 const realMatchMedia = window.matchMedia;
 afterEach(() => { window.matchMedia = realMatchMedia; });
@@ -20,14 +20,23 @@ describe('doorsOpen', () => {
 });
 
 describe('About', () => {
-  test('the whole of Om oss in the room: the title, the four paragraphs with the areas marked, the story of the name; no links', () => {
+  test('Om oss in the room: the title, the statement, the marked paragraph and the third one’s two sentences as columns, the story of the name; the fourth paragraph is the foot’s; no links', () => {
     const { container } = render(<About />);
     const section = container.querySelector('section#om-oss') as HTMLElement;
     const title = within(section).getByRole('heading', { level: 2, name: brief.about.title });
     expect(section).toHaveAttribute('aria-labelledby', title.id);
     expect(title).toHaveAttribute('data-title');
     // the marked line is pieces (MarkedLine), so the paragraphs are matched on the room's text
-    for (const p of brief.about.paragraphs) expect(section).toHaveTextContent(p);
+    const [statement, marked, third, fourth] = brief.about.paragraphs;
+    expect(section).toHaveTextContent(statement);
+    expect(section).toHaveTextContent(marked);
+    // the third paragraph is there as its two sentences, one column each
+    expect(section).not.toHaveTextContent(fourth);
+    const columns = [...section.querySelectorAll('p')].map((p) => p.textContent);
+    const [first, second] = splitSentences(third);
+    expect(second).toMatch(/^Vi ønsker å bringe mennesker sammen/);
+    expect(columns).toContain(first);
+    expect(columns).toContain(second);
     expect(section.querySelectorAll('[data-area]')).toHaveLength(brief.areas.length);
     expect(within(section).getByRole('heading', { level: 3, name: site.pages.about.story.label })).toBeInTheDocument();
     expect(within(section).getByText(site.pages.about.story.text)).toBeInTheDocument();

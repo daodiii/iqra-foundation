@@ -20,9 +20,10 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   await expect(page.getByText(brief.home.paragraph, { exact: true })).toBeVisible();
   const main = page.getByRole('main');
   await expect(main.getByRole('link', { name: site.cta.work.label })).toHaveAttribute('href', site.cta.work.href);
-  // Støtt oss is a button twice on the page: under the hero's text and in its own section at the foot.
-  await expect(main.getByRole('link', { name: site.cta.support.label }).first()).toHaveAttribute('href', site.cta.support.href);
-  await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveCount(2);
+  // Støtt oss is a button once in the page's main: under the hero's text (the header has its own). The foot is Kontakt.
+  await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', site.cta.support.href);
+  await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveCount(1);
+  await expect(main.locator('section#kontakt').getByRole('link', { name: site.cta.contact.label })).toHaveAttribute('href', site.cta.contact.href);
   // the four fields on one sea first — in the sea's order, navy · burgundy · turquoise · white: one water, four layers of words, the first's on the water at the top
   const sea = main.locator('[data-fields]');
   await expect(sea).toHaveAttribute('data-live', '');
@@ -46,11 +47,13 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   const seal = main.locator('section#visjon svg');
   await expect(seal.locator('circle')).toHaveCount(2);
   for (const a of brief.areas) expect(await seal.locator('textPath').textContent()).toContain(a.name);
-  await expect(main.locator('[data-material="flat"][data-ground="navy"]')).toHaveCount(3);
+  // two flat navy plates (the seal, Neste) and two waters (the sea, the foot)
+  await expect(main.locator('[data-material="flat"][data-ground="navy"]')).toHaveCount(2);
+  await expect(main.locator('[data-material="water"]')).toHaveCount(2);
   await expect(main.locator('[data-material="ink"]')).toHaveCount(0);
   // then the rest of the site: four sections in order, no links under them, the lists honest while empty
   const ids = await main.locator('section[id]').evaluateAll((els) => els.map((e) => e.id));
-  expect(ids.slice(-4)).toEqual(['om-oss', 'arrangementer', 'menneskene-bak', 'stott-oss']);
+  expect(ids.slice(-4)).toEqual(['om-oss', 'arrangementer', 'menneskene-bak', 'kontakt']);
   expect(ids).not.toContain('ressurser');
   await expect(main.locator('section#om-oss a, section#menneskene-bak a')).toHaveCount(0);
   // the next event as Neste's statement while one is coming, the honest line while not (the build reads the same collection)
@@ -211,14 +214,14 @@ test('the share card is the logo, on every route', async ({ page }) => {
 /**
  * What the home page hides until its arrival, read by computed style: Playwright's
  * `toBeVisible` counts an element at opacity 0 as visible, so a hidden state has to be
- * asserted by value. The statement's first word, Om oss's title, the Støtt oss card.
+ * asserted by value. The statement's first word, Om oss's title, the foot's button.
  */
 async function nothingHidden(page: Page) {
   const computed = (selector: string, property: string) =>
     page.locator(selector).first().evaluate((el, p) => getComputedStyle(el).getPropertyValue(p), property);
   expect(await computed('section#visjon [data-word]', 'opacity')).toBe('1');
   expect(await computed('#om-oss [data-title]', 'clip-path')).toBe('none');
-  expect(await computed('section#stott-oss', 'opacity')).toBe('1');
+  expect(await computed('section#kontakt [data-prose]', 'opacity')).toBe('1');
 }
 
 /** The seal's scene — the element `Scene` sets `--open` on, the plate's parent — and what it reads there. */
