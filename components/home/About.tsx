@@ -14,6 +14,9 @@ export const OPEN_FROM = 0.8;
 /** … and where they stand open. */
 export const OPEN_AT = 0.42;
 
+/** A paragraph as its sentences, split after each full stop; the text is the brief's, character for character. */
+export const splitSentences = (p: string) => p.split(/(?<=\.)\s+/);
+
 /** How open the doors are, 0-1, from where the plate's centre stands on the screen (0 the top, 1 the foot). */
 export function doorsOpen(centre: number): number {
   return smoothstep((OPEN_FROM - centre) / (OPEN_FROM - OPEN_AT));
@@ -25,8 +28,11 @@ export function doorsOpen(centre: number): number {
  * one the header carries; as it is scrolled up to the middle of the screen its two doors
  * swing open into the room, each on its outer edge, the logo parting at the seam with
  * them, and the room is there behind, saying Om Iqra Foundation in words: the title,
- * the first paragraph as the statement, the other three in columns, and the story of the
- * name in the owner's words. All of it on one screen, in the page's flow — nothing pins,
+ * the first paragraph as the statement, three columns — the second paragraph with the
+ * areas marked, then the third paragraph's two sentences, one each (the owner's cut of
+ * 2026-09-18: the fourth paragraph, on cooperation and arrangements, is the foot of the
+ * page now, Contact.tsx, and says it there) — and the story of the name in the owner's
+ * words. All of it on one screen, in the page's flow — nothing pins,
  * and a reader passes it or reads it as they like. Open, it stays open; scrolled back
  * below the middle, it closes again.
  *
@@ -75,7 +81,8 @@ export function About() {
     };
   }, []);
 
-  const [statement, ...paragraphs] = brief.about.paragraphs;
+  const [statement, marked, third] = brief.about.paragraphs;
+  const columns = [marked, ...splitSentences(third)];
   const story = site.pages.about.story;
   return (
     <Arrive as="section" id="om-oss" className={styles.section} aria-labelledby="om-oss-tittel">
@@ -84,7 +91,7 @@ export function About() {
           <h2 id="om-oss-tittel" className={styles.title} data-title>{brief.about.title}</h2>
           <p className={styles.statement}>{statement}</p>
           <div className={styles.columns}>
-            {paragraphs.map((p, i) => (
+            {columns.map((p, i) => (
               <p key={i} className={styles.col}>{i === 0 ? <MarkedLine text={p} /> : p}</p>
             ))}
           </div>

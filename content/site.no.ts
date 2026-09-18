@@ -38,10 +38,11 @@ export const site = {
   name: 'Iqra Foundation',
   place: 'Oslo',
   nav,
-  /** The two buttons under the home page's text (brief 2), and where they go. */
+  /** The two buttons under the home page's text (brief 2), and where they go; and Kontakt, the way on from the foot of the home page. */
   cta: {
     work: { label: brief.home.buttons[0], href: '/vart-arbeid' },
     support: { label: brief.home.buttons[1], href: '/stott-oss' },
+    contact: { label: brief.menu[7], href: '/kontakt' },
   },
   header: {
     homeLabel: 'Iqra Foundation, til forsiden',

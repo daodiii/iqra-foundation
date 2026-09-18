@@ -4,7 +4,8 @@ import { Hero } from '@/components/home/Hero';
 import styles from '@/components/home/scene.module.css';
 import { Sea } from '@/components/home/Sea';
 import { Seal } from '@/components/home/Seal';
-import { People, Support } from '@/components/home/Sections';
+import { Contact } from '@/components/home/Contact';
+import { People } from '@/components/home/Sections';
 import { getEvents, getPeople, splitEvents, todayISO } from '@/lib/content';
 
 /**
@@ -20,9 +21,12 @@ export const revalidate = 3600;
  * (2) and its two buttons; the four areas (6) as one sea straight under it, each a tide of
  * its colour the scroll pulls across (Havet); Visjon and Misjon (3, 4) as a seal on navy;
  * Om oss (5) as a white plate whose doors open on the whole text; Arrangementer as the
- * next event on navy; Menneskene bak (7) on white; Støtt oss on navy. Every plate after the sea is laid out at the page's full width
- * and opens to the screen as it is read (`Scene`); every section arrives as the tip line
- * reaches it (`Arrive`). The menu is the way on from each.
+ * next event on navy; Menneskene bak (7) on white; and last, Kontakt: the sea back as one
+ * plate, the brief's sentence on cooperation and arrangements in it and the crimson tide
+ * coming in, for whoever wants to work with the foundation. Every plate after the sea is
+ * laid out at the page's full width and opens to the screen as it is read (`Scene`); every
+ * section arrives as the tip line reaches it (`Arrive`). The menu is the way on from each.
+ * Støtt oss is its own page and the header's button, not a plate here (2026-09-18).
  */
 export default function Home() {
   const { upcoming } = splitEvents(getEvents(), todayISO());
@@ -39,7 +43,7 @@ export default function Home() {
       </div>
       <People people={getPeople()} />
       <div className={styles.stage}>
-        <Support />
+        <Contact />
       </div>
     </>
   );
