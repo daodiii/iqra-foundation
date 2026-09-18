@@ -3,10 +3,11 @@
  * carries the perspective (its own centre the vanishing point) and nothing that would
  * flatten it — no overflow, opacity or filter — so the doors may turn; each door is hinged
  * on its outer edge, holds its half of the name, and turns into the room by `--open`
- * (0 closed, 1 open, About.tsx). The room is white and the plate's edge a hairline, so
- * closed and open are both white on the white page: the doors read by their seam, their
- * shadow and the shade of their turn. Without `data-doors` (no script, reduced motion)
- * there are no doors, only the room.
+ * (0 closed, 1 open, About.tsx). Each door holds a copy of the logo centred on the seam and
+ * shows its half, so the closed plate is the logo whole. The room is white and the plate's
+ * edge a hairline, so closed and open are both white on the white page: the doors read by
+ * their seam, their shadow and the shade of their turn. Without `data-doors` (no script,
+ * reduced motion) there are no doors, only the room.
  */
 
 .section {
@@ -108,26 +109,24 @@
   background: linear-gradient(to left, rgb(44 57 75 / 0.16), rgb(44 57 75 / 0.02));
 }
 
-/* The name across both doors: each door holds the whole line, the width of the plate, and shows its half. It goes before the door does — a name on a door turned past sixty degrees is a squashed sliver. */
-.name {
+/* The logo across both doors: each door holds a copy centred on the seam — its own edge — and shows its half. It goes before the door does: a logo on a door turned past sixty degrees is a squashed sliver. */
+.emblem {
   position: absolute;
-  top: 34%;
-  width: 200%;
-  transform: translateY(-50%);
-  text-align: center;
-  font: 600 clamp(40px, 6.4vw, 96px) / 1 var(--font-sans);
-  letter-spacing: -0.025em;
-  color: var(--color-navy);
-  white-space: nowrap;
+  /* a phone's plate is tall: the logo stays where the plate's first screen shows it */
+  top: min(42%, 340px);
+  /* three tenths of the plate: a door is half of it */
+  width: clamp(220px, 60%, 420px);
+  height: auto;
+  transform: translate(-50%, -50%);
   opacity: calc(1 - clamp(0, (var(--open) - 0.4) / 0.25, 1));
 }
 
-.left .name {
-  left: 0;
+.left .emblem {
+  left: 100%;
 }
 
-.right .name {
-  right: 0;
+.right .emblem {
+  left: 0;
 }
 
 /* ----- the room ----- */
@@ -198,11 +197,8 @@
     padding: 32px 22px;
   }
 
-  .name {
-    box-sizing: border-box;
-    padding: 0 10%;
-    font-size: 40px;
-    white-space: normal;
+  .emblem {
+    width: 200px;
   }
 
   .title {
