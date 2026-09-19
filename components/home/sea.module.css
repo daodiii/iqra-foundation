@@ -10,16 +10,14 @@
  * default rules here hold and the four stand under one another on the one water;
  * `[data-live]` turns the stage into the act.
  *
- * The words' sizes are the one open item («we will fix the size of the text later») and
- * live on `.stage` alone. The box's padding is the field box's own (`.field` in
- * fields.module.css): 30px above and below, clamp(24px, 3vw, 44px) at the sides.
+ * A field's words are a spread (Oppslaget, 2026-09-19): the four names down the left
+ * page, the statement and the reading on the right. The sizes live on `.cell`. The box's
+ * padding is the field box's own (`.field` in fields.module.css): 30px above and below,
+ * clamp(24px, 3vw, 44px) at the sides.
  */
 
 .stage {
   --step: 100vh;
-  --name-size: clamp(32px, 8vw, 132px);
-  --text-size: clamp(17px, 1.5vw, 23px);
-  --text-measure: 44ch;
   position: relative;
   /* Seen only where 100vh and 100dvh differ: under the view, on a phone, while the address bar shows. */
   background: var(--color-navy);
@@ -62,7 +60,7 @@
   align-content: stretch;
 }
 
-/* ----- a field's words: the name, the brief's text, the logo; the whole of it a link ----- */
+/* ----- a field's words: the four names, the statement, the reading, the logo; the whole of it a link ----- */
 
 /* A layer: the same place each time, crossing as the tide passes; 40px lower while off. */
 .word {
@@ -87,17 +85,27 @@
   pointer-events: auto;
 }
 
+/*
+ * The spread: two pages, the left two fifths. Left, the four names one row each down the
+ * whole height; right, the statement and the reading, centred; the logo at the foot of
+ * the right page.
+ */
 .cell {
+  --index-size: clamp(34px, 4.6vw, 66px);
+  --say-size: clamp(32px, 4vw, 58px);
+  --text-size: clamp(19px, 1.65vw, 24px);
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  grid-template-rows: 1fr auto;
+  column-gap: clamp(32px, 5vw, 80px);
   height: 100%;
   min-height: 100%;
   color: var(--card-text);
   text-decoration: none;
 }
 
-/* The veil runs left to right: the words stand in the left column, the water opens to the right. */
+/* The veil runs left to right, a little further across than before, since the right page is on the water too. */
 .cell::before {
   content: '';
   position: absolute;
@@ -105,9 +113,9 @@
   z-index: -1;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--ground) 80%, transparent) 0%,
-    color-mix(in srgb, var(--ground) 46%, transparent) 46%,
-    color-mix(in srgb, var(--ground) 0%, transparent) 78%
+    color-mix(in srgb, var(--ground) 82%, transparent) 0%,
+    color-mix(in srgb, var(--ground) 52%, transparent) 45%,
+    color-mix(in srgb, var(--ground) 18%, transparent) 100%
   );
   pointer-events: none;
 }
@@ -123,60 +131,112 @@
   outline-offset: 4px;
 }
 
-.name {
+/* The four, the sea's order, each a row of the height, sized by the longest (`--fit`, Sea.tsx); the one on the water lit. */
+.index {
+  list-style: none;
   margin: 0;
-  font: 700 var(--name-size) / 1 var(--font-sans);
+  padding: 0;
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  align-items: center;
+  min-width: 0;
+  font: 700 var(--fit, var(--index-size)) / 1 var(--font-sans);
   letter-spacing: -0.025em;
+  white-space: nowrap;
   color: var(--card-ink);
-  text-wrap: balance;
 }
 
-.foot {
+.item {
+  opacity: 0.38;
+  transition: opacity 0.5s ease-out;
+}
+
+.item[data-here] {
+  opacity: 1;
+}
+
+.name {
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+.page {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  margin-top: auto;
-  padding-top: clamp(24px, 6vh, 64px);
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.say {
+  margin: 0;
+  font: 600 var(--say-size) / 1.12 var(--font-sans);
+  letter-spacing: -0.022em;
+  color: var(--card-ink);
+  text-wrap: pretty;
 }
 
 .text {
   margin: 0;
-  max-width: var(--text-measure);
-  font-family: var(--font-text);
-  font-weight: 500;
-  font-size: var(--text-size);
-  line-height: 1.5;
+  padding-top: clamp(24px, 4vh, 44px);
+  max-width: 48ch;
+  font: 500 var(--text-size) / 1.48 var(--font-text);
   color: var(--card-text);
   text-wrap: pretty;
 }
 
 .logo {
-  display: block;
-  flex: none;
+  grid-column: 2;
+  justify-self: end;
+  padding-top: 24px;
   line-height: 0;
   opacity: 0.85;
 }
 
 /* Light type on dark water: a breath of shadow keeps it clear of the glints. */
-.word[data-tone="dark"] .name,
+.word[data-tone="dark"] .index,
+.word[data-tone="dark"] .say,
 .word[data-tone="dark"] .text {
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.28);
 }
 
 @media (max-width: 899px) {
-  /* «Samfunnsdeltakelse» has to fit 350px. */
-  .stage {
-    --name-size: clamp(30px, 8.6vw, 132px);
-    --text-measure: 40ch;
+  .cell {
+    --index-size: clamp(26px, 5vw, 66px);
   }
 }
 
 @media (max-width: 699px) {
-  .foot {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-    padding-top: 28px;
+  /* One page: the four as a compact list, then the statement, the reading, the logo. */
+  .cell {
+    --index-size: 27px;
+    --say-size: clamp(26px, 7.4vw, 32px);
+    --text-size: 17px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    row-gap: 22px;
+  }
+
+  .cell::before {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--ground) 70%, transparent) 0%, color-mix(in srgb, var(--ground) 30%, transparent) 100%);
+  }
+
+  .index {
+    grid-template-rows: none;
+    gap: 6px;
+    line-height: 1.1;
+  }
+
+  .page {
+    justify-content: flex-start;
+  }
+
+  .text {
+    padding-top: 20px;
+  }
+
+  .logo {
+    grid-column: 1;
   }
 }

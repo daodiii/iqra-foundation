@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
 import { getEvents, splitEvents, todayISO } from '../lib/content';
+import { sentences } from '../lib/text';
 
 /**
  * Every page of the brief's menu exists, has its own title in the one pattern and a
@@ -235,9 +236,9 @@ test('with JavaScript off every page is complete: the text, the menu, the footer
   }
   await page.goto('/');
   await expect(page.getByText(brief.home.paragraph, { exact: true })).toBeVisible();
-  // the sea is a column without script: nothing live, all four fields' words visible
+  // the sea is a column without script: nothing live, all four fields' words visible (each text its two sentences, the statement and the reading)
   await expect(page.locator('[data-fields]')).not.toHaveAttribute('data-live');
-  for (const a of brief.areas) await expect(page.getByText(a.text, { exact: true })).toBeVisible();
+  for (const a of brief.areas) for (const part of sentences(a.text)) await expect(page.getByText(part, { exact: true })).toBeVisible();
   await nothingHidden(page);
   expect(['', '0']).toContain(await sealOpen(page));
   await context.close();
@@ -252,7 +253,7 @@ test('reduced motion: the pages render and nothing is hidden waiting for an anim
   // the sea under reduced motion: no act, the four fields one under the other, all visible
   const sea = page.locator('[data-fields]');
   await expect(sea).not.toHaveAttribute('data-live');
-  for (const a of brief.areas) await expect(page.getByText(a.text, { exact: true })).toBeVisible();
+  for (const a of brief.areas) for (const part of sentences(a.text)) await expect(page.getByText(part, { exact: true })).toBeVisible();
   const tops = await sea.locator('[data-field]').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
   for (let i = 1; i < tops.length; i++) expect(tops[i]).toBeGreaterThan(tops[i - 1]);
   // once the script has run (the sections are live), everything stands: nothing hidden, the ring drawn, no listener on the scene
