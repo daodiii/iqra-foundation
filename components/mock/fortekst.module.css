@@ -1,0 +1,267 @@
+/*
+ * 4 Fortekst. The take-over is the whole first screen; the hero band under it is the live
+ * hero's (78vh). The name shows on shot 0, the plates on shots 1–4, stacked in order so each
+ * comes in over the last; at the wrap `data-shot` is removed and they all go.
+ */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 3.6vh, 40px);
+  min-height: calc(100dvh - var(--header-h));
+  padding: clamp(20px, 3vh, 36px) var(--margin) clamp(32px, 5vh, 56px);
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+.stage {
+  --mark-w: min(62vw, 36vh * 2.419);
+  position: relative;
+  width: var(--mark-w);
+  aspect-ratio: 728.806 / 301.27;
+  overflow: hidden;
+}
+
+.film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mark {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.page {
+  fill: var(--color-white);
+}
+
+.edge {
+  fill: none;
+  stroke: var(--color-navy);
+  stroke-width: 1px;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+
+.accent {
+  fill: var(--color-crimson);
+}
+
+/* The take-over: the film, the name, the four plates. */
+.over {
+  --film-fade: 900ms;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transition: opacity var(--film-fade) var(--ease-out);
+}
+
+.hero[data-film='inside'] .over {
+  opacity: 0;
+}
+
+.take {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Shot 0: the name, white, centred, a breath in. */
+.name {
+  --w: min(44vw, 26vh * 2.419);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--w);
+  aspect-ratio: 728.806 / 301.27;
+  transform: translate(-50%, -50%) scale(0.97);
+  opacity: 0;
+  filter: drop-shadow(0 4px 24px rgb(44 57 75 / 0.35));
+  transition: opacity 320ms var(--ease-out), transform 320ms var(--ease-out);
+}
+
+.hero[data-shot='0'] .name {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* The plates: each area's colour, the word set big at the foot; in from the left, stacked. */
+.plate {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 clamp(20px, 3vw, 48px) clamp(64px, 14vh, 128px) var(--margin);
+  transform: translateX(-101%);
+  transition: transform 520ms var(--ease-out-expo);
+}
+
+.plate[data-key='kunnskap'] {
+  background: var(--color-area-kunnskap);
+}
+
+.plate[data-key='dialog'] {
+  background: var(--color-area-dialog);
+}
+
+.plate[data-key='moteplasser'] {
+  background: var(--color-area-moteplasser);
+}
+
+.plate[data-key='samfunnsdeltakelse'] {
+  background: var(--color-area-samfunnsdeltakelse);
+}
+
+.hero[data-shot='1'] .plate[data-i='0'],
+.hero[data-shot='2'] .plate[data-i='0'],
+.hero[data-shot='3'] .plate[data-i='0'],
+.hero[data-shot='4'] .plate[data-i='0'],
+.hero[data-shot='2'] .plate[data-i='1'],
+.hero[data-shot='3'] .plate[data-i='1'],
+.hero[data-shot='4'] .plate[data-i='1'],
+.hero[data-shot='3'] .plate[data-i='2'],
+.hero[data-shot='4'] .plate[data-i='2'],
+.hero[data-shot='4'] .plate[data-i='3'] {
+  transform: none;
+}
+
+.word {
+  font: 600 clamp(32px, 4.3vw, 66px) / 0.98 var(--font-sans);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-white);
+}
+
+.plate[data-key='moteplasser'] .word,
+.plate[data-key='dialog'] .word {
+  color: var(--color-navy);
+}
+
+/* The copy, as the live hero's. */
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 780px;
+  text-align: center;
+}
+
+.title {
+  max-width: 18ch;
+  font-size: var(--text-hero);
+  color: var(--color-navy);
+}
+
+.lede {
+  max-width: 58ch;
+  font-size: clamp(18px, 1.4vw, 20px);
+  line-height: 1.5;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  font: 500 15px/1 var(--font-sans);
+  letter-spacing: 0.005em;
+  color: var(--color-white);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--dur-s) var(--ease-out);
+}
+
+.work {
+  background: var(--color-navy);
+}
+
+.work:hover {
+  background: var(--color-crimson);
+}
+
+.support {
+  background: var(--color-crimson);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .over {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) and (max-height: 800px) {
+  .stage {
+    --mark-w: min(62vw, 30vh * 2.419);
+  }
+
+  .lede {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero {
+    gap: 24px;
+  }
+
+  .stage {
+    --mark-w: 88vw;
+  }
+
+  .name {
+    --w: 78vw;
+  }
+
+  /* A phone: the plate is the lower part, the full width, still in from the left. */
+  .plate {
+    top: auto;
+    width: 100%;
+    height: 38%;
+    padding: 0 var(--margin) calc(36px + 56px);
+  }
+
+  .word {
+    font-size: clamp(26px, 8vw, 34px);
+  }
+
+  .copy {
+    gap: 16px;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-self: stretch;
+  }
+}

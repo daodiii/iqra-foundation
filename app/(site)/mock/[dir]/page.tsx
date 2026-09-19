@@ -9,16 +9,19 @@ import { People, Support } from '@/components/home/Sections';
 import { Bar } from '@/components/mock/Bar';
 import { DIRS, isDir } from '@/components/mock/dirs';
 import { Flommen } from '@/components/mock/Flommen';
+import { Fortekst } from '@/components/mock/Fortekst';
 import { Gjennom } from '@/components/mock/Gjennom';
+import { Hjornet } from '@/components/mock/Hjornet';
+import { Kornene } from '@/components/mock/Kornene';
 import { Speilet } from '@/components/mock/Speilet';
 import { getEvents, getPeople, splitEvents, todayISO } from '@/lib/content';
 
 /**
- * The hero and the film three ways (/mock/1 … 3): the home page as it is, with the hero
+ * The hero and the film six ways (/mock/1 … 6): the home page as it is, with the hero
  * replaced by a direction. A tool for one decision, removed once it is made.
  */
 
-const MOCK = { '1': Flommen, '2': Gjennom, '3': Speilet } as const;
+const MOCK = { '1': Flommen, '2': Gjennom, '3': Speilet, '4': Fortekst, '5': Hjornet, '6': Kornene } as const;
 
 export const dynamicParams = false;
 

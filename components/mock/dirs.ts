@@ -1,5 +1,5 @@
 /** The directions for the hero and the film, shared by the route (server) and the strip (client). */
-export type Dir = '1' | '2' | '3';
+export type Dir = '1' | '2' | '3' | '4' | '5' | '6';
 
 export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
   {
@@ -17,9 +17,24 @@ export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
     name: '3 Speilet',
     note: 'Filmen over den øvre delen av skjermen, en vannlinje, og under den filmens levende speilbilde som kruser og faller ned i sidens marineblå. Navnet står hvitt på vannlinjen med sitt eget speilbilde i vannet; overskriften og knappene står på vannet under. Havet overtar vannet rett etter.',
   },
+  {
+    key: '4',
+    name: '4 Fortekst',
+    note: 'Filmen har hele skjermen, og klippene er takten: det første bildet bærer navnet i hvitt, og hvert av de fire neste tar med seg sitt områdes ord på en plate i områdets farge, inn fra venstre som floen i havet – Kunnskap på marineblått med den lærde, Dialog på turkis med ringen, Møteplasser på lyst med halaqaen, Samfunnsdeltakelse på rødt med håndtrykket. Når filmen har gått én gang, legger den seg inn i bokstavene med teksten under.',
+  },
+  {
+    key: '5',
+    name: '5 Hjørnet',
+    note: 'Navnet med filmen inni står i heroen som nå. Rulles det, blir merket ikke igjen: det flyr opp i hodet og blir logoen, med filmen fortsatt gående inne i de små bokstavene, resten av siden ned. Rull tilbake, og det vokser ned i heroen igjen. Teksten under står som før.',
+  },
+  {
+    key: '6',
+    name: '6 Kornene',
+    note: 'Filmen har hele båndet. Når den har gått én gang, går den i tjue tusen korn av seg selv – hvert korn bærer filmens farge der det er – som strømmer over båndet og samler seg i de fire bokstavene mens siden blir hvit bak dem. Kornene smelter sammen, og filmen står inne i navnet med teksten under.',
+  },
 ];
 
-export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3']];
+export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6']];
 
 export function isDir(s: string): s is Dir {
   return DIRS.some((d) => d.key === s);
