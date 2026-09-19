@@ -1,22 +1,9 @@
 /*
- * The home page's sections after the fields: white sections in the subpages' measure,
- * plates in the guide's rhythm (`--box-inset`, one gutter), pen-framed cards on them, and
- * inside them the lists, the facts and the way on. Card colours come from the box
- * (`--card-ink`, `--card-text`), so the same list reads on white, on water and on ink.
+ * The home page's plates after the fields, in the guide's rhythm (`--box-inset`, one
+ * gutter), pen-framed cards on them, and inside them the facts and the way on. Card
+ * colours come from the box (`--card-ink`, `--card-text`), so the same card reads on
+ * white, on water and on ink.
  */
-
-/* ----- a section on white ----- */
-
-.white {
-  padding: 72px var(--margin) 24px;
-  max-width: calc(var(--measure) + 2 * var(--margin) + 200px);
-  scroll-margin-top: calc(var(--header-h) + 16px);
-}
-
-.title {
-  font-size: clamp(36px, 4.8vw, 62px);
-  max-width: 18ch;
-}
 
 /* ----- plates ----- */
 
@@ -41,39 +28,7 @@
   max-width: 560px;
 }
 
-/* ----- inside a section or a card: the list, the facts, the way on ----- */
-
-.list {
-  margin: 16px 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 12px;
-}
-
-.item {
-  padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--card-ink, var(--color-navy)) 18%, transparent);
-  border-radius: var(--radius);
-  color: var(--card-text, var(--color-ink));
-}
-
-.item h3 {
-  font-size: 18px;
-  color: var(--card-ink, var(--color-navy));
-}
-
-/* The quieter lines take the softer ink on white and the card's own text colour on a plate: no opacity, so the contrast holds (the soft ink is 5.9:1). */
-.meta {
-  margin-top: 4px;
-  font: 500 13px/1.4 var(--font-sans);
-  color: var(--card-text, var(--color-ink-soft));
-}
-
-.empty {
-  margin-top: 14px;
-  color: var(--card-text, var(--color-ink-soft));
-}
+/* ----- inside a card: the facts, the way on ----- */
 
 .facts {
   margin: 18px 0 0;
@@ -123,10 +78,6 @@
 }
 
 @media (max-width: 699px) {
-  .white {
-    padding: 48px var(--margin) 12px;
-  }
-
   .plate {
     --box-pad-y: 40px;
     --box-pad-x: 14px;
