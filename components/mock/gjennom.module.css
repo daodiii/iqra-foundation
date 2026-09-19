@@ -1,0 +1,264 @@
+/*
+ * 2 Gjennom. A room a screen taller than the view; the view sticks under the header for
+ * that screen of scroll and is the whole first screen. `--a` is the page's copy (1 → 0 over
+ * the first eighth), `--b` the film's copy (0 → 1 over the last fifth); Gjennom.tsx writes
+ * both per frame, with the plate's scale.
+ */
+.room {
+  --pin: 100vh;
+  position: relative;
+  height: calc(100dvh - var(--header-h) + var(--pin));
+  background: var(--color-white);
+}
+
+.view {
+  --a: 1;
+  --b: 0;
+  position: sticky;
+  top: var(--header-h);
+  height: calc(100dvh - var(--header-h));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 3.6vh, 40px);
+  padding: clamp(20px, 3vh, 36px) var(--margin) clamp(32px, 5vh, 56px);
+  overflow: hidden;
+}
+
+/* The film, the whole screen, under the plate. */
+.film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.stage {
+  --mark-w: min(62vw, 36vh * 2.419);
+  position: relative;
+  width: var(--mark-w);
+  aspect-ratio: 728.806 / 301.27;
+}
+
+.mark {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* The plate and all on it, scaled about the Q; the origin is set in the mark's units. */
+.zoom {
+  transform-box: view-box;
+  will-change: transform;
+}
+
+.page {
+  fill: var(--color-white);
+}
+
+/* The hairline goes with the page's copy: past the first eighth the window is the thing. */
+.edge {
+  fill: none;
+  stroke: var(--color-navy);
+  stroke-width: 1px;
+  stroke-linejoin: round;
+  opacity: calc(0.55 * var(--a));
+}
+
+.accent {
+  fill: var(--color-crimson);
+}
+
+/* The page's copy, over the plate's reach; gone with --a. */
+.copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 780px;
+  text-align: center;
+  opacity: var(--a);
+  transform: translateY(calc((1 - var(--a)) * 22px));
+}
+
+.view[data-in] .copy {
+  visibility: hidden;
+}
+
+/* The film's copy: white, low on the screen, over a navy scrim; up with --b. */
+.scrim {
+  position: absolute;
+  inset: auto 0 0;
+  height: 62%;
+  background: linear-gradient(to top, rgb(44 57 75 / 0.88), rgb(44 57 75 / 0.55) 45%, transparent);
+  opacity: var(--b);
+  pointer-events: none;
+}
+
+.over {
+  position: absolute;
+  inset: auto var(--margin) clamp(36px, 7vh, 72px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  max-width: 720px;
+  opacity: var(--b);
+  transform: translateY(calc((1 - var(--b)) * 26px));
+  visibility: hidden;
+}
+
+.view[data-film] .over {
+  visibility: visible;
+}
+
+.title,
+.title2 {
+  max-width: 18ch;
+  font-size: var(--text-hero);
+}
+
+.title {
+  color: var(--color-navy);
+}
+
+.title2 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-white);
+  text-wrap: balance;
+}
+
+.lede,
+.lede2 {
+  max-width: 58ch;
+  font-size: clamp(18px, 1.4vw, 20px);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.lede {
+  color: var(--color-ink);
+}
+
+.lede2 {
+  color: rgb(255 255 255 / 0.86);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.copy .buttons {
+  justify-content: center;
+}
+
+.work,
+.work2,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  font: 500 15px/1 var(--font-sans);
+  letter-spacing: 0.005em;
+  color: var(--color-white);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--dur-s) var(--ease-out), color var(--dur-s) var(--ease-out);
+}
+
+.work {
+  background: var(--color-navy);
+}
+
+.work:hover {
+  background: var(--color-crimson);
+}
+
+/* On the film the navy button is white: navy on the navy scrim would sink. */
+.work2 {
+  background: var(--color-white);
+  color: var(--color-navy);
+}
+
+.work2:hover {
+  background: var(--color-crimson);
+  color: var(--color-white);
+}
+
+.support {
+  background: var(--color-crimson);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+@media (min-width: 768px) and (max-height: 800px) {
+  .view {
+    gap: 22px;
+    padding-top: 16px;
+  }
+
+  .stage {
+    --mark-w: min(62vw, 30vh * 2.419);
+  }
+
+  .copy {
+    gap: 14px;
+  }
+
+  .lede,
+  .lede2 {
+    font-size: 18px;
+  }
+
+  .buttons {
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 767px) {
+  .view {
+    gap: 24px;
+  }
+
+  .stage {
+    --mark-w: 88vw;
+  }
+
+  .copy {
+    gap: 16px;
+  }
+
+  .copy .buttons,
+  .over .buttons {
+    flex-direction: column;
+    align-self: stretch;
+  }
+
+  .over {
+    inset: auto var(--margin) calc(28px + 56px);
+    gap: 14px;
+  }
+
+  .scrim {
+    height: 78%;
+  }
+}

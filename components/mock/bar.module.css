@@ -1,0 +1,78 @@
+/* The strip at the foot of the screen: mock furniture. */
+.strip {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 40;
+  display: grid;
+  gap: 6px;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  background: rgb(255 255 255 / 0.92);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--color-hairline);
+  font-family: var(--font-sans);
+}
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--color-ink-soft);
+  max-width: 96ch;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px 14px;
+  flex-wrap: wrap;
+}
+
+.group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-pill);
+  font: 500 13px/1 var(--font-sans);
+  text-decoration: none;
+  color: var(--color-navy);
+  background: var(--color-white);
+}
+
+.tab[aria-current='page'] {
+  background: var(--color-navy);
+  border-color: var(--color-navy);
+  color: var(--color-white);
+}
+
+@media (max-width: 699px) {
+  .strip {
+    gap: 4px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  }
+
+  .tabs {
+    gap: 4px;
+  }
+
+  .tab {
+    height: 26px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  /* Fifteen tabs are five rows on a phone: the note goes, and only the round you are in stays. */
+  .note {
+    display: none;
+  }
+
+  .group:not([data-current]) {
+    display: none;
+  }
+}

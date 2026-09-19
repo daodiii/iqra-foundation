@@ -1,0 +1,245 @@
+/*
+ * 1 Flommen. The band is the hero's own (78vh, 70vh on a phone, never under 560px). The
+ * base rules are the page as it ends: the plate white with the letters as windows, the
+ * hairline navy, the copy standing. `[data-phase='film']` is the opening — the plate's
+ * stroke at nothing, the hairline white and drawn on, the copy down — and applies only
+ * with scripting on and motion allowed; anywhere else the page stands from the first paint.
+ */
+.hero {
+  --flood-w: 3200px;
+  --flood: 1200ms;
+  --k: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 3.6vh, 40px);
+  min-height: max(560px, 78vh);
+  padding: clamp(20px, 3vh, 36px) var(--margin) clamp(32px, 5vh, 56px);
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+/* The film under everything, the whole band. */
+.film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.stage {
+  --mark-w: min(62vw, 36vh * 2.419);
+  position: relative;
+  width: var(--mark-w);
+  aspect-ratio: 728.806 / 301.27;
+}
+
+.mark {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* In the mask: the letters' white stroke, grown from the edges; the fill is painted black over it. */
+.ring path {
+  fill: none;
+  stroke: white;
+  stroke-width: var(--flood-w);
+  stroke-linejoin: round;
+  transition: stroke-width var(--flood) cubic-bezier(0.6, 0, 0.9, 0.4);
+}
+
+.page {
+  fill: var(--color-white);
+}
+
+/* The pen's line round each letter: white on the film, navy on the page once the flood has passed. */
+.edge {
+  fill: none;
+  stroke: var(--color-navy);
+  stroke-width: calc(1.4px * var(--k));
+  stroke-linejoin: round;
+  stroke-linecap: butt;
+  opacity: 0.55;
+  transition: stroke 500ms 450ms, opacity 500ms 450ms;
+}
+
+.accent {
+  fill: var(--color-crimson);
+}
+
+/* The copy paints above the plate's reach. */
+.copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 780px;
+  text-align: center;
+  transition: opacity 700ms var(--ease-out) 1000ms, transform 700ms var(--ease-out) 1000ms;
+}
+
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .hero[data-phase='film'] .ring path {
+    stroke-width: 0;
+  }
+
+  .hero[data-phase='film'] .edge {
+    stroke: white;
+    opacity: 0.9;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw 1100ms var(--ease-out) both;
+    animation-delay: calc(var(--i) * 950ms + 200ms);
+    transition: none;
+  }
+
+  .hero[data-phase='film'] .accent {
+    opacity: 0;
+    animation: appear 450ms var(--ease-out) 4150ms both;
+  }
+
+  .hero[data-phase='film'] .copy {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: none;
+  }
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+
+  3% {
+    opacity: 0.9;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+    opacity: 0.9;
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+}
+
+.title {
+  max-width: 18ch;
+  font-size: var(--text-hero);
+  color: var(--color-navy);
+}
+
+.lede {
+  max-width: 58ch;
+  font-size: clamp(18px, 1.4vw, 20px);
+  line-height: 1.5;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  font: 500 15px/1 var(--font-sans);
+  letter-spacing: 0.005em;
+  color: var(--color-white);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--dur-s) var(--ease-out);
+}
+
+.work {
+  background: var(--color-navy);
+}
+
+.work:hover {
+  background: var(--color-crimson);
+}
+
+.support {
+  background: var(--color-crimson);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+@media (min-width: 768px) and (max-height: 800px) {
+  .hero {
+    gap: 22px;
+    padding-top: 16px;
+  }
+
+  .stage {
+    --mark-w: min(62vw, 30vh * 2.419);
+  }
+
+  .copy {
+    gap: 14px;
+  }
+
+  .lede {
+    font-size: 18px;
+  }
+
+  .buttons {
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero {
+    --k: 2.4;
+    min-height: max(560px, 70vh);
+    gap: 24px;
+  }
+
+  .stage {
+    --mark-w: 88vw;
+  }
+
+  .copy {
+    gap: 16px;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-self: stretch;
+  }
+}
