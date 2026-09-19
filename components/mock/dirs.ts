@@ -1,5 +1,5 @@
 /** The directions for the hero and the film, shared by the route (server) and the strip (client). */
-export type Dir = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12' | '13' | '14' | '15';
+export type Dir = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12' | '13' | '14' | '15' | '16' | '17' | '18';
 
 export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
   {
@@ -77,9 +77,24 @@ export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
     name: '15 Teppet',
     note: 'Fra 9: et teppe henger for hele heroen idet du kommer. Bokstavene tennes bak stoffet – lys gjennom fløyel, uskarpt, én og én – og så går teppet til sidene med foldene samlet, og rommet er 9: vinduet med filmen, lyset på gulvet, teksten som kommer når stoffet er borte.',
   },
+  {
+    key: '16',
+    name: '16 Galleriet',
+    note: 'Fra 14, på hvitt: rommet er et hvitt rom. Gulv, tak og vegger i dybden, skilt fra hverandre bare av skyggen og sømmene; vinduet med filmen i bakveggen, og filmens farger ligger på det hvite gulvet som farget lys. Idet du kommer, står du utenfor og går inn mens bokstavene tennes; pekeren snur hodet litt. Teksten i marineblått nederst.',
+  },
+  {
+    key: '17',
+    name: '17 Linet',
+    note: 'Fra 15, på hvitt: et hvitt linteppe henger for heroen idet du kommer. Bokstavene tennes bak stoffet – sol gjennom lin, filmens farger der den er lys, én og én – og så går teppet til sidene med foldene samlet, og veggen er 10: vinduet med filmen, lyset på det hvite gulvet, teksten som kommer når stoffet er borte.',
+  },
+  {
+    key: '18',
+    name: '18 Muren',
+    note: 'På hvitt: veggen navnet er skåret gjennom, er tykk. Filmen står bakerst i åpningen, og fra alle andre steder enn rett forfra ser du innsiden av snittet – i skygge ved kanten, opplyst av filmens eget lys innerst. Idet du kommer, står du langt til venstre og går rundt til du står rett foran; etterpå er pekeren øyet. Lyset på gulvet som i 10. Teksten i bredden nederst.',
+  },
 ];
 
-export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['10', '11', '12'], ['13', '14', '15']];
+export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['10', '11', '12'], ['13', '14', '15'], ['16', '17', '18']];
 
 export function isDir(s: string): s is Dir {
   return DIRS.some((d) => d.key === s);

@@ -1,0 +1,233 @@
+/*
+ * 17 Linet. 10's white wall and its beats when nothing else runs; with the curtain
+ * (`data-curtain`, set once WebGL is up) the panes light early behind the linen and the
+ * cast, the sweep and the band wait for the cloth to clear. The curtain canvas lies over
+ * the whole hero, the band included, and goes when `data-open` is set. `--px`/`--py` are
+ * the pointer, written by the component; they move the film behind the window and the
+ * light on the floor a little.
+ */
+.room {
+  --px: 0;
+  --py: 0;
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: calc(100dvh - var(--header-h));
+  padding: clamp(20px, 3vh, 40px) var(--margin) clamp(28px, 4vh, 48px);
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+.scene {
+  display: grid;
+  place-items: center;
+}
+
+.stage {
+  --mark-w: min(56vw, 32vh * 2.419);
+  position: relative;
+  width: var(--mark-w);
+  aspect-ratio: 728.806 / 301.27;
+}
+
+/* The window: the clip on a box that never moves, the film inside it a little larger, so the pointer can move it. */
+.window {
+  position: absolute;
+  inset: 0;
+  clip-path: url(#lin-letters);
+}
+
+.film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: translate(calc(var(--px) * -18px), calc(var(--py) * -12px)) scale(1.1);
+  transition: transform 160ms var(--ease-out);
+}
+
+.mark {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* A pane still unlit: white over the film, flickering out in turn. */
+.pane {
+  fill: var(--color-white);
+  animation: lit 900ms steps(1, end) both;
+  animation-delay: calc(500ms + var(--i) * 190ms);
+}
+
+@keyframes lit {
+  0% {
+    opacity: 1;
+  }
+
+  18% {
+    opacity: 0.15;
+  }
+
+  26% {
+    opacity: 1;
+  }
+
+  40% {
+    opacity: 0.05;
+  }
+
+  48% {
+    opacity: 0.7;
+  }
+
+  60% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The lead round each pane. */
+.lead {
+  fill: none;
+  stroke: var(--color-navy);
+  stroke-width: 1px;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+
+.accent {
+  fill: var(--color-crimson);
+}
+
+/* The light on the floor, multiplied onto the white; it leans a little with the pointer. */
+.cast {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 728.806 / 301.27;
+  transform-origin: top center;
+  transform: skewX(calc(var(--px) * -20deg)) scale(1.18, 2.8);
+  filter: blur(14px);
+  opacity: 0.82;
+  mix-blend-mode: multiply;
+  transition: transform 160ms var(--ease-out);
+  animation: castIn 1200ms var(--ease-out) 1100ms both;
+  pointer-events: none;
+}
+
+@keyframes castIn {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The band: the light passes over the headline and leaves it navy; the rest comes up after. */
+.band {
+  position: relative;
+  z-index: 1;
+}
+
+.sweep {
+  background: linear-gradient(100deg, var(--color-navy) 0 42%, rgb(44 57 75 / 0.14) 56% 100%);
+  background-size: 260% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sweep 1300ms cubic-bezier(0.2, 0.8, 0.2, 1) 1700ms both;
+}
+
+@keyframes sweep {
+  to {
+    background-position: 0 0;
+  }
+}
+
+.band > div {
+  animation: up 900ms var(--ease-out) 2300ms both;
+}
+
+@keyframes up {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* The curtain, over everything. */
+.curtain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.room[data-curtain] .curtain {
+  display: block;
+}
+
+.room[data-open] .curtain {
+  display: none;
+}
+
+/* With the curtain: the panes behind the cloth, the rest after the cloth. */
+.room[data-curtain] .pane {
+  animation-delay: calc(250ms + var(--i) * 190ms);
+}
+
+.room[data-curtain] .cast {
+  animation-delay: 1900ms;
+}
+
+.room[data-curtain] .sweep {
+  animation-delay: 2700ms;
+}
+
+.room[data-curtain] .band > div {
+  animation-delay: 3100ms;
+}
+
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .pane,
+  .cast,
+  .sweep,
+  .band > div {
+    animation: none;
+  }
+
+  .pane {
+    display: none;
+  }
+
+  .sweep {
+    background-position: 0 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .room {
+    padding-bottom: calc(24px + 56px);
+  }
+
+  .stage {
+    --mark-w: 84vw;
+  }
+
+  .cast {
+    transform: skewX(calc(var(--px) * -14deg)) scale(1.1, 2);
+  }
+}

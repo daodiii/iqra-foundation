@@ -7,7 +7,7 @@ import { pickSource } from '@/lib/media';
 import { Band } from './Band';
 import { frameOf, makeCast, token } from './cast';
 import { makeWindow, WRITE } from './window';
-import styles from './teppet.module.css';
+import styles from './linet.module.css';
 
 const POSTER = '/media/iqra-poster.jpg';
 const [VX, VY, VW, VH] = MARK_VIEWBOX.split(' ').map(Number);
@@ -56,7 +56,7 @@ void main() {
   float sway = 0.010 * sin(vUv.y * 9.0 + t * 2.4 + side * 2.1) * (0.35 + open) + 0.004 * sin(vUv.y * 23.0 - t * 3.1);
   float hem = w + sway;
   if (x > hem) {
-    float sh = smoothstep(0.09, 0.0, x - hem) * 0.4 * (1.0 - open * 0.5) * step(0.001, w);
+    float sh = smoothstep(0.09, 0.0, x - hem) * 0.16 * (1.0 - open * 0.5) * step(0.001, w);
     gl_FragColor = vec4(0.0, 0.0, 0.0, sh);
     return;
   }
@@ -71,27 +71,29 @@ void main() {
   float dif = max(dot(n, L), 0.0);
   vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));
   float sheen = pow(max(dot(n, H), 0.0), 16.0) * 0.16;
-  vec3 col = velvet * (0.22 + 0.78 * dif) + sheen;
-  /* The window's light through the cloth, brighter where a fold is stretched thin. */
-  float thin = 0.45 + 0.55 * (0.5 + 0.5 * sin(phi));
-  col += glowSoft(vUv) * thin * 0.95;
-  /* The cloth's thickness at the hem, and the hang: darker at the foot. */
-  col *= 1.0 - 0.55 * smoothstep(0.014, 0.0, hem - x);
-  col *= 0.86 + 0.14 * (1.0 - vUv.y);
+  vec3 col = velvet * (0.78 + 0.22 * dif) + sheen * 0.5;
+  /* The window's light through the linen: where the film is bright its colour comes through, more where a fold is stretched thin. */
+  float thin = 0.5 + 0.5 * (0.5 + 0.5 * sin(phi));
+  vec3 g = glowSoft(vUv);
+  float lum = dot(g, vec3(0.33));
+  col = mix(col, g * 1.05 + 0.12, clamp(lum * 1.7, 0.0, 1.0) * thin * 0.9);
+  /* The cloth's thickness at the hem, and the hang: a shade darker at the foot. */
+  col *= 1.0 - 0.28 * smoothstep(0.014, 0.0, hem - x);
+  col *= 0.94 + 0.06 * (1.0 - vUv.y);
   gl_FragColor = vec4(col, 1.0);
 }`;
 
 /**
- * 15 Teppet, from 9: a curtain hangs over the whole of the hero when you arrive. Behind
- * it the lamps come on — the letters seen as light through velvet, blurred, flickering in
- * turn — and then the curtain parts to the two sides, its folds gathering as it goes, and
- * the room is 9's: the window with the film, the light on the floor, the band coming up
- * as the last of the cloth leaves. A WebGL quad over the hero draws the cloth per pixel
- * (folds, sheen, the light through it, a wave on the hem, its shadow on the room), from the
- * same window texture the lamps light; when it is fully open the canvas is gone. Without
- * WebGL, or under reduced motion, there is no curtain and the room is lit.
+ * 17 Linet, from 15 on white: a white linen curtain over the hero when you arrive. Behind
+ * it the panes light — the letters seen as sun through linen, the film's colours coming
+ * through where it is bright, flickering in turn — and then the curtain parts to the two
+ * sides, its folds gathering, and the room is 10's white wall: the window with the film,
+ * the film's colours on the white floor, the band in navy coming up as the cloth leaves.
+ * The cloth is 15's shader with linen for velvet: front-lit and pale, the light through it
+ * a mix towards the film's colour rather than an addition. Without WebGL, or under reduced
+ * motion, there is no curtain and the wall is lit.
  */
-export function Teppet() {
+export function Linet() {
   const room = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
@@ -163,10 +165,8 @@ export function Teppet() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.uniform1i(u('glow'), 0);
     gl.uniform1f(u('folds'), narrow ? 6 : 9);
-    const navy = token('--color-navy', '#2c394b');
-    const rgb = [1, 3, 5].map((i) => parseInt(navy.slice(i, i + 2), 16) / 255);
-    // The velvet: the navy, a shade deeper.
-    gl.uniform3f(u('velvet'), rgb[0] * 0.8, rgb[1] * 0.8, rgb[2] * 0.86);
+    // The linen: a warm white, a shade under the page's.
+    gl.uniform3f(u('velvet'), 0.93, 0.92, 0.9);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     const k = Math.min(2, window.devicePixelRatio || 1);
@@ -237,26 +237,26 @@ export function Teppet() {
           </div>
           <svg className={styles.mark} viewBox={MARK_VIEWBOX} role="img" aria-label={site.logoAlt}>
             <defs>
-              <clipPath id="teppe-letters" clipPathUnits="objectBoundingBox">
+              <clipPath id="lin-letters" clipPathUnits="objectBoundingBox">
                 {MARK_LETTERS.map((p, i) => (
                   <path key={i} transform={`scale(${1 / VW} ${1 / VH}) translate(${-VX} ${-VY}) ${p.transform}`} d={p.d} />
                 ))}
               </clipPath>
             </defs>
             {MARK_LETTERS.map((p, i) => (
-              <path key={i} className={styles.lamp} style={{ '--i': WRITE[i] } as React.CSSProperties} transform={p.transform} d={p.d} />
+              <path key={i} className={styles.pane} style={{ '--i': WRITE[i] } as React.CSSProperties} transform={p.transform} d={p.d} />
             ))}
             {MARK_LETTERS.map((p, i) => (
-              <path key={i} className={styles.edge} transform={p.transform} d={p.d} vectorEffect="non-scaling-stroke" />
+              <path key={i} className={styles.lead} transform={p.transform} d={p.d} vectorEffect="non-scaling-stroke" />
             ))}
             {MARK_ACCENTS.map((p, i) => (
               <path key={i} className={styles.accent} transform={p.transform} d={p.d} />
             ))}
           </svg>
-          <canvas ref={beam} className={styles.beam} aria-hidden="true" />
+          <canvas ref={beam} className={styles.cast} aria-hidden="true" />
         </div>
       </div>
-      <Band className={styles.band} title={(t) => <span className={styles.sweep}>{t}</span>} />
+      <Band tone="dark" className={styles.band} title={(t) => <span className={styles.sweep}>{t}</span>} />
       <canvas ref={curtain} className={styles.curtain} aria-hidden="true" />
     </section>
   );

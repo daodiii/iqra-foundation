@@ -10,14 +10,17 @@ import { Bar } from '@/components/mock/Bar';
 import { DIRS, isDir } from '@/components/mock/dirs';
 import { Flommen } from '@/components/mock/Flommen';
 import { Fortekst } from '@/components/mock/Fortekst';
+import { Galleriet } from '@/components/mock/Galleriet';
 import { Gjennom } from '@/components/mock/Gjennom';
 import { Glassmaleriet } from '@/components/mock/Glassmaleriet';
 import { Havbunnen } from '@/components/mock/Havbunnen';
 import { Hjornet } from '@/components/mock/Hjornet';
 import { Kornene } from '@/components/mock/Kornene';
+import { Linet } from '@/components/mock/Linet';
 import { Linsen } from '@/components/mock/Linsen';
 import { Lyset } from '@/components/mock/Lyset';
 import { Mosaikken } from '@/components/mock/Mosaikken';
+import { Muren } from '@/components/mock/Muren';
 import { Papirkuttet } from '@/components/mock/Papirkuttet';
 import { Rommet } from '@/components/mock/Rommet';
 import { Speilet } from '@/components/mock/Speilet';
@@ -26,11 +29,11 @@ import { Teppet } from '@/components/mock/Teppet';
 import { getEvents, getPeople, splitEvents, todayISO } from '@/lib/content';
 
 /**
- * The hero and the film fifteen ways (/mock/1 … 15): the home page as it is, with the hero
+ * The hero and the film eighteen ways (/mock/1 … 18): the home page as it is, with the hero
  * replaced by a direction. A tool for one decision, removed once it is made.
  */
 
-const MOCK = { '1': Flommen, '2': Gjennom, '3': Speilet, '4': Fortekst, '5': Hjornet, '6': Kornene, '7': Mosaikken, '8': Havbunnen, '9': Lyset, '10': Glassmaleriet, '11': Linsen, '12': Papirkuttet, '13': Straalene, '14': Rommet, '15': Teppet } as const;
+const MOCK = { '1': Flommen, '2': Gjennom, '3': Speilet, '4': Fortekst, '5': Hjornet, '6': Kornene, '7': Mosaikken, '8': Havbunnen, '9': Lyset, '10': Glassmaleriet, '11': Linsen, '12': Papirkuttet, '13': Straalene, '14': Rommet, '15': Teppet, '16': Galleriet, '17': Linet, '18': Muren } as const;
 
 export const dynamicParams = false;
 
