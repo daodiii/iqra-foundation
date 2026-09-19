@@ -1,0 +1,316 @@
+/*
+ * 14 Rommet. The first screen is a room in a CSS perspective: the far wall is the plane
+ * z = 0, the floor, ceiling and side walls are hinged on its edges and reach `--depth`
+ * towards the eye, which stands `--p` in front of the wall at the window's height
+ * (`--eye`). The window is on the wall; the band is flat, at the foot, over the floor.
+ * `--px`/`--py` are the pointer, −0.5 to 0.5, written by the component; they turn the
+ * head about the eye. The dolly is a translateZ from outside the room.
+ */
+.room {
+  --px: 0;
+  --py: 0;
+  --dark: #0e141c;
+  --p: 1000px;
+  --depth: 820px;
+  --eye: 36%;
+  --mark-w: min(56vw, 32vh * 2.419);
+  /* The floor's hinge: under the window, a little air below it. */
+  --hinge: calc(var(--eye) + var(--mark-w) / 4.838 + 3vh);
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: calc(100dvh - var(--header-h));
+  padding: clamp(20px, 3vh, 40px) var(--margin) clamp(28px, 4vh, 48px);
+  background: var(--dark);
+  overflow: hidden;
+}
+
+.source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.camera {
+  position: absolute;
+  inset: 0;
+  perspective: var(--p);
+  perspective-origin: 50% var(--eye);
+}
+
+.dolly {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: comeIn 2300ms var(--ease-out-expo) 150ms both;
+}
+
+@keyframes comeIn {
+  from {
+    transform: translateZ(-1500px);
+  }
+
+  to {
+    transform: none;
+  }
+}
+
+/* The head turns about the eye, which is --p in front of the wall. */
+.box {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% var(--eye) var(--p);
+  transform: rotateY(calc(var(--px) * -7deg)) rotateX(calc(var(--py) * 4deg));
+  transition: transform 220ms var(--ease-out);
+}
+
+.plane {
+  position: absolute;
+  backface-visibility: hidden;
+}
+
+/* The far wall, from the top down to the floor's hinge; the room's own light on it. */
+.wall {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: var(--hinge);
+  background: radial-gradient(70% 90% at 50% 70%, #182232, var(--dark) 75%);
+}
+
+.floor {
+  left: 0;
+  top: var(--hinge);
+  width: 100%;
+  height: var(--depth);
+  transform-origin: top;
+  transform: rotateX(90deg);
+  /* The floor takes the wall's colour at the hinge, so the seam is the hairline and no more. */
+  background:
+    radial-gradient(70% 45% at 50% 0%, #182232, transparent 75%),
+    linear-gradient(#0e141c, #0a0e14 50%, #070a0f);
+  /* The light catching the seam where the floor meets the wall. */
+  border-top: 1px solid rgb(255 236 210 / 0.08);
+}
+
+.ceiling {
+  left: 0;
+  top: calc(-1 * var(--depth));
+  width: 100%;
+  height: var(--depth);
+  transform-origin: bottom;
+  transform: rotateX(-90deg);
+  background: linear-gradient(#06090d, #0d131b 50%, #111925);
+}
+
+.left,
+.right {
+  top: 0;
+  width: var(--depth);
+  height: 100%;
+}
+
+.left {
+  left: calc(-1 * var(--depth));
+  transform-origin: right;
+  transform: rotateY(90deg);
+  background:
+    radial-gradient(45% 55% at 100% var(--eye), rgb(255 214 160 / 0.13), transparent 70%),
+    linear-gradient(to left, #131b26, #0a0e14 55%, #06090d);
+}
+
+.right {
+  left: 100%;
+  transform-origin: left;
+  transform: rotateY(-90deg);
+  background:
+    radial-gradient(45% 55% at 0% var(--eye), rgb(255 214 160 / 0.13), transparent 70%),
+    linear-gradient(to right, #131b26, #0a0e14 55%, #06090d);
+}
+
+/* The light on the floor: the cast, blurred in the canvas, lying from the hinge inwards. */
+.cast {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: calc(var(--mark-w) * 1.22);
+  height: calc(var(--mark-w) * 1.15);
+  transform: translateX(-50%);
+  opacity: 0.85;
+  animation: glowIn 1200ms var(--ease-out) 1300ms both;
+}
+
+/* The warmth the film throws onto the wall around the window; up as the lamps come on. */
+.glow {
+  position: absolute;
+  left: 50%;
+  top: var(--eye);
+  width: 80vw;
+  height: 52vh;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgb(255 214 160 / 0.13), transparent 72%);
+  animation: glowIn 1600ms var(--ease-out) 900ms both;
+  pointer-events: none;
+}
+
+@keyframes glowIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* The window, on the wall. */
+.stage {
+  position: absolute;
+  left: 50%;
+  top: var(--eye);
+  width: var(--mark-w);
+  aspect-ratio: 728.806 / 301.27;
+  transform: translate(-50%, -50%);
+}
+
+.still,
+.film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.still {
+  object-fit: cover;
+  clip-path: url(#rom-letters);
+}
+
+.room[data-live] .still {
+  display: none;
+}
+
+.mark {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* A lamp still off over each letter: dark, flickering out in turn. */
+.lamp {
+  fill: var(--dark);
+  animation: lampOn 900ms steps(1, end) both;
+  animation-delay: calc(650ms + var(--i) * 190ms);
+}
+
+@keyframes lampOn {
+  0% {
+    opacity: 1;
+  }
+
+  18% {
+    opacity: 0.15;
+  }
+
+  26% {
+    opacity: 1;
+  }
+
+  40% {
+    opacity: 0.05;
+  }
+
+  48% {
+    opacity: 0.7;
+  }
+
+  60% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.edge {
+  fill: none;
+  stroke: rgb(255 236 210 / 0.55);
+  stroke-width: 1px;
+  stroke-linejoin: round;
+}
+
+.accent {
+  fill: var(--color-crimson);
+}
+
+/* The band: flat, over the floor; the light sweeps the headline and leaves it lit. */
+.band {
+  position: relative;
+  z-index: 1;
+  grid-row: 2;
+}
+
+.sweep {
+  background: linear-gradient(100deg, #fff 0 42%, rgb(255 255 255 / 0.1) 56% 100%);
+  background-size: 260% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sweep 1300ms cubic-bezier(0.2, 0.8, 0.2, 1) 1900ms both;
+}
+
+@keyframes sweep {
+  to {
+    background-position: 0 0;
+  }
+}
+
+.band > div {
+  animation: glowIn 900ms var(--ease-out) 2500ms both;
+}
+
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .dolly,
+  .lamp,
+  .cast,
+  .glow,
+  .sweep,
+  .band > div {
+    animation: none;
+  }
+
+  .lamp {
+    display: none;
+  }
+
+  .sweep {
+    background-position: 0 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .room {
+    --mark-w: 84vw;
+    --p: 700px;
+    --depth: 560px;
+    --eye: 30%;
+    padding-bottom: calc(24px + 56px);
+  }
+
+  .box {
+    transform: none;
+  }
+
+  .cast {
+    height: calc(var(--mark-w) * 0.9);
+  }
+}

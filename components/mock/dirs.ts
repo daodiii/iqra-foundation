@@ -1,5 +1,5 @@
 /** The directions for the hero and the film, shared by the route (server) and the strip (client). */
-export type Dir = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12';
+export type Dir = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12' | '13' | '14' | '15';
 
 export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
   {
@@ -62,9 +62,24 @@ export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
     name: '12 Papirkuttet',
     note: 'Fra 9, på hvitt: navnet skjæres ut av det hvite av en usynlig kniv, bokstav for bokstav, og bitene faller bort og lar vinduene stå igjen med filmen i – og lyset fra den på papiret under. Teksten trykkes av et hode som går over i bredden.',
   },
+  {
+    key: '13',
+    name: '13 Strålene',
+    note: 'Fra 9: lyset står i luften. Rommet er støvet, og filmens lys går ut fra hver bokstav idet den tennes og strekker seg gjennom rommet mot deg, som stråler fra et vindu; noen støvkorn driver i lyset. Lyset på gulvet som i 9; pekeren svinger strålene. Teksten i bredden nederst.',
+  },
+  {
+    key: '14',
+    name: '14 Rommet',
+    note: 'Fra 9: rommet er et rom. Gulv, tak og vegger går innover i dybden, vinduet med filmen står i bakveggen, og lyset faller på et gulv som faktisk ligger der. Idet du kommer, står du utenfor og går inn gjennom åpningen mens bokstavene tennes; pekeren snur hodet litt, og veggene følger. Teksten i bredden nederst, på gulvet.',
+  },
+  {
+    key: '15',
+    name: '15 Teppet',
+    note: 'Fra 9: et teppe henger for hele heroen idet du kommer. Bokstavene tennes bak stoffet – lys gjennom fløyel, uskarpt, én og én – og så går teppet til sidene med foldene samlet, og rommet er 9: vinduet med filmen, lyset på gulvet, teksten som kommer når stoffet er borte.',
+  },
 ];
 
-export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['10', '11', '12']];
+export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['10', '11', '12'], ['13', '14', '15']];
 
 export function isDir(s: string): s is Dir {
   return DIRS.some((d) => d.key === s);

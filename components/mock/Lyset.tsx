@@ -112,7 +112,9 @@ export function Lyset() {
       <div className={styles.glow} aria-hidden="true" />
       <div className={styles.scene}>
         <div className={styles.stage}>
-          <video ref={video} className={styles.film} poster={POSTER} preload="metadata" muted loop playsInline aria-hidden="true" />
+          <div className={styles.window} aria-hidden="true">
+            <video ref={video} className={styles.film} poster={POSTER} preload="metadata" muted loop playsInline />
+          </div>
           <svg className={styles.mark} viewBox={MARK_VIEWBOX} role="img" aria-label={site.logoAlt}>
             <defs>
               {/* No <g> in a clipPath (SVG allows only shapes, paths, text and use): the box mapping goes on each path. */}

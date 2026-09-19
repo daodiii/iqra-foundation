@@ -1,5 +1,5 @@
 /*
- * 9 Lyset. The room is the first screen, near-black; the scene (the window) above, the
+ * 13 Strålene. 9's room, with the rays canvas over the whole of it under the scene: the light in the air,
  * band at the foot. Every entrance here is a CSS animation from the first paint: the
  * lamps, the dolly, the glow, the sweep. `--px`/`--py` are the pointer, −0.5 to 0.5,
  * written by the component.
@@ -15,6 +15,20 @@
   padding: clamp(20px, 3vh, 40px) var(--margin) clamp(28px, 4vh, 48px);
   background: radial-gradient(120% 80% at 50% 30%, #172130, var(--dark) 70%);
   overflow: hidden;
+}
+
+/* The rays: the whole room, under the window, added to the dark. Present only when WebGL ran. */
+.rays {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  pointer-events: none;
+}
+
+.room[data-rays] .rays {
+  display: block;
 }
 
 /* The warmth the film throws into the room; up as the lamps come on. */
@@ -46,6 +60,7 @@
  * letters (measured 2026-09-19: a lit rectangle under the name, gone with the 3D removed).
  */
 .scene {
+  position: relative;
   display: grid;
   place-items: center;
   transform-origin: 50% 42%;
@@ -73,7 +88,7 @@
 .window {
   position: absolute;
   inset: 0;
-  clip-path: url(#lyset-letters);
+  clip-path: url(#straale-letters);
 }
 
 .film {

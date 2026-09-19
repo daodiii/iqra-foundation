@@ -1,8 +1,9 @@
 /*
- * 9 Lyset. The room is the first screen, near-black; the scene (the window) above, the
- * band at the foot. Every entrance here is a CSS animation from the first paint: the
- * lamps, the dolly, the glow, the sweep. `--px`/`--py` are the pointer, −0.5 to 0.5,
- * written by the component.
+ * 15 Teppet. 9's room and its beats when nothing else runs; with the curtain (`data-curtain`,
+ * set once WebGL is up) the lamps come on early behind the cloth, the dolly is dropped —
+ * the curtain's parting is the arrival — and the glow, the beam, the sweep and the band
+ * wait for the cloth to clear. The curtain canvas lies over the whole hero, the band
+ * included, and goes when `data-open` is set.
  */
 .room {
   --px: 0;
@@ -73,7 +74,7 @@
 .window {
   position: absolute;
   inset: 0;
-  clip-path: url(#lyset-letters);
+  clip-path: url(#teppe-letters);
 }
 
 .film {
@@ -184,6 +185,50 @@
 
 .band > div {
   animation: glowIn 900ms var(--ease-out) 2300ms both;
+}
+
+/* The curtain, over everything. */
+.curtain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.room[data-curtain] .curtain {
+  display: block;
+}
+
+.room[data-open] .curtain {
+  display: none;
+}
+
+/* With the curtain: the lamps behind the cloth, no dolly, the rest after the cloth. */
+.room[data-curtain] .scene {
+  animation: none;
+}
+
+.room[data-curtain] .lamp {
+  animation-delay: calc(250ms + var(--i) * 190ms);
+}
+
+.room[data-curtain] .glow {
+  animation-delay: 1600ms;
+}
+
+.room[data-curtain] .beam {
+  animation-delay: 1900ms;
+}
+
+.room[data-curtain] .sweep {
+  animation-delay: 2700ms;
+}
+
+.room[data-curtain] .band > div {
+  animation-delay: 3100ms;
 }
 
 @media (prefers-reduced-motion: reduce), (scripting: none) {

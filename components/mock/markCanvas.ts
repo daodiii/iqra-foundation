@@ -37,6 +37,18 @@ export function markPaths(x: number, y: number, width: number): { letters: Path2
   return { letters: join(LETTERS), accents: join(ACCENTS) };
 }
 
+/** The letters one by one (the art's order, a i Q R), in the canvas's own units — for a cover laid over each in turn. */
+export function markLetterPaths(x: number, y: number, width: number): Path2D[] {
+  const k = width / VW;
+  const base = new DOMMatrix().translate(x, y).scale(k).translate(-VX, -VY);
+  return LETTERS.map((g) => {
+    g.path ??= new Path2D(g.d);
+    const p = new Path2D();
+    p.addPath(g.path, base.multiply(new DOMMatrix(g.m)));
+    return p;
+  });
+}
+
 /** Draw the mark with its top-left at (x, y) and the given width, in the canvas's own units. */
 export function drawMark(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, letters: string, accents: string): void {
   const k = width / VW;
