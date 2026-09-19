@@ -139,6 +139,14 @@ export type WaterHandle = {
    * at 1 `to` alone. The height field is untouched: one water, a new floor.
    */
   retune(from: WaterFloor, to: WaterFloor, t: number): void;
+  /**
+   * Something lying on the bottom (mock/havet-tekst, 2026-09-19): one image per floor,
+   * the size of the canvas, drawn under the water at the refracted point — so the surface
+   * bends it and the tide sweeps from the one image to the next with the floor. `underAt`
+   * picks which two `retune` is between. Empty, nothing changes.
+   */
+  under(images: readonly (TexImageSource | null)[]): void;
+  underAt(a: number, b: number): void;
 };
 
 export type WaterOptions = {
@@ -155,6 +163,12 @@ export type WaterOptions = {
    * still lives. Off, nothing changes.
    */
   calm?: boolean;
+  /**
+   * Drawn at the device's resolution (capped at 2×) instead of half the CSS size: for
+   * words on the bottom, which half resolution would soften. Four to sixteen times the
+   * fragments of the show pass; a mock's option.
+   */
+  sharp?: boolean;
 };
 
 /*
@@ -200,6 +214,7 @@ const FRAG = {
     uniform float refr; uniform float caus; uniform float causB; uniform float spec; uniform float specB; uniform float slope;
     uniform vec3 ground; uniform vec3 groundB; uniform float tide; uniform float band;
     uniform int np; uniform vec4 pools[${POOL_LIMIT}]; uniform vec3 pcol[${POOL_LIMIT}]; uniform float pside[${POOL_LIMIT}];
+    uniform sampler2D uUnderA; uniform sampler2D uUnderB; uniform float underOn;
     float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
     /* How far the second floor has come at this point of the bottom: a soft band sweeping left to right with the tide. The twin of tideMix(). */
     float mixAt(vec2 p){ float e = -band * .5 + tide * (1. + band); return 1. - smoothstep(e - band * .5, e + band * .5, p.x); }
@@ -222,6 +237,8 @@ const FRAG = {
       vec2 fp = clamp(vUv + n.xy * refr, 0., 1.);
       float m = mixAt(fp);
       vec3 col = floorAt(fp, m);
+      /* What lies on the bottom, at the refracted point too, and swept by the same band as the floor. */
+      if (underOn > 0.) { vec2 up = vec2(fp.x, 1. - fp.y); vec4 u = mix(texture(uUnderA, up), texture(uUnderB, up), m); col = mix(col, u.rgb, u.a); }
       col *= 1. + clamp(-lap * mix(caus, causB, m), -.55, 1.4);
       vec3 Ld = normalize(vec3(-.4, .6, .7));
       col += pow(max(reflect(-Ld, n).z, 0.), 70.) * mix(spec, specB, m) * mix(vec3(1.), vec3(1., .88, .7), mix(night, nightB, m));
@@ -427,6 +444,15 @@ export function createWater(canvas: HTMLCanvasElement, opts: WaterOptions): Wate
   const poolArr = new Float32Array(POOL_LIMIT * 4);
   const colourArr = new Float32Array(POOL_LIMIT * 3);
   const sideArr = new Float32Array(POOL_LIMIT);
+  /* The images on the bottom, one texture each; `underA`/`underB` index them. */
+  const unders: (WebGLTexture | null)[] = [];
+  let underA = 0;
+  let underB = 0;
+  const bindUnder = (i: number, unit: number) => {
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, unders[i] ?? null);
+    return unit;
+  };
   const setPools = () => {
     colourArr.fill(0);
     sideArr.fill(0);
@@ -459,8 +485,9 @@ export function createWater(canvas: HTMLCanvasElement, opts: WaterOptions): Wate
   function resize(): boolean {
     needsResize = false;
     const rect = canvas.getBoundingClientRect();
-    const w = Math.max(64, Math.round(rect.width * DRAW_SCALE));
-    const h = Math.max(64, Math.round(rect.height * DRAW_SCALE));
+    const drawScale = opts.sharp ? Math.min(2, window.devicePixelRatio || 1) : DRAW_SCALE;
+    const w = Math.max(64, Math.round(rect.width * drawScale));
+    const h = Math.max(64, Math.round(rect.height * drawScale));
     if (canvas.width === w && canvas.height === h && field) return true;
     canvas.width = w;
     canvas.height = h;
@@ -561,6 +588,9 @@ export function createWater(canvas: HTMLCanvasElement, opts: WaterOptions): Wate
     gl.uniform4fv(uniform('show', 'pools'), poolArr);
     gl.uniform3fv(uniform('show', 'pcol'), colourArr);
     gl.uniform1fv(uniform('show', 'pside'), sideArr);
+    gl.uniform1i(uniform('show', 'uUnderA'), bindUnder(underA, 1));
+    gl.uniform1i(uniform('show', 'uUnderB'), bindUnder(underB, 2));
+    gl.uniform1f(uniform('show', 'underOn'), unders.some(Boolean) ? 1 : 0);
     blit(null);
   }
 
@@ -692,6 +722,28 @@ export function createWater(canvas: HTMLCanvasElement, opts: WaterOptions): Wate
       const g = hexToRgb(from.ground).map((v) => v / 255) as RGB;
       ground[0] = g[0]; ground[1] = g[1]; ground[2] = g[2];
     },
+    under(images) {
+      if (broken) return;
+      images.forEach((img, i) => {
+        if (!img) { if (unders[i]) gl.deleteTexture(unders[i]); unders[i] = null; return; }
+        const tex = unders[i] ?? gl.createTexture();
+        unders[i] = tex;
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      });
+      if (opts.reduced) present(0);
+    },
+    underAt(a, b) {
+      underA = a;
+      underB = b;
+    },
     stir(x: number, y: number) {
       if (broken) return;
       // Deeper and wider than rain by a long way: this answers a press, and a press that
@@ -750,6 +802,8 @@ export function createWaterWhenNear(canvas: HTMLCanvasElement, opts: WaterOption
       destroy() { destroyed = true; live?.destroy(); live = null; },
       stir(x, y) { live?.stir(x, y); },
       retune(a, b, t) { live?.retune(a, b, t); },
+      under(images) { live?.under(images); },
+      underAt(a, b) { live?.underAt(a, b); },
     };
   }
 
@@ -769,5 +823,7 @@ export function createWaterWhenNear(canvas: HTMLCanvasElement, opts: WaterOption
     },
     stir(x, y) { live?.stir(x, y); },
     retune(a, b, t) { live?.retune(a, b, t); },
+    under(images) { live?.under(images); },
+    underAt(a, b) { live?.underAt(a, b); },
   };
 }

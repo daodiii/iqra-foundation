@@ -1,0 +1,87 @@
+/*
+ * 8 Havbunnen. The first screen is the water's box: the canvas fills it, the name's place
+ * (the stage) sits in the upper part and is drawn on the bottom by the component once the
+ * water is live (`data-live` hides the DOM stage); the copy band stands on the water at
+ * the foot. Navy under everything: the ground before the water, and the whole answer
+ * without it.
+ */
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: calc(100dvh - var(--header-h));
+  padding: clamp(20px, 3vh, 40px) var(--margin) clamp(28px, 4vh, 48px);
+  background: var(--color-navy);
+  overflow: hidden;
+}
+
+.water {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.room {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.stage {
+  --mark-w: min(58vw, 34vh * 2.419);
+  position: relative;
+  width: var(--mark-w);
+  aspect-ratio: 728.806 / 301.27;
+}
+
+/* The DOM name: the film clipped to the letters, the accents on top — shown only when the water is not. */
+.hero[data-live] .stage {
+  visibility: hidden;
+}
+
+.film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: url(#havbunn-letters);
+}
+
+.mark {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.accent {
+  fill: var(--color-crimson);
+}
+
+/* The band stands on the water; while the water is live and the tide not yet in, it waits. */
+.band {
+  position: relative;
+  z-index: 1;
+  transition: opacity 800ms var(--ease-out), transform 800ms var(--ease-out);
+}
+
+.hero[data-live]:not([data-tide]) .band {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: none;
+}
+
+@media (max-width: 767px) {
+  .hero {
+    padding-bottom: calc(24px + 56px);
+  }
+
+  .stage {
+    --mark-w: 84vw;
+  }
+}

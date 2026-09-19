@@ -1,5 +1,5 @@
 /** The directions for the hero and the film, shared by the route (server) and the strip (client). */
-export type Dir = '1' | '2' | '3' | '4' | '5' | '6';
+export type Dir = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 
 export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
   {
@@ -32,9 +32,24 @@ export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
     name: '6 Kornene',
     note: 'Filmen har hele båndet. Når den har gått én gang, går den i tjue tusen korn av seg selv – hvert korn bærer filmens farge der det er – som strømmer over båndet og samler seg i de fire bokstavene mens siden blir hvit bak dem. Kornene smelter sammen, og filmen står inne i navnet med teksten under.',
   },
+  {
+    key: '7',
+    name: '7 Mosaikken',
+    note: 'Heroen er en vegg av islamsk geometri i marineblått, og filmen står inne i navnet. Idet du kommer, er veggen lukket; så vipper flisene opp i en bølge ut fra navnet og viser filmen i bokstavene – og teksten, som nå går i bredden under: overskriften til venstre, avsnittet og knappene til høyre – setter seg når bølgen når den. Veggen blir stående som stedet.',
+  },
+  {
+    key: '8',
+    name: '8 Havbunnen',
+    note: 'Heroen er havet. Navnet med filmen inni ligger på bunnen, og du ser det gjennom den levende overflaten: floen kommer inn med det marineblå over det idet du kommer, en stein faller, og pekerens kjølvann går gjennom bokstavene. Teksten står hvit på vannet, i bredden; knappene slipper en stein der de står.',
+  },
+  {
+    key: '9',
+    name: '9 Lyset',
+    note: 'Et mørkt rom. Bokstavene er et vindu i bakveggen; filmen slås på inne i dem, bokstav for bokstav som en projektor som varmes opp, og lyset fra den faller gjennom navnet ned på gulvet. Rommet kjører inn; pekeren flytter filmen bak vinduet; lyset sveiper over overskriften og lar den stå tent. Teksten i bredden nederst, i lyset.',
+  },
 ];
 
-export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6']];
+export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']];
 
 export function isDir(s: string): s is Dir {
   return DIRS.some((d) => d.key === s);

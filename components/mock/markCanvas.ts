@@ -22,6 +22,21 @@ function fill(ctx: CanvasRenderingContext2D, glyphs: Glyph[], colour: string): v
   }
 }
 
+/** The mark's paths in the canvas's own units, top-left at (x, y), the given width: one for clipping to the letters, one for the accents. */
+export function markPaths(x: number, y: number, width: number): { letters: Path2D; accents: Path2D } {
+  const k = width / VW;
+  const base = new DOMMatrix().translate(x, y).scale(k).translate(-VX, -VY);
+  const join = (glyphs: Glyph[]) => {
+    const p = new Path2D();
+    for (const g of glyphs) {
+      g.path ??= new Path2D(g.d);
+      p.addPath(g.path, base.multiply(new DOMMatrix(g.m)));
+    }
+    return p;
+  };
+  return { letters: join(LETTERS), accents: join(ACCENTS) };
+}
+
 /** Draw the mark with its top-left at (x, y) and the given width, in the canvas's own units. */
 export function drawMark(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, letters: string, accents: string): void {
   const k = width / VW;

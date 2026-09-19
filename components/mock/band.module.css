@@ -1,0 +1,112 @@
+/*
+ * The copy band: the headline left, the paragraph and buttons right, across the width.
+ * Type sizes a step under the live hero's, since the band shares its screen with the
+ * place above it. `data-tone` picks the ink.
+ */
+.band {
+  --ink: var(--color-white);
+  --ink-soft: rgb(255 255 255 / 0.84);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 16px clamp(32px, 5vw, 88px);
+  align-items: start;
+  width: 100%;
+}
+
+.band[data-tone='dark'] {
+  --ink: var(--color-navy);
+  --ink-soft: var(--color-ink);
+}
+
+.title {
+  max-width: 16ch;
+  font-size: clamp(28px, 3.1vw, 46px);
+  line-height: 1.08;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.lede {
+  max-width: 54ch;
+  font-size: clamp(16px, 1.2vw, 18px);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 22px;
+  border-radius: var(--radius-pill);
+  font: 500 15px/1 var(--font-sans);
+  letter-spacing: 0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--dur-s) var(--ease-out), color var(--dur-s) var(--ease-out);
+}
+
+/* On a dark place the navy button is white; on a light one, navy. */
+.work {
+  background: var(--color-white);
+  color: var(--color-navy);
+}
+
+.band[data-tone='dark'] .work {
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+.work:hover {
+  background: var(--color-crimson);
+  color: var(--color-white);
+}
+
+.support {
+  background: var(--color-crimson);
+  color: var(--color-white);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+@media (max-width: 767px) {
+  .band {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .title {
+    max-width: 20ch;
+    font-size: clamp(24px, 6.6vw, 30px);
+  }
+
+  .side {
+    gap: 14px;
+  }
+
+  .lede {
+    font-size: 15px;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-self: stretch;
+  }
+}
