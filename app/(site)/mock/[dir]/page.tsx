@@ -11,20 +11,23 @@ import { DIRS, isDir } from '@/components/mock/dirs';
 import { Flommen } from '@/components/mock/Flommen';
 import { Fortekst } from '@/components/mock/Fortekst';
 import { Gjennom } from '@/components/mock/Gjennom';
+import { Glassmaleriet } from '@/components/mock/Glassmaleriet';
 import { Havbunnen } from '@/components/mock/Havbunnen';
 import { Hjornet } from '@/components/mock/Hjornet';
 import { Kornene } from '@/components/mock/Kornene';
+import { Linsen } from '@/components/mock/Linsen';
 import { Lyset } from '@/components/mock/Lyset';
 import { Mosaikken } from '@/components/mock/Mosaikken';
+import { Papirkuttet } from '@/components/mock/Papirkuttet';
 import { Speilet } from '@/components/mock/Speilet';
 import { getEvents, getPeople, splitEvents, todayISO } from '@/lib/content';
 
 /**
- * The hero and the film nine ways (/mock/1 … 9): the home page as it is, with the hero
+ * The hero and the film twelve ways (/mock/1 … 12): the home page as it is, with the hero
  * replaced by a direction. A tool for one decision, removed once it is made.
  */
 
-const MOCK = { '1': Flommen, '2': Gjennom, '3': Speilet, '4': Fortekst, '5': Hjornet, '6': Kornene, '7': Mosaikken, '8': Havbunnen, '9': Lyset } as const;
+const MOCK = { '1': Flommen, '2': Gjennom, '3': Speilet, '4': Fortekst, '5': Hjornet, '6': Kornene, '7': Mosaikken, '8': Havbunnen, '9': Lyset, '10': Glassmaleriet, '11': Linsen, '12': Papirkuttet } as const;
 
 export const dynamicParams = false;
 

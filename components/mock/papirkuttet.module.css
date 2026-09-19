@@ -1,0 +1,222 @@
+/*
+ * 12 Papirkuttet. White, the first screen. The blade runs round each letter (a draw-on
+ * hairline, pathLength 1, widths in user units), the piece behind it falls once the cut is
+ * closed, the cast comes up under the open windows, and the head prints the band. The
+ * beats, from the first paint: the blade at 300ms + i·420, 500ms each; the piece 500ms
+ * after its blade; the cast at 1.5s; the print at 2.4s.
+ */
+.room {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: calc(100dvh - var(--header-h));
+  padding: clamp(20px, 3vh, 40px) var(--margin) clamp(28px, 4vh, 48px);
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+.scene {
+  display: grid;
+  place-items: center;
+}
+
+.stage {
+  --mark-w: min(56vw, 32vh * 2.419);
+  position: relative;
+  width: var(--mark-w);
+  aspect-ratio: 728.806 / 301.27;
+}
+
+.film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: url(#kutt-letters);
+}
+
+.mark {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* The blade: drawn round the letter, then the hairline the window keeps. */
+.blade {
+  fill: none;
+  stroke: var(--color-navy);
+  stroke-width: 1.6px;
+  stroke-linejoin: round;
+  opacity: 0.6;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: cut 500ms cubic-bezier(0.4, 0, 0.6, 1) both;
+  animation-delay: calc(300ms + var(--i) * 420ms);
+}
+
+@keyframes cut {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.accent {
+  fill: var(--color-crimson);
+}
+
+/* The pieces of paper: one white div per letter, clipped to it, tipping over its top edge. */
+.pieces {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  perspective: 900px;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.piece {
+  position: absolute;
+  inset: 0;
+  background: var(--color-white);
+  transform-origin: 50% 0;
+  animation: fall 900ms cubic-bezier(0.55, 0, 0.85, 0.4) both;
+  animation-delay: calc(800ms + var(--i) * 420ms);
+  will-change: transform, opacity;
+}
+
+@keyframes fall {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: rotateX(-96deg) translateY(160px);
+    opacity: 0;
+  }
+}
+
+/* The film's light on the paper below the open windows. */
+.cast {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 728.806 / 301.27;
+  transform-origin: top center;
+  transform: skewX(-8deg) scale(1.18, 2.6);
+  filter: blur(14px);
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+  animation: up 1200ms var(--ease-out) 1500ms both;
+  pointer-events: none;
+}
+
+@keyframes up {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The print: the band revealed left to right behind a head that passes across it. */
+.print {
+  position: relative;
+  z-index: 1;
+}
+
+.band {
+  clip-path: inset(-8px 100% -8px 0);
+  animation: print 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) 2400ms both;
+}
+
+@keyframes print {
+  to {
+    clip-path: inset(-8px 0 -8px 0);
+  }
+}
+
+.head {
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  left: 0;
+  width: 2px;
+  background: var(--color-navy);
+  opacity: 0;
+  animation: head 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) 2400ms both;
+}
+
+@keyframes head {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+
+  6% {
+    opacity: 0.8;
+  }
+
+  92% {
+    opacity: 0.8;
+  }
+
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .blade,
+  .piece,
+  .cast,
+  .band,
+  .head {
+    animation: none;
+  }
+
+  .blade {
+    stroke-dashoffset: 0;
+  }
+
+  .piece,
+  .head {
+    display: none;
+  }
+
+  .band {
+    clip-path: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .room {
+    padding-bottom: calc(24px + 56px);
+  }
+
+  .stage {
+    --mark-w: 84vw;
+  }
+
+  .blade {
+    stroke-width: 3px;
+  }
+
+  .cast {
+    transform: skewX(-6deg) scale(1.1, 2);
+  }
+}

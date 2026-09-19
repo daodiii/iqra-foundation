@@ -1,5 +1,5 @@
 /** The directions for the hero and the film, shared by the route (server) and the strip (client). */
-export type Dir = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
+export type Dir = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12';
 
 export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
   {
@@ -47,9 +47,24 @@ export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
     name: '9 Lyset',
     note: 'Et mørkt rom. Bokstavene er et vindu i bakveggen; filmen slås på inne i dem, bokstav for bokstav som en projektor som varmes opp, og lyset fra den faller gjennom navnet ned på gulvet. Rommet kjører inn; pekeren flytter filmen bak vinduet; lyset sveiper over overskriften og lar den stå tent. Teksten i bredden nederst, i lyset.',
   },
+  {
+    key: '10',
+    name: '10 Glassmaleriet',
+    note: 'Fra 9, på hvitt: bokstavene er glassmaleri i en hvit vegg. De tennes én etter én ut av det hvite, og filmens farger faller gjennom dem ned på det hvite gulvet som farget lys – og solen flytter seg: idet du kommer ligger lyset langt og lavt, og det reiser seg mens solen stiger; etterpå er pekeren solen. Teksten i bredden, lyset sveiper over overskriften.',
+  },
+  {
+    key: '11',
+    name: '11 Linsen',
+    note: 'Fra 9, på hvitt: bokstavene er tykt glass. Filmen inni bøyes mot kantene, deler seg svakt i farger i randen, og et høylys går over glasset idet du kommer, og følger pekeren etterpå. Lyset gjennom glasset faller på gulvet under. Materialet er det som stopper deg. Teksten i bredden.',
+  },
+  {
+    key: '12',
+    name: '12 Papirkuttet',
+    note: 'Fra 9, på hvitt: navnet skjæres ut av det hvite av en usynlig kniv, bokstav for bokstav, og bitene faller bort og lar vinduene stå igjen med filmen i – og lyset fra den på papiret under. Teksten trykkes av et hode som går over i bredden.',
+  },
 ];
 
-export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']];
+export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['10', '11', '12']];
 
 export function isDir(s: string): s is Dir {
   return DIRS.some((d) => d.key === s);

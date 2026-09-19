@@ -1,0 +1,127 @@
+/*
+ * 11 Linsen. White, the first screen. The DOM film clipped to the letters is the answer
+ * until the glass is live (`data-glass`); then the WebGL canvas paints the letters and the
+ * video only feeds it. The cast below is the film's light on the paper, as in 10, at noon.
+ */
+.room {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: calc(100dvh - var(--header-h));
+  padding: clamp(20px, 3vh, 40px) var(--margin) clamp(28px, 4vh, 48px);
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+.scene {
+  display: grid;
+  place-items: center;
+}
+
+.stage {
+  --mark-w: min(56vw, 32vh * 2.419);
+  position: relative;
+  width: var(--mark-w);
+  aspect-ratio: 728.806 / 301.27;
+}
+
+.film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: url(#linse-letters);
+}
+
+.room[data-glass] .film {
+  visibility: hidden;
+}
+
+.glass {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  animation: up 700ms var(--ease-out) both;
+}
+
+.room[data-glass] .glass {
+  display: block;
+}
+
+.mark {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.accent {
+  fill: var(--color-crimson);
+}
+
+.cast {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 728.806 / 301.27;
+  transform-origin: top center;
+  transform: skewX(-10deg) scale(1.18, 2.6);
+  filter: blur(14px);
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+  animation: up 1200ms var(--ease-out) 900ms both;
+  pointer-events: none;
+}
+
+@keyframes up {
+  from {
+    opacity: 0;
+  }
+}
+
+.band {
+  position: relative;
+  z-index: 1;
+  animation: rise 900ms var(--ease-out) 1900ms both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .glass,
+  .cast,
+  .band {
+    animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .room {
+    padding-bottom: calc(24px + 56px);
+  }
+
+  .stage {
+    --mark-w: 84vw;
+  }
+
+  .cast {
+    transform: skewX(-8deg) scale(1.1, 2);
+  }
+}
