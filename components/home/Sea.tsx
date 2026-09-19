@@ -8,9 +8,11 @@ import { Box } from '@/components/materials/Box';
 import { Logo } from '@/components/site/Logo';
 import { site } from '@/content/site.no';
 import type { InkHandle } from '@/lib/ink';
+import { sentences } from '@/lib/text';
 import type { WaterHandle } from '@/lib/water';
 import { AREA_LOOK, areaFloor, type Area } from './areas';
 import fields from './fields.module.css';
+import { useFit } from './fit';
 import styles from './sea.module.css';
 import { groundAt, LANDED, LEFT, seaAreas, seaAt, settle, STEPS } from './tide';
 
@@ -20,6 +22,9 @@ type Plugin = typeof ScrollTrigger;
 /** The snap is deaf for the first half second of ScrollTrigger's life (lib/gsap.ts has the measurements); the act looks once, after it. */
 const BOOT_SETTLE = 0.6;
 
+/** The longest of the four names: the index is sized by it. */
+const widest = seaAreas.reduce((a, b) => (b.name.length > a.name.length ? b : a));
+
 /** The layer's colours: the area's ground for the veil, and the inks that read on it. */
 function wordVars(area: Area): CSSProperties {
   const look = AREA_LOOK[area.key];
@@ -27,21 +32,42 @@ function wordVars(area: Area): CSSProperties {
 }
 
 /**
- * What every field carries: the name, the brief's text, the guide's logo for its ground;
- * the whole of it the link to its section. The sea stands first under the hero, so each
- * name is an `h2`, a section of the page like Visjon and Om oss after it — an `h3`
- * straight after the `h1` broke the page's heading order (Lighthouse, on the mosaic).
+ * What every field carries — the spread (Oppslaget, chosen 2026-09-19 from six): the left
+ * page the four fields' names down the whole height in the sea's order, the one on the
+ * water lit and the field's heading, the others dimmed — so a visitor sees there are four
+ * stops and which this is; the right page the brief's text, its first sentence as the
+ * statement and its second as the reading; the guide's logo at the foot. The whole of it
+ * the link to its section. The sea stands first under the hero, so each name is an `h2`,
+ * a section of the page like Visjon and Om oss after it — an `h3` straight after the `h1`
+ * broke the page's heading order (Lighthouse, on the mosaic). The names are sized by the
+ * longest («Samfunnsdeltakelse»), fitted to the left page's width.
  */
 function FieldWords({ area }: { area: Area }) {
+  const [first, ...rest] = sentences(area.text);
+  const list = useRef<HTMLOListElement>(null);
+  const longest = useRef<HTMLLIElement>(null);
+  useFit(list, longest, { onto: list, max: 66, maxOfHeight: 0.2 });
   return (
     <Link href={area.href} prefetch={false} className={styles.cell} aria-labelledby={`felt-${area.key}`}>
-      <h2 id={`felt-${area.key}`} className={styles.name}>{area.name}</h2>
-      <div className={styles.foot}>
-        <p className={styles.text}>{area.text}</p>
-        <span className={styles.logo}>
-          <Logo ground={area.ground} height={28} decorative />
-        </span>
+      <ol ref={list} className={styles.index}>
+        {seaAreas.map((a) => {
+          const ref = a.key === widest.key ? longest : undefined;
+          return a.key === area.key ? (
+            <li key={a.key} ref={ref} className={styles.item} data-here>
+              <h2 id={`felt-${area.key}`} className={styles.name}>{a.name}</h2>
+            </li>
+          ) : (
+            <li key={a.key} ref={ref} className={styles.item} aria-hidden>{a.name}</li>
+          );
+        })}
+      </ol>
+      <div className={styles.page}>
+        <p className={styles.say}>{first}</p>
+        <p className={styles.text}>{rest.join(' ')}</p>
       </div>
+      <span className={styles.logo}>
+        <Logo ground={area.ground} height={28} decorative />
+      </span>
     </Link>
   );
 }

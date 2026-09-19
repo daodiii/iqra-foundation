@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import { getEvents, splitEvents, todayISO } from '@/lib/content';
+import { sentences } from '@/lib/text';
 import Home from './page';
 
 describe('Hjem', () => {
@@ -17,7 +18,8 @@ describe('Hjem', () => {
       const link = screen.getByRole('link', { name: a.name });
       expect(link).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
       expect(areas).toContainElement(link);
-      expect(screen.getByText(a.text)).toBeInTheDocument();
+      // the text as its two sentences: the statement and the reading (Sea.tsx)
+      for (const part of sentences(a.text)) expect(screen.getByText(part)).toBeInTheDocument();
     }
 
     for (const [id, label, text] of [['visjon', site.pages.home.visionLabel, brief.vision], ['misjon', site.pages.home.missionLabel, brief.mission]] as const) {

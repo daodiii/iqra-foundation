@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
+import { sentences } from '@/lib/text';
 import { Sea } from './Sea';
 import { seaAreas } from './tide';
 
@@ -9,7 +10,7 @@ const realMatchMedia = window.matchMedia;
 afterEach(() => { window.matchMedia = realMatchMedia; });
 
 describe('Havet', () => {
-  test('one sea of water under the region’s label; the four fields’ words on it in the sea’s order (navy, burgundy, turquoise, white), each one link to its section; no numbers', () => {
+  test('one sea of water under the region’s label; the four fields’ words on it in the sea’s order (navy, burgundy, turquoise, white), each a spread and one link to its section; no numbers', () => {
     const { container } = render(<Sea />);
     const region = screen.getByRole('region', { name: site.pages.home.areasLabel });
     expect(region).toHaveAttribute('data-fields');
@@ -29,8 +30,19 @@ describe('Havet', () => {
       expect(waters[0]).toContainElement(word);
       expect(within(word).getByRole('link', { name: a.name })).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
       // first under the hero, so a section of the page: an h2, never an h3 straight after the h1
-      expect(within(word).getByRole('heading', { level: 2, name: a.name })).toBeInTheDocument();
-      expect(within(word).getByText(a.text)).toBeInTheDocument();
+      const heading = within(word).getByRole('heading', { level: 2, name: a.name });
+      expect(heading).toBeInTheDocument();
+      // the spread: the four names down the left page in the sea's order, this one lit and the heading, the others words hidden from the reader
+      const items = [...word.querySelectorAll('ol > li')];
+      expect(items.map((li) => li.textContent)).toEqual(seaAreas.map((x) => x.name));
+      expect(items[k]).toHaveAttribute('data-here');
+      expect(items[k]).toContainElement(heading);
+      items.filter((_, i) => i !== k).forEach((li) => { expect(li).toHaveAttribute('aria-hidden'); expect(li).not.toHaveAttribute('data-here'); });
+      expect(within(word).getAllByRole('heading')).toHaveLength(1);
+      // the text: the first sentence the statement, the second the reading, nothing lost
+      const [statement, reading] = sentences(a.text);
+      expect(within(word).getByText(statement)).toBeInTheDocument();
+      expect(within(word).getByText(reading)).toBeInTheDocument();
       // the guide's logo for the ground, decorative; the veil is the area's own colour
       expect(word.querySelectorAll('img[alt=""]')).toHaveLength(1);
       expect(word.style.getPropertyValue('--ground')).toBe(`var(--color-area-${a.key})`);
