@@ -6,7 +6,9 @@ import styles from '@/components/home/scene.module.css';
 import { Sea } from '@/components/home/Sea';
 import { Seal } from '@/components/home/Seal';
 import { People, Support } from '@/components/home/Sections';
+import { Avdukingen } from '@/components/mock/Avdukingen';
 import { Bar } from '@/components/mock/Bar';
+import { Bassenget } from '@/components/mock/Bassenget';
 import { DIRS, isDir } from '@/components/mock/dirs';
 import { Flommen } from '@/components/mock/Flommen';
 import { Fortekst } from '@/components/mock/Fortekst';
@@ -22,6 +24,7 @@ import { Lyset } from '@/components/mock/Lyset';
 import { Mosaikken } from '@/components/mock/Mosaikken';
 import { Muren } from '@/components/mock/Muren';
 import { Papirkuttet } from '@/components/mock/Papirkuttet';
+import { Relieffet } from '@/components/mock/Relieffet';
 import { Rommet } from '@/components/mock/Rommet';
 import { Speilet } from '@/components/mock/Speilet';
 import { Straalene } from '@/components/mock/Straalene';
@@ -29,11 +32,11 @@ import { Teppet } from '@/components/mock/Teppet';
 import { getEvents, getPeople, splitEvents, todayISO } from '@/lib/content';
 
 /**
- * The hero and the film eighteen ways (/mock/1 … 18): the home page as it is, with the hero
+ * The hero and the film twenty-one ways (/mock/1 … 21): the home page as it is, with the hero
  * replaced by a direction. A tool for one decision, removed once it is made.
  */
 
-const MOCK = { '1': Flommen, '2': Gjennom, '3': Speilet, '4': Fortekst, '5': Hjornet, '6': Kornene, '7': Mosaikken, '8': Havbunnen, '9': Lyset, '10': Glassmaleriet, '11': Linsen, '12': Papirkuttet, '13': Straalene, '14': Rommet, '15': Teppet, '16': Galleriet, '17': Linet, '18': Muren } as const;
+const MOCK = { '1': Flommen, '2': Gjennom, '3': Speilet, '4': Fortekst, '5': Hjornet, '6': Kornene, '7': Mosaikken, '8': Havbunnen, '9': Lyset, '10': Glassmaleriet, '11': Linsen, '12': Papirkuttet, '13': Straalene, '14': Rommet, '15': Teppet, '16': Galleriet, '17': Linet, '18': Muren, '19': Relieffet, '20': Avdukingen, '21': Bassenget } as const;
 
 export const dynamicParams = false;
 

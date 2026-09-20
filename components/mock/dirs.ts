@@ -1,5 +1,5 @@
 /** The directions for the hero and the film, shared by the route (server) and the strip (client). */
-export type Dir = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12' | '13' | '14' | '15' | '16' | '17' | '18';
+export type Dir = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12' | '13' | '14' | '15' | '16' | '17' | '18' | '19' | '20' | '21';
 
 export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
   {
@@ -92,9 +92,24 @@ export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
     name: '18 Muren',
     note: 'På hvitt: veggen navnet er skåret gjennom, er tykk. Filmen står bakerst i åpningen, og fra alle andre steder enn rett forfra ser du innsiden av snittet – i skygge ved kanten, opplyst av filmens eget lys innerst. Idet du kommer, står du langt til venstre og går rundt til du står rett foran; etterpå er pekeren øyet. Lyset på gulvet som i 10. Teksten i bredden nederst.',
   },
+  {
+    key: '19',
+    name: '19 Relieffet',
+    note: 'På hvitt: navnet er skåret inn i en hvit pussvegg, og det er lyset som viser det. Idet du kommer, står solen langt til venstre og lavt og stryker over veggen: kornet i pussen fanger den, hver kant i snittet lyser, hvert av rommene ligger i sin egen skygge – navnet lest som skygge, hvitt på hvitt. Så kommer solen rundt og opp, skyggene kortner, og filmen tennes i bunnen av snittet. Etterpå er pekeren solen. Lyset på gulvet som i 10. Teksten i bredden nederst.',
+  },
+  {
+    key: '20',
+    name: '20 Avdukingen',
+    note: 'På hvitt: navnet står ut fra veggen som bokstaver med filmen i forsidene – og idet du kommer, ligger et hvitt klede over det. Bokstavene leses som form gjennom stoffet, kledet puster. Så trekkes det av, opp og til høyre, løfter seg i kanten og samler folder, og skyggen dets går over det som avdekkes; bokstavene står hvite i hvitt med sider og skygge på veggen, filmen tent i forsidene, lyset på gulvet. Teksten kommer når kledet er borte.',
+  },
+  {
+    key: '21',
+    name: '21 Bassenget',
+    note: 'På hvitt: en gårdsplass. Navnet er et vindu i den hvite veggen med filmen i, og ved veggens fot ligger et stille basseng over hele bredden, der navnet speiler seg – filmen beveger seg i speilbildet, og overflaten bøyer det. Idet du kommer, tennes rutene én og én, og speilbildet med dem; én dråpe faller, og ringene går gjennom navnet. Pekeren lager kjølvann; knappene slipper en stein. Teksten står på det nære vannet.',
+  },
 ];
 
-export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['10', '11', '12'], ['13', '14', '15'], ['16', '17', '18']];
+export const ROUNDS: readonly (readonly Dir[])[] = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['10', '11', '12'], ['13', '14', '15'], ['16', '17', '18'], ['19', '20', '21']];
 
 export function isDir(s: string): s is Dir {
   return DIRS.some((d) => d.key === s);

@@ -28,8 +28,8 @@ export function lampCover(t: number, i: number, base: number): number {
   return 0;
 }
 
-/** Draws the window into `c` at `width` px; `base` is when the lamps start (−Infinity: all lit). */
-export function makeWindow(c: HTMLCanvasElement, width: number, crimson: string, base: number) {
+/** Draws the window into `c` at `width` px; `base` is when the lamps start (−Infinity: all lit). `erase`: an unlit letter is cleared rather than covered dark — for a white wall, where nothing is there until it lights. */
+export function makeWindow(c: HTMLCanvasElement, width: number, crimson: string, base: number, erase = false) {
   c.width = width;
   c.height = Math.round(width / MARK_ASPECT);
   const ctx = c.getContext('2d');
@@ -48,6 +48,7 @@ export function makeWindow(c: HTMLCanvasElement, width: number, crimson: string,
     ctx.drawImage(frame.src, sx, sy, sw, sh, (W - W * z) / 2 + shift[0], (H - H * z) / 2 + shift[1], W * z, H * z);
     ctx.restore();
     ctx.fillStyle = '#000';
+    if (erase) ctx.globalCompositeOperation = 'destination-out';
     letters.forEach((p, i) => {
       const a = lampCover(t, i, base);
       if (a <= 0) return;
@@ -55,6 +56,7 @@ export function makeWindow(c: HTMLCanvasElement, width: number, crimson: string,
       ctx.fill(p);
     });
     ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = crimson;
     ctx.fill(paths.accents);
   };
