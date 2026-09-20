@@ -1,138 +1,152 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import { pickSource } from '@/lib/media';
+import { frameOf, makeCast, token } from './cast';
 import styles from './hero.module.css';
-import { MARK_ACCENTS, MARK_LETTERS, MARK_VIEWBOX } from './mark';
+import { LOCKUP_VIEWBOX, LOCKUP_WORD } from './lockup';
+import { MARK_ACCENTS, MARK_LETTERS } from './mark';
 
 const POSTER = '/media/iqra-poster.jpg';
+const [VX, VY, VW, VH] = LOCKUP_VIEWBOX.split(' ').map(Number);
+/** A path's transform into the box's own units (0..1 both ways), for a clip in `objectBoundingBox`. */
+const box = (t: string) => `scale(${1 / VW} ${1 / VH}) translate(${-VX} ${-VY}) ${t}`;
 
 /**
- * The mask's reach, in the mark's own units: the viewBox plus a hair, so the white rect
- * covers the film to the stage's edge and no further — a rect that overhung the stage
- * painted over the headline below it, because a positioned element paints above the copy
- * that follows in flow. The stage clips what little overhangs.
+ * The fourteen letters the blade cuts, in the art's order: the name's four, then the
+ * word's ten. `i` is each one's place in the blade's order — the name is written i, Q, R,
+ * a though the art lists a, i, Q, R — and the word's ten are `small`: the glyphs are em
+ * squares under a 90-unit matrix, so their blade is the name's over 90 and their piece
+ * falls a shorter way from a lower hinge.
  */
-const [VX, VY, VW, VH] = MARK_VIEWBOX.split(' ').map(Number);
-const BLEED = 2;
-const COVER = { x: VX - BLEED, y: VY - BLEED, width: VW + 2 * BLEED, height: VH + 2 * BLEED };
+const WRITE = [3, 0, 1, 2];
+const CUTS = [
+  ...MARK_LETTERS.map((p, k) => ({ ...p, i: WRITE[k], small: false })),
+  ...LOCKUP_WORD.map((p, k) => ({ ...p, i: k, small: true })),
+];
 
 /**
- * The hero: the film inside the mark.
+ * The hero: the lockup cut out of the paper, the film in the letters.
  *
- * The guide's «iQRa» stands centred on the page's white, and the four navy letters are a
- * window the hero film plays through — an SVG mask over the video: a white rect with the
- * letters cut out of it, so the film shows only inside them. The dot of the i and the tail
- * out of the Q stay solid crimson on top: they are the accent, not windows. A hairline in
- * navy follows the letters' edge, so the name still reads when the film runs light (the
- * plain at Arafat is nearly white). Under the mark the headline takes over from
- * «Foundation»: the brief's own sentence, its paragraph, and the two buttons.
- *
- * First, though, the film takes the whole band: a second `<video>` laid over the mark and
- * the copy, edge to edge under the header, plays the montage through once. When its loop
- * wraps, the letters' film starts on the same frame and the take-over fades out over it
- * (`--film-fade`), so the film is seen to go on inside the name; a moment after the fade
- * the take-over is unmounted and its decoder freed. Two videos are never decoding but for
- * that fade — the letters' film is loaded at mount and waits for the hand-over.
+ * The first screen is white paper. The guide's lockup — «iQRa» with FOUNDATION under it —
+ * is not printed on it but cut out of it: a blade (a navy hairline drawn round each
+ * letter in turn, pathLength 1) runs the name in reading order and then the word, and
+ * behind each cut a piece of the white — a div clipped to that one letter — tips over on
+ * its top edge and falls once its outline is closed, leaving a window with the film in
+ * it. The film is one `<video>` under everything, clipped to all fourteen letters from
+ * the first frame, so nothing of it shows until its piece of paper has gone. Under the
+ * open windows the film's light falls on the paper (`cast.ts`, multiplied and blurred),
+ * and the copy stands in it: the brief's paragraph as a wide statement in the headings'
+ * face and the two buttons, printed left to right by a head that passes across them. The
+ * lockup is the heading — the h1 holds the art, named for the logo; the brief's headline
+ * is not on the page. The beats are the stylesheet's, two seconds from the first paint.
  *
  * The film's source is picked after hydration (`pickSource`: 720p on a phone, WebM where
- * it plays) and never before, so with JavaScript off the `<video>` has no source and shows
- * its poster in the letters, and the take-over is not shown at all (the stylesheet's
- * `scripting: none`); under reduced motion the same — the poster stands, and nothing
- * plays. Autoplay refused: the take-over goes and the poster stands in the letters. Nothing
- * pins and nothing scrubs: this is the name carrying the film, not the film carrying the
- * name — after the film has had the band once.
+ * it plays) and never before, so with JavaScript off the `<video>` has no source and its
+ * poster stands in the letters; under reduced motion the same, and no cast is made. In
+ * both the stylesheet opens the windows at once (no blades, no pieces) and prints the
+ * copy at once. Autoplay refused: the poster stands in the letters and the cast is drawn
+ * from it. Nothing pins and nothing scrubs.
  */
-type Film = 'over' | 'inside' | 'done';
-
-/** A hair over the stylesheet's `--film-fade`, so the take-over is unmounted only once it has gone. */
-const FADE_MS = 1000;
-
 export function Hero() {
   // The poster fills the letters until the film has decoded, so it is asked for early —
   // here, on the one element that wants it, rather than in the head of every route.
   ReactDOM.preload(POSTER, { as: 'image' });
   const video = useRef<HTMLVideoElement>(null);
-  const over = useRef<HTMLVideoElement>(null);
-  const [film, setFilm] = useState<Film>('over');
+  const cast = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const v = video.current;
-    const o = over.current;
-    if (!v || !o) return;
-    // Reduced motion: neither video gets a source; the stylesheet keeps the take-over off.
+    const c = cast.current;
+    if (!v || !c) return;
+    // Reduced motion: no source, no cast; the stylesheet has already opened the windows.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const src = pickSource({
+    v.src = pickSource({
       narrow: window.matchMedia('(max-width: 767px)').matches,
       webm: v.canPlayType('video/webm; codecs="vp9"') !== '',
     });
-    for (const el of [v, o]) {
-      el.src = src;
-      el.muted = true;
-      el.load();
-    }
-    // The take-over's loop wrapping is the cue: `ended` never fires on a looping video, so
-    // the clock stepping back is what marks the montage having run once.
-    let last = 0;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const onTime = () => {
-      if (o.currentTime < last - 1) {
-        o.removeEventListener('timeupdate', onTime);
-        Promise.resolve(v.play()).catch(() => {});
-        setFilm('inside');
-        timer = setTimeout(() => setFilm('done'), FADE_MS);
-      }
-      last = o.currentTime;
+    v.muted = true;
+    v.load();
+    // Autoplay refused: the poster stands in the letters, and `frameOf` gives the cast the poster too.
+    Promise.resolve(v.play()).catch(() => {});
+    const draw = makeCast(c, token('--color-crimson', '#ab5261'));
+    const poster = new Image();
+    poster.src = POSTER;
+    let raf = 0;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      draw(frameOf(v, poster));
     };
-    o.addEventListener('timeupdate', onTime);
-    // Autoplay refused: no take-over, the poster stays in the letters, and nothing else changes.
-    Promise.resolve(o.play()).catch(() => setFilm('done'));
+    raf = requestAnimationFrame(tick);
     return () => {
-      o.removeEventListener('timeupdate', onTime);
-      clearTimeout(timer);
-      o.pause();
+      cancelAnimationFrame(raf);
       v.pause();
     };
   }, []);
 
   return (
-    <section className={styles.hero} data-film={film} aria-labelledby="hovedtekst">
+    <section className={styles.hero} aria-labelledby="hovedtekst">
       <div className={styles.stage}>
-        <video ref={video} className={styles.film} poster={POSTER} preload="metadata" muted loop playsInline aria-hidden="true" />
-        <svg className={styles.mark} viewBox={MARK_VIEWBOX} role="img" aria-label={site.logoAlt}>
-          <defs>
-            {/* Luminance: white shows the rect, black cuts the letters out of it. Not colours on the page. */}
-            <mask id="mark-letters" maskUnits="userSpaceOnUse" {...COVER}>
-              <rect {...COVER} fill="white" />
-              {MARK_LETTERS.map((p, i) => (
-                <path key={i} transform={p.transform} d={p.d} fill="black" />
+        <video ref={video} className={styles.film} style={{ clipPath: 'url(#hero-letters)' }} poster={POSTER} preload="metadata" muted loop playsInline aria-hidden="true" />
+        <h1 id="hovedtekst" className={styles.mark}>
+          <svg viewBox={LOCKUP_VIEWBOX} role="img" aria-label={site.logoAlt}>
+            <defs>
+              {/* All fourteen for the film; each on its own for its piece of paper. In the box's units: the video and the pieces are the stage's size, as the art is. */}
+              <clipPath id="hero-letters" clipPathUnits="objectBoundingBox">
+                {CUTS.map((p, k) => (
+                  <path key={k} transform={box(p.transform)} d={p.d} />
+                ))}
+              </clipPath>
+              {CUTS.map((p, k) => (
+                <clipPath key={k} id={`hero-cut-${k}`} clipPathUnits="objectBoundingBox">
+                  <path transform={box(p.transform)} d={p.d} />
+                </clipPath>
               ))}
-            </mask>
-          </defs>
-          <rect className={styles.page} {...COVER} mask="url(#mark-letters)" />
-          {MARK_LETTERS.map((p, i) => (
-            <path key={i} className={styles.edge} transform={p.transform} d={p.d} vectorEffect="non-scaling-stroke" />
+            </defs>
+            {CUTS.map((p, k) => (
+              <path
+                key={k}
+                className={styles.blade}
+                style={{ '--i': p.i } as React.CSSProperties}
+                transform={p.transform}
+                d={p.d}
+                pathLength={1}
+                data-blade
+                data-small={p.small ? '' : undefined}
+              />
+            ))}
+            {MARK_ACCENTS.map((p, i) => (
+              <path key={i} className={styles.accent} transform={p.transform} d={p.d} data-accent />
+            ))}
+          </svg>
+        </h1>
+        <div className={styles.pieces} aria-hidden="true">
+          {CUTS.map((p, k) => (
+            <div
+              key={k}
+              className={styles.piece}
+              style={{ clipPath: `url(#hero-cut-${k})`, '--i': p.i } as React.CSSProperties}
+              data-piece
+              data-small={p.small ? '' : undefined}
+            />
           ))}
-          {MARK_ACCENTS.map((p, i) => (
-            <path key={i} className={styles.accent} transform={p.transform} d={p.d} data-accent />
-          ))}
-        </svg>
+        </div>
+        <canvas ref={cast} className={styles.cast} data-cast aria-hidden="true" />
       </div>
-      <div className={styles.copy}>
-        <h1 id="hovedtekst" className={styles.title}>{brief.home.headline}</h1>
-        <p className={styles.lede}>{brief.home.paragraph}</p>
-        <p className={styles.buttons}>
-          <Link href={site.cta.work.href} prefetch={false} className={styles.work}>{site.cta.work.label}</Link>
-          <Link href={site.cta.support.href} prefetch={false} className={styles.support}>{site.cta.support.label}</Link>
-        </p>
+      <div className={styles.print}>
+        <div className={styles.copy}>
+          <p className={styles.lede}>{brief.home.paragraph}</p>
+          <p className={styles.buttons}>
+            <Link href={site.cta.work.href} prefetch={false} className={styles.work}>{site.cta.work.label}</Link>
+            <Link href={site.cta.support.href} prefetch={false} className={styles.support}>{site.cta.support.label}</Link>
+          </p>
+        </div>
+        <span className={styles.head} aria-hidden="true" />
       </div>
-      {film !== 'done' && (
-        <video ref={over} className={styles.over} data-over poster={POSTER} preload="metadata" muted loop playsInline aria-hidden="true" />
-      )}
     </section>
   );
 }

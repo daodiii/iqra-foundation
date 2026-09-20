@@ -17,7 +17,10 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   await expect(page).toHaveTitle(site.name);
   expect(await page.locator('html').getAttribute('lang')).toBe('nb');
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', brief.home.paragraph);
-  await expect(page.locator('h1')).toHaveText(brief.home.headline);
+  // The lockup is the heading: the one h1 holds the art, named for the logo; the brief's headline is not on the page.
+  await expect(page.locator('h1')).toHaveAccessibleName(site.logoAlt);
+  await expect(page.locator('h1').getByRole('img', { name: site.logoAlt })).toBeVisible();
+  await expect(page.getByText(brief.home.headline)).toHaveCount(0);
   await expect(page.getByText(brief.home.paragraph, { exact: true })).toBeVisible();
   const main = page.getByRole('main');
   await expect(main.getByRole('link', { name: site.cta.work.label })).toHaveAttribute('href', site.cta.work.href);
