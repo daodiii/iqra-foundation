@@ -1,0 +1,178 @@
+/*
+ * Menneskene bak: the title and the paragraph on white, and the prints on the table under
+ * them. The row is the layout; `--open` (People.tsx, 0 the pile, 1 the row) moves each
+ * print from the middle slot, where the pile lies, to its own — the first print on top,
+ * each a little lower and a little turned — so a covered print is only translated, never
+ * laid out anywhere else. On a phone the pile lies at the first slot and spreads down.
+ */
+
+.section {
+  padding: 72px var(--box-inset) 24px;
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+/* ----- the head ----- */
+
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  column-gap: clamp(32px, 5vw, 96px);
+  align-items: end;
+}
+
+.title {
+  font-size: clamp(36px, 4.6vw, 64px);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  max-width: 12ch;
+}
+
+.text {
+  margin: 0;
+  max-width: 58ch;
+  font-family: var(--font-text);
+  font-size: clamp(16px, 1.25vw, 19px);
+  line-height: 1.55;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.empty {
+  margin: 14px 0 0;
+  color: var(--color-ink-soft);
+}
+
+/* ----- the table ----- */
+
+.table {
+  --gap: clamp(20px, 3vw, 40px);
+  --open: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr));
+  gap: var(--gap);
+  margin-top: clamp(32px, 5vh, 48px);
+}
+
+.print {
+  position: relative;
+  z-index: var(--z, 1);
+  min-width: 0;
+  overflow: hidden;
+  background: var(--color-white);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px rgb(44 57 75 / 0.05),
+    0 18px 48px rgb(44 57 75 / 0.13);
+  transform:
+    translate(calc(var(--k) * -1 * (100% + var(--gap)) * (1 - var(--open))), calc(var(--j) * 6px * (1 - var(--open))))
+    rotate(calc(var(--k) * 2.8deg * (1 - var(--open))));
+  will-change: transform;
+}
+
+.photo {
+  height: min(42vh, 390px);
+  overflow: hidden;
+  background: var(--color-light);
+}
+
+.words {
+  padding: 16px 18px 20px;
+}
+
+.name {
+  font-size: 22px;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--color-navy);
+}
+
+.role {
+  margin: 5px 0 0;
+  font: 500 13px/1.4 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-ink-soft);
+}
+
+.bio {
+  margin: 12px 0 0;
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+/* ----- the picture: a photograph, or the bust that stands for one, filling the print's picture ----- */
+
+.picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bust {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: var(--color-navy);
+}
+
+.art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.note {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  white-space: nowrap;
+  color: currentColor;
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table {
+    --open: 1;
+  }
+}
+
+/* ----- a phone: the head in one column, the prints in one, the pile at the top spreading down ----- */
+
+@media (max-width: 899px) {
+  .section {
+    padding-top: 56px;
+  }
+
+  .head {
+    grid-template-columns: 1fr;
+    row-gap: 16px;
+  }
+
+  .title {
+    font-size: 36px;
+  }
+
+  .table {
+    grid-template-columns: 1fr;
+    --gap: 18px;
+  }
+
+  .print {
+    transform:
+      translateY(calc(var(--j) * -1 * (100% + var(--gap)) * (1 - var(--open)) + var(--j) * 8px * (1 - var(--open))))
+      rotate(calc(var(--k) * 2.2deg * (1 - var(--open))));
+  }
+
+  .photo {
+    height: auto;
+    aspect-ratio: 4 / 5;
+  }
+}

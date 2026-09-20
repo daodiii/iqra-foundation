@@ -1,8 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { SEATS } from '@/components/home/People';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
-import { getEvents, splitEvents, todayISO } from '@/lib/content';
+import { getEvents, getPeople, splitEvents, todayISO } from '@/lib/content';
 import { sentences } from '@/lib/text';
 import Home from './page';
 
@@ -71,7 +72,10 @@ describe('Hjem', () => {
     const peopleTitle = within(people).getByRole('heading', { level: 2, name: brief.people.title });
     expect(people).toHaveAttribute('aria-labelledby', peopleTitle.id);
     expect(people).toHaveTextContent(brief.people.paragraph);
-    expect(people).toHaveTextContent(t.people.empty);
+    // The page renders the real collection: the people as prints on the table while there are any, the honest line while not.
+    const seated = getPeople().slice(0, SEATS);
+    expect([...people.querySelectorAll('article h3')].map((h) => h.textContent)).toEqual(seated.map((p) => p.name));
+    if (!seated.length) expect(people).toHaveTextContent(t.people.empty);
     expect(within(people).queryAllByRole('link')).toHaveLength(0);
 
     const support = container.querySelector('section#stott-oss') as HTMLElement;

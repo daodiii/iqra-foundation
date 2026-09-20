@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
-import { getEvents, splitEvents, todayISO } from '../lib/content';
+import { getEvents, getPeople, splitEvents, todayISO } from '../lib/content';
 import { sentences } from '../lib/text';
 
 /**
@@ -58,7 +58,10 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   const { upcoming } = splitEvents(getEvents(), todayISO());
   if (upcoming.length) await expect(main.locator('section#arrangementer h3').first()).toHaveText(upcoming[0].title);
   else await expect(main.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeAttached();
-  await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeAttached();
+  // the people as prints on the table while the collection has any (the first three, People.tsx's SEATS), the honest line while not
+  const seated = getPeople().slice(0, 3);
+  expect(await main.locator('section#menneskene-bak article h3').allTextContents()).toEqual(seated.map((p) => p.name));
+  if (!seated.length) await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeAttached();
   // nothing of the thread
   await expect(main.locator('canvas[data-thread-canvas]')).toHaveCount(0);
   // the act: a jump 0.4 of a step into the first tide settles forward to the second field —
@@ -153,12 +156,14 @@ test.describe('the collections are honest while empty', () => {
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', brief.resources);
     await expect(page.getByText(site.pages.resources.empty, { exact: true })).toBeVisible();
   });
-  test('menneskene bak: the board paragraph now, the empty line under it', async ({ page }) => {
+  test('menneskene bak: the board paragraph, then everyone in the collection, or the empty line', async ({ page }) => {
     await page.goto('/menneskene-bak');
     await expect(page).toHaveTitle(T(brief.people.title));
     await expect(page.locator('h1')).toHaveText(brief.people.title);
     await expect(page.getByText(brief.people.paragraph, { exact: true })).toBeVisible();
-    await expect(page.getByText(site.pages.people.empty, { exact: true })).toBeVisible();
+    const people = getPeople();
+    expect(await page.getByRole('main').locator('h3').allTextContents()).toEqual(people.map((p) => p.name));
+    if (!people.length) await expect(page.getByText(site.pages.people.empty, { exact: true })).toBeVisible();
   });
   test('styringsdokumenter', async ({ page }) => {
     await page.goto('/styringsdokumenter');
