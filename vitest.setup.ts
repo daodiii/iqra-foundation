@@ -55,7 +55,12 @@ HTMLCanvasElement.prototype.getContext = vi.fn((type: string) =>
 // Goes with the context stub above: jsdom has no Path2D either. The tree collects each
 // depth of branches into one so the whole depth casts a single blurred stroke, and the
 // scene closes the arch into one to clip the sky to it.
-class Path2DStub { moveTo() {} lineTo() {} arc() {} closePath() {} }
+class Path2DStub { moveTo() {} lineTo() {} arc() {} closePath() {} addPath() {} }
 Object.defineProperty(window, 'Path2D', { writable: true, value: Path2DStub });
+
+// Nor DOMMatrix: the hero's cast places each glyph of the lockup into one Path2D by a
+// matrix (`addPath` above), so both are inert here — the geometry is never rasterised.
+class DOMMatrixStub { translate() { return this; } scale() { return this; } multiply() { return this; } }
+Object.defineProperty(window, 'DOMMatrix', { writable: true, value: DOMMatrixStub });
 
 Object.defineProperty(document, 'fonts', { value: { ready: Promise.resolve(), load: () => Promise.resolve([]) } });

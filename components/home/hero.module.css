@@ -1,34 +1,35 @@
 /*
- * The hero band: the mark with the film in it, centred on the page's white, and the
- * brief's headline under it where «Foundation» would stand. About 78vh on a desktop and
- * 70vh on a phone, never under 560px; the content sets the height where it needs more.
+ * The hero: white paper, the first screen. The lockup (the name with FOUNDATION under
+ * it) above, the copy centred under it in the film's light. The blade runs round each
+ * letter (a draw-on hairline, pathLength 1, widths in user units — the word's glyphs are
+ * em squares under a 90-unit matrix, so their width is the name's over 90), the piece
+ * behind it falls once the cut is closed, the cast comes up under the open windows, and
+ * the head prints the copy. The beats, from the first paint: the name's blades at 150ms +
+ * i·190, 230ms each, their pieces 230ms after; the word's blades from 850ms at i·45,
+ * 110ms each, their pieces 125ms after; the cast at 850ms; the print at 1.45s — two
+ * seconds in all (the mock's four, halved at the owner's word).
  */
 .hero {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(24px, 3.6vh, 40px);
-  min-height: max(560px, 78vh);
-  padding: clamp(20px, 3vh, 36px) var(--margin) clamp(32px, 5vh, 56px);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  row-gap: clamp(28px, 7vh, 84px);
+  min-height: calc(100dvh - var(--header-h));
+  padding: clamp(20px, 3vh, 40px) var(--margin) clamp(28px, 4vh, 48px);
   background: var(--color-white);
   overflow: hidden;
 }
 
-/*
- * The mark's box: about 62vw on a desktop, held back on a short screen so the headline
- * and the buttons stay on the first screen with it. The aspect is the art's own viewBox.
- */
+/* The lockup's box: about 54vw on a desktop, held back on a short screen. The aspect is the lockup's viewBox. */
 .stage {
-  --mark-w: min(62vw, 36vh * 2.419);
+  --mark-w: min(54vw, 36vh * 1.822);
   position: relative;
   width: var(--mark-w);
-  aspect-ratio: 728.806 / 301.27;
-  /* The mask's rect bleeds a hair past the box; nothing of it may reach the copy below. */
-  overflow: hidden;
+  aspect-ratio: 728.806 / 400;
 }
 
+/* The film, under everything, clipped to the fourteen letters (inline, to the SVG's clip). */
 .film {
   position: absolute;
   inset: 0;
@@ -37,62 +38,172 @@
   object-fit: cover;
 }
 
-/* The mask is the page's white with the letters cut out, the size of the box and a hair over. */
+/* The heading is the art: the h1 holds the SVG, the stage's size, over the pieces. */
 .mark {
   position: absolute;
   inset: 0;
+  margin: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.mark svg {
   display: block;
   width: 100%;
   height: 100%;
   overflow: visible;
 }
 
-.page {
-  fill: var(--color-white);
-}
-
-/* The pen's hairline round each letter, one device pixel whatever the size: the name reads when the film runs light. */
-.edge {
+/* The blade: drawn round the letter, then the hairline the window keeps. */
+.blade {
   fill: none;
   stroke: var(--color-navy);
-  stroke-width: 1px;
+  stroke-width: 1.6px;
   stroke-linejoin: round;
-  opacity: 0.55;
+  opacity: 0.6;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: cut 230ms cubic-bezier(0.4, 0, 0.6, 1) both;
+  animation-delay: calc(150ms + var(--i) * 190ms);
+}
+
+/* The word's ten, small and quick, after the name. */
+.blade[data-small] {
+  stroke-width: 0.0178px;
+  animation-duration: 110ms;
+  animation-delay: calc(850ms + var(--i) * 45ms);
+}
+
+@keyframes cut {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .accent {
   fill: var(--color-crimson);
 }
 
+/* The pieces of paper: one white div per letter, clipped to it, tipping over its top edge. */
+.pieces {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  perspective: 900px;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.piece {
+  position: absolute;
+  inset: 0;
+  background: var(--color-white);
+  transform-origin: 50% 0;
+  animation: fall 450ms cubic-bezier(0.55, 0, 0.85, 0.4) both;
+  animation-delay: calc(380ms + var(--i) * 190ms);
+  will-change: transform, opacity;
+}
+
+/* The word's pieces hinge where the word is, and fall a shorter way. */
+.piece[data-small] {
+  transform-origin: 50% 82%;
+  animation: fallSmall 350ms cubic-bezier(0.55, 0, 0.85, 0.4) both;
+  animation-delay: calc(975ms + var(--i) * 45ms);
+}
+
+@keyframes fall {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: rotateX(-96deg) translateY(160px);
+    opacity: 0;
+  }
+}
+
+@keyframes fallSmall {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: rotateX(-96deg) translateY(60px);
+    opacity: 0;
+  }
+}
+
+/* The film's light on the paper below the open windows — the copy stands in it. */
+.cast {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 728.806 / 400;
+  transform-origin: top center;
+  transform: skewX(-8deg) scale(1.18, 2);
+  filter: blur(14px);
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+  animation: up 600ms var(--ease-out) 850ms both;
+  pointer-events: none;
+}
+
+@keyframes up {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The print: the copy revealed left to right behind a head that passes across it. */
+.print {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 78vw, 1120px);
+}
+
+/* The statement: across the width under the lockup, in the headings' face, navy, balanced. */
 .copy {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  max-width: 780px;
+  gap: 34px;
+  width: 100%;
   text-align: center;
-}
-
-.title {
-  max-width: 18ch;
-  font-size: var(--text-hero);
-  color: var(--color-navy);
+  clip-path: inset(-8px 100% -8px 0);
+  animation: print 550ms cubic-bezier(0.2, 0.8, 0.2, 1) 1450ms both;
 }
 
 .lede {
-  max-width: 58ch;
-  font-size: clamp(18px, 1.4vw, 20px);
-  line-height: 1.5;
-  color: var(--color-ink);
-  text-wrap: pretty;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: clamp(21px, 2vw, 29px);
+  line-height: 1.34;
+  letter-spacing: -0.008em;
+  color: var(--color-navy);
+  text-wrap: balance;
 }
 
 .buttons {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 14px;
 }
 
 .work,
@@ -101,7 +212,7 @@
   align-items: center;
   justify-content: center;
   height: 48px;
-  padding: 0 24px;
+  padding: 0 26px;
   border-radius: var(--radius-pill);
   font: 500 15px/1 var(--font-sans);
   letter-spacing: 0.005em;
@@ -128,45 +239,99 @@
   background: var(--color-crimson-deep);
 }
 
-/*
- * A short screen — a 720p or 768p laptop — keeps the mark, the headline and both buttons
- * on the first screen: the mark takes less of the height and the gaps close a little.
- */
-@media (min-width: 768px) and (max-height: 800px) {
-  .hero {
-    gap: 22px;
-    padding-top: 16px;
+@keyframes print {
+  to {
+    clip-path: inset(-8px 0 -8px 0);
+  }
+}
+
+.head {
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  left: 0;
+  width: 2px;
+  background: var(--color-navy);
+  opacity: 0;
+  animation: head 500ms cubic-bezier(0.2, 0.8, 0.2, 1) 1450ms both;
+}
+
+@keyframes head {
+  0% {
+    left: 0;
+    opacity: 0;
   }
 
-  .stage {
-    --mark-w: min(62vw, 30vh * 2.419);
+  6% {
+    opacity: 0.8;
+  }
+
+  92% {
+    opacity: 0.8;
+  }
+
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* Reduced motion, or no script: the windows open, the hairlines drawn, the copy printed. */
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .blade,
+  .piece,
+  .cast,
+  .copy,
+  .head {
+    animation: none;
+  }
+
+  .blade {
+    stroke-dashoffset: 0;
+  }
+
+  .piece,
+  .head {
+    display: none;
   }
 
   .copy {
-    gap: 14px;
-  }
-
-  .lede {
-    font-size: 18px;
-  }
-
-  .buttons {
-    margin-top: 4px;
+    clip-path: none;
   }
 }
 
 @media (max-width: 767px) {
   .hero {
-    min-height: max(560px, 70vh);
-    gap: 24px;
+    padding-bottom: calc(24px + 56px);
   }
 
   .stage {
-    --mark-w: 88vw;
+    --mark-w: 84vw;
+  }
+
+  .blade {
+    stroke-width: 3px;
+  }
+
+  .blade[data-small] {
+    stroke-width: 0.0333px;
+  }
+
+  .cast {
+    transform: skewX(-6deg) scale(1.1, 1.6);
+  }
+
+  .print {
+    width: 100%;
   }
 
   .copy {
-    gap: 16px;
+    gap: 22px;
+  }
+
+  .lede {
+    font-size: 19px;
+    line-height: 1.38;
   }
 
   .buttons {
