@@ -60,7 +60,7 @@ export const DIRS: readonly { key: Dir; name: string; note: string }[] = [
   {
     key: '12',
     name: '12 Papirkuttet',
-    note: 'Fra 9, på hvitt: navnet skjæres ut av det hvite av en usynlig kniv, bokstav for bokstav, og bitene faller bort og lar vinduene stå igjen med filmen i – og lyset fra den på papiret under. Teksten trykkes av et hode som går over i bredden.',
+    note: 'VALGT 2026-09-20, og omarbeidet etter tre beskjeder: hele logoen – navnet med FOUNDATION under – skjæres ut av det hvite av en usynlig kniv, bokstav for bokstav, de fire store først og så de ti små, og bitene faller bort og lar vinduene stå igjen med filmen i; lyset fra den på papiret under. Overskriften er borte; avsnittet og knappene står midtstilt i lyset, større, og trykkes av et hode som går over.',
   },
   {
     key: '13',

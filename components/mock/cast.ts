@@ -28,16 +28,19 @@ export function coverOf(w: number, h: number, aspect = MARK_ASPECT): [number, nu
   return [(w - sw) / 2, (h - sh) / 2, sw, sh];
 }
 
-export function makeCast(c: HTMLCanvasElement, crimson: string, mirror = true) {
+/** What the cast is drawn from: the mark by default, or the lockup with FOUNDATION (12, chosen). */
+export type CastGeometry = { aspect: number; paths: (x: number, y: number, width: number) => { letters: Path2D; accents: Path2D } };
+
+export function makeCast(c: HTMLCanvasElement, crimson: string, mirror = true, geo: CastGeometry = { aspect: MARK_ASPECT, paths: markPaths }) {
   c.width = CAST_W;
-  c.height = Math.round(CAST_W / MARK_ASPECT);
+  c.height = Math.round(CAST_W / geo.aspect);
   const ctx = c.getContext('2d');
-  const paths = markPaths(0, 0, CAST_W);
+  const paths = geo.paths(0, 0, CAST_W);
   const W = c.width;
   const H = c.height;
   return (frame: Frame, warm = true) => {
     if (!ctx || !frame) return;
-    const [sx, sy, sw, sh] = coverOf(frame.w, frame.h);
+    const [sx, sy, sw, sh] = coverOf(frame.w, frame.h, geo.aspect);
     ctx.clearRect(0, 0, W, H);
     ctx.save();
     if (mirror) {

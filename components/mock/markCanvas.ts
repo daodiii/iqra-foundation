@@ -1,8 +1,11 @@
 import { MARK_ACCENTS, MARK_LETTERS, MARK_VIEWBOX } from '@/components/home/mark';
+import { LOCKUP_VIEWBOX, LOCKUP_WORD } from './lockup';
 
 /** The mark on a canvas: the same art as the hero's SVG, for a reflection drawn per frame. */
 const [VX, VY, VW, VH] = MARK_VIEWBOX.split(' ').map(Number);
 export const MARK_ASPECT = VW / VH;
+/** The lockup's box: the mark's, grown downward for FOUNDATION. */
+export const LOCKUP_ASPECT = VW / Number(LOCKUP_VIEWBOX.split(' ')[3]);
 
 type Matrix = [number, number, number, number, number, number];
 const matrix = (t: string): Matrix => t.match(/matrix\(([^)]+)\)/)![1].split(',').map(Number) as Matrix;
@@ -10,6 +13,7 @@ const matrix = (t: string): Matrix => t.match(/matrix\(([^)]+)\)/)![1].split(','
 type Glyph = { m: Matrix; d: string; path?: Path2D };
 const LETTERS: Glyph[] = MARK_LETTERS.map((p) => ({ m: matrix(p.transform), d: p.d }));
 const ACCENTS: Glyph[] = MARK_ACCENTS.map((p) => ({ m: matrix(p.transform), d: p.d }));
+const WORD: Glyph[] = LOCKUP_WORD.map((p) => ({ m: matrix(p.transform), d: p.d }));
 
 function fill(ctx: CanvasRenderingContext2D, glyphs: Glyph[], colour: string): void {
   ctx.fillStyle = colour;
@@ -22,19 +26,25 @@ function fill(ctx: CanvasRenderingContext2D, glyphs: Glyph[], colour: string): v
   }
 }
 
-/** The mark's paths in the canvas's own units, top-left at (x, y), the given width: one for clipping to the letters, one for the accents. */
-export function markPaths(x: number, y: number, width: number): { letters: Path2D; accents: Path2D } {
+function joined(glyphs: Glyph[], x: number, y: number, width: number): Path2D {
   const k = width / VW;
   const base = new DOMMatrix().translate(x, y).scale(k).translate(-VX, -VY);
-  const join = (glyphs: Glyph[]) => {
-    const p = new Path2D();
-    for (const g of glyphs) {
-      g.path ??= new Path2D(g.d);
-      p.addPath(g.path, base.multiply(new DOMMatrix(g.m)));
-    }
-    return p;
-  };
-  return { letters: join(LETTERS), accents: join(ACCENTS) };
+  const p = new Path2D();
+  for (const g of glyphs) {
+    g.path ??= new Path2D(g.d);
+    p.addPath(g.path, base.multiply(new DOMMatrix(g.m)));
+  }
+  return p;
+}
+
+/** The mark's paths in the canvas's own units, top-left at (x, y), the given width: one for clipping to the letters, one for the accents. */
+export function markPaths(x: number, y: number, width: number): { letters: Path2D; accents: Path2D } {
+  return { letters: joined(LETTERS, x, y, width), accents: joined(ACCENTS, x, y, width) };
+}
+
+/** The lockup's paths — the name and FOUNDATION as the letters — in a box `width` wide and `width / LOCKUP_ASPECT` tall. */
+export function lockupPaths(x: number, y: number, width: number): { letters: Path2D; accents: Path2D } {
+  return { letters: joined([...LETTERS, ...WORD], x, y, width), accents: joined(ACCENTS, x, y, width) };
 }
 
 /** The letters one by one (the art's order, a i Q R), in the canvas's own units — for a cover laid over each in turn. */

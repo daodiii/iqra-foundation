@@ -1,9 +1,12 @@
 /*
- * 12 Papirkuttet. White, the first screen. The blade runs round each letter (a draw-on
- * hairline, pathLength 1, widths in user units), the piece behind it falls once the cut is
- * closed, the cast comes up under the open windows, and the head prints the band. The
- * beats, from the first paint: the blade at 300ms + i·420, 500ms each; the piece 500ms
- * after its blade; the cast at 1.5s; the print at 2.4s.
+ * 12 Papirkuttet, chosen. White, the first screen: the lockup (the name with FOUNDATION
+ * under it) above, the copy centred under it in the film's light. The blade runs round
+ * each letter (a draw-on hairline, pathLength 1, widths in user units — the word's glyphs
+ * are em squares under a 90-unit matrix, so their width is the name's over 90), the piece
+ * behind it falls once the cut is closed, the cast comes up under the open windows, and
+ * the head prints the copy. The beats, from the first paint: the name's blades at 300ms +
+ * i·380, 460ms each, their pieces 460ms after; the word's blades from 1.7s at i·90, 220ms
+ * each, their pieces 250ms after; the cast at 1.7s; the print at 2.9s.
  */
 .room {
   position: relative;
@@ -21,10 +24,10 @@
 }
 
 .stage {
-  --mark-w: min(56vw, 32vh * 2.419);
+  --mark-w: min(54vw, 36vh * 1.822);
   position: relative;
   width: var(--mark-w);
-  aspect-ratio: 728.806 / 301.27;
+  aspect-ratio: 728.806 / 400;
 }
 
 .film {
@@ -56,8 +59,15 @@
   opacity: 0.6;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: cut 500ms cubic-bezier(0.4, 0, 0.6, 1) both;
-  animation-delay: calc(300ms + var(--i) * 420ms);
+  animation: cut 460ms cubic-bezier(0.4, 0, 0.6, 1) both;
+  animation-delay: calc(300ms + var(--i) * 380ms);
+}
+
+/* The word's ten, small and quick, after the name. */
+.small {
+  stroke-width: 0.0178px;
+  animation-duration: 220ms;
+  animation-delay: calc(1700ms + var(--i) * 90ms);
 }
 
 @keyframes cut {
@@ -90,8 +100,15 @@
   background: var(--color-white);
   transform-origin: 50% 0;
   animation: fall 900ms cubic-bezier(0.55, 0, 0.85, 0.4) both;
-  animation-delay: calc(800ms + var(--i) * 420ms);
+  animation-delay: calc(760ms + var(--i) * 380ms);
   will-change: transform, opacity;
+}
+
+/* The word's pieces hinge where the word is, and fall a shorter way. */
+.smallPiece {
+  transform-origin: 50% 82%;
+  animation: fallSmall 700ms cubic-bezier(0.55, 0, 0.85, 0.4) both;
+  animation-delay: calc(1950ms + var(--i) * 90ms);
 }
 
 @keyframes fall {
@@ -110,19 +127,35 @@
   }
 }
 
-/* The film's light on the paper below the open windows. */
+@keyframes fallSmall {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: rotateX(-96deg) translateY(60px);
+    opacity: 0;
+  }
+}
+
+/* The film's light on the paper below the open windows — the copy stands in it. */
 .cast {
   position: absolute;
   top: 100%;
   left: 0;
   width: 100%;
-  aspect-ratio: 728.806 / 301.27;
+  aspect-ratio: 728.806 / 400;
   transform-origin: top center;
-  transform: skewX(-8deg) scale(1.18, 2.6);
+  transform: skewX(-8deg) scale(1.18, 2);
   filter: blur(14px);
   opacity: 0.8;
   mix-blend-mode: multiply;
-  animation: up 1200ms var(--ease-out) 1500ms both;
+  animation: up 1200ms var(--ease-out) 1700ms both;
   pointer-events: none;
 }
 
@@ -132,15 +165,70 @@
   }
 }
 
-/* The print: the band revealed left to right behind a head that passes across it. */
+/* The print: the copy revealed left to right behind a head that passes across it. */
 .print {
   position: relative;
   z-index: 1;
 }
 
-.band {
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  max-width: 60ch;
+  margin: 0 auto;
+  text-align: center;
   clip-path: inset(-8px 100% -8px 0);
-  animation: print 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) 2400ms both;
+  animation: print 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) 2900ms both;
+}
+
+.lede {
+  max-width: 46ch;
+  font-size: clamp(18px, 1.55vw, 23px);
+  line-height: 1.45;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 26px;
+  border-radius: var(--radius-pill);
+  font: 500 15px/1 var(--font-sans);
+  letter-spacing: 0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--dur-s) var(--ease-out), color var(--dur-s) var(--ease-out);
+}
+
+.work {
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+.work:hover {
+  background: var(--color-crimson);
+}
+
+.support {
+  background: var(--color-crimson);
+  color: var(--color-white);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
 }
 
 @keyframes print {
@@ -157,7 +245,7 @@
   width: 2px;
   background: var(--color-navy);
   opacity: 0;
-  animation: head 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) 2400ms both;
+  animation: head 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) 2900ms both;
 }
 
 @keyframes head {
@@ -184,7 +272,7 @@
   .blade,
   .piece,
   .cast,
-  .band,
+  .copy,
   .head {
     animation: none;
   }
@@ -198,7 +286,7 @@
     display: none;
   }
 
-  .band {
+  .copy {
     clip-path: none;
   }
 }
@@ -216,7 +304,24 @@
     stroke-width: 3px;
   }
 
+  .small {
+    stroke-width: 0.0333px;
+  }
+
   .cast {
-    transform: skewX(-6deg) scale(1.1, 2);
+    transform: skewX(-6deg) scale(1.1, 1.6);
+  }
+
+  .copy {
+    gap: 20px;
+  }
+
+  .lede {
+    font-size: 16px;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-self: stretch;
   }
 }
