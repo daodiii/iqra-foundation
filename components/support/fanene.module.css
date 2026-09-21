@@ -1,0 +1,339 @@
+/*
+ * Støtt oss: the question across the top, and three banners — navy, white, burgundy —
+ * hung from a rail under it, unrolled one after another as the page comes. `--edge` is
+ * how far a banner has unrolled and `--rolled` whether its roll is still there; both are
+ * registered so the keyframes can interpolate them. Each cloth sets one colour (`--fane`)
+ * and its inks and its roll's shading follow from it.
+ */
+
+@property --edge {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 100%;
+}
+
+@property --rolled {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* The question, then the hall the banners hang in, to the foot of the screen. */
+.fanene {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: calc(100dvh - var(--header-h));
+  padding: 0 var(--margin) var(--gutter);
+  background: var(--color-white);
+}
+
+/* The owner's question, centred, rising out of its own line first. */
+.question {
+  margin: clamp(26px, 4.5vh, 48px) 0 clamp(20px, 3vh, 30px);
+  text-align: center;
+  font-size: clamp(28px, 3.2vw, 46px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
+  clip-path: inset(0 0 100% 0);
+  animation: rise 820ms var(--ease-out-expo) 80ms both;
+}
+
+@keyframes rise {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(14px);
+  }
+
+  to {
+    clip-path: inset(0 0 -12px 0);
+    transform: none;
+  }
+}
+
+/* The rail the banners hang from: the header's hairline, across the hall. */
+.hall {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: clamp(16px, 2vw, 32px);
+  border-top: 1px solid var(--color-hairline);
+}
+
+/* A banner; as the roll reaches its foot it swings once and settles. */
+.hang {
+  width: min(30vw, 400px);
+  transform-origin: 50% 0;
+  animation: settle 1500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(1530ms + var(--k) * 240ms);
+}
+
+@keyframes settle {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  30% {
+    transform: rotate(0.8deg);
+  }
+
+  65% {
+    transform: rotate(-0.4deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* The cloths, left to right: navy, white, burgundy. */
+.banner[data-fane='navy'] {
+  --fane: var(--color-navy);
+  --fane-ink: var(--color-white);
+  --fane-soft: rgb(240 240 241 / 0.72);
+  --fane-line-ink: rgb(255 255 255 / 0.32);
+}
+
+.banner[data-fane='white'] {
+  --fane: var(--color-white);
+  --fane-ink: var(--color-navy);
+  --fane-soft: var(--color-ink-soft);
+  --fane-line-ink: color-mix(in srgb, var(--color-navy) 22%, transparent);
+  /* White on white: a hairline inside the edge, where a clip-path cannot take it. */
+  --fane-line: inset 0 0 0 1px var(--color-hairline);
+}
+
+.banner[data-fane='crimson'] {
+  --fane: var(--color-crimson);
+  --fane-ink: var(--color-white);
+  --fane-soft: rgb(255 255 255 / 0.78);
+  --fane-line-ink: rgb(255 255 255 / 0.36);
+}
+
+.banner {
+  position: relative;
+  height: 100%;
+  transform-origin: 50% 0;
+  animation: unroll 1250ms cubic-bezier(0.3, 0.6, 0.2, 1) both;
+  animation-delay: calc(520ms + var(--k) * 240ms);
+  transition: transform 900ms var(--ease-out);
+}
+
+/* Touched: the banner leans a degree, and swings back. */
+.hang:hover .banner {
+  transform: rotate(0.7deg);
+}
+
+@keyframes unroll {
+  0% {
+    --edge: 0%;
+    --rolled: 1;
+  }
+
+  88% {
+    --rolled: 1;
+  }
+
+  100% {
+    --edge: 100%;
+    --rolled: 0;
+  }
+}
+
+/* The shadow the unrolled part throws on the wall; on the face it would be clipped with it. */
+.banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--edge);
+  border-radius: 0 0 var(--box-radius) var(--box-radius);
+  box-shadow: 0 30px 50px -20px rgb(44 57 75 / 0.45);
+}
+
+/* The face: a container, so the number is sized by the banner's own width. */
+.face {
+  position: relative;
+  container-type: inline-size;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 24px;
+  height: 100%;
+  padding: 36px 36px 34px;
+  border-radius: 0 0 var(--box-radius) var(--box-radius);
+  background: var(--fane);
+  box-shadow: var(--fane-line, none);
+  clip-path: inset(0 0 calc(100% - var(--edge)) 0);
+}
+
+/* The roll: the rest of the banner, a cylinder at the moving edge in the cloth's own colour, gone once it is all out. */
+.roll {
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  top: calc(var(--edge) - 30px);
+  height: 30px;
+  border-radius: 5px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--fane) 58%, black) 0%,
+    color-mix(in srgb, var(--fane) 80%, white) 40%,
+    var(--fane) 62%,
+    color-mix(in srgb, var(--fane) 44%, black) 100%
+  );
+  box-shadow: 0 8px 16px -4px rgb(0 0 0 / 0.5);
+  opacity: var(--rolled);
+  transform: scaleY(var(--rolled));
+  transform-origin: 50% 100%;
+}
+
+.name {
+  font-size: clamp(20px, 1.5vw, 24px);
+  line-height: 1.2;
+  color: var(--fane-ink);
+}
+
+.mid {
+  display: grid;
+  gap: 14px;
+  align-self: center;
+}
+
+/*
+ * The number: as large as the banner's width allows its longest line (`--chars`, set
+ * inline from the value), to a ceiling — so the bracketed placeholder fits today and the
+ * real digits get the full size, with no measuring.
+ */
+.value {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: min(clamp(44px, 5.6vw, 84px), calc(100cqi / (var(--chars) * 0.58)));
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--fane-ink);
+}
+
+.line {
+  display: block;
+}
+
+.label {
+  font: 500 14px/1.4 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  color: var(--fane-soft);
+}
+
+.foot {
+  justify-self: start;
+}
+
+/* ----- AvtaleGiro's amounts and button, drawn ----- */
+
+.drawn {
+  display: grid;
+  gap: 14px;
+  font-family: var(--font-sans);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--fane-line-ink);
+  border-radius: var(--radius-pill);
+  font: 500 14px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--fane-ink);
+}
+
+.chip[data-on] {
+  background: var(--fane-ink);
+  border-color: var(--fane-ink);
+  color: var(--fane);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  height: 48px;
+  padding: 0 22px;
+  border: 1px solid var(--fane-line-ink);
+  border-radius: var(--radius-pill);
+  font: 500 15px/1 var(--font-sans);
+  color: var(--fane-ink);
+}
+
+/* ----- reduced motion: everything stands unrolled ----- */
+
+@media (prefers-reduced-motion: reduce) {
+  .question,
+  .hang,
+  .banner {
+    animation: none;
+  }
+
+  .question {
+    clip-path: none;
+  }
+
+  .banner {
+    --edge: 100%;
+    --rolled: 0;
+    transition: none;
+  }
+}
+
+/* ----- a phone: the banners under each other, each with a plate's corners, since they hang from nothing there ----- */
+
+@media (max-width: 899px) {
+  .fanene {
+    min-height: 0;
+  }
+
+  .question {
+    margin: 22px 0 18px;
+    font-size: clamp(26px, 7.4vw, 32px);
+  }
+
+  .hall {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .hang {
+    width: 100%;
+  }
+
+  .banner {
+    height: auto;
+  }
+
+  .face,
+  .banner::before {
+    border-radius: var(--box-radius);
+  }
+
+  .face {
+    gap: 16px;
+    min-height: 28vh;
+    padding: 24px 24px 22px;
+  }
+
+  .value {
+    font-size: min(clamp(40px, 12vw, 56px), calc(100cqi / (var(--chars) * 0.58)));
+  }
+
+  .foot {
+    display: none;
+  }
+}

@@ -107,7 +107,8 @@ test('the home page is the name alone, and carries the brief’s main text, the 
     window.scrollTo(0, window.scrollY + r.top + r.height / 2 - window.innerHeight / 2);
   });
   await expect.poll(async () => Number(await plate.evaluate((el) => (el.parentElement as HTMLElement).style.getPropertyValue('--open')))).toBeGreaterThan(0.97);
-  expect(await plate.evaluate((el) => getComputedStyle(el).clipPath)).toMatch(/inset\(0(px)? 0px round 0px\)|inset\(0px\)|none/);
+  // polled: since the flow went on one clock (glide.ts) the clip trails `--open` by a frame or two, and read the same instant it is still a hundredth of a pixel in
+  await expect.poll(() => plate.evaluate((el) => getComputedStyle(el).clipPath)).toMatch(/inset\(0(px)? 0px round 0px\)|inset\(0px\)|none/);
   await main.locator('section#om-oss').evaluate((el) => window.scrollTo(0, window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.5));
   await expect(main.locator('section#om-oss')).toHaveAttribute('data-arrived', '');
   // a field's link lands on its band: the second field's (Samfunnsdeltakelse), with its words on the water
@@ -188,13 +189,16 @@ test('kontakt: the address and the number, bracketed, and no form', async ({ pag
   await expect(main.locator('form, input, textarea')).toHaveCount(0);
 });
 
-test('støtt oss: Vipps first, then the account, both bracketed, nothing that pretends to pay', async ({ page }) => {
+test('støtt oss: the question, then the three ways in the owner’s order — the account, Vipps, AvtaleGiro — both numbers bracketed, nothing that pretends to pay', async ({ page }) => {
   await page.goto('/stott-oss');
   await expect(page).toHaveTitle(T(site.pages.support.title));
   const main = page.getByRole('main');
+  await expect(main.getByRole('heading', { level: 1 })).toHaveText(site.pages.support.question);
+  await expect(main.getByRole('heading', { level: 2 })).toHaveText([site.support.ways.account, site.support.ways.vipps, site.support.ways.avtale]);
   const text = await main.innerText();
-  expect(text.indexOf(site.support.vipps.value)).toBeGreaterThan(-1);
-  expect(text.indexOf(site.support.vipps.value)).toBeLessThan(text.indexOf(site.support.account.value));
+  expect(text.indexOf(site.support.account.value)).toBeGreaterThan(-1);
+  expect(text.indexOf(site.support.account.value)).toBeLessThan(text.indexOf(site.support.vipps.value));
+  expect(text.indexOf(site.support.vipps.value)).toBeLessThan(text.indexOf(site.support.avtale.button));
   await expect(main.locator('form, input, button')).toHaveCount(0);
 });
 

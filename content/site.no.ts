@@ -64,6 +64,10 @@ export const site = {
   support: {
     vipps: { label: 'Vippsnummer', value: '[NUMMER]' },
     account: { label: 'Kontonummer', value: '[KONTO]' },
+    /** The three ways to give, as the owner listed them (2026-09-18) and in that order: the banners' names. */
+    ways: { account: 'Direkte overføring', vipps: 'Vipps', avtale: 'AvtaleGiro' },
+    /** AvtaleGiro's amounts a month and its one button. Drawn, not wired: nothing on the site takes a payment yet. */
+    avtale: { amount: 'Beløp per måned', tiers: ['100', '200', '500'], pick: 1, unit: 'kr', button: 'Opprett AvtaleGiro' },
   },
   /** The logo's alt text, on every ground. */
   logoAlt: 'Iqra Foundation',
@@ -163,6 +167,8 @@ export const site = {
       label: brief.menu[8],
       title: 'Støtt oss',
       description: brief.home.paragraph,
+      /** The page's heading, the owner's own words (2026-09-21); the title above stays the tab's and the menu's. */
+      question: 'Vil du støtte oss?',
     },
     notFound: {
       title: 'Siden finnes ikke',
