@@ -56,11 +56,11 @@ describe('Hero', () => {
   test('the film is loaded and played at mount, its source picked for the screen: the 1080p WebM here', () => {
     const { container } = render(<Hero />);
     const video = container.querySelector('video')!;
-    expect(video).toHaveAttribute('poster', '/media/iqra-poster.jpg');
+    expect(video).toHaveAttribute('poster', '/media/iqra-ilm-poster.jpg');
     expect(video).toHaveAttribute('loop');
     expect(video).toHaveAttribute('playsinline');
     expect(video.muted).toBe(true);
-    expect(video.getAttribute('src')).toBe('/media/iqra-loop-1080.webm');
+    expect(video.getAttribute('src')).toBe('/media/iqra-ilm-1080.webm');
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
     expect(vi.mocked(HTMLMediaElement.prototype.play).mock.instances[0]).toBe(video);
   });
@@ -68,7 +68,7 @@ describe('Hero', () => {
   test('a phone gets the 720p loop', () => {
     window.matchMedia = ((q: string) => ({ ...realMatchMedia(q), matches: q.includes('max-width') })) as typeof window.matchMedia;
     const { container } = render(<Hero />);
-    expect(container.querySelector('video')!.getAttribute('src')).toBe('/media/iqra-loop-720.webm');
+    expect(container.querySelector('video')!.getAttribute('src')).toBe('/media/iqra-ilm-720.webm');
   });
 
   test('the cast: a canvas under the lockup, made at mount to take the film’s light', () => {
@@ -82,7 +82,7 @@ describe('Hero', () => {
     vi.mocked(HTMLMediaElement.prototype.play).mockRejectedValueOnce(new DOMException('NotAllowedError'));
     const { container } = render(<Hero />);
     await act(async () => {});
-    expect(container.querySelector('video')).toHaveAttribute('poster', '/media/iqra-poster.jpg');
+    expect(container.querySelector('video')).toHaveAttribute('poster', '/media/iqra-ilm-poster.jpg');
   });
 
   test('under reduced motion the video gets no source, nothing plays and no cast is made: the poster stands in the open letters (the stylesheet opens them) and the copy is printed', () => {
@@ -90,7 +90,7 @@ describe('Hero', () => {
     const { container } = render(<Hero />);
     const video = container.querySelector('video')!;
     expect(video.getAttribute('src')).toBeNull();
-    expect(video).toHaveAttribute('poster', '/media/iqra-poster.jpg');
+    expect(video).toHaveAttribute('poster', '/media/iqra-ilm-poster.jpg');
     expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
     expect(container.querySelector<HTMLCanvasElement>('canvas[data-cast]')!.width).not.toBe(CAST_W);
     expect(screen.getByText(brief.home.paragraph)).toBeInTheDocument();
