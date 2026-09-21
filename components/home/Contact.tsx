@@ -10,10 +10,10 @@ import { useRise } from './rise';
 import { Scene } from './Scene';
 import { Words } from './Words';
 
-/** The table's centre, in screen heights from the top: where the two sides begin to come in … */
-export const MEET_FROM = 1.1;
-/** … and where the sheet has been pushed across and rests. */
-export const REST_AT = 0.42;
+/** The table's centre, in screen heights from the top: where the two sides begin to come in — as the table's top clears the foot of the screen … */
+export const MEET_FROM = 1.0;
+/** … and where the sheet has been pushed across and rests: the table in the middle of the screen, where every plate on the page is done. */
+export const REST_AT = 0.5;
 /** The plates meet over this much of the rise, from its start … */
 export const MEET_BY = 0.6;
 /** … and the sheet comes across from here to its end. */
@@ -43,9 +43,11 @@ const t = site.pages.home.contact;
  * sheet comes across over its second half (`--push`), so the table is laid before the
  * paper is handed over. The scene's clip and corner are the table's as a whole, so the
  * outer corners round and the seam runs straight; the plates carry no corner of their
- * own. Nothing pins; without script or under reduced motion the stylesheet's 1s hold and
- * everything stands met and at rest. The words on our plate come once the plates are
- * nearly met — a sentence sliced by a moving edge read as broken.
+ * own; the last plate on the page, it holds open once it has passed the middle (`Scene`'s
+ * `hold`), the page ending before it could leave. Nothing pins; without script or under
+ * reduced motion the stylesheet's 1s hold and everything stands met and at rest. The
+ * words on our plate come once the plates are nearly met — a sentence sliced by a moving
+ * edge read as broken.
  */
 export function Contact() {
   const table = useRef<HTMLDivElement>(null);
@@ -54,7 +56,7 @@ export function Contact() {
     el.style.setProperty('--push', push(o).toFixed(3));
   });
   return (
-    <Scene>
+    <Scene hold>
       <div ref={table} className={styles.table}>
         <Arrive as="section" id="kontakt" aria-labelledby="kontakt-tittel" className={styles.section}>
           <Flat tint="navy" className={`${styles.plate} ${styles.ours}`}>

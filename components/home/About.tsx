@@ -1,22 +1,32 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { MarkedLine } from '@/components/site/AreaMark';
 import { Logo } from '@/components/site/Logo';
 import { brief } from '@/content/brief.no';
 import styles from './about.module.css';
 import { Arrive } from './Arrive';
-import { smoothstep } from './Scene';
+import { centreOf, useGlide } from './glide';
+import { risen } from './rise';
 
-/** The plate's centre, in screen heights from the top: where the doors begin to open … */
-export const OPEN_FROM = 0.8;
-/** … and where they stand open. */
-export const OPEN_AT = 0.42;
+/** The plate's centre, in screen heights from the top: where the doors begin to open — the plate three quarters on the screen … */
+export const OPEN_FROM = 0.86;
+/** … and where they stand open: the plate in the middle of it. */
+export const OPEN_AT = 0.5;
 
 /** How open the doors are, 0-1, from where the plate's centre stands on the screen (0 the top, 1 the foot). */
 export function doorsOpen(centre: number): number {
-  return smoothstep((OPEN_FROM - centre) / (OPEN_FROM - OPEN_AT));
+  return risen(centre, OPEN_FROM, OPEN_AT);
 }
+
+/** The doors' target from the plate's rect: how open they should be where it stands. */
+const doorsAt = (r: DOMRect, H: number) => doorsOpen(centreOf(r, H));
+
+/** A frame of the doors on the plate: `--open`, and `data-open` once they are out of the way. */
+const writeDoors = (open: number, el: HTMLElement) => {
+  el.style.setProperty('--open', open.toFixed(3));
+  el.toggleAttribute('data-open', open >= 0.995);
+};
 
 /** A paragraph's sentences, each with its full stop: the brief's words untouched, only parted where a sentence ends. */
 export function sentences(paragraph: string): string[] {
@@ -36,12 +46,13 @@ export function sentences(paragraph: string): string[] {
  * screen, in the page's flow — nothing pins, and a reader passes it or reads it as they
  * like. Open, it stays open; scrolled back below the middle, it closes again.
  *
- * `--open` is 0 to 1 on the plate, set once per scroll or resize frame from the plate's
- * centre (a tall plate on a phone is judged by its first four fifths of a screen, so it
- * opens while its top is still in view). The doors are marked by `data-doors` only once
- * the script runs and motion is wanted: without either the doors are not drawn and the
- * room simply stands, so nothing is ever hidden — the words are in the DOM either way,
- * and the doors' two copies of the logo (each shows its half) are decoration.
+ * `--open` is 0 to 1 on the plate, from the plate's centre, driven by the scroll and
+ * eased after it (`useGlide`; a tall plate on a phone is judged by its first four fifths
+ * of a screen, so it opens while its top is still in view). The doors are marked by
+ * `data-doors` only once the script runs and motion is wanted: without either the doors
+ * are not drawn and the room simply stands, so nothing is ever hidden — the words are in
+ * the DOM either way, and the doors' two copies of the logo (each shows its half) are
+ * decoration.
  *
  * The doors turn away from the reader, so they only ever shrink toward their hinges and
  * never leave the plate. Seen from the middle of the plate (where the perspective is), a
@@ -51,35 +62,7 @@ export function sentences(paragraph: string): string[] {
  */
 export function About() {
   const plate = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = plate.current;
-    if (!el) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    el.setAttribute('data-doors', '');
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const r = el.getBoundingClientRect();
-      const H = window.innerHeight;
-      const centre = (r.top + Math.min(r.height, H * 0.8) / 2) / H;
-      const open = doorsOpen(centre);
-      el.style.setProperty('--open', open.toFixed(3));
-      el.toggleAttribute('data-open', open >= 0.995);
-    };
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
-    return () => {
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
-      if (raf) cancelAnimationFrame(raf);
-      el.removeAttribute('data-doors');
-      el.removeAttribute('data-open');
-    };
-  }, []);
+  useGlide(plate, doorsAt, writeDoors, 'data-doors');
 
   const [statement, crossing, arena] = brief.about.paragraphs;
   const [open, wish] = sentences(arena);

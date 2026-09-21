@@ -96,7 +96,7 @@ function settleNow(plugin: Plugin, st: ScrollTrigger | undefined, hold: (drive: 
     let wrote = at.y;
     const drive = gsap.to(at, {
       y: st.start + to * (st.end - st.start),
-      duration: 0.65,
+      duration: 0.9,
       ease: 'power2.inOut',
       onUpdate: () => {
         // Two pixels of slack because the browser rounds.
@@ -113,8 +113,10 @@ function settleNow(plugin: Plugin, st: ScrollTrigger | undefined, hold: (drive: 
  * The act: `u` runs 0 to STEPS across the stage — a ScrollTrigger from the stage's top
  * under the header to its bottom at the foot of the screen, scrubbed with a little lag and
  * settling at the four stops once the scroll rests — and `write` puts each `u` on the
- * elements, once per change and once per refresh. Under reduced motion nothing is made and
- * the stage is never `data-live`.
+ * elements, once per change and once per refresh. The settle takes up to nine tenths of a
+ * second for a whole step, so a tide crosses the screen as a tide and not as a cut (at
+ * 0.65 s it read as a colour change), from a tenth of a step in (`settle`). Under reduced
+ * motion nothing is made and the stage is never `data-live`.
  *
  * ScrollTrigger is loaded here, after hydration, not imported with the page: nothing else
  * on the site uses it any more, and carried in the home page's chunk it cost the page's
@@ -150,7 +152,7 @@ function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void
           start: () => `top ${headerH()}px`,
           end: 'bottom bottom',
           scrub: 0.4,
-          snap: { snapTo: settle, duration: { min: 0.25, max: 0.65 }, delay: 0.12, ease: 'power2.inOut', directional: false },
+          snap: { snapTo: settle, duration: { min: 0.45, max: 0.9 }, delay: 0.12, ease: 'power2.inOut', directional: false },
         },
       });
       tl.to({}, { duration: 1 });

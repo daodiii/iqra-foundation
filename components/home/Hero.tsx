@@ -5,13 +5,12 @@ import { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
-import { pickSource } from '@/lib/media';
+import { pickSource, POSTER } from '@/lib/media';
 import { frameOf, makeCast, token } from './cast';
 import styles from './hero.module.css';
 import { LOCKUP_VIEWBOX, LOCKUP_WORD } from './lockup';
 import { MARK_ACCENTS, MARK_LETTERS } from './mark';
 
-const POSTER = '/media/iqra-poster.jpg';
 const [VX, VY, VW, VH] = LOCKUP_VIEWBOX.split(' ').map(Number);
 /** A path's transform into the box's own units (0..1 both ways), for a clip in `objectBoundingBox`. */
 const box = (t: string) => `scale(${1 / VW} ${1 / VH}) translate(${-VX} ${-VY}) ${t}`;

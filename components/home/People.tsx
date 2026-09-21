@@ -1,24 +1,29 @@
 'use client';
 
-import { useEffect, useId, useRef, type CSSProperties } from 'react';
+import { useId, useRef, type CSSProperties } from 'react';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import type { Person, Picture } from '@/lib/content';
 import { Arrive } from './Arrive';
+import { centreOf, useGlide } from './glide';
 import styles from './people.module.css';
-import { smoothstep } from './Scene';
+import { risen } from './rise';
 
-/** The table's centre, in screen heights from the top: where the pile begins to spread … */
-export const SPREAD_FROM = 0.88;
-/** … and where the prints lie in their row. */
-export const SPREAD_AT = 0.46;
+/** The table's centre, in screen heights from the top: where the pile begins to spread — the doors' numbers (About.tsx), so the two white plates move alike … */
+export const SPREAD_FROM = 0.86;
+/** … and where the prints lie in their row: the table in the middle of the screen. */
+export const SPREAD_AT = 0.5;
 /** The table seats this many: the first by order; the subpage lists everyone. */
 export const SEATS = 3;
 
 /** How far the pile has spread, 0 to 1, from where the table's centre stands on the screen, in screen heights. */
 export function spread(centre: number): number {
-  return smoothstep((SPREAD_FROM - centre) / (SPREAD_FROM - SPREAD_AT));
+  return risen(centre, SPREAD_FROM, SPREAD_AT);
 }
+
+/** The pile's target from the table's rect: how far spread it should be where it stands. */
+const spreadAt = (r: DOMRect, H: number) => spread(centreOf(r, H));
+const writeSpread = (open: number, el: HTMLElement) => el.style.setProperty('--open', open.toFixed(3));
 
 const t = site.pages.people;
 
@@ -33,39 +38,15 @@ const t = site.pages.people;
  * line stands under the paragraph.
  *
  * `--open` is 0 (the pile) to 1 (the row) on the table, from where the table's centre
- * stands on the screen — a tall table on a phone is judged by its first four fifths of a
- * screen, so it spreads while its top is in view. On a phone the pile spreads downward
- * into a column instead of across into a row (people.module.css).
+ * stands on the screen, driven by the scroll and eased after it (`useGlide`) — a tall
+ * table on a phone is judged by its first four fifths of a screen, so it spreads while
+ * its top is in view. On a phone the pile spreads downward into a column instead of
+ * across into a row (people.module.css).
  */
 export function People({ people }: { people: Person[] }) {
   const seated = people.slice(0, SEATS);
   const table = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = table.current;
-    if (!el) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    el.setAttribute('data-live', '');
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const r = el.getBoundingClientRect();
-      const H = window.innerHeight;
-      const centre = (r.top + Math.min(r.height, H * 0.8) / 2) / H;
-      el.style.setProperty('--open', spread(centre).toFixed(3));
-    };
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
-    return () => {
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
-      if (raf) cancelAnimationFrame(raf);
-      el.removeAttribute('data-live');
-    };
-  }, []);
+  useGlide(table, spreadAt, writeSpread, 'data-live');
 
   return (
     <Arrive as="section" id="menneskene-bak" aria-labelledby="menneskene-bak-tittel" className={styles.section}>
