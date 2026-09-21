@@ -2,7 +2,7 @@ import { act, render, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
-import { About, doorsOpen, OPEN_AT, OPEN_FROM } from './About';
+import { About, doorsOpen, OPEN_AT, OPEN_FROM, sentences } from './About';
 
 const realMatchMedia = window.matchMedia;
 afterEach(() => { window.matchMedia = realMatchMedia; });
@@ -19,18 +19,36 @@ describe('doorsOpen', () => {
   });
 });
 
+describe('sentences', () => {
+  test('parts a paragraph where its sentences end, each keeping its full stop, and the brief’s third paragraph is two', () => {
+    expect(sentences('En. To.  Tre.')).toEqual(['En.', 'To.', 'Tre.']);
+    expect(sentences('Bare én.')).toEqual(['Bare én.']);
+    const [open, wish] = sentences(brief.about.paragraphs[2]);
+    expect(open).toMatch(/^Stiftelsen skal være .*\.$/);
+    expect(wish).toMatch(/^Vi ønsker å bringe mennesker sammen.*\.$/);
+    expect(`${open} ${wish}`).toBe(brief.about.paragraphs[2]);
+  });
+});
+
 describe('About', () => {
-  test('the whole of Om oss in the room: the title, the four paragraphs with the areas marked, the story of the name; no links', () => {
+  test('the room says the title, the statement, and three lines: the areas marked, then the third paragraph’s two sentences as two; not the fourth paragraph, not the story of the name; no links', () => {
     const { container } = render(<About />);
     const section = container.querySelector('section#om-oss') as HTMLElement;
     const title = within(section).getByRole('heading', { level: 2, name: brief.about.title });
     expect(section).toHaveAttribute('aria-labelledby', title.id);
     expect(title).toHaveAttribute('data-title');
-    // the marked line is pieces (MarkedLine), so the paragraphs are matched on the room's text
-    for (const p of brief.about.paragraphs) expect(section).toHaveTextContent(p);
+    const [statement, crossing, arena, through] = brief.about.paragraphs;
+    expect(within(section).getByText(statement)).toBeInTheDocument();
+    // the marked line is pieces (MarkedLine), so it is matched on the room's text
+    expect(section).toHaveTextContent(crossing);
     expect(section.querySelectorAll('[data-area]')).toHaveLength(brief.areas.length);
-    expect(within(section).getByRole('heading', { level: 3, name: site.pages.about.story.label })).toBeInTheDocument();
-    expect(within(section).getByText(site.pages.about.story.text)).toBeInTheDocument();
+    const [open, wish] = sentences(arena);
+    const lines = [...section.querySelectorAll('p')].map((p) => p.textContent);
+    expect(lines).toEqual([statement, crossing, open, wish]);
+    expect(section).not.toHaveTextContent(through);
+    expect(section).not.toHaveTextContent(site.pages.about.story.label);
+    expect(section).not.toHaveTextContent(site.pages.about.story.text);
+    expect(within(section).queryAllByRole('heading', { level: 3 })).toHaveLength(0);
     expect(within(section).queryAllByRole('link')).toHaveLength(0);
   });
 
