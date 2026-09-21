@@ -17,6 +17,8 @@
 
 .plate {
   --open: 1;
+  /* Where the logo's centre sits down the closed plate, and the seam parts for it: a little above the middle, where the lockup's weight (the mark, not the word) reads as centred; a phone's plate is tall, and there the logo stays where the plate's first screen shows it. */
+  --emblem-y: min(47%, 340px);
   position: relative;
   perspective: 2000px;
   perspective-origin: 50% 50%;
@@ -27,13 +29,23 @@
   --open: 0;
 }
 
+/*
+ * The room is a six-column grid: the title over two, the statement over four beside it
+ * (the hero's band, title left and the words right), and the three lines under them over
+ * two each, so the lines' rules sit under the columns the head is set on. It is as tall
+ * as its words and a floor, so the doors have a plate to carry the logo on.
+ */
 .room {
+  --col-gap: clamp(24px, 3vw, 48px);
   position: relative;
   box-sizing: border-box;
   display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  column-gap: var(--col-gap);
   align-content: center;
-  min-height: min(82vh, 820px);
-  padding: clamp(40px, 6vw, 96px) clamp(28px, 6vw, 96px);
+  align-items: start;
+  min-height: min(58vh, 580px);
+  padding: clamp(36px, 5vw, 72px) clamp(28px, 5vw, 80px);
   background: var(--color-white);
   border: 1px solid var(--color-hairline);
   border-radius: inherit;
@@ -95,10 +107,10 @@
   background: color-mix(in srgb, var(--color-turquoise) 70%, transparent);
   mask-image: linear-gradient(
     to bottom,
-    #000 calc(min(42%, 340px) - var(--seam-gap)),
-    transparent calc(min(42%, 340px) - var(--seam-gap)),
-    transparent calc(min(42%, 340px) + var(--seam-gap)),
-    #000 calc(min(42%, 340px) + var(--seam-gap))
+    #000 calc(var(--emblem-y) - var(--seam-gap)),
+    transparent calc(var(--emblem-y) - var(--seam-gap)),
+    transparent calc(var(--emblem-y) + var(--seam-gap)),
+    #000 calc(var(--emblem-y) + var(--seam-gap))
   );
 }
 
@@ -120,8 +132,7 @@
 /* The logo across both doors: each door holds a copy centred on the seam — its own edge — and shows its half. It goes before the door does: a logo on a door turned past sixty degrees is a squashed sliver. */
 .emblem {
   position: absolute;
-  /* a phone's plate is tall: the logo stays where the plate's first screen shows it */
-  top: min(42%, 340px);
+  top: var(--emblem-y);
   /* three tenths of the plate: a door is half of it */
   width: clamp(220px, 60%, 420px);
   height: auto;
@@ -140,67 +151,53 @@
 /* ----- the room ----- */
 
 .title {
-  font-size: clamp(36px, 4.6vw, 64px);
+  grid-column: 1 / 3;
+  font-size: clamp(36px, 4vw, 58px);
   line-height: 1;
   letter-spacing: -0.025em;
   max-width: 12ch;
 }
 
+/* The statement beside the title, its first line on the title's: a cap height's lift of the title's slack above its x-height. */
 .statement {
-  margin: 32px 0 0;
-  max-width: 28ch;
-  font: 500 clamp(24px, 2.4vw, 38px) / 1.2 var(--font-sans);
+  grid-column: 3 / -1;
+  margin: 0.1em 0 0;
+  font: 500 clamp(22px, 2.2vw, 32px) / 1.2 var(--font-sans);
   letter-spacing: var(--tracking-tight);
   color: var(--color-navy);
   text-wrap: pretty;
 }
 
+/* Three lines under the head, each on its own rule — the three columns of the six, so the rules sit under the head's columns. */
 .columns {
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: clamp(24px, 3vw, 48px);
-  margin-top: clamp(40px, 5vw, 72px);
-  padding-top: 28px;
-  border-top: 1px solid rgb(44 57 75 / 0.14);
+  column-gap: var(--col-gap);
+  margin-top: clamp(36px, 4.5vw, 64px);
 }
 
 .col {
   margin: 0;
+  padding-top: 20px;
+  border-top: 1px solid rgb(44 57 75 / 0.16);
   font-family: var(--font-text);
-  font-size: clamp(16px, 1.2vw, 18px);
-  line-height: 1.55;
+  font-size: clamp(17px, 1.3vw, 19px);
+  line-height: 1.5;
   color: var(--color-ink);
   text-wrap: pretty;
 }
 
-.story {
-  margin-top: clamp(32px, 4vw, 56px);
-  padding-top: 24px;
-  border-top: 1px solid rgb(44 57 75 / 0.14);
-  max-width: 62ch;
-  font-family: var(--font-text);
-  font-size: clamp(16px, 1.2vw, 18px);
-  line-height: 1.55;
-  color: var(--color-ink);
-}
-
-.story h3 {
-  margin: 0 0 8px;
-  font-size: 20px;
-}
-
-.story p {
-  margin: 0;
-}
-
 /* The room's words come up once the doors have turned — a beat after, so the reveal is the doors'. The title is the arrival's (Arrive), not the doors'. */
-.plate[data-doors] :is(.statement, .columns, .story) {
+.plate[data-doors] :is(.statement, .columns) {
   opacity: calc((var(--open) - 0.4) / 0.5);
   transform: translateY(calc((1 - var(--open)) * 16px));
 }
 
+/* A phone: one column, the title over the statement, the three lines under them each on its rule. */
 @media (max-width: 899px) {
   .room {
+    grid-template-columns: 1fr;
     min-height: 0;
     padding: 32px 22px;
   }
@@ -214,17 +211,24 @@
   }
 
   .title {
+    grid-column: 1;
     font-size: 36px;
   }
 
   .statement {
-    margin-top: 22px;
+    grid-column: 1;
+    margin-top: 20px;
     font-size: 23px;
   }
 
   .columns {
+    grid-column: 1;
     grid-template-columns: 1fr;
-    row-gap: 18px;
-    margin-top: 32px;
+    row-gap: 16px;
+    margin-top: 28px;
+  }
+
+  .col {
+    padding-top: 14px;
   }
 }
