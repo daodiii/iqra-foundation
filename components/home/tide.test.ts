@@ -18,18 +18,19 @@ describe('the order on the sea', () => {
     expect([...seaAreas].sort((a, b) => a.key.localeCompare(b.key))).toEqual([...areas].sort((a, b) => a.key.localeCompare(b.key)));
   });
 
-  test('forward, anything past an eighth of a step completes it; short of that, it returns', () => {
+  test('forward, anything past a tenth of a step (one wheel notch) completes it; short of that, it returns', () => {
     expect(at(0.3, 1)).toBeCloseTo(1 / 3, 10); // 0.9 of a step in
-    expect(at(0.05, 1)).toBeCloseTo(1 / 3, 10); // 0.15 of a step: past the eighth
+    expect(at(0.04, 1)).toBeCloseTo(1 / 3, 10); // 0.12 of a step: past the tenth
     expect(at(0.03, 1)).toBe(0); // 0.09 of a step: not yet
-    expect(at(0.7, 1)).toBeCloseTo(2 / 3, 10); // 2.1 steps: a tenth into the third, back to two
+    expect(at(0.69, 1)).toBeCloseTo(2 / 3, 10); // 2.07 steps: not a tenth into the third, back to two
     expect(at(0.75, 1)).toBe(1); // 2.25 steps: on to the last
   });
 
-  test('back, anything short of seven eighths returns; past it, the step is kept', () => {
+  test('back, anything short of nine tenths returns; past it, the step is kept', () => {
     expect(at(0.2, -1)).toBe(0); // 0.6 of a step, going back
     expect(at(0.6, -1)).toBeCloseTo(1 / 3, 10); // 1.8 steps, going back
-    expect(at(0.96, -1)).toBe(1); // 2.88: within the last eighth of the third step, kept
+    expect(at(0.96, -1)).toBeCloseTo(2 / 3, 10); // 2.88: a notch back from the last field returns to the third
+    expect(at(0.98, -1)).toBe(1); // 2.94: within the last tenth of the third step, kept
   });
 
   test('always a whole step, never past either end', () => {
@@ -64,12 +65,16 @@ describe('seaAt', () => {
     expect(f.words.every((w) => w.on === 0 && !w.live)).toBe(true);
   });
 
-  test('a field’s words rise over the last three tenths of its tide and are up at its stop', () => {
-    const f = seaAt(2.4);
-    expect(f.i).toBe(2);
-    expect(f.t).toBeCloseTo(0.4, 10);
-    expect(f.words[2].on).toBeCloseTo(1 / 3, 10);
-    expect(f.words[2].live).toBe(true);
+  test('a field’s words go before its tide is a third out, and the next’s rise over the last quarter, once the tide has crossed their page', () => {
+    // going: two tenths out, two thirds up; gone by 0.36
+    expect(seaAt(2.2).words[2].on).toBeCloseTo(2 / 3, 10);
+    expect(seaAt(2.2).words[2].live).toBe(true);
+    expect(seaAt(2.4).words[2]).toEqual({ on: 0, live: false });
+    // coming: nothing at 0.7 of the tide, a quarter up at 0.8, up at 0.98 and at the stop
+    expect(seaAt(2.7).words[3]).toEqual({ on: 0, live: false });
+    expect(seaAt(2.8).words[3].on).toBeCloseTo(0.25, 10);
+    expect(seaAt(2.8).words[3].live).toBe(true);
+    expect(seaAt(2.98).words[3].on).toBe(1);
     expect(seaAt(1).words[1].on).toBe(1);
   });
 

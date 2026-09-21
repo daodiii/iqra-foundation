@@ -34,18 +34,18 @@ afterEach(() => {
 });
 
 describe('useArrive', () => {
-  test('arrives when the tip (66% down the screen) passes the top + 48, and leaves 120px above it', () => {
+  test('arrives when the tip (70% down the screen) passes the top + 32, and leaves 120px above it', () => {
     const onChange = vi.fn();
     const { getByTestId } = render(<Probe onChange={onChange} />);
     const el = getByTestId('el');
     expect(el).not.toHaveAttribute('data-arrived');
-    // tip = scrollY + 594; arrives at tip >= 1048, i.e. scrollY >= 454
-    scrollTo(450);
+    // tip = scrollY + 630; arrives at tip >= 1032, i.e. scrollY >= 402
+    scrollTo(395);
     expect(el).not.toHaveAttribute('data-arrived');
-    scrollTo(460);
+    scrollTo(405);
     expect(el).toHaveAttribute('data-arrived');
     expect(onChange).toHaveBeenLastCalledWith(true);
-    // leaves at tip < 880, i.e. scrollY < 286: not yet
+    // leaves at tip < 880, i.e. scrollY < 250: not yet
     scrollTo(300);
     expect(el).toHaveAttribute('data-arrived');
     scrollTo(200);
@@ -68,8 +68,8 @@ describe('useArrive', () => {
   });
 
   test('an element on the first screen but below the tip’s leaving line stays through a scroll and back', () => {
-    // The phone's case: the mosaic's top at 723 in an 844 window, the tip at 557, the leaving
-    // line at 603. Here: top 800, tip 594, leaving line 680 — the tip rule alone would clear
+    // The phone's case: the mosaic's top at 723 in an 844 window, the tip at 591, the leaving
+    // line at 603. Here: top 800, tip 630, leaving line 680 — the tip rule alone would clear
     // it on the first scroll and hold it blank until scrollY 254.
     top = 800;
     const onChange = vi.fn();

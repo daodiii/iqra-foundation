@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, type RefObject } from 'react';
 
-/** Where the tip stands: this far down the screen, the reading line the arrivals answer to. */
-export const LEAD = 0.66;
+/** Where the tip stands: this far down the screen, the reading line the arrivals answer to — a section wakes as its top comes up through the lower third, in step with the plates, which begin to open there too. */
+export const LEAD = 0.7;
 export const tipY = () => window.scrollY + window.innerHeight * LEAD;
 
 /**
@@ -20,7 +20,7 @@ export const tipY = () => window.scrollY + window.innerHeight * LEAD;
  * the tip. Under reduced motion it is arrived at once and left alone. `onChange` is told
  * both ways.
  */
-export function useArrive(ref: RefObject<HTMLElement | null>, onChange?: (arrived: boolean) => void, after = 48) {
+export function useArrive(ref: RefObject<HTMLElement | null>, onChange?: (arrived: boolean) => void, after = 32) {
   const cb = useRef(onChange);
   useEffect(() => {
     cb.current = onChange;

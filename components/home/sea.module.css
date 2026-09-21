@@ -5,8 +5,9 @@
  * The scroll is the playhead (`u`, 0 to 3, written by Sea.tsx per frame): between two
  * fields the water's floor is retuned from the one colour to the next, a tide coming in
  * from the left (lib/water.ts `retune`), and the CSS ground under the canvas mixes the same
- * two colours for a device without WebGL2. A field's words are gone before its tide is
- * halfway and up once it has passed (`--on`). Without script, or under reduced motion, the
+ * two colours for a device without WebGL2. A field's words are gone before its tide is a
+ * third out, and the next's rise over the last quarter, once it has crossed their page
+ * (`--on`). Without script, or under reduced motion, the
  * default rules here hold and the four stand under one another on the one water;
  * `[data-live]` turns the stage into the act.
  *

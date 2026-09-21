@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { openness, Scene } from './Scene';
+import { held, openness, Scene } from './Scene';
 
 const realMatchMedia = window.matchMedia;
 afterEach(() => { window.matchMedia = realMatchMedia; });
@@ -15,6 +15,14 @@ describe('openness', () => {
     expect(openness(0.39)).toBeCloseTo(0.5, 5);
     expect(openness(0.3)).toBeGreaterThan(openness(0.4));
     expect(openness(0.4)).toBeGreaterThan(openness(0.5));
+  });
+
+  test('held: the same on the way up, and open for good once past the middle', () => {
+    expect(held(0.39)).toBe(openness(0.39));
+    expect(held(0.58)).toBe(0);
+    expect(held(0)).toBe(1);
+    expect(held(-0.4)).toBe(1);
+    expect(held(-0.9)).toBe(1);
   });
 });
 

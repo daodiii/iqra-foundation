@@ -107,7 +107,7 @@
   overflow: visible;
 }
 
-/* The ring draws itself from the top, clockwise. */
+/* The ring draws itself from the top, clockwise. The seal's arrival is done in a second and a bit — the ring in 1.1 s, the names from 0.45 s, the dot at 1 s — the same order as before at two thirds of the length: a reader at a reading pace was past the plate before a two-second seal had settled. */
 .line {
   fill: none;
   stroke: var(--color-turquoise);
@@ -125,7 +125,7 @@
 
 [data-live][data-arrived] .line {
   stroke-dashoffset: 0;
-  transition: stroke-dashoffset 1500ms var(--ease-out-expo);
+  transition: stroke-dashoffset 1100ms var(--ease-out-expo);
 }
 
 /* The four areas' names, twice round, turning once in eighty seconds. */
@@ -141,7 +141,7 @@
 
 [data-live][data-arrived] .orbit {
   opacity: 1;
-  transition: opacity 900ms var(--ease-out) 900ms;
+  transition: opacity 800ms var(--ease-out) 450ms;
 }
 
 .inscription {
@@ -166,7 +166,7 @@
 
 [data-live][data-arrived] .dot {
   transform: scale(1);
-  transition: transform 460ms cubic-bezier(0.34, 1.56, 0.64, 1) 1450ms;
+  transition: transform 460ms cubic-bezier(0.34, 1.56, 0.64, 1) 1000ms;
 }
 
 /* ----- inside the ring ----- */

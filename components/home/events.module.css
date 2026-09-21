@@ -111,7 +111,7 @@
 [data-live][data-arrived] .count {
   opacity: 1;
   transform: none;
-  transition: opacity 600ms var(--ease-out) 900ms, transform 700ms var(--ease-out-expo) 900ms;
+  transition: opacity 600ms var(--ease-out) 420ms, transform 700ms var(--ease-out-expo) 420ms;
 }
 
 /* ----- the rest ----- */
