@@ -1,0 +1,172 @@
+/*
+ * Kontakt: two navy plates meeting at a white seam, then the white sheet pushed across
+ * your plate from the right and resting a degree off square. `--meet` and `--push` are
+ * set per frame by the script (Contact.tsx) from the section's rise; the stylesheet's 1s
+ * are the state without it. The table's white ground is the seam's light, and the scene's
+ * clip and corner are the table's.
+ */
+
+.table {
+  --meet: 1;
+  --push: 1;
+  display: grid;
+  min-height: min(66vh, 660px);
+  background: var(--color-white);
+}
+
+.section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 2px;
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+/* Each side: no corner of its own, the site's plate padding; its column keeps the closed table's inset. */
+.plate {
+  --box-radius: 0;
+  --box-pad-y: clamp(56px, 8vh, 96px);
+  min-width: 0;
+}
+
+.ours > div {
+  padding-inline: calc(var(--box-inset) + 5%) 6%;
+}
+
+.yours > div {
+  align-content: center;
+  justify-items: center;
+  padding-inline: 7% calc(var(--box-inset) + 5%);
+}
+
+/* The two come in from their own edges and meet. */
+.table[data-rise] .ours {
+  transform: translateX(calc((1 - var(--meet)) * -100%));
+}
+
+.table[data-rise] .yours {
+  transform: translateX(calc((1 - var(--meet)) * 100%));
+}
+
+/* The question comes once the plates are nearly met: a mass first, then what it says. */
+.table[data-rise] .ours > div {
+  opacity: clamp(0, calc((var(--meet) - 0.66) / 0.34), 1);
+}
+
+.title {
+  margin: 0;
+  max-width: 18ch;
+  font: 600 clamp(28px, 3.6vw, 54px) / 1.1 var(--font-sans);
+  letter-spacing: -0.02em;
+  color: var(--color-white);
+  text-wrap: balance;
+}
+
+/* The sheet: paper, not a card — a small corner, a real shadow, one and a half degrees off square at rest. */
+.sheet {
+  display: grid;
+  align-content: space-between;
+  width: min(100%, 400px);
+  aspect-ratio: 1 / 1.22;
+  padding: 32px 34px;
+  border-radius: 4px;
+  background: var(--color-white);
+  box-shadow:
+    0 34px 60px -14px rgb(0 0 0 / 0.5),
+    0 2px 6px rgb(0 0 0 / 0.18);
+  transform: rotate(-1.5deg);
+}
+
+/* Pushed across your plate from its right edge, more askew on the way, settling as it comes. */
+.table[data-rise] .sheet {
+  transform: translateX(calc((1 - var(--push)) * 160%)) rotate(calc(-1.5deg - (1 - var(--push)) * 6deg));
+}
+
+.line {
+  margin: 0;
+  max-width: 16ch;
+  font: 600 clamp(22px, 2vw, 30px) / 1.2 var(--font-sans);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-navy);
+  text-wrap: balance;
+}
+
+.more {
+  margin: 0;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  height: 56px;
+  padding: 0 28px;
+  border-radius: var(--radius-pill);
+  font: 500 clamp(16px, 1.3vw, 19px) / 1 var(--font-sans);
+  text-decoration: none;
+  background: var(--color-crimson);
+  color: var(--color-white);
+  transition: background-color var(--dur-s) var(--ease-out);
+}
+
+.button:hover {
+  background: var(--color-navy);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 3px;
+}
+
+@media (max-width: 699px) {
+  .table {
+    min-height: 0;
+  }
+
+  .section {
+    grid-template-columns: 1fr;
+    row-gap: 2px;
+  }
+
+  .plate {
+    --box-pad-y: 44px;
+    min-height: 40vh;
+  }
+
+  .ours > div,
+  .yours > div {
+    padding-inline: calc(var(--box-inset) + 14px);
+  }
+
+  .yours > div {
+    justify-items: stretch;
+  }
+
+  /* Top and bottom on a phone. */
+  .table[data-rise] .ours {
+    transform: translateY(calc((1 - var(--meet)) * -100%));
+  }
+
+  .table[data-rise] .yours {
+    transform: translateY(calc((1 - var(--meet)) * 100%));
+  }
+
+  .title {
+    font-size: clamp(26px, 7vw, 34px);
+  }
+
+  .sheet {
+    width: 100%;
+    aspect-ratio: 1 / 0.9;
+    padding: 26px;
+  }
+
+  .button {
+    height: 52px;
+    padding: 0 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}

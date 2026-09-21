@@ -38,10 +38,11 @@ export const site = {
   name: 'Iqra Foundation',
   place: 'Oslo',
   nav,
-  /** The two buttons under the home page's text (brief 2), and where they go. */
+  /** The two buttons under the home page's text (brief 2), and where they go; and Kontakt, the way on from the foot of the home page. */
   cta: {
     work: { label: brief.home.buttons[0], href: '/vart-arbeid' },
     support: { label: brief.home.buttons[1], href: '/stott-oss' },
+    contact: { label: brief.menu[7], href: '/kontakt' },
   },
   header: {
     homeLabel: 'Iqra Foundation, til forsiden',
@@ -74,6 +75,18 @@ export const site = {
       visionLabel: 'Visjon',
       missionLabel: 'Misjon',
       areasLabel: 'Fire hovedområder',
+      /**
+       * The foot of the home page: the question on our side of the table and the line on
+       * the sheet. A second exception to the no-prose rule (the first is the story of the
+       * name), and a weaker one: these two lines are a DRAFT, written 2026-09-21 by the
+       * owner's word («I draft it, you correct»), for whoever wants to work with the
+       * foundation, meet it, challenge it or take up a debate. They stand until the owner
+       * writes theirs.
+       */
+      contact: {
+        question: 'Vil du samarbeide, utfordre oss eller ta en debatt?',
+        line: 'Vi vil gjerne høre fra deg.',
+      },
     },
     about: {
       label: brief.menu[1],

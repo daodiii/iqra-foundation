@@ -36,19 +36,19 @@ describe('Hjem', () => {
     const order = [...container.querySelectorAll('[data-fields], section#visjon')];
     expect(order[0]).toHaveAttribute('data-fields');
 
-    // One water, three flat navy plates: the seal, Arrangementer, Støtt oss. No ink anywhere.
+    // One water, four flat navy plates: the seal, Arrangementer, the two sides of Kontakt's table. No ink anywhere.
     expect(container.querySelectorAll('[data-material="water"]')).toHaveLength(1);
     const flats = container.querySelectorAll('[data-material="flat"]');
-    expect(flats).toHaveLength(3);
+    expect(flats).toHaveLength(4);
     flats.forEach((f) => expect(f).toHaveAttribute('data-ground', 'navy'));
     expect(container.querySelector('[data-material="ink"]')).toBeNull();
   });
 
-  test('then the rest of the site, in order: Om oss, Arrangementer, Menneskene bak, Støtt oss — no labels, no links under them, the lists honest while empty and the next event when there is one', () => {
+  test('then the rest of the site, in order: Om oss, Arrangementer, Menneskene bak, Kontakt — no labels, no links under them, the lists honest while empty and the next event when there is one', () => {
     const { container } = render(<Home />);
     const t = site.pages;
     const ids = [...container.querySelectorAll('section[id]')].map((s) => s.id);
-    expect(ids.slice(-4)).toEqual(['om-oss', 'arrangementer', 'menneskene-bak', 'stott-oss']);
+    expect(ids.slice(-4)).toEqual(['om-oss', 'arrangementer', 'menneskene-bak', 'kontakt']);
     expect(ids).not.toContain('ressurser');
 
     const about = container.querySelector('section#om-oss') as HTMLElement;
@@ -78,11 +78,17 @@ describe('Hjem', () => {
     if (!seated.length) expect(people).toHaveTextContent(t.people.empty);
     expect(within(people).queryAllByRole('link')).toHaveLength(0);
 
-    const support = container.querySelector('section#stott-oss') as HTMLElement;
-    expect(within(support).getByRole('heading', { level: 2, name: t.support.title })).toBeInTheDocument();
-    expect(within(support).getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', site.cta.support.href);
-    expect(support).toHaveTextContent(site.support.vipps.value);
-    expect(support.closest('[data-material]')).toHaveAttribute('data-material', 'flat');
+    // The foot: the question as the heading, word by word, on our plate; the line and Kontakt, the only way on, on the sheet on yours; no numbers.
+    const contact = container.querySelector('section#kontakt') as HTMLElement;
+    const contactTitle = within(contact).getByRole('heading', { level: 2 });
+    expect(contact).toHaveAttribute('aria-labelledby', contactTitle.id);
+    expect(contactTitle).toHaveTextContent(t.home.contact.question);
+    expect(contact).toHaveTextContent(t.home.contact.line);
+    expect(within(contact).getAllByRole('link')).toHaveLength(1);
+    expect(within(contact).getByRole('link', { name: site.cta.contact.label })).toHaveAttribute('href', '/kontakt');
+    expect(contact).not.toHaveTextContent(site.support.vipps.value);
+    expect(contact.querySelectorAll('[data-material="flat"][data-ground="navy"]')).toHaveLength(2);
+    expect(container.querySelector('section#stott-oss')).toBeNull();
 
     // Nothing of the thread or its knots, no eyebrow labels.
     expect(container.querySelector('canvas[data-thread-canvas]')).toBeNull();
