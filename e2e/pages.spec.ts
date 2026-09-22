@@ -80,6 +80,10 @@ test('the home page is the name alone, and carries the brief’s main text, the 
     window.scrollTo(0, start + ((end - start) * u) / 3);
   }, u);
   const onOf = (k: number) => words.nth(k).evaluate((el) => (el as HTMLElement).style.getPropertyValue('--on'));
+  // the act is joined on its first field: arriving at the sea locks onto the navy until it has been
+  // stood on (step.ts), so a jump straight into the first tide would be carried back to it
+  await jumpTo(0);
+  await expect.poll(() => onOf(0), { timeout: 3000 }).toBe('1.000');
   await jumpTo(0.4);
   await expect.poll(() => onOf(1), { timeout: 3000 }).toBe('1.000');
   await expect(words.nth(1)).toHaveAttribute('data-on', '');

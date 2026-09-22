@@ -23,6 +23,18 @@ import { settle, STEPS } from './tide';
  * lets go of the page for the rest of the visit — no steps and no settle, the sea scrolled
  * like any tall section, the tide simply following the scroll. Nothing is taken twice.
  *
+ * AND THE FIRST FIELD IS A LOCK. The owner, on the built page: «lock the first one — when
+ * you see the navy, lock it … when I try to scroll fast it ends up somewhere between the
+ * blue and the burgundy, so it doesn't lock there, and it becomes almost a limbo where you
+ * have to scroll and it looks a bit weird. After the first, lock it, and then you can
+ * scroll easier.» A flick that begins up in the hero is the page's own until the act
+ * reaches the screen, and its momentum carried it straight into the first tide or past it
+ * — measured on the built page: four notches of a trackpad landed on the SECOND field and
+ * eight on the third, the navy never seen. So until the page has stood on the first field,
+ * anything that comes to rest inside the act is driven back to it, whichever way it was
+ * going. Arriving at the sea means arriving on the navy; everything else follows from
+ * there.
+ *
  * While the steps do hold, everything that is not a gesture — a key, the scrollbar, a
  * restored position — is left alone and then settled onto a field once it has been still
  * for a moment (`settle`, the rule since 2026-09-17), and that too only downwards: a page
@@ -122,6 +134,13 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
   let gripped = false;
   /** The four have been stepped through: the sea is free for the rest of the visit. */
   let done = false;
+  /** The page has been above the act, so it is arriving rather than starting inside it (a restored scroll is not carried back). */
+  let above = false;
+  /** … and has stood on the first field, which is what the arrival locks onto. */
+  let arrived = false;
+
+  /** Coming in fast, the page is carried back to the first field until it has stood on it. */
+  const locking = (u: number) => above && !arrived && !done && u > ON;
 
   const busy = () => !!drive?.isActive() || performance.now() < restUntil;
   const posOf = (s: Span, k: number) => s.start + ((s.end - s.start) * k) / STEPS;
@@ -130,7 +149,7 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
   const inside = (s: Span) => window.scrollY > s.start - 1 && window.scrollY < s.end + 1;
 
   const go = (s: Span, dir: number) => {
-    const to = nextStop(uAt(s), dir);
+    const to = locking(uAt(s)) ? 0 : nextStop(uAt(s), dir);
     if (to === null) return;
     drive?.kill();
     drive = driveTo(posOf(s, to), STEP, scrollTo);
@@ -140,9 +159,10 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
   const onWheel = (e: WheelEvent) => {
     const s = span();
     if (!s || !inside(s) || done) return;
-    // Down is the way in and the only way that steps; up is the visitor's own, always.
+    // Down is the way in and the only way that steps; up is the visitor's own, always —
+    // except while the arrival is still owed, when either way is answered with the navy.
     const dir = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
-    if (dir <= 0) return;
+    if (!dir || (dir < 0 && !locking(uAt(s)))) return;
     const now = performance.now();
     // A gesture of its own: nothing of ours is running, and either the last one has been over
     // a moment (a flick's tail is still the flick) or the wheel has simply kept turning.
@@ -223,7 +243,10 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
     const s = span();
     const dir = window.scrollY >= was ? 1 : -1;
     was = window.scrollY;
-    // The last field reached is the end of the way in: from here the sea is the visitor's.
+    // Where the page stands this frame: above the act (so it is arriving), on the first
+    // field (so the arrival is made), or at the last (so the way in is over for good).
+    if (s && window.scrollY <= s.start + 1) above = true;
+    if (s && inside(s) && Math.abs(uAt(s)) < ON) arrived = true;
     if (s && uAt(s) >= STEPS - ON) done = true;
     if (s && inside(s) && !done) grip();
     else release();
@@ -231,9 +254,11 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
     window.clearTimeout(idle);
     idle = window.setTimeout(() => {
       const now = span();
-      if (!now || !inside(now) || busy() || done || dir < 0) return;
+      if (!now || !inside(now) || busy() || done) return;
       const u = uAt(now);
-      if (Math.abs(u - Math.round(u)) < ON) return;
+      // The arrival is owed: back to the navy, whichever way the page was going.
+      if (locking(u)) return void (drive = driveTo(posOf(now, 0), STEP, scrollTo));
+      if (dir < 0 || Math.abs(u - Math.round(u)) < ON) return;
       const to = settle(u / STEPS, { progress: u / STEPS, direction: dir }) * STEPS;
       drive = driveTo(posOf(now, to), STEP, scrollTo);
     }, IDLE);
