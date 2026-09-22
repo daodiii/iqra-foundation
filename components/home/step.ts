@@ -6,13 +6,14 @@ import { settle, STEPS } from './tide';
 /**
  * One gesture, one field. The owner, 2026-09-22, on the live page: «if you scroll a little
  * or a lot you should just go to the next one, stop, go to the next one, stop … and it
- * should go pretty fast … in like half a second it goes to the next one.»
+ * should go pretty fast … in like half a second it goes to the next one» — and then, having
+ * tried that half second: «way too fast. maybe half the speed».
  *
  * So the four fields are not scrolled through any more, they are stepped: while the sea
  * holds the screen, a wheel notch, a flick of the trackpad or a swipe of a thumb — a
  * little or a lot, it makes no difference — moves the page exactly one field and stops
- * there, and the tide crosses in that half second, because the tide is written from the
- * scroll (Sea.tsx) and the scroll is this drive. The gesture is taken off the page for as
+ * there, and the tide crosses in that second, because the tide is written from the scroll
+ * (Sea.tsx) and the scroll is this drive. The gesture is taken off the page for as
  * long as the act holds it and handed straight back at the two ends: below the first field
  * and past the last one the page scrolls as it always did.
  *
@@ -26,8 +27,12 @@ import { settle, STEPS } from './tide';
 /** Where the act reaches down the page: the scroll of its first field and of its last. */
 export type Span = { start: number; end: number };
 
-/** The travel from one field to the next. The owner's half second. */
-export const STEP = 480;
+/**
+ * The travel from one field to the next. Half the speed the owner first saw (480 ms, their
+ * «half a second», which they read as way too fast): the tide has a second to cross, and a
+ * field a second to arrive in.
+ */
+export const STEP = 960;
 /** The rest after it lands, before a new gesture is taken. */
 export const REST = 90;
 /**

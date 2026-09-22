@@ -45,8 +45,8 @@ describe('nextStop', () => {
     }
   });
 
-  test('the step is the owner’s half second', () => {
-    expect(STEP).toBeGreaterThanOrEqual(400);
-    expect(STEP).toBeLessThanOrEqual(600);
+  test('the step takes the second the owner settled on — half the speed of the first build', () => {
+    expect(STEP).toBeGreaterThanOrEqual(800);
+    expect(STEP).toBeLessThanOrEqual(1200);
   });
 });

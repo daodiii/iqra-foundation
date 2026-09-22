@@ -1,11 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
+import { STEP } from '../components/home/step';
 import { STEPS } from '../components/home/tide';
 
 /**
  * The sea is stepped: while it holds the screen, one gesture moves one field and stops
  * there — a notch or a flick, it makes no difference — and above and below it the page
  * scrolls as it always did. The owner's ask of 2026-09-22: «if you scroll a little or a
- * lot you should just go to the next one, stop … in like half a second».
+ * lot you should just go to the next one, stop», over a second (their «half the speed» of
+ * the half second they first asked for and then saw).
  *
  * Measured by where the page lands, not by how it felt: headless Chromium has no smooth
  * scrolling and a wheel notch there is one jump, so a build that let the wheel through
@@ -34,9 +36,9 @@ async function stand(page: Page, k: number) {
   await expect.poll(() => u(page)).toBeCloseTo(k, 1);
 }
 
-/** The field the page is standing on, once it has stopped moving. */
+/** The field the page is standing on, once it has stopped moving: a step and its rest, and some room. */
 async function landed(page: Page) {
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(STEP + 700);
   return Math.round((await u(page)) * 100) / 100;
 }
 
@@ -71,17 +73,17 @@ test('the sea steps: a notch and a flick both move exactly one field, and both e
   // the act is over at the last field: the page scrolls on past the sea
   await stand(page, STEPS);
   await page.mouse.wheel(0, 300);
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(700);
   expect(await u(page)).toBeGreaterThan(STEPS);
 
   // and under the first: the page scrolls back up into the hero
   await stand(page, 0);
   await page.mouse.wheel(0, -300);
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(700);
   expect(await u(page)).toBeLessThan(0);
 });
 
-test('a step takes about half a second, and the field is on the water when it lands', async ({ page, isMobile }) => {
+test('a step takes about the second it is set to, and the field is on the water when it lands', async ({ page, isMobile }) => {
   test.skip(isMobile, 'measured with a wheel');
   await page.goto('/');
   await stand(page, 0);
@@ -90,7 +92,8 @@ test('a step takes about half a second, and the field is on the water when it la
   await page.mouse.wheel(0, 120);
   await expect.poll(() => u(page), { timeout: 3000, intervals: [16] }).toBeCloseTo(1, 1);
   const took = Date.now() - t0;
-  expect(took).toBeLessThan(1200);
+  expect(took).toBeGreaterThan(STEP / 2);
+  expect(took).toBeLessThan(STEP + 800);
   // the second field's words are up and on the water, the first's gone
   const words = page.locator('[data-fields] [data-field]');
   await expect.poll(() => words.nth(1).evaluate((el) => (el as HTMLElement).style.getPropertyValue('--on')), { timeout: 3000 }).toBe('1.000');

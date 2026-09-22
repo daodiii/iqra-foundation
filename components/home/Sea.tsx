@@ -73,8 +73,8 @@ function FieldWords({ area }: { area: Area }) {
  *
  * The scroll across those four screens is not the visitor's any more, it is stepped:
  * `takeTheSteps` (step.ts) takes the wheel and the thumb for as long as the act holds the
- * screen and moves the page exactly one field per gesture, in the owner's half second
- * (2026-09-22). So the scrub is only the tenth of a second that keeps a scroll made some
+ * screen and moves the page exactly one field per gesture, over the second the owner
+ * settled on (2026-09-22). So the scrub is only the tenth of a second that keeps a scroll made some
  * other way — a key, the scrollbar — from cutting rather than crossing; the drive's own
  * ease is what the tide rides. ScrollTrigger's `snap` is gone with it, and so is the boot
  * settle that used to rescue an act stranded inside the half second the snap is deaf for:
