@@ -180,13 +180,14 @@ test.describe('the collections are honest while empty', () => {
   });
 });
 
-test('kontakt: «Kontakt» and seven cards in reading order — the map with the address on it, the address, the e-mail, the form, the number, the hours, the way there — every value bracketed but the place, the form drawn, and no pin on a stand-in street', async ({ page }) => {
+test('kontakt: seven cards in reading order — the map with the address on it, the address, the e-mail, the form under «Kontakt oss», the number, the hours, the way there — every value bracketed but the place, the form drawn, and no pin on a stand-in street', async ({ page }) => {
   await page.goto('/kontakt');
   await expect(page).toHaveTitle(T(site.pages.contact.title));
   const t = site.pages.contact;
   const main = page.getByRole('main');
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
-  await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.addressLabel, t.emailLabel, t.phoneLabel, t.hoursLabel, t.transitLabel]);
+  await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.addressLabel, t.emailLabel, t.form.title, t.phoneLabel, t.hoursLabel, t.transitLabel]);
+  await expect(main.getByRole('heading', { level: 2, name: t.form.title })).toBeVisible();
   expect(await main.locator('[data-card]').evaluateAll((els) => els.map((e) => e.getAttribute('data-card')))).toEqual(['kart', 'adresse', 'epost', 'skjema', 'telefon', 'tider', 'vei']);
   await expect(main.getByRole('link', { name: site.contact.email })).toHaveAttribute('href', `mailto:${site.contact.email}`);
   await expect(main.getByRole('link', { name: site.contact.phone })).toHaveAttribute('href', `tel:${site.contact.phone.replace(/\s/g, '')}`);
@@ -207,9 +208,10 @@ test('kontakt: «Kontakt» and seven cards in reading order — the map with the
     await expect(main.getByText(l.name, { exact: true })).toBeVisible();
     if (isPlaceholder(l.href)) await expect(main.getByRole('link', { name: l.name })).toHaveCount(0);
   }
-  // the form is a drawing: nothing to fill in, hidden from a reader, the honest line under it
+  // the form is a drawing: its five fields as text, nothing to fill in, hidden from a reader, the honest line under it
   await expect(main.locator('form, input, textarea, button, select')).toHaveCount(0);
   await expect(main.locator('[data-form]')).toHaveAttribute('aria-hidden', 'true');
+  for (const word of [t.form.name, t.form.email, t.form.mobile, t.form.orgnr, t.form.message]) await expect(main.locator('[data-form]')).toContainText(word);
   await expect(main.getByText(t.form.notice, { exact: true })).toBeVisible();
 });
 

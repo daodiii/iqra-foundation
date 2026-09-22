@@ -5,10 +5,12 @@ import styles from './kortene.module.css';
 
 /**
  * Kontakt as cards (13 Kortene, the owner's pick of 2026-09-22 after five rounds: «top modern
- * page with fantastic animations but still easy to read and find info»). On white, «Kontakt»
- * and under it a grid of cards, each one thing — the map the largest with the address
- * written on it, the address with the org.nr, the e-mail with where to follow, the number,
- * the hours, the way there, and the form down the right. Every card is read at a glance;
+ * page with fantastic animations but still easy to read and find info»). On white, a grid of
+ * cards, each one thing — the map the largest with the address written on it, the address
+ * with the org.nr, the e-mail with where to follow, the number, the hours, the way there, and
+ * the form down the right under «Kontakt oss» (the owner's word, the same day: no title over
+ * the page, the heading on the form; «Kontakt» stays the page's name for the tab, the menu
+ * and a reader, unseen). Every card is read at a glance;
  * they come up in reading order and the map flies in to the dot, and then everything
  * stands still. Every beat is the stylesheet's from the first paint: no hooks, nothing waits
  * for the page to be measured.
@@ -69,19 +71,31 @@ function Follow() {
   );
 }
 
-/** The form, drawn for the eye: spans, not controls, and hidden from a reader, since nothing is wired. The line under it says so. */
+/** One drawn field: its name and a hairline box. */
+function Field({ label }: { label: string }) {
+  return (
+    <span className={styles.field}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <span className={styles.fieldBox} />
+    </span>
+  );
+}
+
+/**
+ * The form, drawn for the eye: spans, not controls, and hidden from a reader, since nothing
+ * is wired. The writer's name and e-mail, their mobile and organisation number side by side,
+ * the message, Send. The line under it says so.
+ */
 function Form() {
   const f = t.form;
   return (
     <div className={styles.formWrap}>
       <div className={styles.form} data-form aria-hidden="true">
-        <span className={styles.field}>
-          <span className={styles.fieldLabel}>{f.name}</span>
-          <span className={styles.fieldBox} />
-        </span>
-        <span className={styles.field}>
-          <span className={styles.fieldLabel}>{f.email}</span>
-          <span className={styles.fieldBox} />
+        <Field label={f.name} />
+        <Field label={f.email} />
+        <span className={styles.pair}>
+          <Field label={f.mobile} />
+          <Field label={f.orgnr} />
         </span>
         <span className={styles.field}>
           <span className={styles.fieldLabel}>{f.message}</span>
@@ -107,7 +121,7 @@ function Card({ area, label, className, children }: { area: string; label?: stri
 export function Kortene() {
   return (
     <article className={styles.kortene}>
-      <h1 className={styles.title}>{t.title}</h1>
+      <h1 className="visually-hidden">{t.title}</h1>
       <div className={styles.bento}>
         <Card area="kart" className={styles.mapCard}>
           <Kart located={!isPlaceholder(c.address.street)} />
@@ -126,6 +140,7 @@ export function Kortene() {
           <p className={styles.cardSmall}>{t.followLabel} <Follow /></p>
         </Card>
         <Card area="skjema" className={styles.formCard}>
+          <h2 className={styles.formTitle}>{t.form.title}</h2>
           <Form />
         </Card>
         <Card area="telefon" label={t.phoneLabel}>
