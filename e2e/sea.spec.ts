@@ -3,11 +3,13 @@ import { STEP } from '../components/home/step';
 import { STEPS } from '../components/home/tide';
 
 /**
- * The sea is stepped: while it holds the screen, one gesture moves one field and stops
- * there — a notch or a flick, it makes no difference — and above and below it the page
- * scrolls as it always did. The owner's ask of 2026-09-22: «if you scroll a little or a
- * lot you should just go to the next one, stop», over a second (their «half the speed» of
- * the half second they first asked for and then saw).
+ * The sea is stepped on the way in, once: while it holds the screen, a gesture downwards
+ * moves one field and stops there — a notch or a flick, it makes no difference — and then,
+ * the four seen, the page is the visitor's again, up and down, free. The owner's ask of
+ * 2026-09-22: «if you scroll a little or a lot you should just go to the next one, stop»,
+ * over a second (their «half the speed» of the half second they first asked for and then
+ * saw), and then: «make it that it's only once, like when you scroll down — after that …
+ * much much more free-flowing … when you scroll back up, make it different».
  *
  * Measured by where the page lands, not by how it felt: headless Chromium has no smooth
  * scrolling and a wheel notch there is one jump, so a build that let the wheel through
@@ -42,7 +44,7 @@ async function landed(page: Page) {
   return Math.round((await u(page)) * 100) / 100;
 }
 
-test('the sea steps: a notch and a flick both move exactly one field, and both ends hand the page back', async ({ page, isMobile }) => {
+test('the way in steps: a notch and a flick both move exactly one field, and both ends hand the page back', async ({ page, isMobile }) => {
   test.skip(isMobile, 'a wheel is the desktop gesture; the thumb is tested below');
   await page.goto('/');
   await expect(page.locator('[data-fields]')).toHaveAttribute('data-live', '');
@@ -66,21 +68,54 @@ test('the sea steps: a notch and a flick both move exactly one field, and both e
   await flick(240);
   expect(await landed(page)).toBe(3);
 
-  // and back, one at a time
-  await page.mouse.wheel(0, -1200);
-  expect(await landed(page)).toBe(2);
-
   // the act is over at the last field: the page scrolls on past the sea
-  await stand(page, STEPS);
   await page.mouse.wheel(0, 300);
   await page.waitForTimeout(700);
   expect(await u(page)).toBeGreaterThan(STEPS);
 
   // and under the first: the page scrolls back up into the hero
+  await page.reload();
   await stand(page, 0);
+  await page.mouse.move(700, 500);
   await page.mouse.wheel(0, -300);
   await page.waitForTimeout(700);
   expect(await u(page)).toBeLessThan(0);
+});
+
+test('only once, and only downwards: the way back up is free, and so is the sea after the four have been seen', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'a wheel is the desktop gesture');
+  await page.goto('/');
+  await expect(page.locator('[data-fields]')).toHaveAttribute('data-live', '');
+  await stand(page, 1);
+  await page.mouse.move(700, 500);
+
+  // up, mid-way in: the page goes where the wheel sent it and is left there — no step, no settle
+  const before = await u(page);
+  await page.mouse.wheel(0, -200);
+  await page.waitForTimeout(STEP + 700);
+  const after = await u(page);
+  expect(after).toBeLessThan(before);
+  expect(before - after).toBeLessThan(0.5);
+  expect(Math.abs(after - Math.round(after))).toBeGreaterThan(0.02);
+
+  // down again is still the way in, so it steps
+  await stand(page, 0);
+  await page.mouse.wheel(0, 100);
+  expect(await landed(page)).toBe(1);
+
+  // once the last field has been reached, the sea is free both ways for the rest of the visit
+  await stand(page, STEPS);
+  await page.mouse.wheel(0, -200);
+  await page.waitForTimeout(STEP + 700);
+  const up = await u(page);
+  expect(STEPS - up).toBeLessThan(0.5);
+  expect(Math.abs(up - Math.round(up))).toBeGreaterThan(0.02);
+  const wasAt = await u(page);
+  await page.mouse.wheel(0, 200);
+  await page.waitForTimeout(STEP + 700);
+  const down = await u(page);
+  expect(down).toBeGreaterThan(wasAt);
+  expect(down - wasAt).toBeLessThan(0.5);
 });
 
 test('a step takes about the second it is set to, and the field is on the water when it lands', async ({ page, isMobile }) => {
@@ -123,9 +158,13 @@ test('a thumb steps one field a swipe, and the page is not dragged with it', asy
   // a long swipe: still one
   await swipe(-600);
   expect(await landed(page)).toBe(2);
-  // back down
+  // a thumb carrying the page back up is its own: it goes where it was sent, not a whole field
+  const before = await u(page);
   await swipe(400);
-  expect(await landed(page)).toBe(1);
+  const after = await landed(page);
+  expect(after).toBeLessThan(before);
+  expect(before - after).toBeLessThan(0.9);
+  expect(Math.abs(after - Math.round(after))).toBeGreaterThan(0.02);
 });
 
 test('a scroll that is nobody’s gesture — a key, the scrollbar — is settled onto a field', async ({ page }) => {
@@ -135,7 +174,8 @@ test('a scroll that is nobody’s gesture — a key, the scrollbar — is settle
   const s = await span(page);
   await page.evaluate((y) => window.scrollTo(0, y), s.start + ((s.end - s.start) * 0.4) / STEPS);
   expect(await landed(page)).toBe(1);
-  // and a nudge back short of the commit returns to the field it left
-  await page.evaluate((y) => window.scrollTo(0, y), s.start + ((s.end - s.start) * 0.9) / STEPS);
-  expect(await landed(page)).toBe(1);
+  // going back up it is left where it was put: the way back is the visitor's own
+  await page.evaluate((y) => window.scrollTo(0, y), s.start + ((s.end - s.start) * 0.6) / STEPS);
+  const back = await landed(page);
+  expect(back).toBeCloseTo(0.6, 1);
 });

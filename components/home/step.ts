@@ -13,15 +13,22 @@ import { settle, STEPS } from './tide';
  * holds the screen, a wheel notch, a flick of the trackpad or a swipe of a thumb — a
  * little or a lot, it makes no difference — moves the page exactly one field and stops
  * there, and the tide crosses in that second, because the tide is written from the scroll
- * (Sea.tsx) and the scroll is this drive. The gesture is taken off the page for as
- * long as the act holds it and handed straight back at the two ends: below the first field
- * and past the last one the page scrolls as it always did.
+ * (Sea.tsx) and the scroll is this drive.
  *
- * Everything else that moves a page — a key, the scrollbar, a restored position, a link —
- * is left alone and then settled: once it has been still for a moment, a position between
- * two fields finishes the step it started (`settle`, the rule since 2026-09-17). That
- * replaces ScrollTrigger's own snap, which is where this used to live, and with it the
- * half second at boot when that snap is deaf and a stranded act had to be rescued by hand.
+ * ONCE, AND ONLY DOWNWARDS. The owner again, having lived with it: «make it that it's only
+ * once, like when you scroll down — after that, if you try to scroll up and down, it's a
+ * lot easier and much much more free-flowing … when you scroll back up, make it
+ * different». So the steps are the way IN: they hold on the first way down and nowhere
+ * else. A gesture upwards is never taken, and once the last field has been reached the act
+ * lets go of the page for the rest of the visit — no steps and no settle, the sea scrolled
+ * like any tall section, the tide simply following the scroll. Nothing is taken twice.
+ *
+ * While the steps do hold, everything that is not a gesture — a key, the scrollbar, a
+ * restored position — is left alone and then settled onto a field once it has been still
+ * for a moment (`settle`, the rule since 2026-09-17), and that too only downwards: a page
+ * pulled back to the field it had just left would be the opposite of free. It replaces
+ * ScrollTrigger's own snap, which is where this used to live, and with it the half second
+ * at boot when that snap is deaf and a stranded act had to be rescued by hand.
  */
 
 /** Where the act reaches down the page: the scroll of its first field and of its last. */
@@ -113,6 +120,8 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
   let hold: 'open' | 'ours' | 'theirs' = 'open';
   let from = 0;
   let gripped = false;
+  /** The four have been stepped through: the sea is free for the rest of the visit. */
+  let done = false;
 
   const busy = () => !!drive?.isActive() || performance.now() < restUntil;
   const posOf = (s: Span, k: number) => s.start + ((s.end - s.start) * k) / STEPS;
@@ -130,9 +139,10 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
 
   const onWheel = (e: WheelEvent) => {
     const s = span();
-    if (!s || !inside(s)) return;
+    if (!s || !inside(s) || done) return;
+    // Down is the way in and the only way that steps; up is the visitor's own, always.
     const dir = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
-    if (!dir) return;
+    if (dir <= 0) return;
     const now = performance.now();
     // A gesture of its own: nothing of ours is running, and either the last one has been over
     // a moment (a flick's tail is still the flick) or the wheel has simply kept turning.
@@ -163,7 +173,7 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
   const onTouchMove = (e: TouchEvent) => {
     if (hold === 'theirs') return;
     const s = span();
-    if (!s || !inside(s)) return;
+    if (!s || !inside(s) || done) return;
     if (hold === 'ours') {
       if (e.cancelable) e.preventDefault();
       return;
@@ -171,7 +181,8 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
     const dy = from - (e.touches[0]?.clientY ?? from);
     if (!dy) return;
     const dir = dy > 0 ? 1 : -1;
-    if (nextStop(uAt(s), dir) === null) {
+    // A thumb carrying the page back up is its own; only the way in steps.
+    if (dir < 0 || nextStop(uAt(s), dir) === null) {
       hold = 'theirs';
       return;
     }
@@ -207,18 +218,20 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
     el.removeEventListener('touchcancel', onTouchEnd);
   };
 
-  /** Whether the act has the screen, and — for anything that moved the page without asking us — the settle. */
+  /** Whether the act has the screen and still steps, and — for anything that moved the page without asking us — the settle. */
   const watch = () => {
     const s = span();
     const dir = window.scrollY >= was ? 1 : -1;
     was = window.scrollY;
-    if (s && inside(s)) grip();
+    // The last field reached is the end of the way in: from here the sea is the visitor's.
+    if (s && uAt(s) >= STEPS - ON) done = true;
+    if (s && inside(s) && !done) grip();
     else release();
-    if (drive?.isActive()) return;
+    if (done || drive?.isActive()) return;
     window.clearTimeout(idle);
     idle = window.setTimeout(() => {
       const now = span();
-      if (!now || !inside(now) || busy()) return;
+      if (!now || !inside(now) || busy() || done || dir < 0) return;
       const u = uAt(now);
       if (Math.abs(u - Math.round(u)) < ON) return;
       const to = settle(u / STEPS, { progress: u / STEPS, direction: dir }) * STEPS;

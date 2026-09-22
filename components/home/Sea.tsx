@@ -71,10 +71,11 @@ function FieldWords({ area }: { area: Area }) {
  * under the header to its bottom at the foot of the screen — and `write` puts each `u` on
  * the elements, once per change and once per refresh.
  *
- * The scroll across those four screens is not the visitor's any more, it is stepped:
- * `takeTheSteps` (step.ts) takes the wheel and the thumb for as long as the act holds the
- * screen and moves the page exactly one field per gesture, over the second the owner
- * settled on (2026-09-22). So the scrub is only the tenth of a second that keeps a scroll made some
+ * The scroll across those four screens is stepped on the way in: `takeTheSteps` (step.ts)
+ * takes the wheel and the thumb while the act holds the screen and moves the page exactly
+ * one field per gesture, over the second the owner settled on (2026-09-22) — downwards, and
+ * only until the four have been seen, after which the sea is scrolled like any other
+ * section. So the scrub is only the tenth of a second that keeps a scroll made some
  * other way — a key, the scrollbar — from cutting rather than crossing; the drive's own
  * ease is what the tide rides. ScrollTrigger's `snap` is gone with it, and so is the boot
  * settle that used to rescue an act stranded inside the half second the snap is deaf for:
