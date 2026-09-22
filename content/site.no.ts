@@ -60,6 +60,23 @@ export const site = {
   contact: {
     email: '[EPOST]',
     orgnr: '[ORG.NR]',
+    /**
+     * The street and the postcode; the place is `site.place`. The Kontakt page's map
+     * (public/kart-1024.webp, kart-1536.webp) is stitched round a point, and the pin on it shows
+     * itself only once the street is real — today the point is Oslo sentrum (59.9138 N
+     * 10.7500 E), a stand-in for the place. When the address arrives: write it here, then
+     * `node scripts/dev/kart.mjs <lat> <lon>` so the map is round it.
+     */
+    address: { street: '[GATEADRESSE]', postcode: '[POSTNUMMER]' },
+    phone: '[TELEFON]',
+    hours: '[ÅPNINGSTIDER]',
+    transit: '[VEIEN DIT]',
+    /** Where to follow. A name stands as plain text while its address is bracketed, and becomes a link once it is real. */
+    follow: [
+      { name: 'Instagram', href: '[INSTAGRAM]' },
+      { name: 'Facebook', href: '[FACEBOOK]' },
+      { name: 'LinkedIn', href: '[LINKEDIN]' },
+    ],
   },
   support: {
     vipps: { label: 'Vippsnummer', value: '[NUMMER]' },
@@ -159,9 +176,17 @@ export const site = {
       label: brief.menu[7],
       title: 'Kontakt',
       description: brief.about.paragraphs[2],
+      addressLabel: 'Adresse',
       emailLabel: 'E-post',
+      phoneLabel: 'Telefon',
       orgnrLabel: 'Organisasjonsnummer',
-      placeLabel: 'Sted',
+      hoursLabel: 'Åpningstider',
+      transitLabel: 'Kollektivt',
+      followLabel: 'Følg oss',
+      /** The map is OpenStreetMap's; the credit is the licence's condition (ODbL), and links to it. The alt is rewritten with the map. */
+      map: { alt: 'Kart over Oslo sentrum', credit: '© OpenStreetMap-bidragsytere', creditHref: 'https://www.openstreetmap.org/copyright' },
+      /** The form's fields are what they are called. It is drawn, not wired, and the notice under it says so (the sibling of the card form's line, 2026-09-12). */
+      form: { name: 'Navn', email: 'E-post', message: 'Melding', send: 'Send', notice: 'Skjemaet er ikke koblet til ennå. Send en e-post så lenge.' },
     },
     support: {
       label: brief.menu[8],

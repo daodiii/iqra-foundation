@@ -86,13 +86,28 @@ describe('contentPlaceholders', () => {
   });
 
   /**
-   * What the site still lacks, exactly: the address, the organisation number, the Vipps
-   * number and the account. Nothing else on the site is a stand-in — the collections ship
-   * empty and the prose is the brief's — so anything more here is a placeholder someone
-   * added and should account for.
+   * What the site still lacks, exactly: the e-mail, the organisation number, the Vipps
+   * number and the account, and what the Kontakt page asks for besides — the street and
+   * the postcode, the number, the hours, the way there, the three places to follow.
+   * Nothing else on the site is a stand-in — the collections ship empty and the prose is
+   * the brief's — so anything more here is a placeholder someone added and should
+   * account for.
    */
-  test('the four facts the foundation has not supplied are the only placeholders', () => {
+  test('the facts the foundation has not supplied are the only placeholders', () => {
     const paths = contentPlaceholders(site).map((p) => p.path).sort();
-    expect(paths).toEqual(['contact.email', 'contact.orgnr', 'support.account.value', 'support.vipps.value']);
+    expect(paths).toEqual([
+      'contact.address.postcode',
+      'contact.address.street',
+      'contact.email',
+      'contact.follow[0].href',
+      'contact.follow[1].href',
+      'contact.follow[2].href',
+      'contact.hours',
+      'contact.orgnr',
+      'contact.phone',
+      'contact.transit',
+      'support.account.value',
+      'support.vipps.value',
+    ]);
   });
 });

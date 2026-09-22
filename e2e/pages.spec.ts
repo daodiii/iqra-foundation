@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
 import { getEvents, getPeople, splitEvents, todayISO } from '../lib/content';
+import { isPlaceholder } from '../lib/placeholder';
 import { sentences } from '../lib/text';
 
 /**
@@ -179,14 +180,37 @@ test.describe('the collections are honest while empty', () => {
   });
 });
 
-test('kontakt: the address and the number, bracketed, and no form', async ({ page }) => {
+test('kontakt: «Kontakt» and seven cards in reading order — the map with the address on it, the address, the e-mail, the form, the number, the hours, the way there — every value bracketed but the place, the form drawn, and no pin on a stand-in street', async ({ page }) => {
   await page.goto('/kontakt');
   await expect(page).toHaveTitle(T(site.pages.contact.title));
+  const t = site.pages.contact;
   const main = page.getByRole('main');
+  await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
+  await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.addressLabel, t.emailLabel, t.phoneLabel, t.hoursLabel, t.transitLabel]);
+  expect(await main.locator('[data-card]').evaluateAll((els) => els.map((e) => e.getAttribute('data-card')))).toEqual(['kart', 'adresse', 'epost', 'skjema', 'telefon', 'tider', 'vei']);
   await expect(main.getByRole('link', { name: site.contact.email })).toHaveAttribute('href', `mailto:${site.contact.email}`);
+  await expect(main.getByRole('link', { name: site.contact.phone })).toHaveAttribute('href', `tel:${site.contact.phone.replace(/\s/g, '')}`);
+  await expect(main).toContainText(site.contact.address.street);
+  await expect(main).toContainText(`${site.contact.address.postcode} ${site.place}`);
   await expect(main).toContainText(site.contact.orgnr);
-  await expect(main).toContainText(site.place);
-  await expect(main.locator('form, input, textarea')).toHaveCount(0);
+  // the map at both widths and served, its credit a link to the licence; the dot only once the street is real
+  await expect(main.getByRole('img', { name: t.map.alt })).toHaveAttribute('srcset', '/kart-1024.webp 1024w, /kart-1536.webp 1536w');
+  for (const file of ['/kart-1024.webp', '/kart-1536.webp']) {
+    const res = await page.request.get(file);
+    expect(res.status()).toBe(200);
+    expect(res.headers()['content-type']).toContain('image/webp');
+  }
+  await expect(main.getByRole('link', { name: t.map.credit })).toHaveAttribute('href', t.map.creditHref);
+  await expect(main.locator('[data-pin]')).toHaveCount(isPlaceholder(site.contact.address.street) ? 0 : 1);
+  // where to follow is named, and links nowhere while bracketed
+  for (const l of site.contact.follow) {
+    await expect(main.getByText(l.name, { exact: true })).toBeVisible();
+    if (isPlaceholder(l.href)) await expect(main.getByRole('link', { name: l.name })).toHaveCount(0);
+  }
+  // the form is a drawing: nothing to fill in, hidden from a reader, the honest line under it
+  await expect(main.locator('form, input, textarea, button, select')).toHaveCount(0);
+  await expect(main.locator('[data-form]')).toHaveAttribute('aria-hidden', 'true');
+  await expect(main.getByText(t.form.notice, { exact: true })).toBeVisible();
 });
 
 test('støtt oss: the question, then the three ways in the owner’s order — the account, Vipps, AvtaleGiro — both numbers bracketed, nothing that pretends to pay', async ({ page }) => {
