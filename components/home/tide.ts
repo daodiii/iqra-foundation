@@ -46,8 +46,11 @@ const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
  * back, anything short of nine tenths returns. A tenth is less than one notch of a mouse
  * wheel (a hundred pixels of a step of a screen): at an eighth a single notch fell short
  * and was pulled back to the field it had left, and only two notches at once moved on.
- * There is no readable state between two fields, so it always settles. The signature is
- * ScrollTrigger's `snapTo` function.
+ * There is no readable state between two fields, so it always settles. Since 2026-09-22
+ * the gestures are stepped whole (step.ts) and nothing lands here between two fields on
+ * purpose; this is what collects a page that was moved some other way — a key, the
+ * scrollbar, a restored position. The shape is ScrollTrigger's old `snapTo`, which is
+ * where it used to be given.
  */
 export const COMMIT = 0.1;
 export function settle(projected: number, self?: { progress: number; direction: number }): number {

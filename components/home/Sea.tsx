@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import gsap from 'gsap';
-import type { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useEffect, useRef, type CSSProperties, type RefObject } from 'react';
 import { Box } from '@/components/materials/Box';
 import { Logo } from '@/components/site/Logo';
@@ -14,13 +13,8 @@ import { AREA_LOOK, areaFloor, type Area } from './areas';
 import fields from './fields.module.css';
 import { useFit } from './fit';
 import styles from './sea.module.css';
-import { groundAt, LANDED, LEFT, seaAreas, seaAt, settle, STEPS } from './tide';
-
-/** The plugin's static side, for `getScrollFunc` and the listeners; the instance type is `ScrollTrigger`. */
-type Plugin = typeof ScrollTrigger;
-
-/** The snap is deaf for the first half second of ScrollTrigger's life (lib/gsap.ts has the measurements); the act looks once, after it. */
-const BOOT_SETTLE = 0.6;
+import { takeTheSteps } from './step';
+import { groundAt, LANDED, LEFT, seaAreas, seaAt, STEPS } from './tide';
 
 /** The longest of the four names: the index is sized by it. */
 const widest = seaAreas.reduce((a, b) => (b.name.length > a.name.length ? b : a));
@@ -73,50 +67,20 @@ function FieldWords({ area }: { area: Area }) {
 }
 
 /**
- * The boot settle. ScrollTrigger schedules no snap until half a second after it starts,
- * and none at all for a page that loads with its scroll restored mid-act until the next
- * scroll. So once, after that half second, the act checks itself: stranded between two
- * fields, it drives the window to where `settle` says, the way the snap would have — and
- * lets go the moment anything else moves the page. `hold` is given the drive so an unmount
- * can kill it.
- */
-function settleNow(plugin: Plugin, st: ScrollTrigger | undefined, hold: (drive: gsap.core.Tween) => void) {
-  if (!st || !st.isActive) return;
-  const before = window.scrollY;
-  requestAnimationFrame(() => {
-    // Still moving? Then ScrollTrigger is awake and its own snap will collect it.
-    if (window.scrollY !== before) return;
-    // `getTween(true)` is the number 0 once a snap has finished — `?.` does not guard 0.
-    const tween = st.getTween(true) as gsap.core.Tween | 0 | undefined;
-    if (tween && tween.isActive()) return;
-    const to = settle(st.progress, st);
-    if (Math.abs(to - st.progress) < 0.001) return;
-    const toScroll = plugin.getScrollFunc(window);
-    const at = { y: window.scrollY };
-    let wrote = at.y;
-    const drive = gsap.to(at, {
-      y: st.start + to * (st.end - st.start),
-      duration: 0.9,
-      ease: 'power2.inOut',
-      onUpdate: () => {
-        // Two pixels of slack because the browser rounds.
-        if (Math.abs(window.scrollY - wrote) > 2) return void drive.kill();
-        toScroll(at.y);
-        wrote = window.scrollY;
-      },
-    });
-    hold(drive);
-  });
-}
-
-/**
  * The act: `u` runs 0 to STEPS across the stage — a ScrollTrigger from the stage's top
- * under the header to its bottom at the foot of the screen, scrubbed with a little lag and
- * settling at the four stops once the scroll rests — and `write` puts each `u` on the
- * elements, once per change and once per refresh. The settle takes up to nine tenths of a
- * second for a whole step, so a tide crosses the screen as a tide and not as a cut (at
- * 0.65 s it read as a colour change), from a tenth of a step in (`settle`). Under reduced
- * motion nothing is made and the stage is never `data-live`.
+ * under the header to its bottom at the foot of the screen — and `write` puts each `u` on
+ * the elements, once per change and once per refresh.
+ *
+ * The scroll across those four screens is not the visitor's any more, it is stepped:
+ * `takeTheSteps` (step.ts) takes the wheel and the thumb for as long as the act holds the
+ * screen and moves the page exactly one field per gesture, in the owner's half second
+ * (2026-09-22). So the scrub is only the tenth of a second that keeps a scroll made some
+ * other way — a key, the scrollbar — from cutting rather than crossing; the drive's own
+ * ease is what the tide rides. ScrollTrigger's `snap` is gone with it, and so is the boot
+ * settle that used to rescue an act stranded inside the half second the snap is deaf for:
+ * step.ts settles a stranded page itself, from the first frame, whatever stranded it.
+ *
+ * Under reduced motion nothing is made and the stage is never `data-live`.
  *
  * ScrollTrigger is loaded here, after hydration, not imported with the page: nothing else
  * on the site uses it any more, and carried in the home page's chunk it cost the page's
@@ -151,8 +115,7 @@ function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void
           trigger: el,
           start: () => `top ${headerH()}px`,
           end: 'bottom bottom',
-          scrub: 0.4,
-          snap: { snapTo: settle, duration: { min: 0.45, max: 0.9 }, delay: 0.12, ease: 'power2.inOut', directional: false },
+          scrub: 0.1,
         },
       });
       tl.to({}, { duration: 1 });
@@ -160,11 +123,10 @@ function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void
       tl.eventCallback('onUpdate', put);
       ScrollTrigger.addEventListener('refresh', put);
       put();
-      let drive: gsap.core.Tween | null = null;
-      const boot = gsap.delayedCall(BOOT_SETTLE, () => settleNow(ScrollTrigger, tl.scrollTrigger, (d) => { drive = d; }));
+      const st = tl.scrollTrigger;
+      const loose = takeTheSteps(el, () => (st ? { start: st.start, end: st.end } : null), ScrollTrigger.getScrollFunc(window));
       down = () => {
-        boot.kill();
-        drive?.kill();
+        loose();
         ScrollTrigger.removeEventListener('refresh', put);
         tl.scrollTrigger?.kill();
         tl.kill();
@@ -179,7 +141,8 @@ function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void
 }
 
 /**
- * Havet: the four fields as one sea. One water the size of the screen, calm; between
+ * Havet: the four fields as one sea, stepped one gesture at a time (step.ts). One water
+ * the size of the screen, calm; between
  * field i and i + 1 its floor is retuned from the one area's water to the next, `t` of the
  * way across — the tide comes in from the left, its edge bent by the surface
  * (`WaterHandle.retune`) — and the CSS ground under the canvas mixes the same two colours
