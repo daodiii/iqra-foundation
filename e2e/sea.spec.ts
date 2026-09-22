@@ -42,6 +42,8 @@ async function stand(page: Page, k: number) {
   const to = (at: number) => page.evaluate((y) => window.scrollTo(0, y), s.start + ((s.end - s.start) * at) / STEPS);
   await to(0);
   await expect.poll(() => u(page)).toBeCloseTo(0, 1);
+  // and stands there long enough for the act to see it standing — the arrival is what spends the lock
+  await page.waitForTimeout(400);
   if (k === 0) return;
   await to(k);
   await expect.poll(() => u(page)).toBeCloseTo(k, 1);

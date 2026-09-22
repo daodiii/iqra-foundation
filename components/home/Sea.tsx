@@ -102,6 +102,10 @@ function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void
     const el = stage.current;
     if (!el) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Read now, while the page is as the visitor found it: whether the sea is still below the
+    // screen, which is what tells an arrival from a position restored inside the act. By the
+    // time ScrollTrigger has been fetched, a quick hand is already in the sea.
+    const startedAbove = el.getBoundingClientRect().top > 0;
     el.setAttribute('data-live', '');
     fn.current(0);
     let gone = false;
@@ -125,7 +129,11 @@ function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void
       ScrollTrigger.addEventListener('refresh', put);
       put();
       const st = tl.scrollTrigger;
-      const loose = takeTheSteps(el, () => (st ? { start: st.start, end: st.end } : null), ScrollTrigger.getScrollFunc(window));
+      // Null until the trigger has measured itself: an act of no length is not an act, and the
+      // driver must not read `u` from a division by zero (it did, and stood down for the page's
+      // first second — long enough for a visitor to arrive and be met by nothing).
+      const reach = () => (st && st.end > st.start ? { start: st.start, end: st.end } : null);
+      const loose = takeTheSteps(el, reach, ScrollTrigger.getScrollFunc(window), startedAbove);
       down = () => {
         loose();
         ScrollTrigger.removeEventListener('refresh', put);

@@ -84,6 +84,9 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   // stood on (step.ts), so a jump straight into the first tide would be carried back to it
   await jumpTo(0);
   await expect.poll(() => onOf(0), { timeout: 3000 }).toBe('1.000');
+  // and stands there a moment: the act locks onto the navy until it has been stood on, so a jump
+  // made the instant the page arrives would be carried back rather than settled forward
+  await page.waitForTimeout(400);
   await jumpTo(0.4);
   await expect.poll(() => onOf(1), { timeout: 3000 }).toBe('1.000');
   await expect(words.nth(1)).toHaveAttribute('data-on', '');

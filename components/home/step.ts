@@ -27,13 +27,25 @@ import { settle, STEPS } from './tide';
  * you see the navy, lock it … when I try to scroll fast it ends up somewhere between the
  * blue and the burgundy, so it doesn't lock there, and it becomes almost a limbo where you
  * have to scroll and it looks a bit weird. After the first, lock it, and then you can
- * scroll easier.» A flick that begins up in the hero is the page's own until the act
- * reaches the screen, and its momentum carried it straight into the first tide or past it
- * — measured on the built page: four notches of a trackpad landed on the SECOND field and
- * eight on the third, the navy never seen. So until the page has stood on the first field,
- * anything that comes to rest inside the act is driven back to it, whichever way it was
- * going. Arriving at the sea means arriving on the navy; everything else follows from
- * there.
+ * scroll easier.» So until the page has stood on the first field, anything that comes to
+ * rest inside the act is driven back to it, whichever way it was going. Arriving at the sea
+ * means arriving on the navy; everything else follows from there.
+ *
+ * A GESTURE THAT BEGAN OUTSIDE THE ACT CANNOT BE TAKEN, AND IS NOT FOUGHT. Measured on the
+ * built page with a real streamed gesture (CDP's scroll synthesiser, not a burst of discrete
+ * notches): every one of its 46 wheel events arrives `cancelable: false`. Chrome hands a
+ * scroll to the compositor once the gesture is under way, and from then on the page may
+ * watch but not refuse — so a flick that starts up in the hero owns the scroll for its whole
+ * life, and the sea cannot step it. Calling `preventDefault` on those events does nothing,
+ * and a drive started under one is killed in its first frame by the scroll still running;
+ * that was the limbo — the page left between two fields with nothing to collect it, because
+ * the retry was scheduled by scroll events and the gesture had finished making any.
+ *
+ * So: a wheel event that cannot be cancelled is left entirely alone, and the landing is what
+ * answers it. The landing is a watchdog rather than a timer — while the act holds the screen
+ * it looks every tenth of a second, and whenever the page has been still for a moment and is
+ * not on a field it drives to the one the rules ask for, again and again until it lands.
+ * Being still is the only thing it waits for, so an interrupted drive is simply retried.
  *
  * While the steps do hold, everything that is not a gesture — a key, the scrollbar, a
  * restored position — is left alone and then settled onto a field once it has been still
@@ -121,21 +133,31 @@ function driveTo(y: number, ms: number, scrollTo: (y: number) => void): gsap.cor
  * taken when the act reaches the screen and given back when it leaves. A thumb is taken on
  * the stage itself, which is the whole screen for exactly as long.
  */
-export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo: (y: number) => void): () => void {
+export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo: (y: number) => void, startedAbove: boolean): () => void {
   let drive: gsap.core.Tween | null = null;
   let restUntil = 0;
   /** The last event of the gesture in hand. */
   let last = 0;
-  let idle = 0;
+  /** When the page last moved, and the watchdog that lands it once it has been still. */
+  let moved = performance.now();
+  let watchdog = 0;
   let was = window.scrollY;
   /** Whose the touch in hand is: nobody's yet, ours (a step), or the page's (it is leaving the act). */
   let hold: 'open' | 'ours' | 'theirs' = 'open';
   let from = 0;
   let gripped = false;
+  /** Which way the page was last going, for the rule that finishes the step it started. */
+  let dirOfTravel = 1;
   /** The four have been stepped through: the sea is free for the rest of the visit. */
   let done = false;
-  /** The page has been above the act, so it is arriving rather than starting inside it (a restored scroll is not carried back). */
-  let above = false;
+  /**
+   * The page has been above the act, so it is arriving at the sea rather than starting inside it
+   * — a restored scroll is not hauled to the top. Its first answer comes from the moment the
+   * section was hydrated, not from this driver's own first look: ScrollTrigger arrives by a
+   * dynamic import, and a visitor who scrolls the instant the page opens is already in the sea
+   * by the time it does, which read as «started inside» and let the navy be skipped.
+   */
+  let above = startedAbove;
   /** … and has stood on the first field, which is what the arrival locks onto. */
   let arrived = false;
 
@@ -149,7 +171,13 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
   const inside = (s: Span) => window.scrollY > s.start - 1 && window.scrollY < s.end + 1;
 
   const go = (s: Span, dir: number) => {
-    const to = locking(uAt(s)) ? 0 : nextStop(uAt(s), dir);
+    const lock = locking(uAt(s));
+    // A gesture made from a field, in the ordinary way, is a visitor in control: the navy has
+    // been seen and the arrival is made. (Without this, a step taken within a moment of landing
+    // on the navy — before the watchdog had noticed the page standing there — was hauled back to
+    // it by the lock, which is the opposite of the point.)
+    if (!lock) arrived = true;
+    const to = lock ? 0 : nextStop(uAt(s), dir);
     if (to === null) return;
     drive?.kill();
     drive = driveTo(posOf(s, to), STEP, scrollTo);
@@ -159,6 +187,9 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
   const onWheel = (e: WheelEvent) => {
     const s = span();
     if (!s || !inside(s) || done) return;
+    // A gesture that began before the act had the screen is the browser's: its events cannot be
+    // refused (`cancelable: false`), and fighting one leaves the page stranded. The landing takes it.
+    if (!e.cancelable) return;
     // Down is the way in and the only way that steps; up is the visitor's own, always —
     // except while the arrival is still owed, when either way is answered with the navy.
     const dir = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
@@ -171,7 +202,7 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
     // The act is over the way you are going and this is a gesture: the page takes it from here.
     if (to === null && fresh) return;
     last = now;
-    if (e.cancelable) e.preventDefault();
+    e.preventDefault();
     // Past the last field or under the first, the tail of the gesture that brought you there is
     // swallowed, so a hard flick stops on the field and it is the next gesture that leaves.
     if (to === null || !fresh) return;
@@ -238,40 +269,86 @@ export function takeTheSteps(el: HTMLElement, span: () => Span | null, scrollTo:
     el.removeEventListener('touchcancel', onTouchEnd);
   };
 
-  /** Whether the act has the screen and still steps, and — for anything that moved the page without asking us — the settle. */
-  const watch = () => {
-    const s = span();
-    const dir = window.scrollY >= was ? 1 : -1;
-    was = window.scrollY;
-    // Where the page stands this frame: above the act (so it is arriving), on the first
-    // field (so the arrival is made), or at the last (so the way in is over for good).
-    if (s && window.scrollY <= s.start + 1) above = true;
-    if (s && inside(s) && Math.abs(uAt(s)) < ON) arrived = true;
-    if (s && uAt(s) >= STEPS - ON) done = true;
-    if (s && inside(s) && !done) grip();
-    else release();
-    if (done || drive?.isActive()) return;
-    window.clearTimeout(idle);
-    idle = window.setTimeout(() => {
-      const now = span();
-      if (!now || !inside(now) || busy() || done) return;
-      const u = uAt(now);
-      // The arrival is owed: back to the navy, whichever way the page was going.
-      if (locking(u)) return void (drive = driveTo(posOf(now, 0), STEP, scrollTo));
-      if (dir < 0 || Math.abs(u - Math.round(u)) < ON) return;
-      const to = settle(u / STEPS, { progress: u / STEPS, direction: dir }) * STEPS;
-      drive = driveTo(posOf(now, to), STEP, scrollTo);
-    }, IDLE);
+  /**
+   * The landing. Every tenth of a second while the act holds the screen: if the page has been
+   * still for a moment and is not standing on a field, drive it to the one the rules ask for —
+   * the navy while the arrival is owed, otherwise the field that finishes the step it was
+   * making. It asks again next tick, so a drive cut short by a scroll that was still running
+   * is simply started again; and it asks nothing at all while the page is moving, so it never
+   * fights a hand.
+   */
+  /**
+   * Where a page at `u` should come to rest, or null to leave it alone: the navy while the
+   * arrival is owed; nothing once the four have been seen, or when it is already standing on
+   * a field, or when it was going back up, the way back being the visitor's own; otherwise
+   * the field that finishes the step it was making.
+   */
+  const restingPlace = (u: number): number | null => {
+    if (locking(u)) return 0;
+    if (done || Math.abs(u - Math.round(u)) < ON || dirOfTravel < 0) return null;
+    return settle(u / STEPS, { progress: u / STEPS, direction: 1 }) * STEPS;
   };
 
-  watch();
+  const land = () => {
+    const s = span();
+    if (!s || !inside(s) || busy()) return;
+    if (performance.now() - moved < IDLE) return;
+    const u = uAt(s);
+    /*
+     * STOOD ON, not passed through. Both of these used to be read on every scroll event, and a
+     * flick from the hero flies through the navy at speed — so the arrival counted itself made
+     * and the lock never fired (measured on the built page: a gesture of 1400 px came to rest
+     * on the second field, one of 2200 px on the third). A field has been stood on only if the
+     * page is still standing on it, which is what this watchdog has already waited for; and the
+     * way in is over only for a page that began it on the navy.
+     */
+    if (Math.abs(u) < ON) arrived = true;
+    if (arrived && u >= STEPS - ON) done = true;
+    const to = restingPlace(u);
+    if (to === null || Math.abs(to - u) < ON) return;
+    // A long haul — a flick that carried the page fields past the navy — is given more time, so
+    // that it reads as a journey back and not as a blur.
+    drive = driveTo(posOf(s, to), STEP * Math.min(1.8, Math.max(1, Math.abs(to - u))), scrollTo);
+  };
+
+  /** Whether the act has the screen and still steps, and which way the page is going. */
+  const watch = () => {
+    const s = span();
+    // The direction is the last real movement's, kept until the page moves again: read on every
+    // tick instead, a page standing still compares equal to itself and reads as going DOWN — so
+    // the settle finished a step the visitor had just scrolled back from, and the way up was not
+    // free after all.
+    if (window.scrollY !== was) {
+      moved = performance.now();
+      dirOfTravel = window.scrollY > was ? 1 : -1;
+    }
+    was = window.scrollY;
+    // Above the act: the page is arriving at the sea rather than starting inside it.
+    if (s && window.scrollY <= s.start + 1) above = true;
+    if (s && inside(s) && !done) grip();
+    else release();
+  };
+
+  /*
+   * The act's own clock. It was the scroll's before, and a page that never scrolled again was
+   * never looked at: the trigger measures itself a moment after the driver is made, so a
+   * visitor already standing on the first field was not seen to be standing there, and a
+   * drive cut short had nothing to start it again. A tenth of a second, for as long as the
+   * sea is on the page.
+   */
+  const tick = () => {
+    watch();
+    land();
+  };
+  tick();
+  watchdog = window.setInterval(tick, 100);
   window.addEventListener('scroll', watch, { passive: true });
   window.addEventListener('resize', watch);
   return () => {
     release();
+    window.clearInterval(watchdog);
     window.removeEventListener('scroll', watch);
     window.removeEventListener('resize', watch);
-    window.clearTimeout(idle);
     drive?.kill();
   };
 }
