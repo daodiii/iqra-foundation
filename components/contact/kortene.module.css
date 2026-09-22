@@ -1,0 +1,362 @@
+/*
+ * Kontakt: «Kontakt» and a grid of cards on white, each one thing, the map the largest and
+ * the form down the right. Everything arrives in reading order — the title rises out of
+ * its line, the cards come up one after another (`--i`, from `data-card`), the map flies in
+ * from close over the address out to the district and the dot lands — and then stands
+ * still; under the pointer a card only lifts.
+ */
+
+/* The page: the title, then the grid, to the foot of the screen at least. */
+.kortene {
+  display: grid;
+  align-content: start;
+  gap: clamp(20px, 3vh, 32px);
+  min-height: calc(100dvh - var(--header-h));
+  padding: clamp(24px, 3.5vh, 40px) var(--margin);
+  background: var(--color-white);
+}
+
+.title {
+  font-size: clamp(36px, 4vw, 60px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--color-navy);
+  clip-path: inset(0 0 100% 0);
+  animation: rise 700ms var(--ease-out-expo) 60ms both;
+}
+
+@keyframes rise {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(14px);
+  }
+
+  to {
+    clip-path: inset(0 0 -12px 0);
+    transform: none;
+  }
+}
+
+/* The grid: the map the largest, the form down the right, one fact a card. */
+.bento {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.35fr;
+  grid-template-rows: 1fr 1fr auto;
+  grid-template-areas:
+    'kart kart adresse skjema'
+    'kart kart epost skjema'
+    'telefon tider vei skjema';
+  gap: 14px;
+}
+
+/* A card: white on white, a hairline; it comes up in its turn and lifts under the pointer. */
+.card {
+  position: relative;
+  display: grid;
+  align-content: space-between;
+  gap: 14px;
+  min-height: 150px;
+  padding: 22px 24px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 18px;
+  background: var(--color-white);
+  animation: up 700ms var(--ease-out-expo) both;
+  animation-delay: calc(200ms + var(--i) * 90ms);
+  transition: transform 320ms var(--ease-out-expo), box-shadow 320ms var(--ease-out-expo);
+}
+
+@keyframes up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 24px 40px -20px rgb(44 57 75 / 0.3);
+}
+
+/* Each card's place in the grid, and its turn in the arrival: reading order. */
+.card[data-card='kart'] { --i: 0; grid-area: kart; }
+.card[data-card='adresse'] { --i: 1; grid-area: adresse; }
+.card[data-card='epost'] { --i: 2; grid-area: epost; }
+.card[data-card='skjema'] { --i: 3; grid-area: skjema; }
+.card[data-card='telefon'] { --i: 4; grid-area: telefon; }
+.card[data-card='tider'] { --i: 5; grid-area: tider; }
+.card[data-card='vei'] { --i: 6; grid-area: vei; }
+
+.cardLabel {
+  font: 500 13px/1 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-ink-soft);
+}
+
+.cardValue {
+  font: 600 clamp(20px, 1.7vw, 26px) / 1.25 var(--font-sans);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-navy);
+}
+
+.cardValue a {
+  text-decoration: none;
+}
+
+.cardValue a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.line {
+  display: block;
+}
+
+.cardSmall {
+  font: 500 14px/1.4 var(--font-sans);
+  color: var(--color-ink-soft);
+}
+
+.cardSmall a {
+  color: var(--color-navy);
+}
+
+/* The names on their own line under «Følg oss». */
+.follow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+}
+
+.follow a {
+  text-decoration: none;
+}
+
+.follow a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sep {
+  margin: 0 8px;
+  opacity: 0.5;
+}
+
+/* ----- the map card ----- */
+
+/* The map is the card — in flow, so its 4:3 sets the two rows' height — the address written on it. */
+.mapCard {
+  min-height: 320px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: var(--color-navy);
+}
+
+.onMap {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--color-white);
+  font: 500 14px/1.3 var(--font-sans);
+  color: var(--color-navy);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+}
+
+/* OpenStreetMap's tiles in the site's navy: the image's light and dark over navy (luminosity), darkened a little first so the streets read as light lines on navy. */
+.kart {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: var(--color-navy);
+}
+
+/* Flown in: from close over the address, out to the district. */
+.kartImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.72) contrast(1.2);
+  mix-blend-mode: luminosity;
+  opacity: 0.9;
+  animation: fly 2800ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes fly {
+  from {
+    transform: scale(1.55);
+  }
+}
+
+/* The address: the i's dot, at the centre, with a ring going out from it; it lands once the map has flown in. */
+.pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: var(--color-crimson);
+  box-shadow: 0 0 0 3px var(--color-white);
+  animation: land 600ms cubic-bezier(0.2, 1.4, 0.4, 1) 1500ms both;
+}
+
+@keyframes land {
+  from {
+    transform: scale(0);
+  }
+}
+
+.pin::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid var(--color-crimson);
+  animation: ring 2400ms ease-out 2100ms infinite;
+}
+
+@keyframes ring {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  to {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+
+/* The licence's credit, in the corner. */
+.credit {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  font: 500 11px/1 var(--font-sans);
+  color: rgb(255 255 255 / 0.7);
+}
+
+.credit a {
+  text-decoration: none;
+}
+
+.credit a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ----- the form card ----- */
+
+.formCard {
+  align-content: center;
+}
+
+.formWrap {
+  display: grid;
+  gap: 12px;
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+  font-family: var(--font-sans);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font: 500 13px/1 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-ink-soft);
+}
+
+/* A field is a hairline box on the paper. */
+.fieldBox {
+  display: block;
+  height: 46px;
+  border: 1px solid color-mix(in srgb, var(--color-navy) 22%, transparent);
+  border-radius: var(--radius);
+}
+
+.area {
+  height: 118px;
+}
+
+.send {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 26px;
+  border-radius: var(--radius-pill);
+  background: var(--color-crimson);
+  color: var(--color-white);
+  font: 500 15px/1 var(--font-sans);
+}
+
+.notice {
+  font: 500 13px/1.45 var(--font-sans);
+  color: var(--color-ink-soft);
+}
+
+/* ----- reduced motion: everything stands ----- */
+
+@media (prefers-reduced-motion: reduce) {
+  .title,
+  .card,
+  .kartImg,
+  .pin,
+  .pin::after {
+    animation: none;
+  }
+
+  .title {
+    clip-path: none;
+  }
+}
+
+/* ----- a phone: one column, the map first, the form last ----- */
+
+@media (max-width: 899px) {
+  .kortene {
+    min-height: 0;
+    padding-top: 20px;
+  }
+
+  .bento {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-template-areas:
+      'kart'
+      'adresse'
+      'epost'
+      'telefon'
+      'tider'
+      'vei'
+      'skjema';
+    gap: 12px;
+  }
+
+  .card {
+    min-height: 0;
+    padding: 20px 22px;
+  }
+
+  .mapCard {
+    min-height: 260px;
+    padding: 0;
+  }
+
+  /* The credit up in the corner, clear of the address at the foot. */
+  .credit {
+    top: 8px;
+    bottom: auto;
+  }
+}
