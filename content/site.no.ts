@@ -185,8 +185,21 @@ export const site = {
       followLabel: 'Følg oss',
       /** The map is OpenStreetMap's; the credit is the licence's condition (ODbL), and links to it. The alt is rewritten with the map. */
       map: { alt: 'Kart over Oslo sentrum', credit: '© OpenStreetMap-bidragsytere', creditHref: 'https://www.openstreetmap.org/copyright' },
-      /** The form's fields are what they are called. It is drawn, not wired, and the notice under it says so (the sibling of the card form's line, 2026-09-12). */
-      form: { name: 'Navn', email: 'E-post', message: 'Melding', send: 'Send', notice: 'Skjemaet er ikke koblet til ennå. Send en e-post så lenge.' },
+      /**
+       * The form: its heading the owner's words (2026-09-22, «kontakt oss above the message form»), its fields what
+       * they are called — the writer's name, e-mail, mobile number and organisation number (the owner's two of the same
+       * day), the message. It is drawn, not wired, and the notice under it says so (the sibling of the card form's line, 2026-09-12).
+       */
+      form: {
+        title: 'Kontakt oss',
+        name: 'Navn',
+        email: 'E-post',
+        mobile: 'Mobilnummer',
+        orgnr: 'Organisasjonsnummer',
+        message: 'Melding',
+        send: 'Send',
+        notice: 'Skjemaet er ikke koblet til ennå. Send en e-post så lenge.',
+      },
     },
     support: {
       label: brief.menu[8],

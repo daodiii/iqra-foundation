@@ -8,13 +8,15 @@ const c = site.contact;
 const secondLine = `${c.address.postcode} ${site.place}`;
 
 describe('Kontakt: the cards', () => {
-  test('«Kontakt» is the heading; seven cards in reading order — the map, the address, the e-mail, the form, the number, the hours, the way there — the five facts each named', () => {
+  test('«Kontakt» is the page’s name, unseen; seven cards in reading order — the map, the address, the e-mail, the form under «Kontakt oss», the number, the hours, the way there — each named', () => {
     const { container } = render(<Kortene />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(t.title);
+    const h1 = screen.getByRole('heading', { level: 1 });
+    expect(h1).toHaveTextContent(t.title);
+    expect(h1).toHaveClass('visually-hidden');
     const cards = Array.from(container.querySelectorAll('[data-card]')).map((el) => el.getAttribute('data-card'));
     expect(cards).toEqual(['kart', 'adresse', 'epost', 'skjema', 'telefon', 'tider', 'vei']);
     const names = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-    expect(names).toEqual([t.addressLabel, t.emailLabel, t.phoneLabel, t.hoursLabel, t.transitLabel]);
+    expect(names).toEqual([t.addressLabel, t.emailLabel, t.form.title, t.phoneLabel, t.hoursLabel, t.transitLabel]);
   });
 
   test('every fact is on its card: the address in two lines with the place real and the org.nr under it, the e-mail a mailto, the number a tel, the hours, the way there', () => {
@@ -55,12 +57,15 @@ describe('Kontakt: the cards', () => {
     expect(container.querySelector('[data-pin]')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  test('the form is drawn, not wired: no control on the page, the drawing hidden from a reader, the honest line outside it', () => {
+  test('the form is drawn, not wired: its five fields and Send as text, no control on the page, the drawing hidden from a reader, the heading and the honest line outside it', () => {
     const { container } = render(<Kortene />);
     expect(container.querySelectorAll('form, input, textarea, button, select')).toHaveLength(0);
     const drawn = container.querySelector('[data-form]') as HTMLElement;
     expect(drawn).toHaveAttribute('aria-hidden', 'true');
-    for (const word of [t.form.name, t.form.email, t.form.message, t.form.send]) expect(drawn).toHaveTextContent(word);
+    for (const word of [t.form.name, t.form.email, t.form.mobile, t.form.orgnr, t.form.message, t.form.send]) expect(drawn).toHaveTextContent(word);
+    const skjema = container.querySelector('[data-card="skjema"]') as HTMLElement;
+    const heading = within(skjema).getByRole('heading', { level: 2, name: t.form.title });
+    expect(drawn.contains(heading)).toBe(false);
     const notice = screen.getByText(t.form.notice);
     expect(drawn.contains(notice)).toBe(false);
   });

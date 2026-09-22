@@ -1,40 +1,18 @@
 /*
- * Kontakt: «Kontakt» and a grid of cards on white, each one thing, the map the largest and
- * the form down the right. Everything arrives in reading order — the title rises out of
- * its line, the cards come up one after another (`--i`, from `data-card`), the map flies in
- * from close over the address out to the district and the dot lands — and then stands
- * still; under the pointer a card only lifts.
+ * Kontakt: a grid of cards on white, each one thing, the map the largest and the form down
+ * the right under «Kontakt oss». Everything arrives in reading order — the cards come up one
+ * after another (`--i`, from `data-card`), the map flies in from close over the address out
+ * to the district and the dot lands — and then stands still; under the pointer a card only
+ * lifts. No title over the page (the owner, 2026-09-22): the grid starts under the header.
  */
 
-/* The page: the title, then the grid, to the foot of the screen at least. */
+/* The page: the grid, to the foot of the screen at least. */
 .kortene {
   display: grid;
   align-content: start;
-  gap: clamp(20px, 3vh, 32px);
   min-height: calc(100dvh - var(--header-h));
   padding: clamp(24px, 3.5vh, 40px) var(--margin);
   background: var(--color-white);
-}
-
-.title {
-  font-size: clamp(36px, 4vw, 60px);
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--color-navy);
-  clip-path: inset(0 0 100% 0);
-  animation: rise 700ms var(--ease-out-expo) 60ms both;
-}
-
-@keyframes rise {
-  from {
-    clip-path: inset(0 0 100% 0);
-    transform: translateY(14px);
-  }
-
-  to {
-    clip-path: inset(0 0 -12px 0);
-    transform: none;
-  }
 }
 
 /* The grid: the map the largest, the form down the right, one fact a card. */
@@ -143,8 +121,9 @@
 
 /* ----- the map card ----- */
 
-/* The map is the card — in flow, so its 4:3 sets the two rows' height — the address written on it. */
+/* The map is the card — its one row the card's whole height, so the map fills it whether its 4:3 or the form's column sets the rows — the address written on it. */
 .mapCard {
+  grid-template-rows: minmax(0, 1fr);
   min-height: 320px;
   padding: 0;
   overflow: hidden;
@@ -251,8 +230,16 @@
 
 /* ----- the form card ----- */
 
+/* «Kontakt oss» at its head, the form under it. */
 .formCard {
-  align-content: center;
+  align-content: start;
+  gap: 18px;
+}
+
+.formTitle {
+  font: 600 clamp(22px, 1.9vw, 30px) / 1.1 var(--font-sans);
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
 }
 
 .formWrap {
@@ -275,6 +262,13 @@
   font: 500 13px/1 var(--font-sans);
   letter-spacing: var(--tracking-label);
   color: var(--color-ink-soft);
+}
+
+/* Two fields side by side: the mobile number and the organisation number. */
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
 /* A field is a hairline box on the paper. */
@@ -309,16 +303,11 @@
 /* ----- reduced motion: everything stands ----- */
 
 @media (prefers-reduced-motion: reduce) {
-  .title,
   .card,
   .kartImg,
   .pin,
   .pin::after {
     animation: none;
-  }
-
-  .title {
-    clip-path: none;
   }
 }
 
@@ -352,6 +341,10 @@
   .mapCard {
     min-height: 260px;
     padding: 0;
+  }
+
+  .pair {
+    grid-template-columns: 1fr;
   }
 
   /* The credit up in the corner, clear of the address at the foot. */
