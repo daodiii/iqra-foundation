@@ -82,9 +82,11 @@ describe('the hold on the first field', () => {
   test('nothing is driven while the page is still moving', async () => {
     at(SPAN.start + 400);
     stop = holdTheFirstField(span, scrollTo, true);
-    for (let i = 0; i < 4; i++) {
-      at(SPAN.start + 400 + i * 50);
-      await new Promise((r) => setTimeout(r, TICK));
+    // moved oftener than the act counts as still, so no tick of it can find the page at rest —
+    // at one nudge per tick a slow machine slips a tick past IDLE and the drive fires
+    for (let i = 0; i < 10; i++) {
+      at(SPAN.start + 400 + i * 20);
+      await new Promise((r) => setTimeout(r, IDLE / 4));
     }
     expect(drives).toEqual([]);
     await settleDown();
