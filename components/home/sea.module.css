@@ -34,6 +34,13 @@
   --index-size: clamp(34px, 4.6vw, 66px);
   --say-size: clamp(32px, 4vw, 58px);
   --text-size: clamp(19px, 1.65vw, 24px);
+  /* The dials, each named once. */
+  /* The inks' fade: .index, .say, .text and .phoneIndex all cross to the next field's colours on it. */
+  --ink-fade: 0.45s;
+  /* The dimmed names' opacity: .item and .phoneIndex li, for the field not on the water. */
+  --name-dim: 0.38;
+  /* The logo's opacity once it's on: .foot[data-on] and .pageLogo. */
+  --logo-on: 0.85;
   position: relative;
   /* The pages' layer above the screen's stays inside the section: nothing of it can rise over the header. */
   isolation: isolate;
@@ -124,11 +131,11 @@
   letter-spacing: -0.025em;
   white-space: nowrap;
   color: var(--card-ink);
-  transition: color 0.45s ease;
+  transition: color var(--ink-fade) ease;
 }
 
 .item {
-  opacity: 0.38;
+  opacity: var(--name-dim);
   transition: opacity 0.5s ease-out;
 }
 
@@ -173,7 +180,7 @@
 }
 
 .foot[data-on] {
-  opacity: 0.85;
+  opacity: var(--logo-on);
 }
 
 /* ----- the right pages: in the flow, over the screen, on its grid ----- */
@@ -206,6 +213,11 @@
   opacity: 0.3;
 }
 
+/* A name click focuses its page before the glide lights it, and Tab can land off the reading line: don't dim the ring. */
+.stage[data-live] .page:focus-visible {
+  opacity: 1;
+}
+
 .page:hover .say {
   text-decoration: underline;
   text-decoration-thickness: 0.04em;
@@ -233,7 +245,7 @@
   letter-spacing: -0.022em;
   color: var(--card-ink);
   text-wrap: pretty;
-  transition: color 0.45s ease;
+  transition: color var(--ink-fade) ease;
 }
 
 .text {
@@ -243,7 +255,7 @@
   font: 500 var(--text-size) / 1.48 var(--font-text);
   color: var(--card-text);
   text-wrap: pretty;
-  transition: color 0.45s ease;
+  transition: color var(--ink-fade) ease;
 }
 
 /* Light type on dark water: a breath of shadow keeps it clear of the glints. */
@@ -304,11 +316,11 @@
     font: 700 27px / 1.1 var(--font-sans);
     letter-spacing: -0.025em;
     color: var(--card-ink);
-    transition: color 0.45s ease;
+    transition: color var(--ink-fade) ease;
   }
 
   .phoneIndex li {
-    opacity: 0.38;
+    opacity: var(--name-dim);
   }
 
   .phoneIndex li[data-here] {
@@ -323,6 +335,6 @@
     display: block;
     padding-top: 24px;
     line-height: 0;
-    opacity: 0.85;
+    opacity: var(--logo-on);
   }
 }
