@@ -10,7 +10,7 @@ describe('the stage', () => {
 });
 
 describe('the order on the sea', () => {
-  test("the owner's: navy, burgundy, turquoise, and white last — every area once, each in its own colour", () => {
+  test('the owner’s: navy, burgundy, turquoise, and white last — every area once, each in its own colour', () => {
     expect(SEA_ORDER).toEqual(['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser']);
     expect(seaAreas.map((a) => a.ground)).toEqual(['navy', 'crimson', 'turquoise', 'light']);
     expect([...seaAreas].sort((a, b) => a.key.localeCompare(b.key))).toEqual([...areas].sort((a, b) => a.key.localeCompare(b.key)));
@@ -34,7 +34,7 @@ describe('seaAt', () => {
     expect(f.words.every((w) => w.on === 0 && !w.live)).toBe(true);
   });
 
-  test("a field's words go before its tide is a third out, and the next's rise over the last quarter, once the tide has crossed their page", () => {
+  test('a field’s words go before its tide is a third out, and the next’s rise over the last quarter, once the tide has crossed their page', () => {
     // going: two tenths out, two thirds up; gone by 0.36
     expect(seaAt(2.2).words[2].on).toBeCloseTo(2 / 3, 10);
     expect(seaAt(2.2).words[2].live).toBe(true);
@@ -54,7 +54,7 @@ describe('seaAt', () => {
     expect(f.words[3]).toEqual({ on: 1, live: true });
   });
 
-  test("two fields' words never share the water", () => {
+  test('two fields’ words never share the water', () => {
     for (let u = 0; u <= 3; u += 0.01) {
       expect(seaAt(u).words.filter((w) => w.on > 0).length).toBeLessThanOrEqual(1);
     }
@@ -62,7 +62,7 @@ describe('seaAt', () => {
 });
 
 describe('groundAt', () => {
-  test("the CSS ground is the next area's token over the current one's, the tide as a percentage", () => {
+  test('the CSS ground is the next area’s token over the current one’s, the tide as a percentage', () => {
     expect(groundAt(0)).toBe('color-mix(in srgb, var(--color-area-samfunnsdeltakelse) 0.0%, var(--color-area-kunnskap))');
     expect(groundAt(1.25)).toBe('color-mix(in srgb, var(--color-area-dialog) 25.0%, var(--color-area-samfunnsdeltakelse))');
     expect(groundAt(3)).toBe('color-mix(in srgb, var(--color-area-moteplasser) 100.0%, var(--color-area-dialog))');
@@ -70,7 +70,7 @@ describe('groundAt', () => {
 });
 
 describe('inkAt', () => {
-  test("the words keep the field they are on until the next one's tide is INK_AT across, then take it", () => {
+  test('the words keep the field they are on until the next one’s tide is INK_AT across, then take it', () => {
     expect(inkAt(0)).toBe(0);
     expect(inkAt(0.5)).toBe(0);
     expect(inkAt(INK_AT)).toBe(0);
@@ -80,7 +80,7 @@ describe('inkAt', () => {
     expect(inkAt(3)).toBe(3);
   });
 
-  test("coming back, the same line: from 2 towards 1 the words are 2's until the tide is back past 1.72", () => {
+  test('coming back, the same line: from 2 towards 1 the words are 2’s until the tide is back past 1.72', () => {
     expect(inkAt(1.8)).toBe(2);
     expect(inkAt(1.7)).toBe(1);
   });
