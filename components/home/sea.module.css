@@ -1,138 +1,111 @@
 /*
- * Havet: the four fields as one act straight under the hero. A stage four screens tall
- * with a view the height of the screen sticky inside it; the view holds ONE box of water,
- * and over the water the four fields' words as four layers standing in the same place.
- * The scroll is the playhead (`u`, 0 to 3, written by Sea.tsx per frame): between two
- * fields the water's floor is retuned from the one colour to the next, a tide coming in
- * from the left (lib/water.ts `retune`), and the CSS ground under the canvas mixes the same
- * two colours for a device without WebGL2. A field's words are gone before its tide is a
- * third out, and the next's rise over the last quarter, once it has crossed their page
- * (`--on`). Without script, or under reduced motion, the
- * default rules here hold and the four stand under one another on the one water;
- * `[data-live]` turns the stage into the act.
+ * Havet: the four fields as one sea straight under the hero. This is Bladene, the owner's pick of
+ * 2026-09-23 («B was without a doubt the best one … a fantastic solution»): the spread
+ * (Oppslaget) opened out. The screen is the water, the veil, the four names down the left page
+ * and the logo at its foot, and it is sticky under the header for the whole of the section. The
+ * four right pages (a field's statement and reading, each the link to its section) are in the
+ * flow over it and go by under the hand like any text. The page nearest the middle of the screen
+ * lights its name and brings its tide (Sea.tsx); the others stand dimmed in the inks of the
+ * water they are on.
  *
- * A field's words are a spread (Oppslaget, 2026-09-19): the four names down the left
- * page, the statement and the reading on the right. The sizes live on `.cell`. The box's
- * padding is the field box's own (`.field` in fields.module.css): 30px above and below,
- * clamp(24px, 3vw, 44px) at the sides.
+ * The section is the pages' height: half a screen of margin, four pages of --page-h, half a
+ * screen of margin. So the first page is in the middle of the screen as the section reaches the
+ * header, and the last is there as it leaves. None of this needs script: without it the pages
+ * scroll over the navy screen in the first field's inks. `[data-live]` dims the pages not being
+ * read.
  */
 
 .stage {
-  --step: 100vh;
-  position: relative;
-  /* Seen only where 100vh and 100dvh differ: under the view, on a phone, while the address bar shows. */
-  background: var(--color-navy);
-}
-
-.view {
-  position: relative;
-  overflow: hidden;
-}
-
-.stage[data-live] {
-  height: calc(100vh + 3 * var(--step));
-}
-
-.stage[data-live] .view {
-  position: sticky;
-  top: var(--header-h);
-  height: calc(100dvh - var(--header-h));
-}
-
-/* The sea: the box of water fills it (a grid, so the box stretches to its height). */
-.sea {
-  position: relative;
-  display: grid;
-  min-height: 72vh;
-}
-
-.stage[data-live] .sea {
-  position: absolute;
-  inset: 0;
-  min-height: 0;
-}
-
-/* The box's inner stretches too, so the layers' inset is the whole box. */
-.fill {
-  min-height: 0;
-}
-
-.fill > div {
-  align-content: stretch;
-}
-
-/* ----- a field's words: the four names, the statement, the reading, the logo; the whole of it a link ----- */
-
-/* A layer: the same place each time, crossing as the tide passes; 40px lower while off. */
-.word {
-  position: absolute;
-  inset: var(--box-pad-y) var(--box-pad-x);
-  opacity: var(--on, 1);
-  transform: translate3d(0, calc((1 - var(--on, 1)) * 40px), 0);
-  pointer-events: none;
-}
-
-.word[data-on] {
-  pointer-events: auto;
-}
-
-/* Without the act the four stand under one another on the one water. */
-.stage:not([data-live]) .word {
-  position: relative;
-  inset: auto;
-  min-height: 60vh;
-  opacity: 1;
-  transform: none;
-  pointer-events: auto;
-}
-
-/*
- * The spread: two pages, the left two fifths. Left, the four names one row each down the
- * whole height; right, the statement and the reading, centred; the logo at the foot of
- * the right page.
- */
-.cell {
+  /*
+   * Each page's share of the scroll, and so the room between two statements. The mock had 48vh.
+   * The owner, choosing it: «maybe a bit more space between the different sections».
+   */
+  --page-h: 60svh;
+  --pad-x: clamp(24px, 3vw, 44px);
+  --gap: clamp(32px, 5vw, 80px);
+  --view-h: calc(100svh - var(--header-h));
+  /* The spread's sizes, on the section, so the index and the pages share them: the names, the statement, the reading. */
   --index-size: clamp(34px, 4.6vw, 66px);
   --say-size: clamp(32px, 4vw, 58px);
   --text-size: clamp(19px, 1.65vw, 24px);
   position: relative;
-  display: grid;
-  grid-template-columns: 5fr 7fr;
-  grid-template-rows: 1fr auto;
-  column-gap: clamp(32px, 5vw, 80px);
-  height: 100%;
-  min-height: 100%;
-  color: var(--card-text);
-  text-decoration: none;
+  /* The pages' layer above the screen's stays inside the section: nothing of it can rise over the header. */
+  isolation: isolate;
+  background: var(--color-navy);
 }
 
-/* The veil runs left to right, a little further across than before, since the right page is on the water too. */
-.cell::before {
-  content: '';
+/*
+ * The screen rides in a track the section's own size. Sticky inside it, it can never leave the
+ * section. (A negative margin under a sticky element lets it stick one screen past its end: the
+ * mock's first build slid the names over the seal.)
+ */
+.track {
   position: absolute;
-  inset: calc(-1 * var(--box-pad-y)) calc(-1 * var(--box-pad-x));
-  z-index: -1;
+  inset: 0;
+  z-index: 0;
+}
+
+.view {
+  position: sticky;
+  top: var(--header-h);
+  height: var(--view-h);
+  overflow: hidden;
+}
+
+/* The sea: the box of water fills the screen (a grid, so the box stretches to its height). */
+.sea {
+  position: absolute;
+  inset: 0;
+  display: grid;
+}
+
+.fill {
+  min-height: 0;
+}
+
+/* The box's inner stretches too, so the veils' inset is the whole box. */
+.fill > div {
+  align-content: stretch;
+}
+
+/* The veil, one per field, the lit one on: the field's colour from the left, most of the way across, since the pages are on the water too. */
+.veil {
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--ground) 82%, transparent) 0%,
     color-mix(in srgb, var(--ground) 52%, transparent) 45%,
     color-mix(in srgb, var(--ground) 18%, transparent) 100%
   );
+  opacity: 0;
+  transition: opacity 0.7s ease;
   pointer-events: none;
 }
 
-.cell:hover .name {
-  text-decoration: underline;
-  text-decoration-thickness: 0.04em;
-  text-underline-offset: 0.12em;
+.veil[data-on] {
+  opacity: 1;
 }
 
-.cell:focus-visible {
-  outline: 3px solid var(--card-ink);
-  outline-offset: 4px;
+/* The left page and its foot, on the screen's own grid; the right column is the pages'. */
+.spread {
+  position: relative;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  grid-template-rows: 1fr auto;
+  column-gap: var(--gap);
+  height: 100%;
+  min-height: 0;
 }
 
-/* The four, the sea's order, each a row of the height, sized by the longest (`--fit`, Sea.tsx); the one on the water lit. */
+.left {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  min-height: 0;
+}
+
+/* The four, in the sea's order, each a row of the height, sized by the longest (`--fit`, Sea.tsx); the one on the water lit. */
 .index {
   list-style: none;
   margin: 0;
@@ -145,6 +118,7 @@
   letter-spacing: -0.025em;
   white-space: nowrap;
   color: var(--card-ink);
+  transition: color 0.45s ease;
 }
 
 .item {
@@ -156,18 +130,95 @@
   opacity: 1;
 }
 
-.name {
-  margin: 0;
+/* A name is a button in the list's type. */
+.go {
+  all: unset;
+  cursor: pointer;
   font: inherit;
   letter-spacing: inherit;
-  color: inherit;
+  white-space: nowrap;
 }
 
+.go:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 0.04em;
+  text-underline-offset: 0.12em;
+}
+
+.go:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 4px;
+}
+
+/* The guide's logo for the field on the water, at the foot of the left page, one per field, crossing as the inks do. */
+.feet {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  justify-self: start;
+  padding-top: 24px;
+  line-height: 0;
+}
+
+.foot {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.foot[data-on] {
+  opacity: 0.85;
+}
+
+/* ----- the right pages: in the flow, over the screen, on its grid ----- */
+
+.pages {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  column-gap: var(--gap);
+  padding: calc((var(--view-h) - var(--page-h)) / 2) var(--pad-x);
+  pointer-events: none;
+}
+
+/* A page: the statement and the reading, centred in its share of the scroll, the whole of it the link to its section. */
 .page {
+  grid-column: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
   min-width: 0;
+  min-height: var(--page-h);
+  color: var(--card-text);
+  text-decoration: none;
+  pointer-events: auto;
+  transition: opacity 0.5s ease;
+}
+
+.stage[data-live] .page:not([data-here]) {
+  opacity: 0.3;
+}
+
+.page:hover .say {
+  text-decoration: underline;
+  text-decoration-thickness: 0.04em;
+  text-underline-offset: 0.14em;
+}
+
+.page:focus-visible {
+  outline: 3px solid var(--card-ink);
+  outline-offset: 4px;
+}
+
+/* The field's name: the index shows it to the eye, so this one is for a reader. */
+.name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .say {
@@ -176,6 +227,7 @@
   letter-spacing: -0.022em;
   color: var(--card-ink);
   text-wrap: pretty;
+  transition: color 0.45s ease;
 }
 
 .text {
@@ -185,59 +237,86 @@
   font: 500 var(--text-size) / 1.48 var(--font-text);
   color: var(--card-text);
   text-wrap: pretty;
-}
-
-.logo {
-  grid-column: 2;
-  justify-self: end;
-  padding-top: 24px;
-  line-height: 0;
-  opacity: 0.85;
+  transition: color 0.45s ease;
 }
 
 /* Light type on dark water: a breath of shadow keeps it clear of the glints. */
-.word[data-tone="dark"] .index,
-.word[data-tone="dark"] .say,
-.word[data-tone="dark"] .text {
+.index[data-tone='dark'],
+.pages[data-tone='dark'] :is(.say, .text, .phoneIndex) {
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.28);
 }
 
+/* A phone's alone: the four names at the head of every page, and its logo at its foot. */
+.phoneIndex,
+.pageLogo {
+  display: none;
+}
+
 @media (max-width: 899px) {
-  .cell {
+  .stage {
     --index-size: clamp(26px, 5vw, 66px);
   }
 }
 
+/*
+ * A phone: one page, no left one. The screen is the water and the veil alone. Each page carries
+ * the four names at its head, its own lit (the owner's pick, 2026-09-23: «A: every text»), and its
+ * logo at its foot, because at the foot of the screen the pages' text ran over it.
+ */
 @media (max-width: 699px) {
-  /* One page: the four as a compact list, then the statement, the reading, the logo. */
-  .cell {
-    --index-size: 27px;
+  .stage {
+    --page-h: 84svh;
     --say-size: clamp(26px, 7.4vw, 32px);
     --text-size: 17px;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-    row-gap: 22px;
   }
 
-  .cell::before {
+  .spread,
+  .pages {
+    grid-template-columns: 1fr;
+  }
+
+  .left,
+  .feet {
+    display: none;
+  }
+
+  .veil {
     background: linear-gradient(180deg, color-mix(in srgb, var(--ground) 70%, transparent) 0%, color-mix(in srgb, var(--ground) 30%, transparent) 100%);
   }
 
-  .index {
-    grid-template-rows: none;
-    gap: 6px;
-    line-height: 1.1;
+  .page {
+    grid-column: 1;
   }
 
-  .page {
-    justify-content: flex-start;
+  .phoneIndex {
+    display: grid;
+    justify-items: start;
+    gap: 6px;
+    margin: 0 0 22px;
+    padding: 0;
+    list-style: none;
+    font: 700 27px / 1.1 var(--font-sans);
+    letter-spacing: -0.025em;
+    color: var(--card-ink);
+    transition: color 0.45s ease;
+  }
+
+  .phoneIndex li {
+    opacity: 0.38;
+  }
+
+  .phoneIndex li[data-here] {
+    opacity: 1;
   }
 
   .text {
     padding-top: 20px;
   }
 
-  .logo {
-    grid-column: 1;
+  .pageLogo {
+    display: block;
+    padding-top: 24px;
+    line-height: 0;
+    opacity: 0.85;
   }
 }

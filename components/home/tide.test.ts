@@ -19,45 +19,20 @@ describe('the order on the sea', () => {
 });
 
 describe('seaAt', () => {
-  test('at the first field: the first floor alone, its words up and live, the others down', () => {
-    const f = seaAt(0);
-    expect(f.i).toBe(0);
-    expect(f.t).toBe(0);
-    expect(f.words.map((w) => w.on)).toEqual([1, 0, 0, 0]);
-    expect(f.words.map((w) => w.live)).toEqual([true, false, false, false]);
+  test('at the first field: the first floor alone', () => {
+    expect(seaAt(0)).toEqual({ i: 0, t: 0 });
   });
 
-  test('halfway between two fields the tide is halfway across and no words are on the water', () => {
-    const f = seaAt(0.5);
-    expect(f.i).toBe(0);
-    expect(f.t).toBe(0.5);
-    expect(f.words.every((w) => w.on === 0 && !w.live)).toBe(true);
+  test('half way between two fields the tide is half way across', () => {
+    expect(seaAt(0.5)).toEqual({ i: 0, t: 0.5 });
   });
 
-  test('a field’s words go before its tide is a third out, and the next’s rise over the last quarter, once the tide has crossed their page', () => {
-    // going: two tenths out, two thirds up; gone by 0.36
-    expect(seaAt(2.2).words[2].on).toBeCloseTo(2 / 3, 10);
-    expect(seaAt(2.2).words[2].live).toBe(true);
-    expect(seaAt(2.4).words[2]).toEqual({ on: 0, live: false });
-    // coming: nothing at 0.7 of the tide, a quarter up at 0.8, up at 0.98 and at the stop
-    expect(seaAt(2.7).words[3]).toEqual({ on: 0, live: false });
-    expect(seaAt(2.8).words[3].on).toBeCloseTo(0.25, 10);
-    expect(seaAt(2.8).words[3].live).toBe(true);
-    expect(seaAt(2.98).words[3].on).toBe(1);
-    expect(seaAt(1).words[1].on).toBe(1);
+  test('a field between two tides is the start of the next: 1 is the second tide at 0', () => {
+    expect(seaAt(1)).toEqual({ i: 1, t: 0 });
   });
 
   test('at the last field the tide has come all the way in from the third', () => {
-    const f = seaAt(3);
-    expect(f.i).toBe(2);
-    expect(f.t).toBe(1);
-    expect(f.words[3]).toEqual({ on: 1, live: true });
-  });
-
-  test('two fields’ words never share the water', () => {
-    for (let u = 0; u <= 3; u += 0.01) {
-      expect(seaAt(u).words.filter((w) => w.on > 0).length).toBeLessThanOrEqual(1);
-    }
+    expect(seaAt(3)).toEqual({ i: 2, t: 1 });
   });
 });
 
