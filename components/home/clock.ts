@@ -64,7 +64,10 @@ export function tideClock(write: (u: number) => void, max: number, start: number
   const show = (now: number) => {
     const u = Math.max(0, Math.min(max, base(now).p));
     // `!(… <= …)`, not `… > …`: the first frame compares with NaN, and must write.
-    if (!(Math.abs(u - shown) <= 1e-5)) {
+    // A frame close enough to T can already sit within 1e-5 of the field before it lands — by the
+    // time this reads `moving`, `base` has just cleared it — so a stop is always written, even
+    // into ground the frame before it already all but reached.
+    if (!(Math.abs(u - shown) <= 1e-5) || (!moving && u !== shown)) {
       shown = u;
       write(u);
     }

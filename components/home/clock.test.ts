@@ -71,6 +71,17 @@ describe('tideClock', () => {
     expectNoJump(writes);
   });
 
+  test('a tide aimed between two frames still lands exactly on its field, not a hair short', () => {
+    const writes: number[] = [];
+    const clock = tideClock((u) => writes.push(u), 3, 0);
+    clock.aim(1);
+    // The next tick lands almost a whole frame after the aim, so the frame before landing sits a
+    // hair inside the crossing's last 1e-5 of ground: the phase a frame-boundary aim never hits.
+    now += FRAME - 1;
+    run();
+    expect(writes.at(-1)).toBe(1);
+  });
+
   test('asked on to the next field mid-tide, it keeps its speed (no stall at the new aim) and never goes back', () => {
     const writes: number[] = [];
     const clock = tideClock((u) => writes.push(u), 3, 0);
