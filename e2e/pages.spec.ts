@@ -222,7 +222,7 @@ test('kontakt: seven cards in reading order — the map with the address on it, 
   await expect(main.getByText(t.form.notice, { exact: true })).toBeVisible();
 });
 
-test('støtt oss: the question, then the three ways in the owner’s order — the account, Vipps, AvtaleGiro — both numbers bracketed, nothing that pretends to pay', async ({ page }) => {
+test('støtt oss: the question, then the three ways in the owner’s order — the account, Vipps, AvtaleGiro — the Vipps number real, the account bracketed, and one way out to the agreement', async ({ page }) => {
   await page.goto('/stott-oss');
   await expect(page).toHaveTitle(T(site.pages.support.title));
   const main = page.getByRole('main');
@@ -233,6 +233,10 @@ test('støtt oss: the question, then the three ways in the owner’s order — t
   expect(text.indexOf(site.support.account.value)).toBeLessThan(text.indexOf(site.support.vipps.value));
   expect(text.indexOf(site.support.vipps.value)).toBeLessThan(text.indexOf(site.support.avtale.button));
   await expect(main.locator('form, input, button')).toHaveCount(0);
+  // AvtaleGiro's one way out: the foundation's own agreement, at its provider
+  const avtale = main.getByRole('link', { name: site.support.avtale.button });
+  await expect(avtale).toHaveAttribute('href', site.support.avtale.href);
+  await expect(main.getByRole('link')).toHaveCount(1);
 });
 
 test('a page that does not exist is a page in the same system', async ({ page }) => {

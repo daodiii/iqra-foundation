@@ -15,7 +15,6 @@ describe('Støtt oss: the banners', () => {
     expect(sections[0]).toHaveTextContent(site.support.account.value);
     expect(sections[1]).toHaveTextContent(site.support.vipps.label);
     expect(sections[1]).toHaveTextContent(site.support.vipps.value);
-    expect(sections[2]).toHaveTextContent(site.support.avtale.amount);
     expect(sections[2]).toHaveTextContent(site.support.avtale.button);
     expect(container.querySelector('[data-plates]')).not.toBeNull();
   });
@@ -27,12 +26,15 @@ describe('Støtt oss: the banners', () => {
     expect(container.querySelectorAll('img')).toHaveLength(3);
   });
 
-  test('AvtaleGiro is drawn, not wired: no control anywhere, and the drawing is hidden from a reader', () => {
+  test('AvtaleGiro is the one way out: a link to the foundation’s agreement, and nothing on the page that pretends to take a payment', () => {
     const { container } = render(<Fanene />);
-    expect(container.querySelectorAll('input, button, select, textarea, form, a')).toHaveLength(0);
-    const drawn = container.querySelector('[data-drawn]')!;
-    expect(drawn).toHaveAttribute('aria-hidden', 'true');
-    expect(drawn).toHaveTextContent(`${site.support.avtale.tiers[site.support.avtale.pick]} ${site.support.avtale.unit}`);
+    expect(container.querySelectorAll('input, button, select, textarea, form')).toHaveLength(0);
+    const links = container.querySelectorAll('a');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveTextContent(site.support.avtale.button);
+    expect(links[0]).toHaveAttribute('href', site.support.avtale.href);
+    // it stands on the third banner, where the other two carry their number
+    expect(container.querySelectorAll('section')[2]).toContainElement(links[0]);
   });
 
   test('a number is read whole and shown in its lines: an account number breaks after its second group, a placeholder does not', () => {

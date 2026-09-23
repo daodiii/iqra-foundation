@@ -79,12 +79,19 @@ export const site = {
     ],
   },
   support: {
-    vipps: { label: 'Vippsnummer', value: '[NUMMER]' },
+    /** The foundation's own, given 2026-09-23. */
+    vipps: { label: 'Vippsnummer', value: '26354' },
     account: { label: 'Kontonummer', value: '[KONTO]' },
     /** The three ways to give, as the owner listed them (2026-09-18) and in that order: the banners' names. */
     ways: { account: 'Direkte overføring', vipps: 'Vipps', avtale: 'AvtaleGiro' },
-    /** AvtaleGiro's amounts a month and its one button. Drawn, not wired: nothing on the site takes a payment yet. */
-    avtale: { amount: 'Beløp per måned', tiers: ['100', '200', '500'], pick: 1, unit: 'kr', button: 'Opprett AvtaleGiro' },
+    /**
+     * AvtaleGiro is the foundation's agreement at Solidus, given 2026-09-23 («the link is the
+     * avtalegiro, make a button for it»): the button on the third banner goes there and the
+     * agreement — the amount, the account, the signing — is made on their page, not here. The
+     * amounts this used to draw are gone with it: nothing on this site should look like it is
+     * taking a payment when the taking happens elsewhere.
+     */
+    avtale: { button: 'Opprett AvtaleGiro', href: 'https://nettbutikk.solidus.no/avtalestraks/D6E5B9EA-89CF-43F0-90F0-2BD4039EADD2' },
   },
   /** The logo's alt text, on every ground. */
   logoAlt: 'Iqra Foundation',
