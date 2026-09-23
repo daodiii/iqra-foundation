@@ -29,18 +29,17 @@ function Value({ value, className }: { value: string; className: string }) {
   );
 }
 
-/** AvtaleGiro's amounts and its button, drawn for the eye: spans, not controls, and hidden from a reader, since nothing is wired. */
+/**
+ * AvtaleGiro's one button, and it is a real one now (2026-09-23): the foundation's agreement lives
+ * at Solidus, and this is the way to it. It stands where the other two banners carry their number,
+ * because the number of a standing order is not a thing to read — it is a thing to go and set up.
+ */
 function Avtale() {
   const a = site.support.avtale;
   return (
-    <div className={styles.drawn} data-drawn aria-hidden="true">
-      <span className={styles.chips}>
-        {a.tiers.map((t, i) => (
-          <span key={t} className={styles.chip} data-on={i === a.pick ? '' : undefined}>{t} {a.unit}</span>
-        ))}
-      </span>
-      <span className={styles.button}>{a.button}</span>
-    </div>
+    <a className={styles.button} href={a.href} data-avtale>
+      {a.button}
+    </a>
   );
 }
 
@@ -53,15 +52,15 @@ function Avtale() {
  * as it settles; touched, a banner leans a degree. The name at the top, the number across
  * the middle, the guide's lockup for that ground at the foot. Every beat is the
  * stylesheet's, from the first paint, and needs no script; under reduced motion everything
- * stands unrolled. The numbers are bracketed until the foundation's own arrive (the build
- * reports them); AvtaleGiro's amounts and button are drawn, not wired.
+ * stands unrolled. The Vipps number and AvtaleGiro's button are the foundation's own
+ * (2026-09-23); the account number is bracketed until it arrives, and the build reports it.
  */
 export function Fanene() {
   const s = site.support;
   const ways = [
     { key: 'konto', name: s.ways.account, label: s.account.label, value: s.account.value, avtale: false },
     { key: 'vipps', name: s.ways.vipps, label: s.vipps.label, value: s.vipps.value, avtale: false },
-    { key: 'avtale', name: s.ways.avtale, label: s.avtale.amount, value: s.avtale.tiers[s.avtale.pick], avtale: true },
+    { key: 'avtale', name: s.ways.avtale, label: null, value: null, avtale: true },
   ] as const;
   return (
     <article className={styles.fanene} data-plates>
@@ -73,8 +72,8 @@ export function Fanene() {
               <div className={styles.face}>
                 <h2 id={`fane-${w.key}`} className={styles.name}>{w.name}</h2>
                 <div className={styles.mid}>
-                  <Value value={w.value} className={styles.value} />
-                  <p className={styles.label}>{w.label}</p>
+                  {w.value && <Value value={w.value} className={styles.value} />}
+                  {w.label && <p className={styles.label}>{w.label}</p>}
                   {w.avtale && <Avtale />}
                 </div>
                 <div className={styles.foot}>
