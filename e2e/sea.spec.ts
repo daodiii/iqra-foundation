@@ -85,7 +85,11 @@ test('the page at the middle lights its name, and its tide lands on its field, w
     await expect.poll(() => lit(page, '[data-page]'), { timeout: 8_000 }).toEqual(only(k));
     expect(await lit(page, '[data-item]')).toEqual(only(k));
     await expect.poll(() => playhead(page), { timeout: 10_000 }).toBe(`${k}.000`);
-    expect(await page.locator('[data-fields] [data-material="water"]').evaluate((el) => (el as HTMLElement).style.getPropertyValue('--ground'))).toBe(groundAt(k));
+    // a single read here can race the exact landing (data-u can show `k.000` a frame before the
+    // ground catches up), so poll it too rather than read it once right after the playhead poll
+    await expect
+      .poll(() => page.locator('[data-fields] [data-material="water"]').evaluate((el) => (el as HTMLElement).style.getPropertyValue('--ground')), { timeout: 10_000 })
+      .toBe(groundAt(k));
   }
 });
 

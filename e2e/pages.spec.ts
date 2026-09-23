@@ -83,12 +83,14 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   await toPage(1);
   await expect(pages.nth(1)).toHaveAttribute('data-here', '');
   await expect(pages.nth(0)).not.toHaveAttribute('data-here');
-  await expect.poll(playhead, { timeout: 3000 }).toBe('1.000');
-  expect(await ground()).toBe(groundAt(1));
+  // a software-renderer frame can starve headless Chromium, the same as sea.spec.ts's polls
+  await expect.poll(playhead, { timeout: 10_000 }).toBe('1.000');
+  // polled, not read once: a single read can race the exact landing right after the playhead poll
+  await expect.poll(ground, { timeout: 10_000 }).toBe(groundAt(1));
   // and back on the first field as the page returns to it
   await toPage(0);
   await expect(pages.nth(0)).toHaveAttribute('data-here', '');
-  await expect.poll(playhead, { timeout: 3000 }).toBe('0.000');
+  await expect.poll(playhead, { timeout: 10_000 }).toBe('0.000');
   // the seal's plate opens as it passes the middle of the screen, and Om oss arrives as the tip line reaches it
   const plate = main.locator('section#visjon').locator('xpath=ancestor::*[@data-material][1]');
   await plate.evaluate((el) => {
