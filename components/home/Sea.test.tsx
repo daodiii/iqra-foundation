@@ -140,6 +140,9 @@ describe('Havet as Bladene', () => {
   test('scrolled so the third page is on the reading line, its name lights and the tide goes there on its own clock, whole: the veil, the foot logo, the inks, the ground', () => {
     render(<Sea />);
     scrollToPage(2);
+    // a tide of two fields is dozens of frames of its own; a jump would be the scroll's one frame
+    // (the mirror of the reduced-motion test's `toHaveBeenCalledTimes(1)`)
+    expect(vi.mocked(window.requestAnimationFrame).mock.calls.length).toBeGreaterThan(10);
     expect(lit('[data-item]')).toEqual(only(2));
     expect(lit('[data-page]')).toEqual(only(2));
     // the frames ran at once: the tide has landed, on the field exactly
