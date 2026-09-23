@@ -35,6 +35,14 @@ export const WORD_IN = 0.74;
 export const LANDED = 0.12;
 /** … and has left it beyond this (the stone is re-armed). */
 export const LEFT = 0.5;
+/** The page nearest the reading line must be nearer than the one showing by this share of the screen before the sea changes. */
+export const HYST = 0.06;
+/**
+ * The words take the next field's inks once its tide is this far across. By then it has crossed
+ * their page (the right page starts two fifths of the way over), so no word stands in the ink of
+ * a colour it is not yet on.
+ */
+export const INK_AT = 0.72;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
@@ -74,4 +82,23 @@ export function seaAt(u: number): SeaFrame {
 export function groundAt(u: number): string {
   const { i, t } = seaAt(u);
   return `color-mix(in srgb, var(${seaAreas[i + 1].token}) ${(t * 100).toFixed(1)}%, var(${seaAreas[i].token}))`;
+}
+
+/** The field whose inks the words and the names wear at playhead `u`. */
+export function inkAt(u: number): number {
+  const i = Math.max(0, Math.min(STEPS, Math.floor(u)));
+  return u - i > INK_AT ? Math.min(STEPS, i + 1) : i;
+}
+
+/**
+ * Which page the sea shows: the one whose centre is nearest `y`, the reading line. The one
+ * showing keeps it until another is nearer by `slack`, so a page standing half way between two
+ * does not flicker between them. `centres` and `y` are in the page's coordinates.
+ */
+export function nearestPage(centres: readonly number[], y: number, current: number, slack: number): number {
+  let best = current;
+  centres.forEach((c, k) => {
+    if (Math.abs(c - y) < Math.abs(centres[best] - y) - slack) best = k;
+  });
+  return best;
 }
