@@ -63,7 +63,7 @@ describe('paymentPlaceholders', () => {
    */
   test('finds the payment details, and nothing that is merely unfinished', () => {
     const paths = paymentPlaceholders(site).map((p) => p.path);
-    expect(paths).toEqual(['contact.orgnr', 'support.vipps.value', 'support.account.value']);
+    expect(paths).toEqual(['contact.orgnr', 'support.account.value']);
     expect(paths).not.toContain('contact.email');
   });
 
@@ -86,8 +86,8 @@ describe('contentPlaceholders', () => {
   });
 
   /**
-   * What the site still lacks, exactly: the e-mail, the organisation number, the Vipps
-   * number and the account, and what the Kontakt page asks for besides — the street and
+   * What the site still lacks, exactly: the e-mail, the organisation number and the account
+   * number (the Vipps number arrived 2026-09-23), and what the Kontakt page asks for — the street and
    * the postcode, the number, the hours, the way there, the three places to follow.
    * Nothing else on the site is a stand-in — the collections ship empty and the prose is
    * the brief's — so anything more here is a placeholder someone added and should
@@ -107,7 +107,6 @@ describe('contentPlaceholders', () => {
       'contact.phone',
       'contact.transit',
       'support.account.value',
-      'support.vipps.value',
     ]);
   });
 });

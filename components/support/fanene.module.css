@@ -228,49 +228,33 @@
   justify-self: start;
 }
 
-/* ----- AvtaleGiro's amounts and button, drawn ----- */
+/* ----- AvtaleGiro's button: the way to the agreement at Solidus ----- */
 
-.drawn {
-  display: grid;
-  gap: 14px;
-  font-family: var(--font-sans);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  height: 38px;
-  padding: 0 14px;
-  border: 1px solid var(--fane-line-ink);
-  border-radius: var(--radius-pill);
-  font: 500 14px/1 var(--font-sans);
-  font-variant-numeric: tabular-nums;
-  color: var(--fane-ink);
-}
-
-.chip[data-on] {
-  background: var(--fane-ink);
-  border-color: var(--fane-ink);
-  color: var(--fane);
-}
-
+/*
+ * It stands in the middle of its banner, where the other two carry their number, so the three read
+ * as one set: the cloth's own ink on the cloth, filled on the pointer the way a banner leans.
+ */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   justify-self: start;
-  height: 48px;
-  padding: 0 22px;
-  border: 1px solid var(--fane-line-ink);
+  min-height: clamp(58px, 6cqi, 76px);
+  padding: 0 clamp(24px, 4cqi, 40px);
+  border: 1px solid var(--fane-ink);
   border-radius: var(--radius-pill);
-  font: 500 15px/1 var(--font-sans);
-  color: var(--fane-ink);
+  background: var(--fane-ink);
+  font: 500 clamp(17px, 2.4cqi, 26px) / 1.15 var(--font-sans);
+  letter-spacing: -0.01em;
+  color: var(--fane);
+  text-decoration: none;
+  transition: transform 260ms var(--ease-out-expo), box-shadow 260ms var(--ease-out-expo);
+}
+
+.button:hover,
+.button:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px -16px rgb(0 0 0 / 0.55);
 }
 
 /* ----- reduced motion: everything stands unrolled ----- */
