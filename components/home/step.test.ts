@@ -1,52 +1,96 @@
-import { describe, expect, test } from 'vitest';
-import { nextStop, ON, STEP } from './step';
-import { STEPS } from './tide';
+import gsap from 'gsap';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { holdTheFirstField, IDLE, TICK } from './step';
 
-describe('nextStop', () => {
-  test('standing on a field, a gesture goes to the next one along — a whole step, either way', () => {
-    expect(nextStop(0, 1)).toBe(1);
-    expect(nextStop(1, 1)).toBe(2);
-    expect(nextStop(2, 1)).toBe(3);
-    expect(nextStop(3, -1)).toBe(2);
-    expect(nextStop(1, -1)).toBe(0);
+/**
+ * The hold, at the level the browser cannot be made to show: whether the page was ARRIVING at the
+ * sea or opened inside it. A restored scroll cannot be driven from Playwright — neither a reload
+ * nor a scroll before hydration reproduces it — so the contract is read here instead: the drive is
+ * asked for, or it is not.
+ */
+
+const SPAN = { start: 1000, end: 4000 };
+const span = () => SPAN;
+const scrollTo = vi.fn();
+
+/** Put the window where a scroll would have left it. */
+function at(y: number) {
+  Object.defineProperty(window, 'scrollY', { value: y, configurable: true, writable: true });
+}
+
+/** Long enough for the act's clock to tick and to count the page as still. */
+const settleDown = () => new Promise((r) => setTimeout(r, IDLE + TICK * 3));
+
+/** Every drive the act asked for, by the scroll it aimed at. It asks again each tick while the page has not got there — the mock never moves it, so more than one is right. */
+let drives: number[];
+let stop: (() => void) | null = null;
+
+beforeEach(() => {
+  drives = [];
+  scrollTo.mockClear();
+  vi.spyOn(gsap, 'to').mockImplementation(((_t: unknown, vars: { y: number }) => {
+    drives.push(vars.y);
+    return { isActive: () => false, kill: () => {} };
+  }) as unknown as typeof gsap.to);
+});
+
+afterEach(() => {
+  stop?.();
+  stop = null;
+  vi.restoreAllMocks();
+});
+
+describe('the hold on the first field', () => {
+  test('a page arriving from above and coming to rest inside the sea is driven to the first field', async () => {
+    at(SPAN.start + 400);
+    stop = holdTheFirstField(span, scrollTo, true);
+    await settleDown();
+    expect(drives.length).toBeGreaterThan(0);
+    expect(drives.every((y) => y === SPAN.start)).toBe(true);
   });
 
-  test('a page the browser rounded a hair off a field is standing on it', () => {
-    expect(nextStop(0.999, 1)).toBe(2);
-    expect(nextStop(1.001, -1)).toBe(0);
-    expect(nextStop(2 - ON / 2, 1)).toBe(3);
+  test('a page that opened inside the sea is left where it is — a restored scroll is not hauled to the top', async () => {
+    at(SPAN.start + 1500);
+    stop = holdTheFirstField(span, scrollTo, false);
+    await settleDown();
+    expect(drives).toEqual([]);
   });
 
-  test('stranded between two fields, it finishes the step the way it is going', () => {
-    expect(nextStop(0.4, 1)).toBe(1);
-    expect(nextStop(0.4, -1)).toBe(0);
-    expect(nextStop(2.6, 1)).toBe(3);
-    expect(nextStop(2.6, -1)).toBe(2);
+  test('the hold is spent once the page has stood on the first field: after that the sea is the visitor’s', async () => {
+    at(SPAN.start);
+    stop = holdTheFirstField(span, scrollTo, true);
+    await settleDown();
+    expect(drives).toEqual([]);
+    // and now, off the field and still: nothing
+    at(SPAN.start + 600);
+    await settleDown();
+    expect(drives).toEqual([]);
   });
 
-  test('at the two ends the act is over and the page has its scroll back', () => {
-    expect(nextStop(0, -1)).toBeNull();
-    expect(nextStop(STEPS, 1)).toBeNull();
-    expect(nextStop(STEPS + 0.5, 1)).toBeNull();
-    expect(nextStop(-0.5, -1)).toBeNull();
+  test('a page above the sea, or below it, is not the act’s business', async () => {
+    at(SPAN.start - 300);
+    stop = holdTheFirstField(span, scrollTo, true);
+    await settleDown();
+    expect(drives).toEqual([]);
+    stop();
+    at(SPAN.end + 300);
+    stop = holdTheFirstField(span, scrollTo, true);
+    await settleDown();
+    expect(drives).toEqual([]);
   });
 
-  test('never past either end, and never more than one step from where it is', () => {
-    for (let u = 0; u <= STEPS; u += 0.05) {
-      for (const dir of [1, -1] as const) {
-        const to = nextStop(u, dir);
-        if (to === null) continue;
-        expect(to).toBeGreaterThanOrEqual(0);
-        expect(to).toBeLessThanOrEqual(STEPS);
-        expect(Number.isInteger(to)).toBe(true);
-        expect(Math.abs(to - u)).toBeLessThanOrEqual(1 + ON);
-        expect(Math.sign(to - u)).toBe(dir);
-      }
+  test('nothing is driven while the page is still moving', async () => {
+    at(SPAN.start + 400);
+    stop = holdTheFirstField(span, scrollTo, true);
+    // moved oftener than the act counts as still, so no tick of it can find the page at rest —
+    // at one nudge per tick a slow machine slips a tick past IDLE and the drive fires
+    for (let i = 0; i < 10; i++) {
+      at(SPAN.start + 400 + i * 20);
+      await new Promise((r) => setTimeout(r, IDLE / 4));
     }
-  });
-
-  test('the step takes the second the owner settled on — half the speed of the first build', () => {
-    expect(STEP).toBeGreaterThanOrEqual(800);
-    expect(STEP).toBeLessThanOrEqual(1200);
+    expect(drives).toEqual([]);
+    await settleDown();
+    expect(drives.length).toBeGreaterThan(0);
+    expect(drives.every((y) => y === SPAN.start)).toBe(true);
   });
 });

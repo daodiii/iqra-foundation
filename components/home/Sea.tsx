@@ -13,7 +13,7 @@ import { AREA_LOOK, areaFloor, type Area } from './areas';
 import fields from './fields.module.css';
 import { useFit } from './fit';
 import styles from './sea.module.css';
-import { takeTheSteps } from './step';
+import { holdTheFirstField } from './step';
 import { groundAt, LANDED, LEFT, seaAreas, seaAt, STEPS } from './tide';
 
 /** The longest of the four names: the index is sized by it. */
@@ -71,15 +71,13 @@ function FieldWords({ area }: { area: Area }) {
  * under the header to its bottom at the foot of the screen — and `write` puts each `u` on
  * the elements, once per change and once per refresh.
  *
- * The scroll across those four screens is stepped on the way in: `takeTheSteps` (step.ts)
- * takes the wheel and the thumb while the act holds the screen and moves the page exactly
- * one field per gesture, over the second the owner settled on (2026-09-22) — downwards, and
- * only until the four have been seen, after which the sea is scrolled like any other
- * section. So the scrub is only the tenth of a second that keeps a scroll made some
- * other way — a key, the scrollbar — from cutting rather than crossing; the drive's own
- * ease is what the tide rides. ScrollTrigger's `snap` is gone with it, and so is the boot
- * settle that used to rescue an act stranded inside the half second the snap is deaf for:
- * step.ts settles a stranded page itself, from the first frame, whatever stranded it.
+ * The four screens are scrolled, not stepped — the owner's choice of 2026-09-23 — with one
+ * hold in them: coming down the page for the first time, `holdTheFirstField` (step.ts) brings
+ * the page to rest on the navy, however hard the scroll that reached the sea, and from there
+ * the sea is the visitor's. So the scrub is a tenth of a second of smoothing and nothing
+ * more. ScrollTrigger's `snap` is gone, and so is the boot settle that used to rescue an act
+ * stranded inside the half second the snap is deaf for: step.ts has its own clock and brings a
+ * stranded page home from the first frame, whatever stranded it.
  *
  * Under reduced motion nothing is made and the stage is never `data-live`.
  *
@@ -133,7 +131,7 @@ function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void
       // driver must not read `u` from a division by zero (it did, and stood down for the page's
       // first second — long enough for a visitor to arrive and be met by nothing).
       const reach = () => (st && st.end > st.start ? { start: st.start, end: st.end } : null);
-      const loose = takeTheSteps(el, reach, ScrollTrigger.getScrollFunc(window), startedAbove);
+      const loose = holdTheFirstField(reach, ScrollTrigger.getScrollFunc(window), startedAbove);
       down = () => {
         loose();
         ScrollTrigger.removeEventListener('refresh', put);
@@ -150,8 +148,8 @@ function useAct(stage: RefObject<HTMLElement | null>, write: (u: number) => void
 }
 
 /**
- * Havet: the four fields as one sea, stepped one gesture at a time (step.ts). One water
- * the size of the screen, calm; between
+ * Havet: the four fields as one sea, held once on the navy as it is reached (step.ts). One
+ * water the size of the screen, calm; between
  * field i and i + 1 its floor is retuned from the one area's water to the next, `t` of the
  * way across — the tide comes in from the left, its edge bent by the surface
  * (`WaterHandle.retune`) — and the CSS ground under the canvas mixes the same two colours
