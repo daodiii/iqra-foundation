@@ -38,29 +38,12 @@ export const LEFT = 0.5;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
-/**
- * Where the act settles once the scroll rests: it finishes the step you started. Judged on
- * the trigger's real position, not on the landing GSAP projects from the velocity — a
- * programmatic jump of a third of a step was snapped TWO steps ahead by `snapTo: 1/3` —
- * and by the way you were going: forward, anything past a tenth of a step completes it;
- * back, anything short of nine tenths returns. A tenth is less than one notch of a mouse
- * wheel (a hundred pixels of a step of a screen): at an eighth a single notch fell short
- * and was pulled back to the field it had left, and only two notches at once moved on.
- * There is no readable state between two fields, so it always settles. Since 2026-09-22
- * the gestures are stepped whole (step.ts) and nothing lands here between two fields on
- * purpose; this is what collects a page that was moved some other way — a key, the
- * scrollbar, a restored position. The shape is ScrollTrigger's old `snapTo`, which is
- * where it used to be given.
+/*
+ * A settle used to live here — the rule, from 2026-09-17, that a scroll coming to rest between
+ * two fields finished the step it had started. It went with the stepping on 2026-09-23, when the
+ * owner chose to have the sea scroll freely with one hold on its first field (step.ts): there is
+ * no longer any position in the act that the page is moved away from, except that one.
  */
-export const COMMIT = 0.1;
-export function settle(projected: number, self?: { progress: number; direction: number }): number {
-  if (!self) return projected;
-  const p = self.progress * STEPS;
-  const base = Math.floor(p);
-  const frac = p - base;
-  const to = self.direction < 0 ? (frac < 1 - COMMIT ? base : base + 1) : (frac > COMMIT ? base + 1 : base);
-  return Math.max(0, Math.min(STEPS, to)) / STEPS;
-}
 
 export type SeaFrame = {
   /** The field the tide comes from … */

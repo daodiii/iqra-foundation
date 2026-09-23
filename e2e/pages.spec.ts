@@ -70,8 +70,8 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   if (!seated.length) await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeAttached();
   // nothing of the thread
   await expect(main.locator('canvas[data-thread-canvas]')).toHaveCount(0);
-  // the act: a jump 0.4 of a step into the first tide settles forward to the second field —
-  // its words up and on the water, the first's gone, the CSS ground wholly the second area's (Samfunnsdeltakelse)
+  // the act: the playhead is the scroll, so the page put on the second field shows its words up and
+  // on the water, the first's gone, the CSS ground wholly the second area's (Samfunnsdeltakelse)
   const jumpTo = (u: number) => sea.evaluate((el, u) => {
     const r = el.getBoundingClientRect();
     const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
@@ -82,20 +82,19 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   const onOf = (k: number) => words.nth(k).evaluate((el) => (el as HTMLElement).style.getPropertyValue('--on'));
   // the act is joined on its first field: arriving at the sea locks onto the navy until it has been
   // stood on (step.ts), so a jump straight into the first tide would be carried back to it
+  // on the first field first, and standing there a moment: the sea holds the page on the navy until
+  // it has been stood on (step.ts), so a jump made the instant the page arrives is carried back
   await jumpTo(0);
   await expect.poll(() => onOf(0), { timeout: 3000 }).toBe('1.000');
-  // and stands there a moment: the act locks onto the navy until it has been stood on, so a jump
-  // made the instant the page arrives would be carried back rather than settled forward
   await page.waitForTimeout(400);
-  await jumpTo(0.4);
+  await jumpTo(1);
   await expect.poll(() => onOf(1), { timeout: 3000 }).toBe('1.000');
   await expect(words.nth(1)).toHaveAttribute('data-on', '');
   await expect(words.nth(0)).not.toHaveAttribute('data-on');
   expect(await onOf(0)).toBe('0.000');
-  // once the settle has finished, the CSS ground is wholly the second area's — as the end of
-  // the first tide (samfunnsdeltakelse at ~100% over kunnskap) or the start of the second (dialog
-  // at ~0% over samfunnsdeltakelse): the browser rounds the settled scroll to a pixel, so u lands a hair
-  // either side of 1. The words are up a fifth of a step before that, so this is polled.
+  // the CSS ground is wholly the second area's — as the end of the first tide (samfunnsdeltakelse at
+  // ~100% over kunnskap) or the start of the second (dialog at ~0% over samfunnsdeltakelse): the
+  // browser rounds the scroll to a pixel, so u lands a hair either side of 1.
   const groundIs = (area: string) => async () => {
     const ground = await sea.locator('[data-sea]').evaluate((el) => (el as HTMLElement).style.getPropertyValue('--ground'));
     const m = ground.match(/^color-mix\(in srgb, var\((--color-area-\w+)\) ([\d.]+)%, var\((--color-area-\w+)\)\)$/);
@@ -104,7 +103,7 @@ test('the home page is the name alone, and carries the brief’s main text, the 
     return (to === area && Number(pct) >= 99.5) || (from === area && Number(pct) <= 0.5) ? area : ground;
   };
   await expect.poll(groundIs('--color-area-samfunnsdeltakelse'), { timeout: 3000 }).toBe('--color-area-samfunnsdeltakelse');
-  // and back: a jump to 0.9 of the way back to the first field returns to it
+  // and back on the first field's words as the page returns to it
   await jumpTo(0.1);
   await expect.poll(() => onOf(0), { timeout: 3000 }).toBe('1.000');
   await expect(words.nth(0)).toHaveAttribute('data-on', '');

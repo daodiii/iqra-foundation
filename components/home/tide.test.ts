@@ -1,10 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import { areas } from './areas';
-import { groundAt, SEA_ORDER, seaAreas, seaAt, settle, STEPS } from './tide';
+import { groundAt, SEA_ORDER, seaAreas, seaAt, STEPS } from './tide';
 
-const at = (progress: number, direction: 1 | -1) => settle(progress, { progress, direction });
-
-describe('settle', () => {
+describe('the stage', () => {
   test('three steps between the four fields, and the stage is built for exactly that', () => {
     expect(STEPS).toBe(3);
     expect(STEPS).toBe(seaAreas.length - 1);
@@ -18,35 +16,6 @@ describe('the order on the sea', () => {
     expect([...seaAreas].sort((a, b) => a.key.localeCompare(b.key))).toEqual([...areas].sort((a, b) => a.key.localeCompare(b.key)));
   });
 
-  test('forward, anything past a tenth of a step (one wheel notch) completes it; short of that, it returns', () => {
-    expect(at(0.3, 1)).toBeCloseTo(1 / 3, 10); // 0.9 of a step in
-    expect(at(0.04, 1)).toBeCloseTo(1 / 3, 10); // 0.12 of a step: past the tenth
-    expect(at(0.03, 1)).toBe(0); // 0.09 of a step: not yet
-    expect(at(0.69, 1)).toBeCloseTo(2 / 3, 10); // 2.07 steps: not a tenth into the third, back to two
-    expect(at(0.75, 1)).toBe(1); // 2.25 steps: on to the last
-  });
-
-  test('back, anything short of nine tenths returns; past it, the step is kept', () => {
-    expect(at(0.2, -1)).toBe(0); // 0.6 of a step, going back
-    expect(at(0.6, -1)).toBeCloseTo(1 / 3, 10); // 1.8 steps, going back
-    expect(at(0.96, -1)).toBeCloseTo(2 / 3, 10); // 2.88: a notch back from the last field returns to the third
-    expect(at(0.98, -1)).toBe(1); // 2.94: within the last tenth of the third step, kept
-  });
-
-  test('always a whole step, never past either end', () => {
-    for (let p = 0; p <= 1; p += 0.01) {
-      for (const dir of [1, -1] as const) {
-        const s = at(p, dir);
-        expect(s).toBeGreaterThanOrEqual(0);
-        expect(s).toBeLessThanOrEqual(1);
-        expect(Math.abs(s * STEPS - Math.round(s * STEPS))).toBeLessThan(1e-9);
-      }
-    }
-  });
-
-  test('without a trigger it hands back what it was given', () => {
-    expect(settle(0.42)).toBe(0.42);
-  });
 });
 
 describe('seaAt', () => {
