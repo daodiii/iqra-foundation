@@ -13,6 +13,9 @@
  * header, and the last is there as it leaves. None of this needs script: without it the pages
  * scroll over the navy screen in the first field's inks. `[data-live]` dims the pages not being
  * read.
+ *
+ * A phone has no room for a left page beside the pages, so it lays it across the head of the
+ * screen as a band (at the foot of this file), and the texts go by under it.
  */
 
 .stage {
@@ -35,11 +38,11 @@
   --say-size: clamp(32px, 4vw, 58px);
   --text-size: clamp(19px, 1.65vw, 24px);
   /* The dials, each named once. */
-  /* The inks' fade: .index, .say, .text and .phoneIndex all cross to the next field's colours on it. */
+  /* The inks' fade: .index, .say, .text and .band all cross to the next field's colours on it. */
   --ink-fade: 0.45s;
-  /* The dimmed names' opacity: .item and .phoneIndex li, for the field not on the water. */
+  /* The dimmed names' opacity: .item and .bandIndex li, for the field not on the water. */
   --name-dim: 0.38;
-  /* The logo's opacity once it's on: .foot[data-on] and .pageLogo. */
+  /* The logo's opacity once it's on: .foot[data-on], at the foot of the left page or the band. */
   --logo-on: 0.85;
   position: relative;
   /* The pages' layer above the screen's stays inside the section: nothing of it can rise over the header. */
@@ -152,10 +155,13 @@
   white-space: nowrap;
 }
 
-.go:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 0.04em;
-  text-underline-offset: 0.12em;
+/* Only where there is a hover: a phone keeps a tapped name «hovered», underlined, after its page has come. */
+@media (hover: hover) {
+  .go:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 0.04em;
+    text-underline-offset: 0.12em;
+  }
 }
 
 .go:focus-visible {
@@ -260,13 +266,12 @@
 
 /* Light type on dark water: a breath of shadow keeps it clear of the glints. */
 .index[data-tone='dark'],
-.pages[data-tone='dark'] :is(.say, .text, .phoneIndex) {
+.pages[data-tone='dark'] :is(.say, .text) {
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.28);
 }
 
-/* A phone's alone: the four names at the head of every page, and its logo at its foot. */
-.phoneIndex,
-.pageLogo {
+/* A phone's alone: the band (below). */
+.head {
   display: none;
 }
 
@@ -277,20 +282,37 @@
 }
 
 /*
- * A phone: one page, no left one. The screen is the water and the veil alone. Each page carries
- * the four names at its head, its own lit (the owner's pick, 2026-09-23: «A: every text»), and its
- * logo at its foot, because at the foot of the screen the pages' text ran over it.
+ * A phone: one page, and no room for a left one beside it, so the left page is laid across the
+ * head of the screen as a band (Sea.tsx's `Band`): the four names on the field's own colour, the
+ * one on the water lit, and the field's logo at the foot of the list. The texts go by under it as
+ * they go by beside the names on a desktop (the owner, 2026-09-24: «so they're both the same»).
+ * It replaces the four names at the head of every page, 2026-09-23's «A: every text».
  */
 @media (max-width: 699px) {
   .stage {
-    --page-h: 84svh;
+    /*
+     * A desktop's share. With the names out of the pages it keeps the room between two texts that
+     * «A: every text» had at 84svh: about 265 px on a 390 × 844 phone.
+     */
+    --page-h: 60svh;
     --say-size: clamp(26px, 7.4vw, 32px);
     --text-size: 17px;
+    /* The band's size: its names, and its height from its padding and four rows of them. */
+    --band-size: 26px;
+    --band-h: calc(16px + 4 * var(--band-size) * 1.2 + 18px);
+    /* Its soft foot, from its colour into the water. */
+    --band-edge: 36px;
   }
 
   .spread,
   .pages {
     grid-template-columns: 1fr;
+  }
+
+  /* The middle is the middle of the water under the band: the first text is there as the section reaches the header, the last as it leaves. */
+  .pages {
+    padding-top: calc((var(--view-h) + var(--band-h) - var(--page-h)) / 2);
+    padding-bottom: max(0px, calc((var(--view-h) - var(--band-h) - var(--page-h)) / 2));
   }
 
   .left,
@@ -306,35 +328,80 @@
     grid-column: 1;
   }
 
-  .phoneIndex {
-    display: grid;
-    justify-items: start;
-    gap: 6px;
-    margin: 0 0 22px;
-    padding: 0;
-    list-style: none;
-    font: 700 27px / 1.1 var(--font-sans);
-    letter-spacing: -0.025em;
-    color: var(--card-ink);
-    transition: color var(--ink-fade) ease;
-  }
-
-  .phoneIndex li {
-    opacity: var(--name-dim);
-  }
-
-  .phoneIndex li[data-here] {
-    opacity: 1;
-  }
-
   .text {
     padding-top: 20px;
   }
 
-  .pageLogo {
+  /* The band rides over the pages in a track of its own, the screen's height and sticky as it is, so it arrives and leaves with the screen. */
+  .head {
     display: block;
-    padding-top: 24px;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .headView {
+    position: sticky;
+    top: var(--header-h);
+    height: var(--view-h);
+  }
+
+  /*
+   * Solid, so a text going under it goes out of sight: a list pinned over the texts on the water
+   * (the second of 2026-09-23's phone pictures) let them show through. It takes the taps over it,
+   * so no text hidden under it is followed.
+   */
+  .band {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    column-gap: 16px;
+    box-sizing: border-box;
+    min-height: var(--band-h);
+    padding: 16px var(--pad-x) 18px;
+    background: var(--band, var(--ground));
+    color: var(--card-ink);
+    pointer-events: auto;
+    transition: color var(--ink-fade) ease;
+  }
+
+  .band::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: var(--band-edge);
+    background: linear-gradient(180deg, var(--band, var(--ground)), transparent);
+    pointer-events: none;
+  }
+
+  .bandIndex {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    justify-items: start;
+    min-width: 0;
+    font: 700 var(--band-size) / 1.2 var(--font-sans);
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+  }
+
+  .bandIndex li {
+    opacity: var(--name-dim);
+    transition: opacity 0.5s ease-out;
+  }
+
+  .bandIndex li[data-here] {
+    opacity: 1;
+  }
+
+  .bandFeet {
+    display: grid;
+    padding-bottom: 4px;
     line-height: 0;
-    opacity: var(--logo-on);
   }
 }

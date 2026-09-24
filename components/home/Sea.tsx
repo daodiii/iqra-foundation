@@ -18,6 +18,9 @@ import { groundAt, HYST, inkAt, LANDED, LEFT, nearestPage, seaAreas, seaAt, STEP
 /** The longest of the four names: the index is sized by it. */
 const widest = seaAreas.reduce((a, b) => (b.name.length > a.name.length ? b : a));
 
+/** On a phone the stone drops into the water this far under the band (px), below the lit name: under the band it would not be seen. */
+const DROP = 44;
+
 /** A field's colours: its ground for the veil, and the inks that read on it. */
 function inks(area: Area): CSSProperties {
   const look = AREA_LOOK[area.key];
@@ -50,31 +53,51 @@ function Index({ go }: { go: (k: number) => void }) {
 }
 
 /**
+ * A phone's left page, laid across the head of the screen: the four names pinned under the
+ * header on the field's own colour, the one on the water lit, each the way to its page, and the
+ * field's logo at the foot of the list. The texts go by under it as they go by beside the names
+ * on a desktop (the owner, 2026-09-24: «on the mobile site, we don't have the same scrolling
+ * thing as desktop … Can that be changed so they're both the same?»). Only a phone draws it.
+ */
+function Band({ go }: { go: (k: number) => void }) {
+  const first = seaAreas[0];
+  return (
+    <div className={styles.band} data-band data-tone={first.tone} style={inks(first)}>
+      <ol className={styles.bandIndex}>
+        {seaAreas.map((a, k) => (
+          <li key={a.key} data-item={k} data-here={k === 0 ? '' : undefined}>
+            <button type="button" className={styles.go} onClick={() => go(k)}>
+              {a.name}
+            </button>
+          </li>
+        ))}
+      </ol>
+      <div className={styles.bandFeet}>
+        {seaAreas.map((a, k) => (
+          <span key={a.key} className={styles.foot} data-foot={k} data-on={k === 0 ? '' : undefined}>
+            <Logo ground={a.ground} height={28} decorative />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
  * A right page: the field's statement and its reading (the brief's text, its first sentence and
  * the rest), the whole of it the link to its section of Vårt arbeid. Its name is an `h2` (the sea
  * stands first under the hero, so each field is a section of the page) for a reader; the index
- * shows it to the eye. On a phone, where there is no left page, the four names head it and its
- * logo ends it.
+ * shows it to the eye, and on a phone the band does.
  */
 function Page({ area, k }: { area: Area; k: number }) {
   const [first, ...rest] = sentences(area.text);
   return (
     <Link href={area.href} prefetch={false} className={styles.page} data-page={k} data-here={k === 0 ? '' : undefined} aria-labelledby={`felt-${area.key}`}>
-      <ol className={styles.phoneIndex} aria-hidden>
-        {seaAreas.map((a) => (
-          <li key={a.key} data-here={a.key === area.key ? '' : undefined}>
-            {a.name}
-          </li>
-        ))}
-      </ol>
       <h2 id={`felt-${area.key}`} className={styles.name}>
         {area.name}
       </h2>
       <p className={styles.say}>{first}</p>
       <p className={styles.text}>{rest.join(' ')}</p>
-      <span className={styles.pageLogo}>
-        <Logo ground={area.ground} height={28} decorative />
-      </span>
     </Link>
   );
 }
@@ -89,6 +112,8 @@ function Page({ area, k }: { area: Area; k: number }) {
  * device without WebGL2. The words take the next field's inks once its tide has crossed their
  * page (`inkAt`), and a stone drops under the name as the field lands. A name is a button: it
  * brings its page to the middle with the browser's own smooth scroll, and the focus goes with it.
+ * A phone has the same, with the names in a band at the head of the screen (`Band`): its colour
+ * follows the tide, and the middle is the middle of the water under it.
  *
  * Under reduced motion the sea goes to a field at once: the name, the inks and the colour, with no
  * tide, no stone and no glide (the site's stylesheet drops every transition there too). Without
@@ -106,28 +131,37 @@ export function Sea() {
     const el = stage.current;
     const box = el?.querySelector<HTMLElement>('[data-material="water"]');
     const index = el?.querySelector<HTMLElement>('[data-index]');
+    const band = el?.querySelector<HTMLElement>('[data-band]');
     const sheet = el?.querySelector<HTMLElement>('[data-pages]');
-    if (!el || !box || !index || !sheet) return;
+    if (!el || !box || !index || !band || !sheet) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const canvas = box.querySelector('canvas');
     const pages = [...el.querySelectorAll<HTMLElement>('[data-page]')];
+    // Both lists' names, the index's and the band's, each by its own number: only one is drawn.
     const items = [...el.querySelectorAll<HTMLElement>('[data-item]')];
     const veils = [...el.querySelectorAll<HTMLElement>('[data-veil]')];
     // The foot's logos by their own attribute: `Logo` puts `data-logo` on its <img>, and the mock's `[data-logo]` found eight.
     const feet = [...el.querySelectorAll<HTMLElement>('[data-foot]')];
+    const own = (e: HTMLElement, name: 'item' | 'foot') => Number(e.dataset[name]);
     el.setAttribute('data-live', '');
 
     /** Which fields have had their stone, each re-armed once the tide is well away from it. */
     const landed = seaAreas.map(() => false);
-    /** The stone drops under the name: the index's on a desktop, the page's own list on a phone, where the index is not drawn. */
+    /**
+     * The stone drops under the lit name, in whichever list is drawn. On a phone the band is over
+     * the water, so it drops into the water just under the band, below the name.
+     */
     const stone = (k: number) => {
       const water = live.current;
       const frame = canvas?.getBoundingClientRect();
-      const name = [items[k]?.querySelector('button'), pages[k]?.querySelector('li[data-here]')]
-        .map((e) => e?.getBoundingClientRect())
+      const name = items
+        .filter((it) => own(it, 'item') === k)
+        .map((it) => it.querySelector('button')?.getBoundingClientRect())
         .find((r) => r && r.width > 0);
       if (!water || !frame?.width || !frame.height || !name) return;
-      water.stir((name.left + name.width / 2 - frame.left) / frame.width, 1 - (name.top + name.height / 2 - frame.top) / frame.height);
+      const head = band.getBoundingClientRect();
+      const y = head.height ? head.bottom + DROP : name.top + name.height / 2;
+      water.stir((name.left + name.width / 2 - frame.left) / frame.width, 1 - (y - frame.top) / frame.height);
     };
 
     let inked = -1;
@@ -137,6 +171,8 @@ export function Sea() {
       tune(live.current, u);
       // On the box itself: it declares its own `--ground` (`.field.navy`), so a ground set on anything above it never showed.
       box.style.setProperty('--ground', groundAt(u));
+      // The phone's band is the water's colour all the way across the tide, not a step behind it.
+      band.style.setProperty('--band', groundAt(u));
       const k = inkAt(u);
       if (k !== inked) {
         inked = k;
@@ -144,11 +180,13 @@ export function Sea() {
         for (const [name, value] of Object.entries(inks(area))) {
           sheet.style.setProperty(name, value as string);
           index.style.setProperty(name, value as string);
+          band.style.setProperty(name, value as string);
         }
         sheet.dataset.tone = area.tone;
         index.dataset.tone = area.tone;
+        band.dataset.tone = area.tone;
         veils.forEach((v, j) => v.toggleAttribute('data-on', j === k));
-        feet.forEach((f, j) => f.toggleAttribute('data-on', j === k));
+        feet.forEach((f) => f.toggleAttribute('data-on', own(f, 'foot') === k));
       }
       seaAreas.forEach((_, j) => {
         const d = Math.abs(u - j);
@@ -164,11 +202,15 @@ export function Sea() {
     let centres: number[] = [];
     let line = 0;
     let span = 1;
-    /** The reading line (the middle of the screen under the header) and each page's centre, in the page's coordinates. */
+    /**
+     * The reading line (the middle of the screen under the header, and on a phone under the band
+     * too) and each page's centre, in the page's coordinates. A band that is not drawn measures 0.
+     */
     const measure = () => {
       const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
-      span = window.innerHeight - header;
-      line = header + span / 2;
+      const head = band.getBoundingClientRect().height;
+      span = window.innerHeight - header - head;
+      line = header + head + span / 2;
       centres = pages.map((p) => {
         const r = p.getBoundingClientRect();
         return r.top + window.scrollY + r.height / 2;
@@ -177,7 +219,7 @@ export function Sea() {
     measure();
     let field = nearestPage(centres, window.scrollY + line, 0, HYST * span);
     const light = (k: number) => {
-      items.forEach((it, j) => it.toggleAttribute('data-here', j === k));
+      items.forEach((it) => it.toggleAttribute('data-here', own(it, 'item') === k));
       pages.forEach((p, j) => p.toggleAttribute('data-here', j === k));
     };
     light(field);
@@ -263,6 +305,11 @@ export function Sea() {
               </div>
             </Box>
           </div>
+        </div>
+      </div>
+      <div className={styles.head}>
+        <div className={styles.headView}>
+          <Band go={(k) => go.current(k)} />
         </div>
       </div>
       <div className={styles.pages} data-pages style={inks(first)} data-tone={first.tone}>

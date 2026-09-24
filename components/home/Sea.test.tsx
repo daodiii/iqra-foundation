@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import { sentences } from '@/lib/text';
-import { areaFloor } from './areas';
+import { AREA_LOOK, areaFloor } from './areas';
 import { Sea } from './Sea';
 import { groundAt, seaAreas } from './tide';
 
@@ -44,6 +44,7 @@ beforeEach(() => {
   now = 0;
   water.build = null;
   water.retune.mockClear();
+  water.stir.mockClear();
   setScroll(0);
   const real = HTMLElement.prototype.getBoundingClientRect;
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
@@ -72,6 +73,12 @@ const on = (selector: string) => all(selector).map((e) => e.hasAttribute('data-o
 const only = (k: number) => seaAreas.map((_, j) => j === k);
 const box = () => region().querySelector('[data-material="water"]') as HTMLElement;
 const sheet = () => region().querySelector('[data-pages]') as HTMLElement;
+const band = () => region().querySelector('[data-band]') as HTMLElement;
+/** A name's button in one list: the desktop's left page (`[data-index]`) or the phone's band (`[data-band]`). jsdom draws both. */
+const name = (list: '[data-index]' | '[data-band]', k: number) => within(region().querySelector<HTMLElement>(list)!).getByRole('button', { name: seaAreas[k].name });
+/** The desktop's foot logos, on the screen, and the phone's, in the band. */
+const FEET = '[data-material="water"] [data-foot]';
+const BAND_FEET = '[data-band] [data-foot]';
 const scrollToPage = (k: number) =>
   act(() => {
     setScroll(centre(k) - LINE);
@@ -92,6 +99,10 @@ describe('Havet as Bladene', () => {
     expect(all('[data-index]')).toHaveLength(1);
     expect(within(all('[data-index]')[0]).getAllByRole('button').map((b) => b.textContent)).toEqual(seaAreas.map((a) => a.name));
     expect(within(region()).queryByRole('navigation')).toBeNull();
+    // a phone's left page, laid across the head of the screen: one band of the same four buttons, and a foot logo per field
+    expect(all('[data-band]')).toHaveLength(1);
+    expect(within(band()).getAllByRole('button').map((b) => b.textContent)).toEqual(seaAreas.map((a) => a.name));
+    expect(all(BAND_FEET).map((f) => f.querySelector('img')?.getAttribute('data-logo'))).toEqual(seaAreas.map((a) => a.ground));
 
     // the right pages, in the sea's order
     const pages = all('[data-page]');
@@ -107,18 +118,13 @@ describe('Havet as Bladene', () => {
       const [statement, reading] = sentences(a.text);
       expect(within(page).getByText(statement)).toBeInTheDocument();
       expect(within(page).getByText(reading)).toBeInTheDocument();
-      // a phone's: the four names head it, its own marked, hidden from a reader (the h2 is its name) …
-      const list = page.querySelector('ol')!;
-      expect(list).toHaveAttribute('aria-hidden', 'true');
-      expect([...list.querySelectorAll('li')].map((li) => li.textContent)).toEqual(seaAreas.map((x) => x.name));
-      expect([...list.querySelectorAll('li')].map((li) => li.hasAttribute('data-here'))).toEqual(only(k));
-      // … and its logo ends it, for its own ground, decorative
-      expect(page.querySelectorAll('img[alt=""]')).toHaveLength(1);
-      expect(page.querySelector('img')).toHaveAttribute('data-logo', a.ground);
+      // the names and the logos are the left page's and the band's: a page carries neither of its own
+      expect(page.querySelector('ol')).toBeNull();
+      expect(page.querySelector('img')).toBeNull();
     });
     // a veil and a foot logo per field; the foot's found by their own attribute (Logo puts `data-logo` on its img)
     expect(all('[data-veil]')).toHaveLength(4);
-    expect(all('[data-foot]').map((f) => f.querySelector('img')?.getAttribute('data-logo'))).toEqual(seaAreas.map((a) => a.ground));
+    expect(all(FEET).map((f) => f.querySelector('img')?.getAttribute('data-logo'))).toEqual(seaAreas.map((a) => a.ground));
     for (const a of brief.areas) expect(within(region()).getByRole('link', { name: a.name })).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/\b0[1-4]\b/);
   });
@@ -127,14 +133,20 @@ describe('Havet as Bladene', () => {
     render(<Sea />);
     expect(region()).toHaveAttribute('data-live');
     expect(region().dataset.u).toBe('0.000');
-    expect(lit('[data-item]')).toEqual(only(0));
+    expect(lit('[data-index] [data-item]')).toEqual(only(0));
     expect(lit('[data-page]')).toEqual(only(0));
     expect(on('[data-veil]')).toEqual(only(0));
-    expect(on('[data-foot]')).toEqual(only(0));
+    expect(on(FEET)).toEqual(only(0));
     // on the box itself: it declares its own `--ground`, and one set above it never showed
     expect(box().style.getPropertyValue('--ground')).toBe(groundAt(0));
     expect(sheet().style.getPropertyValue('--card-text')).toBe('var(--color-light)');
     expect(sheet()).toHaveAttribute('data-tone', 'dark');
+    // the phone's band the same: its name and logo, the water's colour, the field's inks
+    expect(lit('[data-band] [data-item]')).toEqual(only(0));
+    expect(on(BAND_FEET)).toEqual(only(0));
+    expect(band().style.getPropertyValue('--band')).toBe(groundAt(0));
+    expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK[seaAreas[0].key].headingInk})`);
+    expect(band()).toHaveAttribute('data-tone', 'dark');
   });
 
   test('scrolled so the third page is on the reading line, its name lights and the tide goes there on its own clock, whole: the veil, the foot logo, the inks, the ground', () => {
@@ -143,23 +155,64 @@ describe('Havet as Bladene', () => {
     // a tide of two fields is dozens of frames of its own; a jump would be the scroll's one frame
     // (the mirror of the reduced-motion test's `toHaveBeenCalledTimes(1)`)
     expect(vi.mocked(window.requestAnimationFrame).mock.calls.length).toBeGreaterThan(10);
-    expect(lit('[data-item]')).toEqual(only(2));
+    expect(lit('[data-index] [data-item]')).toEqual(only(2));
     expect(lit('[data-page]')).toEqual(only(2));
     // the frames ran at once: the tide has landed, on the field exactly
     expect(region().dataset.u).toBe('2.000');
     expect(on('[data-veil]')).toEqual(only(2));
-    expect(on('[data-foot]')).toEqual(only(2));
+    expect(on(FEET)).toEqual(only(2));
     expect(box().style.getPropertyValue('--ground')).toBe(groundAt(2));
     expect(sheet().style.getPropertyValue('--card-text')).toBe('var(--color-navy)');
     expect(sheet()).toHaveAttribute('data-tone', 'light');
+    expect(lit('[data-band] [data-item]')).toEqual(only(2));
+    expect(on(BAND_FEET)).toEqual(only(2));
+    expect(band().style.getPropertyValue('--band')).toBe(groundAt(2));
+    expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK[seaAreas[2].key].headingInk})`);
+    expect(band()).toHaveAttribute('data-tone', 'light');
   });
 
   test('a name is the way to its page: the browser’s own smooth scroll brings the page’s centre to the reading line, and the focus goes to the page', () => {
     const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     render(<Sea />);
-    fireEvent.click(screen.getByRole('button', { name: seaAreas[3].name }));
+    fireEvent.click(name('[data-index]', 3));
     expect(scrollTo).toHaveBeenCalledWith({ top: centre(3) - LINE, behavior: 'smooth' });
     expect(document.activeElement).toBe(screen.getByRole('link', { name: seaAreas[3].name }));
+    // the band's names the same, where it is not drawn (it measures nothing)
+    fireEvent.click(name('[data-band]', 1));
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: centre(1) - LINE, behavior: 'smooth' });
+  });
+
+  test('on a phone the middle is the middle of the water under the band: the page there lights, a name brings its page there, and the stone drops into the water just under the band', () => {
+    // the band drawn, 160 tall under the header, and the water's canvas the screen under the header
+    const HEAD = 160;
+    const PHONE_LINE = 72 + HEAD + (768 - 72 - HEAD) / 2;
+    // the pages' rects as every test has them, and whatever else jsdom gives
+    const pagesAsBefore = vi.mocked(HTMLElement.prototype.getBoundingClientRect).getMockImplementation()!;
+    const rect = (left: number, top: number, width: number, height: number) =>
+      ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON() {} }) as DOMRect;
+    vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockImplementation(function (this: HTMLElement) {
+      if (this.hasAttribute('data-band')) return rect(0, 72, 390, HEAD);
+      if (this.closest('[data-band]') && this.tagName === 'BUTTON') return rect(24, 90 + 31 * Number(this.closest('li')!.dataset.item), 200, 31);
+      if (this.tagName === 'CANVAS') return rect(0, 72, 390, 696);
+      return pagesAsBefore.call(this);
+    });
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    render(<Sea />);
+    act(() => water.build!());
+    // a little past half way from the second page to the third on the phone's line, where the
+    // screen's middle would still be on the second: the third is the one lit
+    act(() => {
+      setScroll((centre(1) + centre(2)) / 2 + 40 - PHONE_LINE);
+      window.dispatchEvent(new Event('scroll'));
+    });
+    expect(lit('[data-page]')).toEqual(only(2));
+    expect(region().dataset.u).toBe('2.000');
+    // the stone: under the lit name's middle, just under the band, not under the band where it would not be seen
+    const [x, y] = water.stir.mock.calls.at(-1)!;
+    expect(x).toBeCloseTo((24 + 100) / 390);
+    expect(y).toBeCloseTo(1 - (72 + HEAD + 44 - 72) / 696);
+    fireEvent.click(name('[data-band]', 0));
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: centre(0) - PHONE_LINE, behavior: 'smooth' });
   });
 
   test('under reduced motion the sea goes to a field at once, with no clock and no frames of its own, and a name jumps rather than glides', () => {
@@ -173,7 +226,8 @@ describe('Havet as Bladene', () => {
     expect(box().style.getPropertyValue('--ground')).toBe(groundAt(3));
     // one frame, the scroll's own: nothing ran between the fields
     expect(window.requestAnimationFrame).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByRole('button', { name: seaAreas[0].name }));
+    expect(band().style.getPropertyValue('--band')).toBe(groundAt(3));
+    fireEvent.click(name('[data-index]', 0));
     expect(scrollTo).toHaveBeenCalledWith({ top: centre(0) - LINE, behavior: 'auto' });
   });
 

@@ -11,11 +11,15 @@ import { groundAt, seaAreas } from '../components/home/tide';
  * streams its wheel events over time, and the discrete notch a harness sends lands as one jump.
  */
 
-/** The reading line and each page's centre, read the way Sea.tsx reads them, and where the section starts in scroll. */
+/**
+ * The reading line and each page's centre, read the way Sea.tsx reads them (on a phone, the middle
+ * of the water under the band; a band not drawn measures 0), and where the section starts in scroll.
+ */
 async function geometry(page: Page) {
   return page.evaluate(() => {
     const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
-    const line = header + (window.innerHeight - header) / 2;
+    const head = document.querySelector('[data-band]')!.getBoundingClientRect().height;
+    const line = header + head + (window.innerHeight - header - head) / 2;
     const centres = [...document.querySelectorAll('[data-page]')].map((p) => {
       const r = p.getBoundingClientRect();
       return r.top + window.scrollY + r.height / 2;
@@ -56,6 +60,22 @@ const playhead = (page: Page) => page.locator('[data-fields]').evaluate((el) => 
 /** Which of a set is lit. */
 const lit = (page: Page, selector: string) => page.locator(selector).evaluateAll((els) => els.map((e) => e.hasAttribute('data-here')));
 const only = (k: number) => seaAreas.map((_, j) => j === k);
+/** The names drawn: the left page's on a desktop, the band's on a phone. */
+const names = (isMobile: boolean) => (isMobile ? '[data-band] [data-item]' : '[data-index] [data-item]');
+
+/** A finger's swipe up the screen of `px`, as raw touch events, held still before it lifts so nothing flings. */
+async function swipe(page: Page, px: number) {
+  const cdp = await page.context().newCDPSession(page);
+  const x = 180;
+  const from = Math.round(page.viewportSize()!.height * 0.85);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: from }] });
+  for (let d = 16; d < px + 16; d += 16) {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: from - Math.min(px, d) }] });
+    await page.waitForTimeout(16);
+  }
+  await page.waitForTimeout(300);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+}
 
 async function open(page: Page) {
   await page.goto('/');
@@ -75,15 +95,31 @@ test('a gesture moves the page exactly as far as the hand sent it: nothing holds
   }
 });
 
+// Chrome keeps the first few pixels of a finger's travel (its touch slop) before the touch counts
+// as a scroll; measured at 15 on this page and on the build before the band alike.
+test('on a phone a swipe moves the page as far as the finger went: nothing holds, snaps or steps it', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'a swipe is the phone’s gesture');
+  await open(page);
+  const { start } = await geometry(page);
+  for (const px of [160, 320, 480]) {
+    await page.evaluate((y) => window.scrollTo(0, y), start + 200);
+    const from = await stillAt(page);
+    await swipe(page, px);
+    const moved = (await stillAt(page)) - from;
+    expect(moved, `a swipe of ${px}`).toBeGreaterThanOrEqual(px - 20);
+    expect(moved, `a swipe of ${px}`).toBeLessThanOrEqual(px);
+  }
+});
+
 // The crossing itself (a field is TIDE_MS, three fields at crossing(3)) is clock.test.ts's to prove,
 // to the frame, and was measured landing on a real GPU by the probe; headless Chromium draws this
 // water in software, so here the polls are wide open — the frames come when they come.
-test('the page at the middle lights its name, and its tide lands on its field, whole, on its own clock', async ({ page }) => {
+test('the page at the middle lights its name, and its tide lands on its field, whole, on its own clock', async ({ page, isMobile }) => {
   await open(page);
   for (const k of [1, 3, 2, 0]) {
     await toPage(page, k);
     await expect.poll(() => lit(page, '[data-page]'), { timeout: 8_000 }).toEqual(only(k));
-    expect(await lit(page, '[data-item]')).toEqual(only(k));
+    expect(await lit(page, names(isMobile))).toEqual(only(k));
     await expect.poll(() => playhead(page), { timeout: 10_000 }).toBe(`${k}.000`);
     // a single read here can race the exact landing (data-u can show `k.000` a frame before the
     // ground catches up), so poll it too rather than read it once right after the playhead poll
@@ -93,8 +129,8 @@ test('the page at the middle lights its name, and its tide lands on its field, w
   }
 });
 
-test('a name takes its page to the middle with the browser’s own smooth scroll, and the focus goes with it, unringed after a click', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'on a phone the names head every page and are not buttons');
+// On a phone the button is the band's: the left page is not drawn, so it is not in the accessibility tree.
+test('a name takes its page to the middle with the browser’s own smooth scroll, and the focus goes with it, unringed after a click', async ({ page }) => {
   await open(page);
   await toPage(page, 0);
   const from = await stillAt(page);
@@ -121,17 +157,44 @@ test('a name takes its page to the middle with the browser’s own smooth scroll
   expect(await focused.evaluate((el) => el.matches(':focus-visible'))).toBe(false);
 });
 
-test('on a phone each page carries the four names, its own lit, and its own logo; the screen draws neither', async ({ page, isMobile }) => {
+test('on a phone the four names stand in one band under the header while the texts go by under it, out of sight there; the band is the water’s colour and carries the logo; the pages carry neither', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'the phone’s layout');
   await open(page);
-  for (const [k, a] of seaAreas.entries()) {
-    const p = page.locator(`[data-page="${k}"]`);
-    await expect(p.locator('ol')).toBeVisible();
-    await expect(p.locator('ol li')).toHaveText(seaAreas.map((x) => x.name));
-    expect(await p.locator('ol li').evaluateAll((els) => els.map((e) => e.hasAttribute('data-here')))).toEqual(only(k));
-    await expect(p.locator('img')).toBeVisible();
-    await expect(p.locator('img')).toHaveAttribute('data-logo', a.ground);
-  }
+  const band = page.locator('[data-fields] [data-band]');
+  await expect(band).toBeVisible();
+  await expect(band.getByRole('button')).toHaveText(seaAreas.map((a) => a.name));
   await expect(page.locator('[data-fields] [data-index]')).toBeHidden();
-  for (const foot of await page.locator('[data-fields] [data-foot]').all()) await expect(foot).toBeHidden();
+  for (const foot of await page.locator('[data-fields] [data-material="water"] [data-foot]').all()) await expect(foot).toBeHidden();
+  for (const k of seaAreas.keys()) {
+    await expect(page.locator(`[data-page="${k}"] ol`)).toHaveCount(0);
+    await expect(page.locator(`[data-page="${k}"] img`)).toHaveCount(0);
+  }
+  const header = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72);
+  for (const k of [0, 2, 3]) {
+    await toPage(page, k);
+    await expect.poll(() => lit(page, '[data-band] [data-item]'), { timeout: 8_000 }).toEqual(only(k));
+    // pinned: whichever text is going by, the band stands under the header
+    expect(Math.round(await band.evaluate((el) => el.getBoundingClientRect().top))).toBe(header);
+    await expect(band.locator(`[data-foot="${k}"]`)).toHaveAttribute('data-on', '');
+    await expect(band.locator(`[data-foot="${k}"] img`)).toBeVisible();
+    await expect.poll(() => band.evaluate((el) => (el as HTMLElement).style.getPropertyValue('--band')), { timeout: 10_000 }).toBe(groundAt(k));
+  }
+  // a text going under it is out of sight: the band is what lies over it, and the band is solid
+  const g = await geometry(page);
+  await page.evaluate((y) => window.scrollTo(0, y), Math.round(g.centres[1] - header - 40));
+  await expect.poll(() => band.evaluate((el) => el.getBoundingClientRect().top)).toBe(header);
+  const under = await page.locator('[data-page="1"] p').first().evaluate((p, header) => {
+    const r = p.getBoundingClientRect();
+    const y = Math.max(r.top, header) + 4;
+    const b = document.querySelector('[data-band]')!.getBoundingClientRect();
+    return { inBand: y < b.bottom, onTop: document.elementFromPoint(r.left + 8, y)?.closest('[data-band]') !== null };
+  }, header);
+  expect(under).toEqual({ inBand: true, onTop: true });
+  const alpha = await band.evaluate((el) => {
+    const c = document.createElement('canvas').getContext('2d')!;
+    c.fillStyle = getComputedStyle(el).backgroundColor;
+    c.fillRect(0, 0, 1, 1);
+    return c.getImageData(0, 0, 1, 1).data[3];
+  });
+  expect(alpha).toBe(255);
 });
