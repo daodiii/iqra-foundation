@@ -40,11 +40,11 @@ The spread (Oppslaget, 2026-09-19), opened out.
 
 | Question | Decision | Source |
 |---|---|---|
-| Space between the sections | `--page-h` 60svh on desktop (the mock had 48vh) and 84svh on a phone (66vh). One named value each, shown on the running page, one correction expected. | the owner's note; the brief |
-| Phone: where the four names go | **A: at the head of every page**, its own lit, as in the mock. B (one pinned list) was shown beside it. Its band let the text sliding under it show through. | the owner, 2026-09-23 |
-| Phone: the logo | It moves from the foot of the screen into each page, at its foot. The pages' text ran over it. | stated with the phone question, not vetoed |
+| Space between the sections | `--page-h` 60svh on desktop (the mock had 48vh) and on a phone (66vh). A phone had 84svh while its names sat in every page; with them out, 60svh keeps the same room between two texts, about 265 px on a 390 × 844 phone. | the owner's note; the brief; 2026-09-24 |
+| Phone: where the four names go | **Pinned at the head of the screen, as the desktop's left page is pinned beside it**: one band on the field's own colour, solid so a text going under it is out of sight, its lit name following the page at the middle, each name the way to its page. Superseded 2026-09-23's «A: at the head of every page» (picked from still pictures), which scrolled like any section. On a phone on its side (under 500 px tall) the names go in one row and the texts a size down, so a whole text fits under the band. | the owner, 2026-09-24: «so they're both the same» |
+| Phone: the logo | At the foot of the band's list, one per field, crossing as the inks do. | with the band, 2026-09-24 |
 | Reduced motion | The sea goes to a field at once: the name, the inks and the colour change with no tide, no stone and no glide. The site's stylesheet already drops every transition there. A name jumps (`behavior: 'auto'`). | the brief left it to the plan |
-| Without script | Sticky is CSS, so the pages scroll over the navy screen in the first field's inks and all stay readable. The names are inert buttons. | the brief |
+| Without script | Sticky is CSS, so the pages scroll over the navy screen in the first field's inks and all stay readable. The names are inert buttons, the first lit, on a desktop's left page and a phone's band alike. | the brief |
 | The index's landmark | A list of buttons inside the region, **not** a `<nav>`. The mock's `<nav>` reused the region's label, and a second label would be new copy. The names are in-page controls, and each page's `h2` is what a reader navigates by. | this plan |
 | The clock's `lead` | **Not carried.** Bladene passed 0 and never used it. | this plan |
 | ScrollTrigger | Leaves the home page. `step.ts`, the hold and the four word layers go. gsap core stays (`lib/near.ts`). | the brief |

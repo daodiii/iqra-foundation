@@ -71,10 +71,10 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   // the act: the scroll is the browser's and the tide is ours. Put the second page on the middle of
   // the screen and its name lights at once; its tide lands on its own clock, whole, and the box's own
   // CSS ground is wholly the second area's (Samfunnsdeltakelse)
+  // the page's centre onto the reading line the sea measured (`data-line`; on a phone it is under the band)
   const toPage = (k: number) =>
     sea.evaluate((el, k) => {
-      const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
-      const line = header + (window.innerHeight - header) / 2;
+      const line = Number((el as HTMLElement).dataset.line);
       const p = el.querySelectorAll('[data-page]')[k].getBoundingClientRect();
       window.scrollTo(0, window.scrollY + p.top + p.height / 2 - line);
     }, k);
@@ -298,9 +298,8 @@ test('reduced motion: the pages render and nothing is hidden waiting for an anim
   for (let i = 1; i < tops.length; i++) expect(tops[i]).toBeGreaterThan(tops[i - 1]);
   await expect(sea).toHaveAttribute('data-live', '');
   await sea.evaluate((el) => {
-    const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
     const p = el.querySelectorAll('[data-page]')[3].getBoundingClientRect();
-    window.scrollTo(0, window.scrollY + p.top + p.height / 2 - (header + (window.innerHeight - header) / 2));
+    window.scrollTo(0, window.scrollY + p.top + p.height / 2 - Number((el as HTMLElement).dataset.line));
   });
   await expect(sea.locator('[data-page]').nth(3)).toHaveAttribute('data-here', '');
   expect(await sea.evaluate((el) => (el as HTMLElement).dataset.u)).toBe('3.000');

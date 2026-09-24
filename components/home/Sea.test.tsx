@@ -122,9 +122,11 @@ describe('Havet as Bladene', () => {
       expect(page.querySelector('ol')).toBeNull();
       expect(page.querySelector('img')).toBeNull();
     });
-    // a veil and a foot logo per field; the foot's found by their own attribute (Logo puts `data-logo` on its img)
-    expect(all('[data-veil]')).toHaveLength(4);
+    // a veil per field in its own field's colour, and a foot logo per field; the foot's found by their own attribute (Logo puts `data-logo` on its img)
+    expect(all('[data-veil]').map((v) => v.style.getPropertyValue('--ground'))).toEqual(seaAreas.map((a) => `var(${AREA_LOOK[a.key].token})`));
     expect(all(FEET).map((f) => f.querySelector('img')?.getAttribute('data-logo'))).toEqual(seaAreas.map((a) => a.ground));
+    // every logo on the sea is decorative, the screen's and the band's: the names say what it shows
+    expect(all(`${FEET} img, ${BAND_FEET} img`).map((img) => img.getAttribute('alt'))).toEqual(Array(8).fill(''));
     for (const a of brief.areas) expect(within(region()).getByRole('link', { name: a.name })).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/\b0[1-4]\b/);
   });
@@ -146,7 +148,6 @@ describe('Havet as Bladene', () => {
     expect(on(BAND_FEET)).toEqual(only(0));
     expect(band().style.getPropertyValue('--band')).toBe(groundAt(0));
     expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK[seaAreas[0].key].headingInk})`);
-    expect(band()).toHaveAttribute('data-tone', 'dark');
   });
 
   test('scrolled so the third page is on the reading line, its name lights and the tide goes there on its own clock, whole: the veil, the foot logo, the inks, the ground', () => {
@@ -168,7 +169,44 @@ describe('Havet as Bladene', () => {
     expect(on(BAND_FEET)).toEqual(only(2));
     expect(band().style.getPropertyValue('--band')).toBe(groundAt(2));
     expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK[seaAreas[2].key].headingInk})`);
-    expect(band()).toHaveAttribute('data-tone', 'light');
+  });
+
+  test('a page that opens already inside the sea (a reload, a way back) stands on the field at the reading line at once, with no tide from the first', () => {
+    setScroll(centre(2) - LINE);
+    render(<Sea />);
+    expect(lit('[data-page]')).toEqual(only(2));
+    expect(lit('[data-index] [data-item]')).toEqual(only(2));
+    expect(region().dataset.u).toBe('2.000');
+    expect(on('[data-veil]')).toEqual(only(2));
+    // a tide of two fields is dozens of frames; standing on the field at once is one or two
+    expect(vi.mocked(window.requestAnimationFrame).mock.calls.length).toBeLessThan(5);
+  });
+
+  test('the reading line is the middle of the screen the stylesheet lays the pages out on, not innerHeight: a phone’s toolbar coming or going does not move it, a turn of the phone does, and the e2e reads it off the section', () => {
+    let SCREEN = 760;
+    const pagesAsBefore = vi.mocked(HTMLElement.prototype.getBoundingClientRect).getMockImplementation()!;
+    vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockImplementation(function (this: HTMLElement) {
+      if (this.hasAttribute('data-screen')) return { left: 0, top: 72, width: 390, height: SCREEN, right: 390, bottom: 72 + SCREEN, x: 0, y: 72, toJSON() {} } as DOMRect;
+      return pagesAsBefore.call(this);
+    });
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const innerHeight = window.innerHeight;
+    try {
+      render(<Sea />);
+      expect(region().dataset.line).toBe((72 + SCREEN / 2).toFixed(1));
+      // the toolbar comes in: the window is shorter, the screen the pages are laid out on is not
+      Object.defineProperty(window, 'innerHeight', { value: 700, configurable: true });
+      act(() => window.dispatchEvent(new Event('resize')));
+      expect(region().dataset.line).toBe((72 + SCREEN / 2).toFixed(1));
+      fireEvent.click(name('[data-index]', 3));
+      expect(scrollTo).toHaveBeenLastCalledWith({ top: centre(3) - (72 + SCREEN / 2), behavior: 'smooth' });
+      // the phone turns: the screen itself changes, and the line with it
+      SCREEN = 300;
+      act(() => window.dispatchEvent(new Event('resize')));
+      expect(region().dataset.line).toBe((72 + SCREEN / 2).toFixed(1));
+    } finally {
+      Object.defineProperty(window, 'innerHeight', { value: innerHeight, configurable: true });
+    }
   });
 
   test('a name is the way to its page: the browser’s own smooth scroll brings the page’s centre to the reading line, and the focus goes to the page', () => {
@@ -183,21 +221,26 @@ describe('Havet as Bladene', () => {
   });
 
   test('on a phone the middle is the middle of the water under the band: the page there lights, a name brings its page there, and the stone drops into the water just under the band', () => {
-    // the band drawn, 160 tall under the header, and the water's canvas the screen under the header
+    // the band drawn, 160 tall under the header, on a screen of its own height (not innerHeight − the
+    // header, 696: a phone's toolbar), and the water's canvas that screen
     const HEAD = 160;
-    const PHONE_LINE = 72 + HEAD + (768 - 72 - HEAD) / 2;
+    const SCREEN = 740;
+    const PHONE_LINE = 72 + HEAD + (SCREEN - HEAD) / 2;
     // the pages' rects as every test has them, and whatever else jsdom gives
     const pagesAsBefore = vi.mocked(HTMLElement.prototype.getBoundingClientRect).getMockImplementation()!;
     const rect = (left: number, top: number, width: number, height: number) =>
       ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON() {} }) as DOMRect;
     vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockImplementation(function (this: HTMLElement) {
       if (this.hasAttribute('data-band')) return rect(0, 72, 390, HEAD);
+      if (this.hasAttribute('data-screen')) return rect(0, 72, 390, SCREEN);
       if (this.closest('[data-band]') && this.tagName === 'BUTTON') return rect(24, 90 + 31 * Number(this.closest('li')!.dataset.item), 200, 31);
-      if (this.tagName === 'CANVAS') return rect(0, 72, 390, 696);
+      if (this.tagName === 'CANVAS') return rect(0, 72, 390, SCREEN);
       return pagesAsBefore.call(this);
     });
     const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     render(<Sea />);
+    // the band's soft foot, as the phone's stylesheet sets it (jsdom applies no stylesheet)
+    band().style.setProperty('--band-edge', '36px');
     act(() => water.build!());
     // a little past half way from the second page to the third on the phone's line, where the
     // screen's middle would still be on the second: the third is the one lit
@@ -207,10 +250,11 @@ describe('Havet as Bladene', () => {
     });
     expect(lit('[data-page]')).toEqual(only(2));
     expect(region().dataset.u).toBe('2.000');
-    // the stone: under the lit name's middle, just under the band, not under the band where it would not be seen
+    // the stone: under the lit name's middle, just past the band's soft foot, not under the band where it would not be seen
     const [x, y] = water.stir.mock.calls.at(-1)!;
     expect(x).toBeCloseTo((24 + 100) / 390);
-    expect(y).toBeCloseTo(1 - (72 + HEAD + 44 - 72) / 696);
+    expect(y).toBeCloseTo(1 - (72 + HEAD + 36 + 8 - 72) / SCREEN);
+    expect(region().dataset.line).toBe(PHONE_LINE.toFixed(1));
     fireEvent.click(name('[data-band]', 0));
     expect(scrollTo).toHaveBeenLastCalledWith({ top: centre(0) - PHONE_LINE, behavior: 'smooth' });
   });

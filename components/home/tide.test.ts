@@ -80,4 +80,11 @@ describe('nearestPage', () => {
     expect(nearestPage(centres, 2600, 0, 30)).toBe(3);
     expect(nearestPage(centres, 0, 3, 30)).toBe(0);
   });
+
+  test('a long way at once lands on the nearest page, even just past half way between two the sea was not on: the slack holds only the page showing', () => {
+    // a reload or a jump that lands 10 px past half way from the third page to the fourth, from the first
+    expect(nearestPage(centres, 2260, 0, 30)).toBe(3);
+    // and 5 px short of half way back from the second to the first, from the last
+    expect(nearestPage(centres, 1255, 3, 30)).toBe(1);
+  });
 });

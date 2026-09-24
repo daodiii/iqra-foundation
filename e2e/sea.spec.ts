@@ -12,20 +12,21 @@ import { groundAt, seaAreas } from '../components/home/tide';
  */
 
 /**
- * The reading line and each page's centre, read the way Sea.tsx reads them (on a phone, the middle
- * of the water under the band; a band not drawn measures 0), and where the section starts in scroll.
+ * The reading line as the sea measured it (`data-line`: the middle of its screen under the header,
+ * and on a phone under the band; Sea.test.tsx proves how it is measured), each page's centre, where
+ * the section starts in scroll, and the header's height.
  */
 async function geometry(page: Page) {
   return page.evaluate(() => {
     const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
-    const head = document.querySelector('[data-band]')!.getBoundingClientRect().height;
-    const line = header + head + (window.innerHeight - header - head) / 2;
+    const sea = document.querySelector<HTMLElement>('[data-fields]')!;
+    const line = Number(sea.dataset.line);
     const centres = [...document.querySelectorAll('[data-page]')].map((p) => {
       const r = p.getBoundingClientRect();
       return r.top + window.scrollY + r.height / 2;
     });
-    const s = document.querySelector('[data-fields]')!.getBoundingClientRect();
-    return { line, centres, start: Math.round(s.top + window.scrollY - header) };
+    const s = sea.getBoundingClientRect();
+    return { header, line, centres, start: Math.round(s.top + window.scrollY - header) };
   });
 }
 
@@ -99,6 +100,9 @@ test('a gesture moves the page exactly as far as the hand sent it: nothing holds
 // as a scroll; measured at 15 on this page and on the build before the band alike.
 test('on a phone a swipe moves the page as far as the finger went: nothing holds, snaps or steps it', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'a swipe is the phone’s gesture');
+  // three swipes of a move every 16 px each, and a wait for the page to stand still around each:
+  // 20 s on a quiet machine, and past the 40 s default on a loaded one
+  test.slow();
   await open(page);
   const { start } = await geometry(page);
   for (const px of [160, 320, 480]) {
@@ -134,6 +138,10 @@ test('a name takes its page to the middle with the browser’s own smooth scroll
   await open(page);
   await toPage(page, 0);
   const from = await stillAt(page);
+  // the keyboard on a name that is not lit keeps its ring whole: its name is not dimmed while it has the focus
+  const unlit = page.getByRole('button', { name: seaAreas[1].name });
+  await unlit.focus();
+  await expect.poll(() => unlit.evaluate((b) => Number(getComputedStyle(b.parentElement!).opacity)), { timeout: 5_000 }).toBe(1);
   // every frame's scroll while it travels: a glide passes through many, a jump through none
   await page.evaluate(() => {
     const seen: number[] = [];
@@ -157,7 +165,7 @@ test('a name takes its page to the middle with the browser’s own smooth scroll
   expect(await focused.evaluate((el) => el.matches(':focus-visible'))).toBe(false);
 });
 
-test('on a phone the four names stand in one band under the header while the texts go by under it, out of sight there; the band is the water’s colour and carries the logo; the pages carry neither', async ({ page, isMobile }) => {
+test('on a phone the four names stand in one band under the header while the texts go by under it, out of sight there; the band wears the fields’ colours through the tide and carries the logo; the pages carry neither', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'the phone’s layout');
   await open(page);
   const band = page.locator('[data-fields] [data-band]');
@@ -169,15 +177,19 @@ test('on a phone the four names stand in one band under the header while the tex
     await expect(page.locator(`[data-page="${k}"] ol`)).toHaveCount(0);
     await expect(page.locator(`[data-page="${k}"] img`)).toHaveCount(0);
   }
-  const header = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72);
+  const { header } = await geometry(page);
+  /** A foot logo's own opacity: the span's (the img's own is always 1, and Playwright counts opacity 0 as visible). */
+  const shown = (k: number) => band.locator(`[data-foot="${k}"]`).evaluate((el) => Number(getComputedStyle(el).opacity));
   for (const k of [0, 2, 3]) {
     await toPage(page, k);
     await expect.poll(() => lit(page, '[data-band] [data-item]'), { timeout: 8_000 }).toEqual(only(k));
     // pinned: whichever text is going by, the band stands under the header
     expect(Math.round(await band.evaluate((el) => el.getBoundingClientRect().top))).toBe(header);
-    await expect(band.locator(`[data-foot="${k}"]`)).toHaveAttribute('data-on', '');
-    await expect(band.locator(`[data-foot="${k}"] img`)).toBeVisible();
     await expect.poll(() => band.evaluate((el) => (el as HTMLElement).style.getPropertyValue('--band')), { timeout: 10_000 }).toBe(groundAt(k));
+    // the same write as the colour's lights the field's logo, and it fades up (0.6 s) while the others stay out
+    await expect(band.locator(`[data-foot="${k}"]`)).toHaveAttribute('data-on', '');
+    await expect.poll(() => shown(k), { timeout: 10_000 }).toBeGreaterThan(0.8);
+    for (const j of seaAreas.keys()) if (j !== k) await expect.poll(() => shown(j), { timeout: 10_000 }).toBe(0);
   }
   // a text going under it is out of sight: the band is what lies over it, and the band is solid
   const g = await geometry(page);
@@ -197,4 +209,26 @@ test('on a phone the four names stand in one band under the header while the tex
     return c.getImageData(0, 0, 1, 1).data[3];
   });
   expect(alpha).toBe(255);
+});
+
+// On a phone turned on its side the four rows of names and the header left a strip of water shorter
+// than a text: 15 px of it under the band and 15 px below the screen at 667 × 375.
+test('on a phone on its side the band is one row, and a whole text fits in the water under it', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'the phone’s layout');
+  await page.setViewportSize({ width: 667, height: 375 });
+  await open(page);
+  const band = page.locator('[data-fields] [data-band]');
+  const first = await band.locator('button').first().boundingBox();
+  const last = await band.locator('button').last().boundingBox();
+  expect(Math.abs(first!.y - last!.y), 'the names in one row').toBeLessThanOrEqual(1);
+  for (const k of [0, 1, 2, 3]) {
+    await toPage(page, k);
+    await expect.poll(() => lit(page, '[data-band] [data-item]'), { timeout: 8_000 }).toEqual(only(k));
+    const fits = await page.locator(`[data-page="${k}"]`).evaluate((p) => {
+      const words = [...p.querySelectorAll('p')].map((e) => e.getBoundingClientRect());
+      const b = document.querySelector('[data-band]')!.getBoundingClientRect();
+      return { belowTheBand: Math.min(...words.map((r) => r.top)) >= b.bottom, onTheScreen: Math.max(...words.map((r) => r.bottom)) <= window.innerHeight };
+    });
+    expect(fits, `page ${k}`).toEqual({ belowTheBand: true, onTheScreen: true });
+  }
 });

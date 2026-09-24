@@ -18,8 +18,8 @@ import { groundAt, HYST, inkAt, LANDED, LEFT, nearestPage, seaAreas, seaAt, STEP
 /** The longest of the four names: the index is sized by it. */
 const widest = seaAreas.reduce((a, b) => (b.name.length > a.name.length ? b : a));
 
-/** On a phone the stone drops into the water this far under the band (px), below the lit name: under the band it would not be seen. */
-const DROP = 44;
+/** On a phone the stone drops into the water this far past the band's soft foot (px, `--band-edge`), below the lit name: under the band it would not be seen. */
+const PAST_FOOT = 8;
 
 /** A field's colours: its ground for the veil, and the inks that read on it. */
 function inks(area: Area): CSSProperties {
@@ -62,10 +62,10 @@ function Index({ go }: { go: (k: number) => void }) {
 function Band({ go }: { go: (k: number) => void }) {
   const first = seaAreas[0];
   return (
-    <div className={styles.band} data-band data-tone={first.tone} style={inks(first)}>
+    <div className={styles.band} data-band style={inks(first)}>
       <ol className={styles.bandIndex}>
         {seaAreas.map((a, k) => (
-          <li key={a.key} data-item={k} data-here={k === 0 ? '' : undefined}>
+          <li key={a.key} className={styles.item} data-item={k} data-here={k === 0 ? '' : undefined}>
             <button type="button" className={styles.go} onClick={() => go(k)}>
               {a.name}
             </button>
@@ -130,10 +130,11 @@ export function Sea() {
   useEffect(() => {
     const el = stage.current;
     const box = el?.querySelector<HTMLElement>('[data-material="water"]');
+    const screen = el?.querySelector<HTMLElement>('[data-screen]');
     const index = el?.querySelector<HTMLElement>('[data-index]');
     const band = el?.querySelector<HTMLElement>('[data-band]');
     const sheet = el?.querySelector<HTMLElement>('[data-pages]');
-    if (!el || !box || !index || !band || !sheet) return;
+    if (!el || !box || !screen || !index || !band || !sheet) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const canvas = box.querySelector('canvas');
     const pages = [...el.querySelectorAll<HTMLElement>('[data-page]')];
@@ -149,18 +150,16 @@ export function Sea() {
     const landed = seaAreas.map(() => false);
     /**
      * The stone drops under the lit name, in whichever list is drawn. On a phone the band is over
-     * the water, so it drops into the water just under the band, below the name.
+     * the water, so it drops into the water just past the band's soft foot, below the name.
      */
     const stone = (k: number) => {
       const water = live.current;
       const frame = canvas?.getBoundingClientRect();
-      const name = items
-        .filter((it) => own(it, 'item') === k)
-        .map((it) => it.querySelector('button')?.getBoundingClientRect())
-        .find((r) => r && r.width > 0);
-      if (!water || !frame?.width || !frame.height || !name) return;
       const head = band.getBoundingClientRect();
-      const y = head.height ? head.bottom + DROP : name.top + name.height / 2;
+      const name = (head.height ? band : index).querySelectorAll('button')[k]?.getBoundingClientRect();
+      if (!water || !frame?.width || !frame.height || !name) return;
+      const foot = parseFloat(getComputedStyle(band).getPropertyValue('--band-edge')) || 0;
+      const y = head.height ? head.bottom + foot + PAST_FOOT : name.top + name.height / 2;
       water.stir((name.left + name.width / 2 - frame.left) / frame.width, 1 - (y - frame.top) / frame.height);
     };
 
@@ -171,7 +170,8 @@ export function Sea() {
       tune(live.current, u);
       // On the box itself: it declares its own `--ground` (`.field.navy`), so a ground set on anything above it never showed.
       box.style.setProperty('--ground', groundAt(u));
-      // The phone's band is the water's colour all the way across the tide, not a step behind it.
+      // The phone's band wears the fields' own colours as the tide crosses, the same mix as the box's
+      // CSS ground, not a step behind it. (The water drawn over that ground has floors of its own.)
       band.style.setProperty('--band', groundAt(u));
       const k = inkAt(u);
       if (k !== inked) {
@@ -184,7 +184,6 @@ export function Sea() {
         }
         sheet.dataset.tone = area.tone;
         index.dataset.tone = area.tone;
-        band.dataset.tone = area.tone;
         veils.forEach((v, j) => v.toggleAttribute('data-on', j === k));
         feet.forEach((f) => f.toggleAttribute('data-on', own(f, 'foot') === k));
       }
@@ -205,12 +204,18 @@ export function Sea() {
     /**
      * The reading line (the middle of the screen under the header, and on a phone under the band
      * too) and each page's centre, in the page's coordinates. A band that is not drawn measures 0.
+     * The screen is the one the stylesheet lays the pages out on (`--view-h`, the large viewport
+     * under the header), not `innerHeight`: on a phone with its toolbar showing that is shorter, so
+     * a name glided the last page past the end of the pin and the band slid under the header, and
+     * the line moved as the toolbar came and went, with no scroll. Written to `data-line`, so the
+     * e2e reads the line the sea reads rather than working it out again.
      */
     const measure = () => {
       const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
       const head = band.getBoundingClientRect().height;
-      span = window.innerHeight - header - head;
+      span = (screen.getBoundingClientRect().height || window.innerHeight - header) - head;
       line = header + head + span / 2;
+      el.dataset.line = line.toFixed(1);
       centres = pages.map((p) => {
         const r = p.getBoundingClientRect();
         return r.top + window.scrollY + r.height / 2;
@@ -273,7 +278,7 @@ export function Sea() {
   return (
     <section ref={stage} aria-label={site.pages.home.areasLabel} className={styles.stage} data-fields>
       <div className={styles.track}>
-        <div className={styles.view}>
+        <div className={styles.view} data-screen>
           <div className={styles.sea}>
             <Box
               material="water"

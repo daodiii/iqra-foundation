@@ -70,12 +70,14 @@ export function inkAt(u: number): number {
 /**
  * Which page the sea shows: the one whose centre is nearest `y`, the reading line. The one
  * showing keeps it until another is nearer by `slack`, so a page standing half way between two
- * does not flicker between them. `centres` and `y` are in the page's coordinates.
+ * does not flicker between them. The slack holds only the page showing: a line that lands a long
+ * way off at once (a reload, a jump) takes the nearest page, not the first one past the slack.
+ * `centres` and `y` are in the page's coordinates.
  */
 export function nearestPage(centres: readonly number[], y: number, current: number, slack: number): number {
-  let best = current;
+  let near = current;
   centres.forEach((c, k) => {
-    if (Math.abs(c - y) < Math.abs(centres[best] - y) - slack) best = k;
+    if (Math.abs(c - y) < Math.abs(centres[near] - y)) near = k;
   });
-  return best;
+  return Math.abs(centres[near] - y) < Math.abs(centres[current] - y) - slack ? near : current;
 }
