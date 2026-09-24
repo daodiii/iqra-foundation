@@ -4,6 +4,7 @@ import { site } from '../content/site.no';
 import { getEvents, getPeople, splitEvents, todayISO } from '../lib/content';
 import { isPlaceholder } from '../lib/placeholder';
 import { sentences } from '../lib/text';
+import { groundAt, seaAreas } from '../components/home/tide';
 
 /**
  * Every page of the brief's menu exists, has its own title in the one pattern and a
@@ -29,20 +30,17 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', site.cta.support.href);
   await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveCount(1);
   await expect(main.locator('section#kontakt').getByRole('link', { name: site.cta.contact.label })).toHaveAttribute('href', site.cta.contact.href);
-  // the four fields on one sea first — in the sea's order, navy · burgundy · turquoise · white: one water, four layers of words, the first's on the water at the top
+  // the four fields on one sea first, in the sea's order (navy · burgundy · turquoise · white): one water, one list of the four names, four pages of text over it, the first lit
   const sea = main.locator('[data-fields]');
   await expect(sea).toHaveAttribute('data-live', '');
   await expect(sea.locator('[data-material="water"]')).toHaveCount(1);
-  const words = sea.locator('[data-field]');
-  await expect(words).toHaveCount(4);
-  await expect(words.nth(0)).toHaveAttribute('data-tone', 'dark');
-  await expect(words.nth(1)).toHaveAttribute('data-tone', 'dark');
-  await expect(words.nth(2)).toHaveAttribute('data-tone', 'light');
-  await expect(words.nth(3)).toHaveAttribute('data-tone', 'light');
-  await expect(words.nth(0)).toHaveAttribute('data-on', '');
-  await expect(words.nth(1)).not.toHaveAttribute('data-on');
+  await expect(sea.locator('[data-index] button')).toHaveText(seaAreas.map((a) => a.name));
+  const pages = sea.locator('[data-page]');
+  await expect(pages).toHaveCount(4);
+  await expect(pages.nth(0)).toHaveAttribute('data-here', '');
+  await expect(pages.nth(1)).not.toHaveAttribute('data-here');
   for (const a of brief.areas) {
-    await expect(main.getByRole('link', { name: a.name, exact: true }).first()).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
+    await expect(main.getByRole('link', { name: a.name, exact: true })).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
   }
   // Visjon and Misjon as a seal on a flat navy plate: the ring, the four names twice round it, the words verbatim
   await expect(main.getByText(brief.vision.headline, { exact: true })).toBeAttached();
@@ -70,43 +68,29 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   if (!seated.length) await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeAttached();
   // nothing of the thread
   await expect(main.locator('canvas[data-thread-canvas]')).toHaveCount(0);
-  // the act: the playhead is the scroll, so the page put on the second field shows its words up and
-  // on the water, the first's gone, the CSS ground wholly the second area's (Samfunnsdeltakelse)
-  const jumpTo = (u: number) => sea.evaluate((el, u) => {
-    const r = el.getBoundingClientRect();
-    const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
-    const start = window.scrollY + r.top - header;
-    const end = window.scrollY + r.bottom - window.innerHeight;
-    window.scrollTo(0, start + ((end - start) * u) / 3);
-  }, u);
-  const onOf = (k: number) => words.nth(k).evaluate((el) => (el as HTMLElement).style.getPropertyValue('--on'));
-  // the act is joined on its first field: arriving at the sea locks onto the navy until it has been
-  // stood on (step.ts), so a jump straight into the first tide would be carried back to it
-  // on the first field first, and standing there a moment: the sea holds the page on the navy until
-  // it has been stood on (step.ts), so a jump made the instant the page arrives is carried back
-  await jumpTo(0);
-  await expect.poll(() => onOf(0), { timeout: 3000 }).toBe('1.000');
-  await page.waitForTimeout(400);
-  await jumpTo(1);
-  await expect.poll(() => onOf(1), { timeout: 3000 }).toBe('1.000');
-  await expect(words.nth(1)).toHaveAttribute('data-on', '');
-  await expect(words.nth(0)).not.toHaveAttribute('data-on');
-  expect(await onOf(0)).toBe('0.000');
-  // the CSS ground is wholly the second area's — as the end of the first tide (samfunnsdeltakelse at
-  // ~100% over kunnskap) or the start of the second (dialog at ~0% over samfunnsdeltakelse): the
-  // browser rounds the scroll to a pixel, so u lands a hair either side of 1.
-  const groundIs = (area: string) => async () => {
-    const ground = await sea.locator('[data-sea]').evaluate((el) => (el as HTMLElement).style.getPropertyValue('--ground'));
-    const m = ground.match(/^color-mix\(in srgb, var\((--color-area-\w+)\) ([\d.]+)%, var\((--color-area-\w+)\)\)$/);
-    if (!m) return `unparsed: ${ground}`;
-    const [, to, pct, from] = m;
-    return (to === area && Number(pct) >= 99.5) || (from === area && Number(pct) <= 0.5) ? area : ground;
-  };
-  await expect.poll(groundIs('--color-area-samfunnsdeltakelse'), { timeout: 3000 }).toBe('--color-area-samfunnsdeltakelse');
-  // and back on the first field's words as the page returns to it
-  await jumpTo(0.1);
-  await expect.poll(() => onOf(0), { timeout: 3000 }).toBe('1.000');
-  await expect(words.nth(0)).toHaveAttribute('data-on', '');
+  // the act: the scroll is the browser's and the tide is ours. Put the second page on the middle of
+  // the screen and its name lights at once; its tide lands on its own clock, whole, and the box's own
+  // CSS ground is wholly the second area's (Samfunnsdeltakelse)
+  // the page's centre onto the reading line the sea measured (`data-line`; on a phone it is under the band)
+  const toPage = (k: number) =>
+    sea.evaluate((el, k) => {
+      const line = Number((el as HTMLElement).dataset.line);
+      const p = el.querySelectorAll('[data-page]')[k].getBoundingClientRect();
+      window.scrollTo(0, window.scrollY + p.top + p.height / 2 - line);
+    }, k);
+  const playhead = () => sea.evaluate((el) => (el as HTMLElement).dataset.u);
+  const ground = () => sea.locator('[data-material="water"]').evaluate((el) => (el as HTMLElement).style.getPropertyValue('--ground'));
+  await toPage(1);
+  await expect(pages.nth(1)).toHaveAttribute('data-here', '');
+  await expect(pages.nth(0)).not.toHaveAttribute('data-here');
+  // a software-renderer frame can starve headless Chromium, the same as sea.spec.ts's polls
+  await expect.poll(playhead, { timeout: 10_000 }).toBe('1.000');
+  // polled, not read once: a single read can race the exact landing right after the playhead poll
+  await expect.poll(ground, { timeout: 10_000 }).toBe(groundAt(1));
+  // and back on the first field as the page returns to it
+  await toPage(0);
+  await expect(pages.nth(0)).toHaveAttribute('data-here', '');
+  await expect.poll(playhead, { timeout: 10_000 }).toBe('0.000');
   // the seal's plate opens as it passes the middle of the screen, and Om oss arrives as the tip line reaches it
   const plate = main.locator('section#visjon').locator('xpath=ancestor::*[@data-material][1]');
   await plate.evaluate((el) => {
@@ -118,9 +102,9 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   await expect.poll(() => plate.evaluate((el) => getComputedStyle(el).clipPath)).toMatch(/inset\(0(px)? 0px round 0px\)|inset\(0px\)|none/);
   await main.locator('section#om-oss').evaluate((el) => window.scrollTo(0, window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.5));
   await expect(main.locator('section#om-oss')).toHaveAttribute('data-arrived', '');
-  // a field's link lands on its band: the second field's (Samfunnsdeltakelse), with its words on the water
-  await jumpTo(1);
-  await expect.poll(() => onOf(1), { timeout: 3000 }).toBe('1.000');
+  // a field's page is the link to its band: the second field's (Samfunnsdeltakelse), lit on the middle of the screen
+  await toPage(1);
+  await expect(pages.nth(1)).toHaveAttribute('data-here', '');
   await main.getByRole('link', { name: brief.areas[3].name, exact: true }).click();
   await expect(page).toHaveURL(/\/vart-arbeid#samfunnsdeltakelse$/);
   await expect(page.locator('#samfunnsdeltakelse')).toBeInViewport();
@@ -292,7 +276,7 @@ test('with JavaScript off every page is complete: the text, the menu, the footer
   }
   await page.goto('/');
   await expect(page.getByText(brief.home.paragraph, { exact: true })).toBeVisible();
-  // the sea is a column without script: nothing live, all four fields' words visible (each text its two sentences, the statement and the reading)
+  // without script the pages still go by over the sticky screen (CSS alone): nothing live, nothing dimmed, every text its two sentences, the statement and the reading
   await expect(page.locator('[data-fields]')).not.toHaveAttribute('data-live');
   for (const a of brief.areas) for (const part of sentences(a.text)) await expect(page.getByText(part, { exact: true })).toBeVisible();
   await nothingHidden(page);
@@ -306,12 +290,19 @@ test('reduced motion: the pages render and nothing is hidden waiting for an anim
   await page.goto('/');
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.getByText(brief.mission.paragraph, { exact: true })).toBeVisible();
-  // the sea under reduced motion: no act, the four fields one under the other, all visible
+  // the sea under reduced motion: the four pages one under the other, every text there; a page put on
+  // the middle of the screen takes the sea at once, its name lit and the playhead on its field with no tide between
   const sea = page.locator('[data-fields]');
-  await expect(sea).not.toHaveAttribute('data-live');
   for (const a of brief.areas) for (const part of sentences(a.text)) await expect(page.getByText(part, { exact: true })).toBeVisible();
-  const tops = await sea.locator('[data-field]').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
+  const tops = await sea.locator('[data-page]').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
   for (let i = 1; i < tops.length; i++) expect(tops[i]).toBeGreaterThan(tops[i - 1]);
+  await expect(sea).toHaveAttribute('data-live', '');
+  await sea.evaluate((el) => {
+    const p = el.querySelectorAll('[data-page]')[3].getBoundingClientRect();
+    window.scrollTo(0, window.scrollY + p.top + p.height / 2 - Number((el as HTMLElement).dataset.line));
+  });
+  await expect(sea.locator('[data-page]').nth(3)).toHaveAttribute('data-here', '');
+  expect(await sea.evaluate((el) => (el as HTMLElement).dataset.u)).toBe('3.000');
   // once the script has run (the sections are live), everything stands: nothing hidden, the ring drawn, no listener on the scene
   await expect(page.locator('section#om-oss')).toHaveAttribute('data-live', '');
   await nothingHidden(page);

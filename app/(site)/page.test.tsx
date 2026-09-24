@@ -14,7 +14,7 @@ describe('Hjem', () => {
 
     const areas = screen.getByRole('region', { name: site.pages.home.areasLabel });
     expect(areas.querySelectorAll('[data-material="water"]')).toHaveLength(1);
-    expect(areas.querySelectorAll('[data-field]')).toHaveLength(4);
+    expect(areas.querySelectorAll('[data-page]')).toHaveLength(4);
     for (const a of brief.areas) {
       const link = screen.getByRole('link', { name: a.name });
       expect(link).toHaveAttribute('href', `/vart-arbeid#${a.key}`);

@@ -18,8 +18,9 @@ export const revalidate = 3600;
 
 /**
  * Hjem: the whole site in one page. The film inside the mark with the brief's main text
- * (2) and its two buttons; the four areas (6) as one sea straight under it, each a tide of
- * its colour the scroll pulls across (Havet); Visjon and Misjon (3, 4) as a seal on navy;
+ * (2) and its two buttons; the four areas (6) as one sea straight under it, their texts going
+ * by over the water, whose colour comes in as each reaches the middle (Havet); Visjon and
+ * Misjon (3, 4) as a seal on navy;
  * Om oss (5) as a white plate whose doors open on the whole text; Arrangementer as the
  * next event on navy; Menneskene bak (7) as prints on a white table; Kontakt as two navy
  * plates meeting at a table, the sheet handed across. Every plate after the sea is laid

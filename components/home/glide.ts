@@ -8,7 +8,7 @@ import { useEffect, useRef, type RefObject } from 'react';
  * straight from the scroll jumps with it — the doors, the prints and the plates all
  * stepped a third of their way at a click; eased after the scroll with this lag, ninety
  * per cent of the jump is made up in three and a half of them, and a trackpad or a thumb
- * feels only a little weight. The sea's scrub (Sea.tsx) is set to the same feel.
+ * feels only a little weight.
  */
 export const LAG = 150;
 

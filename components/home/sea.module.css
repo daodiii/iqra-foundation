@@ -1,138 +1,127 @@
 /*
- * Havet: the four fields as one act straight under the hero. A stage four screens tall
- * with a view the height of the screen sticky inside it; the view holds ONE box of water,
- * and over the water the four fields' words as four layers standing in the same place.
- * The scroll is the playhead (`u`, 0 to 3, written by Sea.tsx per frame): between two
- * fields the water's floor is retuned from the one colour to the next, a tide coming in
- * from the left (lib/water.ts `retune`), and the CSS ground under the canvas mixes the same
- * two colours for a device without WebGL2. A field's words are gone before its tide is a
- * third out, and the next's rise over the last quarter, once it has crossed their page
- * (`--on`). Without script, or under reduced motion, the
- * default rules here hold and the four stand under one another on the one water;
- * `[data-live]` turns the stage into the act.
+ * Havet: the four fields as one sea straight under the hero. This is Bladene, the owner's pick of
+ * 2026-09-23 («B was without a doubt the best one … a fantastic solution»): the spread
+ * (Oppslaget) opened out. The screen is the water, the veil, the four names down the left page
+ * and the logo at its foot, and it is sticky under the header for the whole of the section. The
+ * four right pages (a field's statement and reading, each the link to its section) are in the
+ * flow over it and go by under the hand like any text. The page nearest the middle of the screen
+ * lights its name and brings its tide (Sea.tsx); the others stand dimmed in the inks of the
+ * water they are on.
  *
- * A field's words are a spread (Oppslaget, 2026-09-19): the four names down the left
- * page, the statement and the reading on the right. The sizes live on `.cell`. The box's
- * padding is the field box's own (`.field` in fields.module.css): 30px above and below,
- * clamp(24px, 3vw, 44px) at the sides.
+ * The section is the pages' height: half a screen of margin, four pages of --page-h, half a
+ * screen of margin. So the first page is in the middle of the screen as the section reaches the
+ * header, and the last is there as it leaves. None of this needs script: without it the pages
+ * scroll over the navy screen in the first field's inks. `[data-live]` dims the pages not being
+ * read.
+ *
+ * A phone has no room for a left page beside the pages, so it lays it across the head of the
+ * screen as a band (at the foot of this file), and the texts go by under it.
  */
 
 .stage {
-  --step: 100vh;
+  /*
+   * Each page's share of the scroll, and so the room between two statements. The mock had 48vh.
+   * The owner, choosing it: «maybe a bit more space between the different sections».
+   */
+  --page-h: 60svh;
+  --pad-x: clamp(24px, 3vw, 44px);
+  --gap: clamp(32px, 5vw, 80px);
+  /*
+   * The large viewport's height, not the small one's: when a phone's address bar hides, a view
+   * sized to the small viewport leaves a band of the section's navy under it, which the pages'
+   * text crosses — navy on navy on Dialog and Møteplasser. And unlike `dvh` it never changes as
+   * the bar moves, so the water's canvas is not re-sized mid-scroll.
+   */
+  --view-h: calc(100lvh - var(--header-h));
+  /* The spread's sizes, on the section, so the index and the pages share them: the names, the statement, the reading. */
+  --index-size: clamp(34px, 4.6vw, 66px);
+  --say-size: clamp(32px, 4vw, 58px);
+  --text-size: clamp(19px, 1.65vw, 24px);
+  /* The dials, each named once. */
+  /* The inks' fade: .index, .say, .text and .band all cross to the next field's colours on it. */
+  --ink-fade: 0.45s;
+  /* The dimmed names' opacity: .item (the left page's and the band's), for the field not on the water. */
+  --name-dim: 0.38;
+  /* The logo's opacity once it's on: .foot[data-on], at the foot of the left page or the band. */
+  --logo-on: 0.85;
   position: relative;
-  /* Seen only where 100vh and 100dvh differ: under the view, on a phone, while the address bar shows. */
+  /* The pages' layer above the screen's stays inside the section: nothing of it can rise over the header. */
+  isolation: isolate;
   background: var(--color-navy);
 }
 
+/*
+ * The screen rides in a track the section's own size. Sticky inside it, it can never leave the
+ * section. (A negative margin under a sticky element lets it stick one screen past its end: the
+ * mock's first build slid the names over the seal.)
+ */
+.track {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
 .view {
-  position: relative;
+  position: sticky;
+  top: var(--header-h);
+  height: var(--view-h);
   overflow: hidden;
 }
 
-.stage[data-live] {
-  height: calc(100vh + 3 * var(--step));
-}
-
-.stage[data-live] .view {
-  position: sticky;
-  top: var(--header-h);
-  height: calc(100dvh - var(--header-h));
-}
-
-/* The sea: the box of water fills it (a grid, so the box stretches to its height). */
+/* The sea: the box of water fills the screen (a grid, so the box stretches to its height). */
 .sea {
-  position: relative;
-  display: grid;
-  min-height: 72vh;
-}
-
-.stage[data-live] .sea {
   position: absolute;
   inset: 0;
-  min-height: 0;
+  display: grid;
 }
 
-/* The box's inner stretches too, so the layers' inset is the whole box. */
 .fill {
   min-height: 0;
 }
 
+/* The box's inner stretches too, so the veils' inset is the whole box. */
 .fill > div {
   align-content: stretch;
 }
 
-/* ----- a field's words: the four names, the statement, the reading, the logo; the whole of it a link ----- */
-
-/* A layer: the same place each time, crossing as the tide passes; 40px lower while off. */
-.word {
+/* The veil, one per field, the lit one on: the field's colour from the left, most of the way across, since the pages are on the water too. */
+.veil {
   position: absolute;
-  inset: var(--box-pad-y) var(--box-pad-x);
-  opacity: var(--on, 1);
-  transform: translate3d(0, calc((1 - var(--on, 1)) * 40px), 0);
-  pointer-events: none;
-}
-
-.word[data-on] {
-  pointer-events: auto;
-}
-
-/* Without the act the four stand under one another on the one water. */
-.stage:not([data-live]) .word {
-  position: relative;
-  inset: auto;
-  min-height: 60vh;
-  opacity: 1;
-  transform: none;
-  pointer-events: auto;
-}
-
-/*
- * The spread: two pages, the left two fifths. Left, the four names one row each down the
- * whole height; right, the statement and the reading, centred; the logo at the foot of
- * the right page.
- */
-.cell {
-  --index-size: clamp(34px, 4.6vw, 66px);
-  --say-size: clamp(32px, 4vw, 58px);
-  --text-size: clamp(19px, 1.65vw, 24px);
-  position: relative;
-  display: grid;
-  grid-template-columns: 5fr 7fr;
-  grid-template-rows: 1fr auto;
-  column-gap: clamp(32px, 5vw, 80px);
-  height: 100%;
-  min-height: 100%;
-  color: var(--card-text);
-  text-decoration: none;
-}
-
-/* The veil runs left to right, a little further across than before, since the right page is on the water too. */
-.cell::before {
-  content: '';
-  position: absolute;
-  inset: calc(-1 * var(--box-pad-y)) calc(-1 * var(--box-pad-x));
-  z-index: -1;
+  inset: 0;
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--ground) 82%, transparent) 0%,
     color-mix(in srgb, var(--ground) 52%, transparent) 45%,
     color-mix(in srgb, var(--ground) 18%, transparent) 100%
   );
+  opacity: 0;
+  transition: opacity 0.7s ease;
   pointer-events: none;
 }
 
-.cell:hover .name {
-  text-decoration: underline;
-  text-decoration-thickness: 0.04em;
-  text-underline-offset: 0.12em;
+.veil[data-on] {
+  opacity: 1;
 }
 
-.cell:focus-visible {
-  outline: 3px solid var(--card-ink);
-  outline-offset: 4px;
+/* The left page and its foot, on the screen's own grid; the right column is the pages'. */
+.spread {
+  position: relative;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  grid-template-rows: 1fr auto;
+  column-gap: var(--gap);
+  height: 100%;
+  min-height: 0;
 }
 
-/* The four, the sea's order, each a row of the height, sized by the longest (`--fit`, Sea.tsx); the one on the water lit. */
+.left {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  min-height: 0;
+}
+
+/* The four, in the sea's order, each a row of the height, sized by the longest (`--fit`, Sea.tsx); the one on the water lit. */
 .index {
   list-style: none;
   margin: 0;
@@ -145,10 +134,11 @@
   letter-spacing: -0.025em;
   white-space: nowrap;
   color: var(--card-ink);
+  transition: color var(--ink-fade) ease;
 }
 
 .item {
-  opacity: 0.38;
+  opacity: var(--name-dim);
   transition: opacity 0.5s ease-out;
 }
 
@@ -156,18 +146,111 @@
   opacity: 1;
 }
 
-.name {
-  margin: 0;
-  font: inherit;
-  letter-spacing: inherit;
-  color: inherit;
+/*
+ * A name the keyboard is on keeps its focus ring whole: dimmed with its name it was too faint to
+ * see. (A click or a tap hands the focus straight on to the name's page, so only a key keeps it.)
+ */
+.item:focus-within {
+  opacity: 1;
 }
 
+/* A name is a button in the list's type. */
+.go {
+  all: unset;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  white-space: nowrap;
+}
+
+/* Only where there is a hover: a phone keeps a tapped name «hovered», underlined, after its page has come. */
+@media (hover: hover) {
+  .go:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 0.04em;
+    text-underline-offset: 0.12em;
+  }
+}
+
+.go:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 4px;
+}
+
+/* The guide's logo for the field on the water, at the foot of the left page, one per field, crossing as the inks do. */
+.feet {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  justify-self: start;
+  padding-top: 24px;
+  line-height: 0;
+}
+
+.foot {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.foot[data-on] {
+  opacity: var(--logo-on);
+}
+
+/* ----- the right pages: in the flow, over the screen, on its grid ----- */
+
+.pages {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  column-gap: var(--gap);
+  padding: calc((var(--view-h) - var(--page-h)) / 2) var(--pad-x);
+  pointer-events: none;
+}
+
+/* A page: the statement and the reading, centred in its share of the scroll, the whole of it the link to its section. */
 .page {
+  grid-column: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
   min-width: 0;
+  min-height: var(--page-h);
+  color: var(--card-text);
+  text-decoration: none;
+  pointer-events: auto;
+  transition: opacity 0.5s ease;
+}
+
+.stage[data-live] .page:not([data-here]) {
+  opacity: 0.3;
+}
+
+/* A name click focuses its page before the glide lights it, and Tab can land off the reading line: don't dim the ring. */
+.stage[data-live] .page:focus-visible {
+  opacity: 1;
+}
+
+.page:hover .say {
+  text-decoration: underline;
+  text-decoration-thickness: 0.04em;
+  text-underline-offset: 0.14em;
+}
+
+.page:focus-visible {
+  outline: 3px solid var(--card-ink);
+  outline-offset: 4px;
+}
+
+/* The field's name: the index shows it to the eye, so this one is for a reader. */
+.name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .say {
@@ -176,6 +259,7 @@
   letter-spacing: -0.022em;
   color: var(--card-ink);
   text-wrap: pretty;
+  transition: color var(--ink-fade) ease;
 }
 
 .text {
@@ -185,59 +269,175 @@
   font: 500 var(--text-size) / 1.48 var(--font-text);
   color: var(--card-text);
   text-wrap: pretty;
-}
-
-.logo {
-  grid-column: 2;
-  justify-self: end;
-  padding-top: 24px;
-  line-height: 0;
-  opacity: 0.85;
+  transition: color var(--ink-fade) ease;
 }
 
 /* Light type on dark water: a breath of shadow keeps it clear of the glints. */
-.word[data-tone="dark"] .index,
-.word[data-tone="dark"] .say,
-.word[data-tone="dark"] .text {
+.index[data-tone='dark'],
+.pages[data-tone='dark'] :is(.say, .text) {
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.28);
 }
 
+/* A phone's alone: the band (below). */
+.head {
+  display: none;
+}
+
 @media (max-width: 899px) {
-  .cell {
+  .stage {
     --index-size: clamp(26px, 5vw, 66px);
   }
 }
 
+/*
+ * A phone: one page, and no room for a left one beside it, so the left page is laid across the
+ * head of the screen as a band (Sea.tsx's `Band`): the four names on the field's own colour, the
+ * one on the water lit, and the field's logo at the foot of the list. The texts go by under it as
+ * they go by beside the names on a desktop (the owner, 2026-09-24: «so they're both the same»).
+ * It replaces the four names at the head of every page, 2026-09-23's «A: every text».
+ */
 @media (max-width: 699px) {
-  /* One page: the four as a compact list, then the statement, the reading, the logo. */
-  .cell {
-    --index-size: 27px;
+  .stage {
+    /*
+     * A desktop's share. With the names out of the pages it keeps the room between two texts that
+     * «A: every text» had at 84svh: about 265 px on a 390 × 844 phone.
+     */
+    --page-h: 60svh;
     --say-size: clamp(26px, 7.4vw, 32px);
     --text-size: 17px;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-    row-gap: 22px;
+    /* The band's names, their line, its padding, and so its height: four rows of them. */
+    --band-size: 26px;
+    --band-lh: 1.2;
+    --band-pad-top: 16px;
+    --band-pad-bottom: 18px;
+    --band-h: calc(var(--band-pad-top) + 4 * var(--band-size) * var(--band-lh) + var(--band-pad-bottom));
+    /* Its soft foot, from its colour into the water. */
+    --band-edge: 36px;
   }
 
-  .cell::before {
+  .spread,
+  .pages {
+    grid-template-columns: 1fr;
+  }
+
+  /* The middle is the middle of the water under the band: the first text is there as the section reaches the header, the last as it leaves. */
+  .pages {
+    padding-top: calc((var(--view-h) + var(--band-h) - var(--page-h)) / 2);
+    padding-bottom: max(0px, calc((var(--view-h) - var(--band-h) - var(--page-h)) / 2));
+  }
+
+  .left,
+  .feet {
+    display: none;
+  }
+
+  .veil {
     background: linear-gradient(180deg, color-mix(in srgb, var(--ground) 70%, transparent) 0%, color-mix(in srgb, var(--ground) 30%, transparent) 100%);
   }
 
-  .index {
-    grid-template-rows: none;
-    gap: 6px;
-    line-height: 1.1;
-  }
-
+  /* A page taken into view by the keyboard comes out below the band and its foot, not under them (the root's scroll padding clears only the header). */
   .page {
-    justify-content: flex-start;
+    grid-column: 1;
+    scroll-margin-top: calc(var(--band-h) + var(--band-edge));
   }
 
   .text {
     padding-top: 20px;
   }
 
-  .logo {
-    grid-column: 1;
+  /* The band rides over the pages in a track of its own, the screen's height and sticky as it is, so it arrives and leaves with the screen. */
+  .head {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .headView {
+    position: sticky;
+    top: var(--header-h);
+    height: var(--view-h);
+  }
+
+  /*
+   * Solid, so a text going under it goes out of sight: a list pinned over the texts on the water
+   * (the second of 2026-09-23's phone pictures) let them show through. It takes the taps over it,
+   * so no text hidden under it is followed.
+   */
+  .band {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    column-gap: 16px;
+    box-sizing: border-box;
+    min-height: var(--band-h);
+    padding: var(--band-pad-top) var(--pad-x) var(--band-pad-bottom);
+    background: var(--band, var(--ground));
+    color: var(--card-ink);
+    pointer-events: auto;
+    transition: color var(--ink-fade) ease;
+  }
+
+  .band::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: var(--band-edge);
+    background: linear-gradient(180deg, var(--band, var(--ground)), transparent);
+    pointer-events: none;
+  }
+
+  .bandIndex {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    justify-items: start;
+    min-width: 0;
+    font: 700 var(--band-size) / var(--band-lh) var(--font-sans);
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+  }
+
+  .bandFeet {
+    display: grid;
+    padding-bottom: 4px;
+    line-height: 0;
+  }
+}
+
+/*
+ * A phone on its side, or any phone too short for four rows of names: the band's four rows and
+ * the header left a strip of water shorter than a text (on a 667 × 375 phone, 15 px of each text
+ * stood under the band and 15 px below the screen). The names go in one row, a size down, beside
+ * the logo, and the texts take a size down too, so a whole text fits in the water under the band.
+ */
+@media (max-width: 699px) and (max-height: 500px) {
+  .stage {
+    --band-size: 16px;
+    --band-pad-top: 10px;
+    --band-pad-bottom: 10px;
+    /* One row, as tall as the logo. */
+    --band-h: calc(var(--band-pad-top) + 28px + var(--band-pad-bottom));
+    --say-size: 24px;
+    --text-size: 15px;
+  }
+
+  .band {
+    align-items: center;
+  }
+
+  .bandIndex {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 14px;
+  }
+
+  .bandFeet {
+    padding-bottom: 0;
   }
 }
