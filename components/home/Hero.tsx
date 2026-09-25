@@ -29,6 +29,13 @@ const CUTS = [
 ];
 
 /**
+ * When the hero's opening has played out, on the page's clock (`performance.now()`): its last
+ * beat, the print, ends two seconds after the first paint (hero.module.css). Heavy work that can
+ * wait — the sea's water being built — waits for it, so it does not stall the blades mid-cut.
+ */
+export const openingEnd = () => (performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? performance.now()) + 2000;
+
+/**
  * The hero: the lockup cut out of the paper, the film in the letters.
  *
  * The first screen is white paper. The guide's lockup — «iQRa» with FOUNDATION under it —
@@ -55,13 +62,15 @@ export function Hero() {
   // The poster fills the letters until the film has decoded, so it is asked for early —
   // here, on the one element that wants it, rather than in the head of every route.
   ReactDOM.preload(POSTER, { as: 'image' });
+  const hero = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const cast = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    const section = hero.current;
     const v = video.current;
     const c = cast.current;
-    if (!v || !c) return;
+    if (!section || !v || !c) return;
     // Reduced motion: no source, no cast; the stylesheet has already opened the windows.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     v.src = pickSource({
@@ -81,14 +90,39 @@ export function Hero() {
       draw(frameOf(v, poster));
     };
     raf = requestAnimationFrame(tick);
+    /*
+     * Scrolled past, the film rests and its light is not drawn. It had played on under the rest
+     * of the page: a trace of a read-through (2026-09-25) found its decoding holding the GPU for
+     * 46 to 76 ms at a time, twice with the hero long off the screen, each a dropped frame of the
+     * scroll; and the cast was drawn every frame for no one. Back on the screen both go on, the
+     * film from where it stopped.
+     */
+    let shown = true;
+    const io = typeof IntersectionObserver === 'function'
+      ? new IntersectionObserver((entries) => {
+          const on = entries[entries.length - 1].isIntersecting;
+          if (on === shown) return;
+          shown = on;
+          if (on) {
+            Promise.resolve(v.play()).catch(() => {});
+            if (!raf) raf = requestAnimationFrame(tick);
+          } else {
+            v.pause();
+            cancelAnimationFrame(raf);
+            raf = 0;
+          }
+        })
+      : null;
+    io?.observe(section);
     return () => {
+      io?.disconnect();
       cancelAnimationFrame(raf);
       v.pause();
     };
   }, []);
 
   return (
-    <section className={styles.hero} aria-labelledby="hovedtekst">
+    <section ref={hero} className={styles.hero} aria-labelledby="hovedtekst">
       <div className={styles.stage}>
         <video ref={video} className={styles.film} style={{ clipPath: 'url(#hero-letters)' }} poster={POSTER} preload="metadata" muted loop playsInline aria-hidden="true" />
         <h1 id="hovedtekst" className={styles.mark}>

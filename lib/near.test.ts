@@ -49,6 +49,30 @@ test('a page still scrolling holds the build until the scroll has stopped', () =
   expect(build).toHaveBeenCalledTimes(1);
 });
 
+test('told to wait for a moment (the hero’s opening), a near and quiet box builds only once it has passed', () => {
+  const build = vi.fn();
+  const after = performance.now() + 2000;
+  buildWhenQuietNear(document.createElement('canvas'), build, { after: () => after });
+  near();
+  vi.advanceTimersByTime(1500);
+  expect(build).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(600);
+  expect(build).toHaveBeenCalledTimes(1);
+});
+
+test('patience does not cut the wait short: a box told to wait still waits', () => {
+  const build = vi.fn();
+  const after = performance.now() + PATIENCE + 1000;
+  buildWhenQuietNear(document.createElement('canvas'), build, { after: () => after });
+  near();
+  const scroll = setInterval(() => window.dispatchEvent(new Event('scroll')), 100);
+  vi.advanceTimersByTime(PATIENCE + 500);
+  expect(build).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(700);
+  expect(build).toHaveBeenCalledTimes(1);
+  clearInterval(scroll);
+});
+
 test('patience runs out: a page that is never quiet still gets its picture', () => {
   const build = vi.fn();
   buildWhenQuietNear(document.createElement('canvas'), build);

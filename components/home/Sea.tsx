@@ -11,6 +11,7 @@ import { sentences } from '@/lib/text';
 import type { WaterHandle } from '@/lib/water';
 import { AREA_LOOK, areaFloor, type Area } from './areas';
 import { tideClock } from './clock';
+import { openingEnd } from './Hero';
 import fields from './fields.module.css';
 import { useFit } from './fit';
 import styles from './sea.module.css';
@@ -289,6 +290,7 @@ export function Sea() {
               ground={first.ground}
               className={`${fields.field} ${fields[first.ground]} ${styles.fill}`}
               calm
+              after={openingEnd}
               onMaterial={(w) => {
                 live.current = w;
                 // Built late, at the first field's floor: put it straight onto the frame the sea is showing.

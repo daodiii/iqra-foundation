@@ -35,7 +35,18 @@ function listen() {
   window.addEventListener('scroll', () => { lastScroll = performance.now(); }, { passive: true });
 }
 
-export type NearOptions = { reduced?: boolean };
+export type NearOptions = {
+  reduced?: boolean;
+  /**
+   * Not before this moment on the page's clock (`performance.now()`), asked when the box is
+   * near: the home page's water waits out the hero's opening. Built at load it had landed a
+   * 70 to 105 ms block of main-thread work in the opening's first half second, while the
+   * blades were cutting (measured 2026-09-25, desktop and phone), and on Lighthouse's phone
+   * run it could fall on the frame that paints the film's poster. Patience does not cut this
+   * wait short.
+   */
+  after?: () => number;
+};
 
 /**
  * Build once the element is near and the page is quiet. Returns the cancel; after it
@@ -53,11 +64,12 @@ export function buildWhenQuietNear(el: Element, build: () => void, opts: NearOpt
     io.disconnect();
     if (opts.reduced) { done = true; build(); return; }
     const since = performance.now();
+    const after = opts.after?.() ?? 0;
     const check = () => {
       if (done) return;
       const now = performance.now();
       const quiet = now - lastScroll >= SCROLL_STILL;
-      if (quiet || now - since >= PATIENCE) { done = true; build(); return; }
+      if (now >= after && (quiet || now - since >= PATIENCE)) { done = true; build(); return; }
       timer = window.setTimeout(check, POLL);
     };
     timer = window.setTimeout(check, POLL);

@@ -75,16 +75,6 @@ describe('Scene, scrolled', () => {
   };
 
   test('opens as it reaches the middle and tells onOpen on the edge, both ways', () => {
-    /*
-     * Runs the scheduled update synchronously and reports no frame left pending (returns
-     * 0, not a real handle): `schedule` does `raf = requestAnimationFrame(update)`, and
-     * `update` clears `raf` to 0 as its first line — so a stub returning a truthy id would
-     * have that assignment clobber the clear right back to truthy, latching `raf` non-zero
-     * forever and silently dropping every scroll after the first. Confirmed by running it:
-     * with a literal `return 1`, --open stuck at '1.000' and onOpen never saw its second
-     * call after scrollTo(0). `return 0` lets every call below drive its own fresh recompute.
-     */
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => { cb(0); return 0; });
     const onOpen = vi.fn();
     render(<Scene onOpen={onOpen}><div>plate</div></Scene>);
     const scene = screen.getByText('plate').parentElement as HTMLElement;
@@ -107,32 +97,26 @@ describe('Scene, scrolled', () => {
     expect(onOpen).toHaveBeenCalledTimes(2);
   });
 
-  test('one frame per burst of scroll events', () => {
+  test('the plate is where the page is on every scroll: no frame of its own, nothing easing after it', () => {
+    const raf = vi.spyOn(window, 'requestAnimationFrame');
     render(<Scene><div>plate</div></Scene>);
-    // Never runs the callback, so `raf` latches non-zero after the first call and the
-    // guard in `schedule` coalesces the rest of the burst into that one pending frame.
-    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 7);
-    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
-    act(() => {
-      window.dispatchEvent(new Event('scroll'));
-      window.dispatchEvent(new Event('scroll'));
-      window.dispatchEvent(new Event('scroll'));
-    });
-    expect(raf).toHaveBeenCalledTimes(1);
+    const scene = screen.getByText('plate').parentElement as HTMLElement;
+    scrollTo(1750 - 0.4 * 900); // off 0.4: between OPEN_WITHIN and CLOSED_BEYOND
+    const midway = scene.style.getPropertyValue('--open');
+    expect(Number(midway)).toBeGreaterThan(0);
+    expect(Number(midway)).toBeLessThan(1);
+    scrollTo(1750);
+    expect(scene.style.getPropertyValue('--open')).toBe('1.000');
+    expect(raf).not.toHaveBeenCalled();
   });
 
-  test('unmounting stops listening and cancels the pending frame', () => {
+  test('unmounting stops listening: a scroll after it leaves the plate as it was', () => {
     const off = vi.spyOn(window, 'removeEventListener');
-    const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
-    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 7); // never resolves: the frame stays pending
     const { unmount } = render(<Scene><div>plate</div></Scene>);
-    act(() => { window.dispatchEvent(new Event('scroll')); });
+    const scene = screen.getByText('plate').parentElement as HTMLElement;
     unmount();
     expect(off).toHaveBeenCalledWith('resize', expect.anything());
-    expect(caf).toHaveBeenCalledWith(7);
-    // A scroll after it has gone asks for no frame.
-    raf.mockClear();
-    act(() => { window.dispatchEvent(new Event('scroll')); });
-    expect(raf).not.toHaveBeenCalled();
+    scrollTo(1750);
+    expect(scene.style.getPropertyValue('--open')).toBe('0.000');
   });
 });

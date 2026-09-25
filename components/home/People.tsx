@@ -38,7 +38,7 @@ const t = site.pages.people;
  * line stands under the paragraph.
  *
  * `--open` is 0 (the pile) to 1 (the row) on the table, from where the table's centre
- * stands on the screen, driven by the scroll and eased after it (`useGlide`) — a tall
+ * stands on the screen, driven by the scroll and written where the page is (`useGlide`) — a tall
  * table on a phone is judged by its first four fifths of a screen, so it spreads while
  * its top is in view. On a phone the pile spreads downward into a column instead of
  * across into a row (people.module.css).

@@ -9,7 +9,7 @@ export const risen = (centre: number, from: number, at: number) => smoothstep((f
 
 /**
  * A section's rise: `--o` runs 0 to 1 on the element as its centre climbs from `from` to
- * `at` (screen heights from the top), driven by the scroll and eased after it
+ * `at` (screen heights from the top), driven by the scroll and written where the page is
  * (`useGlide`) — the foot's table (Contact.tsx) is on it, and the doors (About.tsx) and
  * the prints (People.tsx) take the same rise under their own names. A tall element is
  * judged by its first four fifths of a screen, so a phone's plate is open while its top

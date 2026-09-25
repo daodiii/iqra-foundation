@@ -47,7 +47,7 @@ export function sentences(paragraph: string): string[] {
  * like. Open, it stays open; scrolled back below the middle, it closes again.
  *
  * `--open` is 0 to 1 on the plate, from the plate's centre, driven by the scroll and
- * eased after it (`useGlide`; a tall plate on a phone is judged by its first four fifths
+ * written where the page is (`useGlide`; a tall plate on a phone is judged by its first four fifths
  * of a screen, so it opens while its top is still in view). The doors are marked by
  * `data-doors` only once the script runs and motion is wanted: without either the doors
  * are not drawn and the room simply stands, so nothing is ever hidden — the words are in
