@@ -36,7 +36,7 @@ type Props = {
 
 /**
  * A plate that opens as it passes the middle of the screen. `--open` is 0 to 1 on the
- * element, driven by the scroll and eased after it (`useGlide`); the sheet turns it into
+ * element, driven by the scroll and written where the page is (`useGlide`); the sheet turns it into
  * the clip. Under reduced motion nothing is listened to and the plate stays inset.
  */
 export function Scene({ className, onOpen, hold = false, children }: Props) {

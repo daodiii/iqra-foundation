@@ -1,22 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type RefObject } from 'react';
-
-/**
- * The lag of a scroll-driven value behind the scroll, in ms: the time constant of its
- * approach. A wheel notch moves the page a hundred pixels in one go, and a value written
- * straight from the scroll jumps with it — the doors, the prints and the plates all
- * stepped a third of their way at a click; eased after the scroll with this lag, ninety
- * per cent of the jump is made up in three and a half of them, and a trackpad or a thumb
- * feels only a little weight.
- */
-export const LAG = 150;
-
-/** How much of the way to the target a frame of `dt` ms goes. */
-export const gain = (dt: number, lag = LAG) => 1 - Math.exp(-dt / lag);
-
-/** Closer than this to the target, the value is written as the target and the frames stop. */
-const SETTLED = 0.001;
+import { onScroll } from '@/lib/smooth';
 
 /**
  * Where an element's centre stands on the screen, 0 the top and 1 the foot, in screen
@@ -26,19 +11,25 @@ const SETTLED = 0.001;
 export const centreOf = (r: DOMRect, H: number) => (r.top + Math.min(r.height, H * 0.8) / 2) / H;
 
 /**
- * A value driven by the scroll and eased after it. `target` reads the element's rect and
- * the screen's height on every scroll or resize and says where the value should be;
- * `write` puts each frame's value on the element, once per frame while it is on its way
- * and once more as it lands. At mount the value is written where the scroll has it,
- * nothing glides in from nowhere; under reduced motion nothing is listened to and the
- * stylesheet's defaults hold. `mark` is set on the element for as long as it is driven,
- * so the stylesheet knows the script is running.
+ * A value driven by the scroll, written where the page is: in the frame the page moves (told by
+ * lib/smooth.ts — by the glide on a touchpad, a TrackPoint or a mouse, by the browser's own
+ * scroll on a phone) and on a resize, and only when it has changed. `target` reads the
+ * element's rect and the screen's height and says where the value should be; `write` puts it on
+ * the element. At mount it is written where the scroll has it; under reduced motion nothing is
+ * listened to and the stylesheet's defaults hold. `mark` is set on the element for as long as it
+ * is driven, so the stylesheet knows the script is running.
  *
- * The frames are scheduled one at a time and the pending one is coalesced — a burst of
- * scroll events costs one frame — and they carry on after the scroll has stopped until the
- * value has settled, then stop: nothing runs while the page is at rest. A frame's `dt` is
- * read from the timestamps, capped so a tab that was hidden does not jump on its return
- * (and a test whose frames run at once counts a frame each).
+ * Nothing eases it after the scroll any more. It was eased 150 ms behind (2026-09-21, when a
+ * headless wheel notch, which jumps where a real browser's glides, had stepped the plates a third
+ * of their way at a click), and that was a second clock after the scroll's own: measured on the
+ * owner's laptop the plates went on drifting for up to 0.4 s after the page had stopped, and on
+ * a phone they trailed the thumb (2026-09-25). The page's own motion — the glide, or a phone's
+ * momentum — is the one smoothing there is.
+ *
+ * The screen's height is the one it had when its width last changed. A phone's toolbar, hiding
+ * and showing as the page scrolls, changes the height alone, and judged live that stepped every
+ * plate at once; a window resized or a phone turned changes the width too. A precise pointer's
+ * screen (a laptop, a desktop) has no such toolbar, and takes every new height as it comes.
  */
 export function useGlide(
   ref: RefObject<HTMLElement | null>,
@@ -55,35 +46,28 @@ export function useGlide(
     if (!el) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (mark) el.setAttribute(mark, '');
-    let raf = 0;
-    let to = 0;
-    let at = 0;
-    let last = 0;
-    const aim = () => {
-      to = fns.current.target(el.getBoundingClientRect(), window.innerHeight);
-    };
-    const frame = (now: number) => {
-      raf = 0;
-      const dt = last && now > last && now - last < 100 ? now - last : 16;
-      last = now;
-      at += (to - at) * gain(dt);
-      if (Math.abs(to - at) < SETTLED) at = to;
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    let at = Number.NaN;
+    const update = () => {
+      const to = fns.current.target(el.getBoundingClientRect(), H);
+      if (to === at) return;
+      at = to;
       fns.current.write(at, el);
-      if (at !== to) raf = requestAnimationFrame(frame);
     };
-    const schedule = () => {
-      aim();
-      if (!raf) raf = requestAnimationFrame(frame);
+    const resize = () => {
+      if (window.innerWidth !== W || window.matchMedia('(pointer: fine)').matches) {
+        W = window.innerWidth;
+        H = window.innerHeight;
+      }
+      update();
     };
-    aim();
-    at = to;
-    fns.current.write(at, el);
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
+    update();
+    const off = onScroll(update);
+    window.addEventListener('resize', resize);
     return () => {
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
-      if (raf) cancelAnimationFrame(raf);
+      off();
+      window.removeEventListener('resize', resize);
       if (mark) el.removeAttribute(mark);
     };
   }, [ref, mark]);

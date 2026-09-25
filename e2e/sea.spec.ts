@@ -134,7 +134,7 @@ test('the page at the middle lights its name, and its tide lands on its field, w
 });
 
 // On a phone the button is the band's: the left page is not drawn, so it is not in the accessibility tree.
-test('a name takes its page to the middle with the browser’s own smooth scroll, and the focus goes with it, unringed after a click', async ({ page }) => {
+test('a name takes its page to the middle on the page’s glide (the browser’s own smooth scroll on a phone), and the focus goes with it, unringed after a click', async ({ page }) => {
   await open(page);
   await toPage(page, 0);
   const from = await stillAt(page);

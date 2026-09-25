@@ -1,4 +1,3 @@
-import gsap from 'gsap';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { buildWhenQuietNear, PATIENCE, SCROLL_STILL } from './near';
 
@@ -27,7 +26,6 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: realIO });
-  gsap.globalTimeline.clear();
 });
 
 test('near and quiet: the build runs on the next check, not in the observer callback', () => {
@@ -51,21 +49,28 @@ test('a page still scrolling holds the build until the scroll has stopped', () =
   expect(build).toHaveBeenCalledTimes(1);
 });
 
-test('a running tween holds the build — an entrance is not the moment to compile shaders', () => {
-  // GSAP's own ticker captured the real clock at import, so a real tween cannot be driven
-  // by fake timers; what the helper asks the global timeline is stubbed instead.
-  const running = { isActive: () => true } as unknown as gsap.core.Tween;
-  const children = vi.spyOn(gsap.globalTimeline, 'getChildren').mockReturnValue([running]);
+test('told to wait for a moment (the hero’s opening), a near and quiet box builds only once it has passed', () => {
   const build = vi.fn();
-  vi.advanceTimersByTime(SCROLL_STILL + 10);
-  buildWhenQuietNear(document.createElement('canvas'), build);
+  const after = performance.now() + 2000;
+  buildWhenQuietNear(document.createElement('canvas'), build, { after: () => after });
   near();
-  vi.advanceTimersByTime(400);
+  vi.advanceTimersByTime(1500);
   expect(build).not.toHaveBeenCalled();
-  children.mockReturnValue([]);
-  vi.advanceTimersByTime(400);
+  vi.advanceTimersByTime(600);
   expect(build).toHaveBeenCalledTimes(1);
-  children.mockRestore();
+});
+
+test('patience does not cut the wait short: a box told to wait still waits', () => {
+  const build = vi.fn();
+  const after = performance.now() + PATIENCE + 1000;
+  buildWhenQuietNear(document.createElement('canvas'), build, { after: () => after });
+  near();
+  const scroll = setInterval(() => window.dispatchEvent(new Event('scroll')), 100);
+  vi.advanceTimersByTime(PATIENCE + 500);
+  expect(build).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(700);
+  expect(build).toHaveBeenCalledTimes(1);
+  clearInterval(scroll);
 });
 
 test('patience runs out: a page that is never quiet still gets its picture', () => {
@@ -90,13 +95,11 @@ test('cancelled before it built: nothing runs, even once the page is quiet', () 
 });
 
 test('reduced motion builds as soon as it is near: there are no entrances to protect', () => {
-  const children = vi.spyOn(gsap.globalTimeline, 'getChildren').mockReturnValue([{ isActive: () => true } as unknown as gsap.core.Tween]);
   const build = vi.fn();
   buildWhenQuietNear(document.createElement('canvas'), build, { reduced: true });
   window.dispatchEvent(new Event('scroll'));
   near();
   expect(build).toHaveBeenCalledTimes(1);
-  children.mockRestore();
 });
 
 test('no IntersectionObserver at all: build now rather than never', () => {

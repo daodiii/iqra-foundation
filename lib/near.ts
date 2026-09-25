@@ -11,13 +11,13 @@
  * «not smooth».
  *
  * So near is where the wait starts, not where the build runs. The build waits for a quiet
- * moment — no scroll for a quarter second, no tween running anywhere — and lands while
- * the visitor is reading, when a stall costs a stutter in the ink's drift and nothing
- * else. It does not wait forever: a page that is never quiet gets its picture after
+ * moment — no scroll for a quarter second — and lands while the visitor is reading, when a
+ * stall costs a stutter in the ink's drift and nothing else. (The page's glide, lib/smooth.ts,
+ * moves the window itself, so a glide still coming to rest is not quiet either. It once also
+ * waited for any GSAP tween to finish; nothing on the site tweens with GSAP any more, and
+ * GSAP has gone.) It does not wait forever: a page that is never quiet gets its picture after
  * `PATIENCE` regardless, because a box that never paints is worse than a hitch.
  */
-import gsap from 'gsap';
-
 /** How far off the screen a box may be and still count as near: 60% of the viewport. */
 export const NEAR = '60%';
 /** No scroll event for this long. */
@@ -35,12 +35,18 @@ function listen() {
   window.addEventListener('scroll', () => { lastScroll = performance.now(); }, { passive: true });
 }
 
-/** Any tween anywhere still running: an entrance, a page turn, the hero's settle. */
-function tweening(): boolean {
-  return gsap.globalTimeline.getChildren(true, true, true).some((t) => t.isActive());
-}
-
-export type NearOptions = { reduced?: boolean };
+export type NearOptions = {
+  reduced?: boolean;
+  /**
+   * Not before this moment on the page's clock (`performance.now()`), asked when the box is
+   * near: the home page's water waits out the hero's opening. Built at load it had landed a
+   * 70 to 105 ms block of main-thread work in the opening's first half second, while the
+   * blades were cutting (measured 2026-09-25, desktop and phone), and on Lighthouse's phone
+   * run it could fall on the frame that paints the film's poster. Patience does not cut this
+   * wait short.
+   */
+  after?: () => number;
+};
 
 /**
  * Build once the element is near and the page is quiet. Returns the cancel; after it
@@ -58,11 +64,12 @@ export function buildWhenQuietNear(el: Element, build: () => void, opts: NearOpt
     io.disconnect();
     if (opts.reduced) { done = true; build(); return; }
     const since = performance.now();
+    const after = opts.after?.() ?? 0;
     const check = () => {
       if (done) return;
       const now = performance.now();
-      const quiet = now - lastScroll >= SCROLL_STILL && !tweening();
-      if (quiet || now - since >= PATIENCE) { done = true; build(); return; }
+      const quiet = now - lastScroll >= SCROLL_STILL;
+      if (now >= after && (quiet || now - since >= PATIENCE)) { done = true; build(); return; }
       timer = window.setTimeout(check, POLL);
     };
     timer = window.setTimeout(check, POLL);

@@ -78,6 +78,38 @@ describe('Hero', () => {
     expect(cast.width).toBe(CAST_W);
   });
 
+  test('scrolled past, the film rests and its light is no longer drawn; back on screen, both go on', () => {
+    // A controllable IntersectionObserver: the test says when the hero is on the screen. The setup's stub never fires.
+    const told: IntersectionObserverCallback[] = [];
+    const realIO = window.IntersectionObserver;
+    class IO {
+      constructor(cb: IntersectionObserverCallback) { told.push(cb); }
+      observe() {} unobserve() {} disconnect() {} takeRecords() { return []; }
+    }
+    Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: IO });
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 11);
+    const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
+    try {
+      const { container } = render(<Hero />);
+      const video = container.querySelector('video')!;
+      const onScreen = (on: boolean) => act(() => told.forEach((cb) => cb([{ isIntersecting: on } as IntersectionObserverEntry], {} as IntersectionObserver)));
+      onScreen(true); // the first report, standing where it started: nothing changes
+      expect(HTMLMediaElement.prototype.pause).not.toHaveBeenCalled();
+      onScreen(false);
+      expect(HTMLMediaElement.prototype.pause).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(HTMLMediaElement.prototype.pause).mock.instances[0]).toBe(video);
+      expect(caf).toHaveBeenCalledWith(11);
+      raf.mockClear();
+      onScreen(true);
+      expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(2);
+      expect(raf).toHaveBeenCalledTimes(1);
+    } finally {
+      raf.mockRestore();
+      caf.mockRestore();
+      Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: realIO });
+    }
+  });
+
   test('autoplay refused: nothing is thrown, and the poster stands in the letters', async () => {
     vi.mocked(HTMLMediaElement.prototype.play).mockRejectedValueOnce(new DOMException('NotAllowedError'));
     const { container } = render(<Hero />);

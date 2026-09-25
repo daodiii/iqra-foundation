@@ -28,6 +28,8 @@ type Props = {
   calm?: boolean;
   /** Told the handle once the simulation is built — for whoever wants to stir it. Never told about one that declined. */
   onMaterial?: (live: InkHandle | WaterHandle) => void;
+  /** Not built before this moment on the page's clock (`NearOptions.after`): the home page's sea waits out the hero's opening. */
+  after?: () => number;
   children: ReactNode;
 };
 
@@ -48,7 +50,7 @@ type Props = {
  * The pointer is tracked on the box, not on the canvas, so a hand moving over the copy
  * stirs the material behind it: the frames are lines drawn on the water, not lids on it.
  */
-export function Box({ material, palette, floor, tone = 'light', ground, className, style, calm = false, onMaterial, children }: Props) {
+export function Box({ material, palette, floor, tone = 'light', ground, className, style, calm = false, onMaterial, after, children }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const paint = useRef<HTMLCanvasElement>(null);
   const told = useRef(onMaterial);
@@ -75,13 +77,13 @@ export function Box({ material, palette, floor, tone = 'light', ground, classNam
       }
       live = createWater(canvas, { reduced: false, floor: floor ?? brand.floor, host, calm });
       if (live) told.current?.(live);
-    });
+    }, { after });
     return () => {
       gone = true;
       cancel();
       live?.destroy();
     };
-  }, [material, palette, floor, calm]);
+  }, [material, palette, floor, calm, after]);
 
   return (
     <div
