@@ -11,13 +11,13 @@
  * «not smooth».
  *
  * So near is where the wait starts, not where the build runs. The build waits for a quiet
- * moment — no scroll for a quarter second, no tween running anywhere — and lands while
- * the visitor is reading, when a stall costs a stutter in the ink's drift and nothing
- * else. It does not wait forever: a page that is never quiet gets its picture after
+ * moment — no scroll for a quarter second — and lands while the visitor is reading, when a
+ * stall costs a stutter in the ink's drift and nothing else. (The page's glide, lib/smooth.ts,
+ * moves the window itself, so a glide still coming to rest is not quiet either. It once also
+ * waited for any GSAP tween to finish; nothing on the site tweens with GSAP any more, and
+ * GSAP has gone.) It does not wait forever: a page that is never quiet gets its picture after
  * `PATIENCE` regardless, because a box that never paints is worse than a hitch.
  */
-import gsap from 'gsap';
-
 /** How far off the screen a box may be and still count as near: 60% of the viewport. */
 export const NEAR = '60%';
 /** No scroll event for this long. */
@@ -33,11 +33,6 @@ function listen() {
   if (listening || typeof window === 'undefined') return;
   listening = true;
   window.addEventListener('scroll', () => { lastScroll = performance.now(); }, { passive: true });
-}
-
-/** Any tween anywhere still running: an entrance, a page turn, the hero's settle. */
-function tweening(): boolean {
-  return gsap.globalTimeline.getChildren(true, true, true).some((t) => t.isActive());
 }
 
 export type NearOptions = { reduced?: boolean };
@@ -61,7 +56,7 @@ export function buildWhenQuietNear(el: Element, build: () => void, opts: NearOpt
     const check = () => {
       if (done) return;
       const now = performance.now();
-      const quiet = now - lastScroll >= SCROLL_STILL && !tweening();
+      const quiet = now - lastScroll >= SCROLL_STILL;
       if (quiet || now - since >= PATIENCE) { done = true; build(); return; }
       timer = window.setTimeout(check, POLL);
     };

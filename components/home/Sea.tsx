@@ -6,6 +6,7 @@ import { Box } from '@/components/materials/Box';
 import { Logo } from '@/components/site/Logo';
 import { site } from '@/content/site.no';
 import type { InkHandle } from '@/lib/ink';
+import { scrollToY } from '@/lib/smooth';
 import { sentences } from '@/lib/text';
 import type { WaterHandle } from '@/lib/water';
 import { AREA_LOOK, areaFloor, type Area } from './areas';
@@ -111,7 +112,8 @@ function Page({ area, k }: { area: Area; k: number }) {
  * (`WaterHandle.retune`), and the same two colours are mixed as the box's own CSS ground for a
  * device without WebGL2. The words take the next field's inks once its tide has crossed their
  * page (`inkAt`), and a stone drops under the name as the field lands. A name is a button: it
- * brings its page to the middle with the browser's own smooth scroll, and the focus goes with it.
+ * brings its page to the middle on the page's own glide (lib/smooth.ts; the browser's smooth
+ * scroll where the page does not glide), and the focus goes with it.
  * A phone has the same, with the names in a band at the head of the screen (`Band`): its colour
  * follows the tide, and the middle is the middle of the water under it.
  *
@@ -243,7 +245,7 @@ export function Sea() {
     go.current = (k) => {
       measure();
       pages[k]?.focus({ preventScroll: true });
-      window.scrollTo({ top: centres[k] - line, behavior: reduced ? 'auto' : 'smooth' });
+      scrollToY(centres[k] - line);
     };
 
     let queued = 0;

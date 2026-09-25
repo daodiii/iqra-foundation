@@ -6,6 +6,7 @@ import { People } from '@/components/home/People';
 import styles from '@/components/home/scene.module.css';
 import { Sea } from '@/components/home/Sea';
 import { Seal } from '@/components/home/Seal';
+import { Smooth } from '@/components/site/Smooth';
 import { getEvents, getPeople, splitEvents, todayISO } from '@/lib/content';
 
 /**
@@ -26,12 +27,15 @@ export const revalidate = 3600;
  * plates meeting at a table, the sheet handed across. Every plate after the sea is laid
  * out at the page's full width and opens to the screen as it is read (`Scene`); every
  * section arrives as the tip line reaches it (`Arrive`). The menu is the way on from
- * each, and Støtt oss is the header's button and its own page.
+ * each, and Støtt oss is the header's button and its own page. On a touchpad, a TrackPoint or a
+ * mouse the page glides (`Smooth`, lib/smooth.ts), and everything above answers to the glide in
+ * the frame it moves; a phone keeps its own scroll.
  */
 export default function Home() {
   const { upcoming } = splitEvents(getEvents(), todayISO());
   return (
     <>
+      <Smooth />
       <Hero />
       <Sea />
       <div className={styles.stage}>

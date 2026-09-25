@@ -3,6 +3,10 @@ import { useRef } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { centreOf, gain, LAG, useGlide } from './glide';
 
+/** Whether the page's glide (lib/smooth.ts) is running: the real module, with its answer to `smooth()` set by the test. */
+const glide = vi.hoisted(() => ({ on: false }));
+vi.mock('@/lib/smooth', async (real) => ({ ...(await real<typeof import('@/lib/smooth')>()), smooth: () => (glide.on ? {} : null) }));
+
 const realMatchMedia = window.matchMedia;
 afterEach(() => { window.matchMedia = realMatchMedia; });
 
@@ -35,6 +39,7 @@ describe('useGlide', () => {
   beforeEach(() => {
     now = 0;
     target = 0;
+    glide.on = false;
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -134,15 +139,51 @@ describe('useGlide', () => {
     expect(on).not.toHaveBeenCalledWith('scroll', expect.anything(), expect.anything());
   });
 
-  test('unmounting removes the listeners and cancels the pending frame', () => {
+  test('unmounting stops listening and cancels the pending frame', () => {
     const off = vi.spyOn(window, 'removeEventListener');
     const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 7);
-    const { unmount } = render(<Probe />);
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 7);
+    const writes: number[] = [];
+    const { unmount } = render(<Probe onWrite={(v) => writes.push(v)} />);
     scroll();
     unmount();
-    expect(off).toHaveBeenCalledWith('scroll', expect.anything());
     expect(off).toHaveBeenCalledWith('resize', expect.anything());
     expect(caf).toHaveBeenCalledWith(7);
+    // A scroll after it has gone asks for no frame and writes nothing.
+    raf.mockClear();
+    target = 1;
+    scroll();
+    expect(raf).not.toHaveBeenCalled();
+    expect(writes).toEqual([0]);
+  });
+
+  test('while the page glides the value follows the scroll exactly: written on the move itself, no frames of its own, no lag', () => {
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 7);
+    const writes: number[] = [];
+    const { getByTestId } = render(<Probe onWrite={(v) => writes.push(v)} />);
+    glide.on = true;
+    target = 0.4;
+    scroll();
+    expect(getByTestId('el').style.getPropertyValue('--v')).toBe('0.400');
+    target = 0.7;
+    scroll();
+    expect(writes).toEqual([0, 0.4, 0.7]);
+    // The same place again: nothing to write.
+    scroll();
+    expect(writes).toEqual([0, 0.4, 0.7]);
+    expect(raf).not.toHaveBeenCalled();
+  });
+
+  test('a value still easing when the glide starts is put where the page is at once, and its frame cancelled', () => {
+    const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 9);
+    const writes: number[] = [];
+    render(<Probe onWrite={(v) => writes.push(v)} />);
+    target = 1;
+    scroll(); // a frame is pending, the value has not moved yet
+    glide.on = true;
+    scroll();
+    expect(caf).toHaveBeenCalledWith(9);
+    expect(writes).toEqual([0, 1]);
   });
 });

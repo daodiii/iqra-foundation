@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type RefObject } from 'react';
+import { onScroll, smooth } from '@/lib/smooth';
 
 /**
  * The lag of a scroll-driven value behind the scroll, in ms: the time constant of its
@@ -9,6 +10,11 @@ import { useEffect, useRef, type RefObject } from 'react';
  * stepped a third of their way at a click; eased after the scroll with this lag, ninety
  * per cent of the jump is made up in three and a half of them, and a trackpad or a thumb
  * feels only a little weight.
+ *
+ * Only where the scroll is the browser's own — a phone, or a page without the glide. Where the
+ * page glides (lib/smooth.ts) the scroll is already smoothed, and a lag on top of it is a
+ * second clock: measured on the owner's laptop, the plates went on drifting for up to 0.4 s
+ * after the page had stopped. There the value goes where the page is, in the same frame.
  */
 export const LAG = 150;
 
@@ -38,7 +44,8 @@ export const centreOf = (r: DOMRect, H: number) => (r.top + Math.min(r.height, H
  * scroll events costs one frame — and they carry on after the scroll has stopped until the
  * value has settled, then stop: nothing runs while the page is at rest. A frame's `dt` is
  * read from the timestamps, capped so a tab that was hidden does not jump on its return
- * (and a test whose frames run at once counts a frame each).
+ * (and a test whose frames run at once counts a frame each). While the page glides there are
+ * no frames of its own: each move of the glide writes the value where the page now is.
  */
 export function useGlide(
   ref: RefObject<HTMLElement | null>,
@@ -73,15 +80,26 @@ export function useGlide(
     };
     const schedule = () => {
       aim();
+      // The page glides: the scroll is smoothed already, so the value follows it exactly — one smoothing layer, not two.
+      if (smooth()) {
+        if (raf) cancelAnimationFrame(raf);
+        raf = 0;
+        last = 0;
+        if (at !== to) {
+          at = to;
+          fns.current.write(at, el);
+        }
+        return;
+      }
       if (!raf) raf = requestAnimationFrame(frame);
     };
     aim();
     at = to;
     fns.current.write(at, el);
-    window.addEventListener('scroll', schedule, { passive: true });
+    const off = onScroll(schedule);
     window.addEventListener('resize', schedule);
     return () => {
-      window.removeEventListener('scroll', schedule);
+      off();
       window.removeEventListener('resize', schedule);
       if (raf) cancelAnimationFrame(raf);
       if (mark) el.removeAttribute(mark);

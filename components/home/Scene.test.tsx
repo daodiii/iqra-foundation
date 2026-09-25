@@ -121,15 +121,18 @@ describe('Scene, scrolled', () => {
     expect(raf).toHaveBeenCalledTimes(1);
   });
 
-  test('unmounting removes the listeners and cancels the pending frame', () => {
+  test('unmounting stops listening and cancels the pending frame', () => {
     const off = vi.spyOn(window, 'removeEventListener');
     const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 7); // never resolves: the frame stays pending
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 7); // never resolves: the frame stays pending
     const { unmount } = render(<Scene><div>plate</div></Scene>);
     act(() => { window.dispatchEvent(new Event('scroll')); });
     unmount();
-    expect(off).toHaveBeenCalledWith('scroll', expect.anything());
     expect(off).toHaveBeenCalledWith('resize', expect.anything());
     expect(caf).toHaveBeenCalledWith(7);
+    // A scroll after it has gone asks for no frame.
+    raf.mockClear();
+    act(() => { window.dispatchEvent(new Event('scroll')); });
+    expect(raf).not.toHaveBeenCalled();
   });
 });
