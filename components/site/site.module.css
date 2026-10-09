@@ -184,6 +184,98 @@
   background: var(--color-crimson-deep);
 }
 
+/*
+ * Styringsdokumenter under Ressurser (the owner, 2026-10-09): a small plate of the header's own
+ * ground that drops from Ressurser while it is pointed at or holds the focus, on the one curve,
+ * and goes the same way. Escape (Nav.tsx, `data-shut`) puts it away until the item is left.
+ */
+.branch {
+  position: relative;
+}
+
+/* A small chevron after Ressurser: something stands under it. */
+.caret {
+  width: 5px;
+  height: 5px;
+  margin: -3px 0 0 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.6;
+}
+
+.under {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  background: var(--header-ground, var(--color-white));
+  border: 1px solid var(--color-hairline);
+  border-radius: 10px;
+  box-shadow: 0 14px 30px -14px color-mix(in srgb, var(--color-navy) 35%, transparent);
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--dur-s) var(--ease-out),
+    transform var(--dur-s) var(--ease-out),
+    visibility 0s linear var(--dur-s);
+}
+
+.branch:hover > .under,
+.branch:focus-within > .under {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition-delay: 0s;
+}
+
+.branch[data-shut] > .under {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.header[data-dark] .under {
+  border-color: color-mix(in srgb, var(--color-light) 14%, transparent);
+}
+
+/* Its word starts under Ressurser's: the link's 11px less the plate's 1px hairline. */
+.underLink {
+  height: 40px;
+  padding: 0 18px 0 10px;
+}
+
+/* Ressurser while the page under it is open carries the square too: the row says where you are. */
+.link[data-branch]::after {
+  opacity: 1;
+  background: var(--color-navy);
+}
+
+.header[data-dark] .link[data-branch]::after {
+  background: var(--color-light);
+}
+
+/* A wide screen that cannot hover keeps Styringsdokumenter in the row beside Ressurser, as before. */
+@media (hover: none) and (min-width: 900px) {
+  .branch,
+  .under,
+  .under > li {
+    display: contents;
+  }
+
+  .under {
+    visibility: visible;
+  }
+
+  .caret {
+    display: none;
+  }
+}
+
 .scrim {
   display: none;
 }
@@ -313,6 +405,39 @@
     border-radius: 0;
     font-size: 18px;
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* In the drawer Styringsdokumenter is a line set in under Ressurser, always there. */
+  .branch {
+    position: static;
+  }
+
+  .caret {
+    display: none;
+  }
+
+  .under,
+  .branch[data-shut] > .under {
+    position: static;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .underLink {
+    height: 48px;
+    padding: 0 0 0 38px;
+    font-size: 16px;
+  }
+
+  .underLink::after {
+    left: 20px;
   }
 }
 

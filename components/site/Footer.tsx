@@ -12,12 +12,11 @@ import styles from './site.module.css';
  * foundation supplies them; the build says so.
  *
  * The thread's four words each wear their area's colour, and their full stops are drawn as
- * dots; the text is still the brief's line, character for character, so the words are
- * matched to the areas by name and a word the mapping does not know keeps the footer's
- * own colour.
+ * dots. They are the brief's line, its words in the site's order (`AREA_ORDER`: the home
+ * page's, the owner's choice of 2026-10-09).
  */
 export function Footer() {
-  const words = brief.thread.line.split(/(?<=\.)\s+/);
+  const words = areas.map((a) => `${a.name}.`);
   return (
     <footer className={styles.footer} data-header="dark">
       <div className={styles.footerTop}>
@@ -26,7 +25,7 @@ export function Footer() {
         </Link>
         <nav aria-label={site.footer.navLabel}>
           <ul className={styles.footerList}>
-            {site.nav.map((item) => (
+            {site.links.map((item) => (
               <li key={item.href}>
                 <Link href={item.href} prefetch={false} className={styles.footerLink}>
                   {item.label}

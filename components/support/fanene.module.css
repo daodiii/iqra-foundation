@@ -1,12 +1,12 @@
 /*
  * Støtt oss: the question across the top, and three banners — navy, white, burgundy —
- * hung from a rail under it, unrolled one after another as the page comes. `--edge` is
+ * hung from a rail under it, unrolled one after another as the page comes. `--fane-unroll` is
  * how far a banner has unrolled and `--rolled` whether its roll is still there; both are
  * registered so the keyframes can interpolate them. Each cloth sets one colour (`--fane`)
  * and its inks and its roll's shading follow from it.
  */
 
-@property --edge {
+@property --fane-unroll {
   syntax: '<percentage>';
   inherits: true;
   initial-value: 100%;
@@ -126,7 +126,7 @@
 
 @keyframes unroll {
   0% {
-    --edge: 0%;
+    --fane-unroll: 0%;
     --rolled: 1;
   }
 
@@ -135,7 +135,7 @@
   }
 
   100% {
-    --edge: 100%;
+    --fane-unroll: 100%;
     --rolled: 0;
   }
 }
@@ -147,7 +147,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: var(--edge);
+  height: var(--fane-unroll);
   border-radius: 0 0 var(--box-radius) var(--box-radius);
   box-shadow: 0 30px 50px -20px rgb(44 57 75 / 0.45);
 }
@@ -164,7 +164,7 @@
   border-radius: 0 0 var(--box-radius) var(--box-radius);
   background: var(--fane);
   box-shadow: var(--fane-line, none);
-  clip-path: inset(0 0 calc(100% - var(--edge)) 0);
+  clip-path: inset(0 0 calc(100% - var(--fane-unroll)) 0);
 }
 
 /* The roll: the rest of the banner, a cylinder at the moving edge in the cloth's own colour, gone once it is all out. */
@@ -172,7 +172,7 @@
   position: absolute;
   left: -3px;
   right: -3px;
-  top: calc(var(--edge) - 30px);
+  top: calc(var(--fane-unroll) - 30px);
   height: 30px;
   border-radius: 5px;
   background: linear-gradient(
@@ -271,7 +271,7 @@
   }
 
   .banner {
-    --edge: 100%;
+    --fane-unroll: 100%;
     --rolled: 0;
     transition: none;
   }

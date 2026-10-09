@@ -59,7 +59,8 @@ describe('Hero', () => {
     // the poster is a responsive still under the film now (elite study), not the video's own poster
     expect(video).not.toHaveAttribute('poster');
     expect(container.querySelector('img[data-still]')).toHaveAttribute('src', '/media/iqra-ilm-poster-960.webp');
-    expect(video).toHaveAttribute('loop');
+    // the owner, 2026-10-09: the film plays once and stops on its last frame
+    expect(video).not.toHaveAttribute('loop');
     expect(video).toHaveAttribute('playsinline');
     expect(video.muted).toBe(true);
     expect(video.getAttribute('src')).toBe('/media/iqra-ilm-1080.webm');
@@ -106,6 +107,38 @@ describe('Hero', () => {
       expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(2);
       expect(raf).toHaveBeenCalledTimes(1);
     } finally {
+      raf.mockRestore();
+      caf.mockRestore();
+      Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: realIO });
+    }
+  });
+
+  test('played to its end, the film rests on its last frame: its light is drawn no more, and coming back on screen does not start it again', () => {
+    const told: IntersectionObserverCallback[] = [];
+    const realIO = window.IntersectionObserver;
+    class IO {
+      constructor(cb: IntersectionObserverCallback) { told.push(cb); }
+      observe() {} unobserve() {} disconnect() {} takeRecords() { return []; }
+    }
+    Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: IO });
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 11);
+    const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
+    const ended = vi.spyOn(HTMLMediaElement.prototype, 'ended', 'get');
+    try {
+      const { container } = render(<Hero />);
+      const video = container.querySelector('video')!;
+      const onScreen = (on: boolean) => act(() => told.forEach((cb) => cb([{ isIntersecting: on } as IntersectionObserverEntry], {} as IntersectionObserver)));
+      ended.mockReturnValue(true);
+      act(() => { video.dispatchEvent(new Event('ended')); });
+      expect(caf).toHaveBeenCalledWith(11);
+      onScreen(false);
+      vi.mocked(HTMLMediaElement.prototype.play).mockClear();
+      raf.mockClear();
+      onScreen(true);
+      expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
+      expect(raf).not.toHaveBeenCalled();
+    } finally {
+      ended.mockRestore();
       raf.mockRestore();
       caf.mockRestore();
       Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: realIO });

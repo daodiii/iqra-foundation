@@ -57,7 +57,7 @@ describe('Hjem', () => {
     expect(about).toHaveTextContent(brief.about.paragraphs[0]);
     expect(about).toHaveTextContent(brief.about.paragraphs[1]);
     expect(about.querySelectorAll('[data-area]')).toHaveLength(4);
-    const hrefOf = (label: string) => site.nav.find((n) => n.label === label)?.href;
+    const hrefOf = (label: string) => site.links.find((n) => n.label === label)?.href;
     expect(within(about).getAllByRole('link')).toHaveLength(1);
     expect(within(aboutTitle).getByRole('link')).toHaveAttribute('href', hrefOf(t.about.label));
 

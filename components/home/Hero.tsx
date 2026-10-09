@@ -55,8 +55,8 @@ export const openingEnd = () => (performance.getEntriesByName('first-contentful-
  * lockup is the heading — the h1 holds the art, named for the logo; the brief's headline
  * is not on the page. The beats are the stylesheet's, two seconds from the first paint.
  *
- * The film's source is picked after hydration (`pickSource`: 720p on a phone, WebM where
- * it plays) and never before, so with JavaScript off the `<video>` has no source and its
+ * The film plays once and rests on its last frame. Its source is picked after hydration
+ * (`pickSource`: 720p on a phone, WebM where it plays) and never before, so with JavaScript off the `<video>` has no source and its
  * poster stands in the letters; under reduced motion the same, and no cast is made. In
  * both the stylesheet opens the windows at once (no blades, no pieces) and prints the
  * copy at once. Autoplay refused: the poster stands in the letters and the cast is drawn
@@ -97,6 +97,13 @@ export function Hero() {
       draw(frameOf(v, poster));
     };
     raf = requestAnimationFrame(tick);
+    // Played to its end, the film rests on its last frame (the owner, 2026-10-09: «stop»). The cast
+    // keeps the light of the last frame it drew, and is drawn no more.
+    const rest = () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    };
+    v.addEventListener('ended', rest);
     /*
      * Scrolled past, the film rests and its light is not drawn. It had played on under the rest
      * of the page: a trace of a read-through (2026-09-25) found its decoding holding the GPU for
@@ -111,6 +118,8 @@ export function Hero() {
           if (on === shown) return;
           shown = on;
           if (on) {
+            // A film that has played to its end stays on its last frame.
+            if (v.ended) return;
             Promise.resolve(v.play()).catch(() => {});
             if (!raf) raf = requestAnimationFrame(tick);
           } else {
@@ -125,6 +134,7 @@ export function Hero() {
       io?.disconnect();
       cancelAnimationFrame(raf);
       v.removeEventListener('playing', playing);
+      v.removeEventListener('ended', rest);
       v.pause();
     };
   }, []);
@@ -148,7 +158,7 @@ export function Hero() {
             data-still
           />
         </picture>
-        <video ref={video} className={styles.film} style={{ clipPath: 'url(#hero-letters)' }} preload="metadata" muted loop playsInline aria-hidden="true" />
+        <video ref={video} className={styles.film} style={{ clipPath: 'url(#hero-letters)' }} preload="metadata" muted playsInline aria-hidden="true" />
         {/* The word's floor: navy over the film inside FOUNDATION's ten letters alone, so the small word holds on the film's brightest frames. */}
         <div className={styles.floor} style={{ clipPath: 'url(#hero-word)' }} aria-hidden="true" />
         <h1 id="hovedtekst" className={styles.mark}>

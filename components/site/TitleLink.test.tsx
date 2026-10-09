@@ -23,6 +23,6 @@ describe('TitleLink', () => {
   });
 
   test('pageHref reads a page’s address from the menu, by its label', () => {
-    for (const item of site.nav) expect(pageHref(item.label)).toBe(item.href);
+    for (const item of site.links) expect(pageHref(item.label)).toBe(item.href);
   });
 });

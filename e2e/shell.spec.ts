@@ -9,7 +9,9 @@ import { site } from '../content/site.no';
  * not fail here, and a dropped one does.
  */
 
-const NINE = site.nav.map((n) => n.label);
+/** All nine, in the menu's reading order; the row holds eight, Styringsdokumenter stands under Ressurser. */
+const NINE = site.links.map((n) => n.label);
+const ROW = site.nav.map((n) => n.label);
 
 async function headerLinks(page: Page) {
   return page.getByRole('navigation', { name: site.header.navLabel }).getByRole('link');
@@ -25,9 +27,17 @@ test('the header carries the logo home and the brief’s nine items in order', a
   await expect(logo).toHaveAttribute('src', /\/brand\/iqra-logo(-on-[a-z]+)?\.svg/);
   // On a phone the items are behind the button; open it so they are in the accessibility tree.
   const button = page.getByRole('button', { name: site.header.open });
-  if (await button.isVisible()) await button.click();
+  const phone = await button.isVisible();
+  if (phone) await button.click();
   const links = await headerLinks(page);
-  await expect(links).toHaveText(NINE);
+  if (phone) {
+    await expect(links).toHaveText(NINE);
+  } else {
+    // the row; pointing at Ressurser shows Styringsdokumenter under it
+    await expect(links).toHaveText(ROW);
+    await links.filter({ hasText: brief.menu[4] }).hover();
+    await expect(links).toHaveText(NINE);
+  }
   await expect(links.last()).toHaveText(brief.menu[8]); // Støtt oss is the last item and the button
 });
 
@@ -37,6 +47,7 @@ test('desktop: every item is on screen at 1440, 1280 and 1024, and one click rea
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     const links = await headerLinks(page);
+    await links.filter({ hasText: brief.menu[4] }).hover();
     for (let i = 0; i < NINE.length; i++) {
       const box = await links.nth(i).boundingBox();
       expect(box, `${NINE[i]} at ${width}`).not.toBeNull();
@@ -52,6 +63,36 @@ test('desktop: every item is on screen at 1440, 1280 and 1024, and one click rea
   await page.getByRole('navigation', { name: site.header.navLabel }).getByRole('link', { name: brief.menu[2], exact: true }).click();
   await expect(page).toHaveURL(/\/vart-arbeid$/);
   await expect(page.locator('h1')).toBeVisible();
+});
+
+test('desktop: Styringsdokumenter stands under Ressurser, shown when Ressurser is pointed at or tabbed to, put away by Escape, one click from its page', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the phone has the drawer, where it stands under Ressurser always');
+  await page.goto('/om-oss');
+  const nav = page.getByRole('navigation', { name: site.header.navLabel });
+  const ressurser = nav.getByRole('link', { name: brief.menu[4], exact: true });
+  const under = nav.locator('a[href="/styringsdokumenter"]');
+  await expect(under).toBeHidden();
+  await ressurser.hover();
+  await expect(under).toBeVisible();
+  const r = (await ressurser.boundingBox())!;
+  const u = (await under.boundingBox())!;
+  expect(u.y, 'under Ressurser').toBeGreaterThanOrEqual(r.y + r.height - 1);
+  await page.mouse.move(8, 600);
+  await expect(under).toBeHidden();
+  // the keyboard: Tab to Ressurser shows it, the next Tab enters it, Escape puts it away and goes back to Ressurser
+  await ressurser.focus();
+  await expect(under).toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(under).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(under).toBeHidden();
+  await expect(ressurser).toBeFocused();
+  await page.keyboard.press('Tab');
+  await ressurser.hover();
+  await under.click();
+  await expect(page).toHaveURL(/\/styringsdokumenter$/);
+  await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
+  await expect(ressurser).toHaveAttribute('data-branch', '');
 });
 
 test('the current page is marked, once', async ({ page }) => {
@@ -140,7 +181,7 @@ test('no page logs a console error', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
-  for (const item of site.nav) {
+  for (const item of site.links) {
     await page.goto(item.href);
     await page.waitForLoadState('networkidle');
   }
@@ -148,9 +189,10 @@ test('no page logs a console error', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('the thread’s four words each carry their area', async ({ page }) => {
+test('the thread’s four words each carry their area, in the home page’s order', async ({ page }) => {
   await page.goto('/kontakt');
   const words = page.getByRole('contentinfo').locator('[data-thread] [data-area]');
   await expect(words).toHaveCount(4);
-  await expect(words).toHaveText(brief.areas.map((a) => new RegExp(`^${a.name}`)));
+  const order = ['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser'];
+  await expect(words).toHaveText(order.map((k) => new RegExp(`^${brief.areas.find((a) => a.key === k)!.name}`)));
 });

@@ -59,7 +59,7 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   const ids = await main.locator('section[id]').evaluateAll((els) => els.map((e) => e.id));
   expect(ids.slice(-4)).toEqual(['om-oss', 'arrangementer', 'menneskene-bak', 'kontakt']);
   expect(ids).not.toContain('ressurser');
-  const hrefOf = (label: string) => site.nav.find((n) => n.label === label)?.href ?? '';
+  const hrefOf = (label: string) => site.links.find((n) => n.label === label)?.href ?? '';
   for (const [id, label] of [['om-oss', site.pages.about.label], ['arrangementer', site.pages.events.label], ['menneskene-bak', site.pages.people.label], ['misjon', site.pages.work.label]] as const) {
     await expect(main.locator(`section#${id} a`)).toHaveCount(1);
     await expect(main.locator(`section#${id} h2 a`)).toHaveAttribute('href', hrefOf(label));
@@ -265,6 +265,18 @@ test('støtt oss: the question, then the three ways in the owner’s order — t
   await expect(main.getByRole('link')).toHaveCount(1);
 });
 
+test('støtt oss is exactly as wide as the screen, and so is the page after it once the visitor moves on', async ({ page }) => {
+  // 2026-10-09: the banners registered `--edge`, the site's shared edge, as a percentage; the page went
+  // twice the screen's width, blank, and its stylesheet stayed in the document for the pages after it.
+  const fits = () => page.evaluate(() => document.documentElement.scrollWidth === window.innerWidth);
+  await page.goto('/stott-oss');
+  expect(await fits()).toBe(true);
+  await page.getByRole('contentinfo').getByRole('link', { name: brief.menu[1], exact: true }).click();
+  await expect(page).toHaveURL(/\/om-oss$/);
+  await expect(page.locator('h1')).toBeVisible();
+  expect(await fits()).toBe(true);
+});
+
 test('a page that does not exist is a page in the same system', async ({ page }) => {
   const res = await page.goto('/denne-siden-finnes-ikke');
   expect(res?.status()).toBe(404);
@@ -312,7 +324,7 @@ const sealOpen = (page: Page) =>
 test('with JavaScript off every page is complete: the text, the menu, the footer', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  for (const item of site.nav) {
+  for (const item of site.links) {
     await page.goto(item.href);
     await expect(page.locator('h1')).toBeVisible();
     await expect(page.getByRole('contentinfo').getByRole('link', { name: brief.menu[8] })).toBeAttached();

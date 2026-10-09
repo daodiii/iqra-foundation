@@ -20,24 +20,31 @@ import { brief } from './brief.no.ts';
  */
 const story = 'Iqra er det første ordet i Koranen. Det kan bety å lese eller resitere. Vi vil at alle skal lese, forstå og lære hva islam faktisk er.';
 
-/** The nine menu items in the brief's order, and where each goes. The labels are the brief's. */
+/**
+ * The brief's nine menu items, and where each goes; the labels are the brief's. Eight stand in
+ * the row, and Styringsdokumenter stands under Ressurser — the owner, 2026-10-09: «ressurser on
+ * top and have styringsdokumenter under it».
+ */
 const nav = [
   { label: brief.menu[0], href: '/' },
   { label: brief.menu[1], href: '/om-oss' },
   { label: brief.menu[2], href: '/vart-arbeid' },
   { label: brief.menu[3], href: '/arrangementer' },
-  { label: brief.menu[4], href: '/ressurser' },
+  { label: brief.menu[4], href: '/ressurser', children: [{ label: brief.menu[6], href: '/styringsdokumenter' }] },
   { label: brief.menu[5], href: '/menneskene-bak' },
-  { label: brief.menu[6], href: '/styringsdokumenter' },
   { label: brief.menu[7], href: '/kontakt' },
   { label: brief.menu[8], href: '/stott-oss', button: true },
 ] as const;
+
+/** All nine, in the menu's reading order (an item, then what stands under it): the footer's list, and every page a link can name. */
+const links: readonly { label: string; href: string }[] = nav.flatMap<{ label: string; href: string }>((item) => ('children' in item ? [item, ...item.children] : [item]));
 
 export const site = {
   lang: 'nb',
   name: 'Iqra Foundation',
   place: 'Oslo',
   nav,
+  links,
   /** The two buttons under the home page's text (brief 2), and where they go; and Kontakt, the way on from the foot of the home page. */
   cta: {
     work: { label: brief.home.buttons[0], href: '/vart-arbeid' },
