@@ -26,7 +26,7 @@ describe('Events', () => {
     expect(within(name).getByRole('link', { name: t.title })).toHaveAttribute('href', site.nav.find((n) => n.label === t.label)?.href);
     expect(within(section).getAllByRole('link')).toHaveLength(1);
     expect(section).not.toHaveAttribute('data-empty');
-    expect(section.closest('[data-material]')).toHaveAttribute('data-ground', 'navy');
+    expect(section.closest('[data-material]')).toHaveAttribute('data-ground', 'navy-lift');
     expect(within(section).getByText('24. september 2026 kl. 18:00')).toBeInTheDocument();
     const title = within(section).getByRole('heading', { level: 3, name: 'Arrangement 1' });
     expect(title.querySelectorAll('[data-word]')).toHaveLength(2);

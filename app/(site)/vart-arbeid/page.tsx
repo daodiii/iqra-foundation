@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Bands } from '@/components/home/Bands';
+import { PageTitle } from '@/components/site/PageTitle';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import styles from './work.module.css';
@@ -18,7 +19,7 @@ export default function VartArbeid() {
   return (
     <article className={styles.work} data-plates>
       <header className={styles.head}>
-        <h1 className={styles.title}>{site.pages.work.title}</h1>
+        <PageTitle href="/vart-arbeid" className={styles.title}>{site.pages.work.title}</PageTitle>
         <p className={styles.lede}>{brief.mission.headline}</p>
       </header>
       <Bands />

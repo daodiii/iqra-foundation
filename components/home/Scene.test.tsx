@@ -12,7 +12,9 @@ describe('openness', () => {
     expect(openness(-0.2)).toBe(1);
     expect(openness(0.58)).toBe(0);
     expect(openness(-0.9)).toBe(0);
-    expect(openness(0.39)).toBeCloseTo(0.5, 5);
+    // on the site's one curve (lib/ease.ts): quick, then settling, so half way through the window it is most of the way open
+    expect(openness(0.39)).toBeGreaterThan(0.85);
+    expect(openness(0.39)).toBeLessThan(1);
     expect(openness(0.3)).toBeGreaterThan(openness(0.4));
     expect(openness(0.4)).toBeGreaterThan(openness(0.5));
   });

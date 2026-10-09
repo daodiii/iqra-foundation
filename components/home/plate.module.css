@@ -1,0 +1,68 @@
+/*
+ * The page's one grid and its one way of opening a section (elite study).
+ *
+ * Every plate's content stands on twelve columns between the two edges (`--edge`, the same edge
+ * the header's logo stands on), whether the plate is closed or open. Every section opens the same
+ * way: its name as a step-4 title on the first column, and its first words beside it from column 6
+ * on a laptop, under it on a phone. A plate that holds two sections (Visjon and Misjon) opens the
+ * second on column 7. What follows the head is each section's own.
+ */
+
+.plate {
+  --box-pad-y: var(--space-6);
+  --box-pad-x: var(--edge);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--col-gap);
+  align-items: start;
+}
+
+.head {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: start;
+  row-gap: var(--space-3);
+}
+
+.title {
+  grid-column: 1 / span 5;
+  margin: 0;
+  font: 600 var(--step-4) / var(--lead-head) var(--font-sans);
+  letter-spacing: var(--track-head);
+  color: var(--card-ink, var(--color-navy));
+  text-wrap: balance;
+}
+
+/* A section's first words: a lead in the running text's face, its first line on the title's. */
+.lede {
+  grid-column: 6 / -1;
+  margin: 0;
+  padding-top: 0.42em;
+  max-width: 46ch;
+  font: 400 var(--step-1) / 1.42 var(--font-text);
+  color: var(--card-text, var(--color-ink));
+  text-wrap: pretty;
+}
+
+@media (max-width: 899px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .title,
+  .lede {
+    grid-column: 1;
+  }
+
+  .lede {
+    padding-top: 0;
+  }
+}

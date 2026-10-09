@@ -6,3 +6,18 @@
 .flat {
   --frost: 0.35;
 }
+
+/*
+ * White on the white page, told apart by a hairline (the owner's way with white plates). The plate
+ * is clipped to its inset by the scene, so the line is drawn where the clip is, not at the box's
+ * edge: it follows `--open` in from the sides and round the corners. Over the plate's content.
+ */
+.flat[data-ground='white']::after {
+  content: '';
+  position: absolute;
+  inset: 0 calc(var(--plate-inset) * (1 - var(--open, 1)));
+  z-index: 4;
+  border: 1px solid var(--color-hairline);
+  border-radius: calc(var(--plate-radius) * (1 - var(--open, 1)));
+  pointer-events: none;
+}

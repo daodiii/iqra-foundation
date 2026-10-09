@@ -9,6 +9,11 @@
   text-decoration: none;
 }
 
+/* One box round the words, so the page change can carry them as one piece (a name on an inline box broken across lines cannot be). */
+.words {
+  display: inline-block;
+}
+
 .last {
   white-space: nowrap;
 }

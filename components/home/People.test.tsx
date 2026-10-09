@@ -3,7 +3,10 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import type { Person } from '@/lib/content';
-import { People, Portrait, SEATS, SPREAD_AT, SPREAD_FROM, spread } from './People';
+import { People, Portrait, SEATS } from './People';
+
+/** The text as read: the soft hyphens (lib/soft.ts) are invisible unless a line breaks at them. */
+const plain = (s: string | null | undefined) => (s ?? '').replace(/­/g, '');
 
 const realMatchMedia = window.matchMedia;
 afterEach(() => { window.matchMedia = realMatchMedia; });
@@ -14,26 +17,16 @@ const person = (n: number, photo: Person['photo'] = null): Person => ({
 const three = [person(1), person(2, { src: '/media/menneskene/to.jpg', alt: 'Person 2 smiler' }), person(3)];
 const t = site.pages.people;
 
-describe('spread', () => {
-  test('the pile with the table low on the screen, the row from the middle up, between in between', () => {
-    expect(spread(0.95)).toBe(0);
-    expect(spread(SPREAD_FROM)).toBe(0);
-    expect(spread(SPREAD_AT)).toBe(1);
-    expect(spread(0.2)).toBe(1);
-    const mid = spread((SPREAD_FROM + SPREAD_AT) / 2);
-    expect(mid).toBeGreaterThan(0.4);
-    expect(mid).toBeLessThan(0.6);
-  });
-});
-
 describe('People', () => {
   test('the title and the board paragraph, then the people as prints in order: the name, the role, the lines, and the photograph or «Bilde kommer»; the title the one link, to Menneskene bak', () => {
     const { container } = render(<People people={three} />);
     const section = container.querySelector('section#menneskene-bak') as HTMLElement;
-    const title = within(section).getByRole('heading', { level: 2, name: brief.people.title });
+    const title = within(section).getByRole('heading', { level: 2 });
+    expect(plain(title.textContent)).toBe(brief.people.title);
     expect(section).toHaveAttribute('aria-labelledby', title.id);
     expect(title).toHaveAttribute('data-title');
-    expect(within(section).getByText(brief.people.paragraph)).toHaveAttribute('data-prose');
+    const lede = [...section.querySelectorAll('p')].find((p) => plain(p.textContent) === brief.people.paragraph);
+    expect(lede).toHaveAttribute('data-prose');
     expect(section).toHaveAttribute('data-arrive');
 
     const prints = section.querySelectorAll('article');
@@ -54,7 +47,7 @@ describe('People', () => {
     expect(within(prints[1] as HTMLElement).queryByText(t.photoMissing)).toBeNull();
     expect(within(prints[0] as HTMLElement).getByText(t.photoMissing)).toBeInTheDocument();
     expect(within(prints[2] as HTMLElement).getByText(t.photoMissing)).toBeInTheDocument();
-    expect(prints[0].querySelector('svg')).not.toBeNull();
+    expect(prints[0].querySelector('img[src="/media/bust.webp"]')).not.toBeNull();
     const links = within(section).getAllByRole('link');
     expect(links).toHaveLength(1);
     expect(title).toContainElement(links[0]);
@@ -62,19 +55,20 @@ describe('People', () => {
     expect(within(section).queryByText(t.empty)).toBeNull();
   });
 
-  test('live, the table is marked and --open set from where it stands (in jsdom, at the top: the row); reduced motion leaves it to the sheet', () => {
+  test('the board is a white plate in a scene, driven once the script runs; reduced motion leaves it to the sheet', () => {
     const { container, unmount } = render(<People people={three} />);
+    const scene = container.querySelector('[data-scene]') as HTMLElement;
+    expect(scene).toHaveAttribute('data-live');
+    expect((scene.firstElementChild as HTMLElement)).toHaveAttribute('data-ground', 'white');
     const table = container.querySelector('section#menneskene-bak article')?.parentElement as HTMLElement;
-    expect(table).toHaveAttribute('data-live');
     expect(table.style.getPropertyValue('--n')).toBe('3');
-    expect(table.style.getPropertyValue('--open')).toBe('1.000');
     unmount();
-    expect(table).not.toHaveAttribute('data-live');
+    expect(scene).not.toHaveAttribute('data-live');
 
     window.matchMedia = ((q: string) => ({ ...realMatchMedia(q), matches: q.includes('prefers-reduced-motion') })) as typeof window.matchMedia;
-    const quiet = render(<People people={three} />).container.querySelector('section#menneskene-bak article')?.parentElement as HTMLElement;
+    const quiet = render(<People people={three} />).container.querySelector('[data-scene]') as HTMLElement;
     expect(quiet).not.toHaveAttribute('data-live');
-    expect(quiet.style.getPropertyValue('--open')).toBe('');
+    expect(quiet.style.getPropertyValue('--rise')).toBe('');
   });
 
   test('the table seats the first three by order; the rest are the subpage’s', () => {
@@ -91,10 +85,9 @@ describe('People', () => {
   test('while the collection is empty: the title, the paragraph and the honest line, no table', () => {
     const { container } = render(<People people={[]} />);
     const section = container.querySelector('section#menneskene-bak') as HTMLElement;
-    expect(within(section).getByText(brief.people.paragraph)).toBeInTheDocument();
+    expect(plain(section.textContent)).toContain(brief.people.paragraph);
     expect(within(section).getByText(t.empty)).toHaveAttribute('data-prose');
     expect(section.querySelectorAll('article')).toHaveLength(0);
-    expect(section.querySelector('[data-live]')).toBeNull();
   });
 
   test('Portrait: the photograph when there is one, the bust and the line when not', () => {
@@ -102,8 +95,9 @@ describe('People', () => {
     expect(container.querySelector('img')).toHaveAttribute('alt', 'En');
     expect(container.querySelector('svg')).toBeNull();
     const bust = render(<Portrait photo={null} />).container;
-    expect(bust.querySelector('img')).toBeNull();
-    expect(bust.querySelector('svg')).not.toBeNull();
+    // the stand-in bust is a baked image now (elite study), decorative
+    expect(bust.querySelector('img')).toHaveAttribute('src', '/media/bust.webp');
+    expect(bust.querySelector('img')).toHaveAttribute('alt', '');
     expect(bust.textContent).toBe(t.photoMissing);
   });
 });

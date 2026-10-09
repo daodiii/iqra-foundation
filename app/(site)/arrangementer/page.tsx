@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { AreaMark } from '@/components/site/AreaMark';
 import styles from '@/components/site/page.module.css';
+import { PageTitle } from '@/components/site/PageTitle';
 import { site } from '@/content/site.no';
 import { getEvents, splitEvents, todayISO, type Event } from '@/lib/content';
 import { writeDateTime } from '@/lib/dates';
@@ -44,8 +45,7 @@ export default function Arrangementer() {
   const t = site.pages.events;
   return (
     <article className={styles.page}>
-      <p className={styles.eyebrow}>{t.label}</p>
-      <h1 className={styles.title}>{t.title}</h1>
+      <PageTitle href="/arrangementer" className={styles.title}>{t.title}</PageTitle>
       <p className={styles.lede}>{t.description}</p>
       <section className={styles.section} aria-labelledby="kommende">
         <h2 id="kommende">{t.upcoming}</h2>

@@ -1,35 +1,37 @@
 /*
- * The scenes. Every plate is laid out at the page's full width and clipped to the guide's
- * inset; `--open` (set per scroll frame by Scene) takes the clip to the edges and the
- * corners square as the plate passes the middle of the screen, and back as it leaves. The
- * content inside keeps the column it had, so only the plate grows. Nothing pins.
+ * The scenes: the plate opening, the page's grammar. Every plate is laid out at the page's full
+ * width and clipped to the inset; `--open` (Scene.tsx, per scroll frame) takes the clip to the
+ * edges and the corners square as the plate passes the middle of the screen, and back as it leaves.
+ * Nothing inside moves with the clip: every plate's content stands on the page's one grid, its
+ * first word on the shared left edge (`--edge`), whether the plate is closed or open. Nothing pins.
  */
 
 /* The plates' column: full width, one gutter between, one before what follows. The clip does the inset. */
 .stage {
   display: grid;
   gap: var(--gutter);
-  padding: 0 0 var(--gutter);
+  padding: var(--gutter) 0 0;
 }
 
 .scene {
   --open: 0;
+  --rise: 1;
 }
 
 /* The plate: clipped to the inset when closed, to the edges when open; the corners follow. */
 .scene > :first-child {
   border-radius: 0;
-  clip-path: inset(0 calc(var(--box-inset) * (1 - var(--open))) round calc(var(--box-radius) * (1 - var(--open))));
+  clip-path: inset(0 calc(var(--plate-inset) * (1 - var(--open))) round calc(var(--plate-radius) * (1 - var(--open))));
 }
 
-/* A plate's content keeps the closed plate's column. */
-.scene > [data-material] > div {
-  width: calc(100% - 2 * var(--box-inset));
-  justify-self: center;
+/* Driven: what the plate holds waits for it. Without script, or under reduced motion, it stands revealed. */
+.scene[data-live] {
+  --rise: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .scene {
     --open: 0;
+    --rise: 1;
   }
 }

@@ -56,7 +56,9 @@ describe('Hero', () => {
   test('the film is loaded and played at mount, its source picked for the screen: the 1080p WebM here', () => {
     const { container } = render(<Hero />);
     const video = container.querySelector('video')!;
-    expect(video).toHaveAttribute('poster', '/media/iqra-ilm-poster.jpg');
+    // the poster is a responsive still under the film now (elite study), not the video's own poster
+    expect(video).not.toHaveAttribute('poster');
+    expect(container.querySelector('img[data-still]')).toHaveAttribute('src', '/media/iqra-ilm-poster-960.webp');
     expect(video).toHaveAttribute('loop');
     expect(video).toHaveAttribute('playsinline');
     expect(video.muted).toBe(true);
@@ -114,7 +116,7 @@ describe('Hero', () => {
     vi.mocked(HTMLMediaElement.prototype.play).mockRejectedValueOnce(new DOMException('NotAllowedError'));
     const { container } = render(<Hero />);
     await act(async () => {});
-    expect(container.querySelector('video')).toHaveAttribute('poster', '/media/iqra-ilm-poster.jpg');
+    expect(container.querySelector('img[data-still]')).toHaveAttribute('src', '/media/iqra-ilm-poster-960.webp');
   });
 
   test('under reduced motion the video gets no source, nothing plays and no cast is made: the poster stands in the open letters (the stylesheet opens them) and the copy is printed', () => {
@@ -122,7 +124,7 @@ describe('Hero', () => {
     const { container } = render(<Hero />);
     const video = container.querySelector('video')!;
     expect(video.getAttribute('src')).toBeNull();
-    expect(video).toHaveAttribute('poster', '/media/iqra-ilm-poster.jpg');
+    expect(container.querySelector('img[data-still]')).toHaveAttribute('srcset', expect.stringContaining('/media/iqra-ilm-poster-480.webp 480w'));
     expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
     expect(container.querySelector<HTMLCanvasElement>('canvas[data-cast]')!.width).not.toBe(CAST_W);
     expect(screen.getByText(brief.home.paragraph)).toBeInTheDocument();

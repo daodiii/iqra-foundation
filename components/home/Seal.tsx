@@ -29,7 +29,7 @@ const R_TEXT = 40.5;
 
 export function Seal() {
   return (
-    <Scene>
+    <Scene dark>
       <Flat tint="navy" className={styles.plate}>
         <Arrive as="div">
           <div className={styles.row}>

@@ -1,95 +1,79 @@
 /*
- * Neste: the next event as the plate's statement, the count under it, the two after it
- * beside. The words come in as the vision's do (words.module.css); the count fades in
- * after them. Live and not arrived, they wait; without script everything stands.
+ * Neste: the section's head (the title, the brief's paragraph), then the next event as the plate's
+ * statement with the count under it, the two after it beside. The words come in as the vision's do
+ * (words.module.css); the count after them. Live and not arrived, they wait; without script
+ * everything stands. While nothing is coming, the honest line under the title, on a shorter plate.
  */
 
-.plate {
-  --box-pad-y: clamp(64px, 9vh, 96px);
-}
-
 .wrap {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
-  column-gap: clamp(32px, 5vw, 96px);
-  row-gap: 48px;
-  align-items: end;
+  row-gap: var(--space-5);
   scroll-margin-top: calc(var(--header-h) + 16px);
 }
 
-.main,
-.side {
+.plate:has([data-empty]) {
+  --box-pad-y: var(--space-5);
+}
+
+.main {
+  grid-column: 1 / span 7;
   min-width: 0;
 }
 
-/* The section's name: a small heading in the light. */
+/* The head's first cell: the title, and while nothing is coming the honest line under it. */
 .name {
-  margin: 0 0 18px;
-  font: 500 15px/1 var(--font-sans);
-  letter-spacing: var(--tracking-label);
-  color: rgb(240 240 241 / 0.72);
+  grid-column: 1 / span 5;
+  display: grid;
+  row-gap: var(--space-2);
+  align-content: start;
 }
 
-/*
- * While nothing is coming the name is the plate's heading, at the size the next event's title would
- * have, and the plate stands shorter: the honest line says what it must without a whole band of
- * navy announcing it.
- */
-.plate:has([data-empty]) {
-  --box-pad-y: clamp(44px, 6vh, 64px);
-}
-
-.wrap[data-empty] .name {
-  margin: 0 0 16px;
-  font: 600 clamp(30px, 3.8vw, 56px) / 1.06 var(--font-sans);
-  letter-spacing: -0.02em;
+.heading {
+  margin: 0;
+  font: 600 var(--step-4) / var(--lead-head) var(--font-sans);
+  letter-spacing: var(--track-head);
   color: var(--color-white);
   text-wrap: balance;
 }
 
-.text {
+.empty {
   margin: 0;
-  max-width: 54ch;
-  font-family: var(--font-text);
-  font-size: clamp(16px, 1.2vw, 18px);
-  line-height: 1.6;
-  color: rgb(240 240 241 / 0.88);
-  text-wrap: pretty;
+  font: 400 var(--step-1) / 1.42 var(--font-text);
+  color: rgb(240 240 241 / 0.72);
 }
 
 .when {
-  margin: 0 0 14px;
-  font: 500 15px/1.4 var(--font-sans);
+  margin: 0 0 var(--space-2);
+  font: 500 var(--step--1) / 1.4 var(--font-sans);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tracking-label);
   color: rgb(240 240 241 / 0.72);
 }
 
 .title {
   margin: 0;
   max-width: 18ch;
-  font: 600 clamp(30px, 3.8vw, 56px) / 1.06 var(--font-sans);
-  letter-spacing: -0.02em;
+  font: 600 var(--step-3) / var(--lead-sub) var(--font-sans);
+  letter-spacing: var(--track-sub);
   color: var(--color-white);
   text-wrap: balance;
 }
 
 .place {
-  margin: 18px 0 0;
-  font: 500 16px/1.4 var(--font-sans);
+  margin: var(--space-2) 0 0;
+  font: 500 var(--step-0) / 1.4 var(--font-sans);
   color: rgb(240 240 241 / 0.8);
 }
 
 .area {
-  margin: 10px 0 0;
+  margin: var(--space-1) 0 0;
 }
 
 /* ----- the count ----- */
 
 .count {
   display: flex;
-  gap: clamp(20px, 2.4vw, 36px);
-  margin: 36px 0 0;
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
   min-height: 52px;
 }
 
@@ -106,14 +90,14 @@
 .count dd {
   margin: 0;
   min-width: 2ch;
-  font: 600 clamp(26px, 2.4vw, 36px) / 1 var(--font-sans);
+  font: 600 var(--step-3) / 1 var(--font-sans);
   font-variant-numeric: tabular-nums;
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: var(--track-sub);
   color: var(--color-white);
 }
 
 .count dt {
-  font: 500 11px/1 var(--font-sans);
+  font: 500 var(--step--1) / 1 var(--font-sans);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgb(240 240 241 / 0.6);
@@ -128,13 +112,15 @@
 [data-live][data-arrived] .count {
   opacity: 1;
   transform: none;
-  transition: opacity 600ms var(--ease-out) 420ms, transform 700ms var(--ease-out-expo) 420ms;
+  transition: opacity var(--dur-3) var(--ease) calc(var(--beat) * 4), transform var(--dur-3) var(--ease) calc(var(--beat) * 4);
 }
 
 /* ----- the rest ----- */
 
 .rows {
-  margin: 28px 0 0;
+  grid-column: 9 / -1;
+  align-self: end;
+  margin: 0;
   padding: 0;
   list-style: none;
   border-top: 1px solid rgb(103 193 191 / 0.45);
@@ -143,27 +129,27 @@
 .row {
   display: grid;
   row-gap: 3px;
-  padding: 14px 0;
+  padding: var(--space-2) 0;
   border-bottom: 1px solid rgb(103 193 191 / 0.2);
 }
 
 .rowWhen {
-  font: 500 13px/1.4 var(--font-sans);
+  font: 500 var(--step--1) / 1.4 var(--font-sans);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-label);
   color: rgb(240 240 241 / 0.72);
 }
 
 .rowWhat {
   margin: 0;
-  font: 600 17px/1.3 var(--font-sans);
-  letter-spacing: var(--tracking-tight);
+  font: 600 var(--step-0) / 1.3 var(--font-sans);
+  letter-spacing: var(--track-sub);
   color: var(--color-white);
   text-wrap: balance;
 }
 
 .rowWhere {
-  font: 500 13px/1.4 var(--font-sans);
+  font: 500 var(--step--1) / 1.4 var(--font-sans);
   color: rgb(240 240 241 / 0.72);
 }
 
@@ -172,14 +158,10 @@
 }
 
 @media (max-width: 899px) {
-  .wrap {
-    grid-template-columns: 1fr;
-    row-gap: 40px;
-  }
-
-  .title,
-  .wrap[data-empty] .name {
-    font-size: 30px;
+  .main,
+  .rows,
+  .name {
+    grid-column: 1;
   }
 }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { MarkedLine } from '@/components/site/AreaMark';
 import styles from '@/components/site/page.module.css';
+import { PageTitle } from '@/components/site/PageTitle';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 
@@ -16,8 +17,7 @@ export const metadata: Metadata = {
 export default function OmOss() {
   return (
     <article className={styles.page}>
-      <p className={styles.eyebrow}>{site.pages.about.label}</p>
-      <h1 className={styles.title}>{brief.about.title}</h1>
+      <PageTitle href="/om-oss" className={styles.title}>{brief.about.title}</PageTitle>
       <div className={styles.prose}>
         {brief.about.paragraphs.map((p, i) => (
           <p key={p.slice(0, 24)}>{i === 1 ? <MarkedLine text={p} /> : p}</p>

@@ -19,7 +19,7 @@ import styles from './site.module.css';
 export function Footer() {
   const words = brief.thread.line.split(/(?<=\.)\s+/);
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} data-header="dark">
       <div className={styles.footerTop}>
         <Link href="/" prefetch={false} className={styles.footerHome} aria-label={site.header.homeLabel}>
           <Logo ground="navy" height={44} decorative />

@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
-import { pickSource, POSTER } from '@/lib/media';
+import { pickSource, POSTER_FALLBACK, POSTER_SIZES, posterSet } from '@/lib/media';
 import { frameOf, makeCast, token } from './cast';
 import styles from './hero.module.css';
 import { LOCKUP_VIEWBOX, LOCKUP_WORD } from './lockup';
@@ -28,12 +28,16 @@ const CUTS = [
   ...LOCKUP_WORD.map((p, k) => ({ ...p, i: k, small: true })),
 ];
 
+/** The word's ten, by their place in `CUTS`: the navy floor under them is clipped to these alone. */
+const WORD = CUTS.slice(MARK_LETTERS.length);
+
 /**
  * When the hero's opening has played out, on the page's clock (`performance.now()`): its last
- * beat, the print, ends two seconds after the first paint (hero.module.css). Heavy work that can
- * wait — the sea's water being built — waits for it, so it does not stall the blades mid-cut.
+ * beat, the word's last piece, lands 1.6 s after the first paint (hero.module.css, on the timing
+ * scale's 120ms beats). Heavy work that can wait — the sea's water being built — waits for it, so
+ * it does not stall the blades mid-cut.
  */
-export const openingEnd = () => (performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? performance.now()) + 2000;
+export const openingEnd = () => (performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? performance.now()) + 1600;
 
 /**
  * The hero: the lockup cut out of the paper, the film in the letters.
@@ -59,18 +63,20 @@ export const openingEnd = () => (performance.getEntriesByName('first-contentful-
  * from it. Nothing pins and nothing scrubs.
  */
 export function Hero() {
-  // The poster fills the letters until the film has decoded, so it is asked for early —
-  // here, on the one element that wants it, rather than in the head of every route.
-  ReactDOM.preload(POSTER, { as: 'image' });
+  // The poster fills the letters until the film has decoded, so it is asked for early, at the width
+  // the screen needs (elite study: AVIF from 21 KB on a phone; it was a 142 KB JPEG, the phone's LCP).
+  ReactDOM.preload(POSTER_FALLBACK, { as: 'image', type: 'image/avif', imageSrcSet: posterSet('avif'), imageSizes: POSTER_SIZES, fetchPriority: 'high' });
   const hero = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
+  const still = useRef<HTMLImageElement>(null);
   const cast = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const section = hero.current;
     const v = video.current;
     const c = cast.current;
-    if (!section || !v || !c) return;
+    const poster = still.current;
+    if (!section || !v || !c || !poster) return;
     // Reduced motion: no source, no cast; the stylesheet has already opened the windows.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     v.src = pickSource({
@@ -81,9 +87,10 @@ export function Hero() {
     v.load();
     // Autoplay refused: the poster stands in the letters, and `frameOf` gives the cast the poster too.
     Promise.resolve(v.play()).catch(() => {});
+    // The film covers the still once it plays; until then the still is what the letters (and the cast) show.
+    const playing = () => section.setAttribute('data-playing', '');
+    v.addEventListener('playing', playing, { once: true });
     const draw = makeCast(c, token('--color-crimson', '#ab5261'));
-    const poster = new Image();
-    poster.src = POSTER;
     let raf = 0;
     const tick = () => {
       raf = requestAnimationFrame(tick);
@@ -117,6 +124,7 @@ export function Hero() {
     return () => {
       io?.disconnect();
       cancelAnimationFrame(raf);
+      v.removeEventListener('playing', playing);
       v.pause();
     };
   }, []);
@@ -124,13 +132,36 @@ export function Hero() {
   return (
     <section ref={hero} className={styles.hero} aria-labelledby="hovedtekst">
       <div className={styles.stage}>
-        <video ref={video} className={styles.film} style={{ clipPath: 'url(#hero-letters)' }} poster={POSTER} preload="metadata" muted loop playsInline aria-hidden="true" />
+        <picture>
+          <source type="image/avif" srcSet={posterSet('avif')} sizes={POSTER_SIZES} />
+          <img
+            ref={still}
+            className={styles.film}
+            style={{ clipPath: 'url(#hero-letters)' }}
+            src={POSTER_FALLBACK}
+            srcSet={posterSet('webp')}
+            sizes={POSTER_SIZES}
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            decoding="async"
+            data-still
+          />
+        </picture>
+        <video ref={video} className={styles.film} style={{ clipPath: 'url(#hero-letters)' }} preload="metadata" muted loop playsInline aria-hidden="true" />
+        {/* The word's floor: navy over the film inside FOUNDATION's ten letters alone, so the small word holds on the film's brightest frames. */}
+        <div className={styles.floor} style={{ clipPath: 'url(#hero-word)' }} aria-hidden="true" />
         <h1 id="hovedtekst" className={styles.mark}>
           <svg viewBox={LOCKUP_VIEWBOX} role="img" aria-label={site.logoAlt}>
             <defs>
               {/* All fourteen for the film; each on its own for its piece of paper. In the box's units: the video and the pieces are the stage's size, as the art is. */}
               <clipPath id="hero-letters" clipPathUnits="objectBoundingBox">
                 {CUTS.map((p, k) => (
+                  <path key={k} transform={box(p.transform)} d={p.d} />
+                ))}
+              </clipPath>
+              <clipPath id="hero-word" clipPathUnits="objectBoundingBox">
+                {WORD.map((p, k) => (
                   <path key={k} transform={box(p.transform)} d={p.d} />
                 ))}
               </clipPath>

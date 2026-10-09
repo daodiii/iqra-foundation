@@ -93,15 +93,22 @@ const AREA_WATER: Record<AreaGround, WaterScene> = {
     deep: '#f0f0f1',
     pools: WATER.pools,
   },
+  /*
+   * Held near the brand crimson (elite study): the light pools of navy's night water lifted crimson
+   * to pink, and white reading text on a phone measured 2.9-3.2:1 (the review, 2026-10-09). The
+   * pools are a breath now, and the caustic net and the glint are about half of night water's, so
+   * the floor under the text stays within a few points of #ab5261, where white is 5.1:1.
+   */
   crimson: {
     pale: '#ab5261',
     deep: '#ab5261',
     night: true,
-    // The first pool a seventh dimmer than navy's: at 0.35 white type on the raw floor under it is 2.9:1, at 0.30 it is 3.1:1.
+    caus: 1.0,
+    spec: 0.3,
     pools: [
-      ['#f0f0f1', 0.2, 0.82, 0.5, 0.3],
-      ['#f0f0f1', 0.8, 0.22, 0.42, 0.14],
-      ['#f0f0f1', 0.58, 0.62, 0.5, 0.28],
+      ['#f0f0f1', 0.2, 0.82, 0.5, 0.04],
+      ['#f0f0f1', 0.8, 0.22, 0.42, 0.02],
+      ['#f0f0f1', 0.58, 0.62, 0.5, 0.03],
     ],
   },
 };
