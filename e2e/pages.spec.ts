@@ -26,10 +26,12 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   await expect(page.getByText(brief.home.paragraph, { exact: true })).toBeVisible();
   const main = page.getByRole('main');
   await expect(main.getByRole('link', { name: site.cta.work.label })).toHaveAttribute('href', site.cta.work.href);
-  // Støtt oss is a button once in the page's main: under the hero's text (the header has its own). The foot is Kontakt.
-  await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', site.cta.support.href);
-  await expect(main.getByRole('link', { name: site.cta.support.label })).toHaveCount(1);
+  // Støtt oss twice in the page's main: under the hero's text and on the ending's sheet beside Kontakt (the header has its own)
+  const support = main.getByRole('link', { name: site.cta.support.label });
+  await expect(support).toHaveCount(2);
+  for (const link of await support.all()) await expect(link).toHaveAttribute('href', site.cta.support.href);
   await expect(main.locator('section#kontakt').getByRole('link', { name: site.cta.contact.label })).toHaveAttribute('href', site.cta.contact.href);
+  await expect(main.locator('section#kontakt').getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', site.cta.support.href);
   // the four fields on one sea first, in the sea's order (navy · burgundy · turquoise · white): one water, one list of the four names, four pages of text over it, the first lit
   const sea = main.locator('[data-fields]');
   await expect(sea).toHaveAttribute('data-live', '');
@@ -50,8 +52,8 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   const seal = main.locator('section#visjon svg');
   await expect(seal.locator('circle')).toHaveCount(2);
   for (const a of brief.areas) expect(await seal.locator('textPath').textContent()).toContain(a.name);
-  // four flat navy plates: the seal, Neste, the two sides of Kontakt's table
-  await expect(main.locator('[data-material="flat"][data-ground="navy"]')).toHaveCount(4);
+  // every section after the sea a flat plate, on the navy ramp's steps and white: the seal, Om oss, Neste, the board, the ending
+  expect(await main.locator('[data-material="flat"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-ground')))).toEqual(['navy', 'white', 'navy-lift', 'white', 'navy-deep']);
   await expect(main.locator('[data-material="ink"]')).toHaveCount(0);
   // then the rest of the site: four sections in order, each section's title its one way on (no pill under it), the lists honest while empty
   const ids = await main.locator('section[id]').evaluateAll((els) => els.map((e) => e.id));
@@ -134,8 +136,8 @@ test('phone: the page is never wider than the screen, from the hero to the foot'
   await page.goto('/');
   const width = page.viewportSize()?.width;
   const widths = await walkDown(page, () => page.evaluate(() => Math.max(document.documentElement.scrollWidth, window.innerWidth)));
-  // the doors did turn on the way (the state that widened the page), and are open by the foot
-  await expect(page.locator('section#om-oss > div')).toHaveAttribute('data-open', '');
+  // the doors did turn on the way (the state that widened the page), and the plate has risen by the foot
+  await expect(page.locator('section#om-oss [data-scene]')).toHaveAttribute('data-risen', '');
   expect(Math.max(...widths)).toBe(width);
   const menu = await page.getByRole('button', { name: site.header.open }).boundingBox();
   expect((menu?.x ?? 0) + (menu?.width ?? 0)).toBeLessThanOrEqual(width ?? 0);

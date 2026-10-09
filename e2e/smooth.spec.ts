@@ -47,7 +47,7 @@ async function record(page: Page) {
     const loop = (ts: number) => {
       if (!R.on) return;
       setTimeout(() => {
-        const open = [...document.querySelectorAll<HTMLElement>('[style*="--open"]')].map((e) => e.style.getPropertyValue('--open')).join(',');
+        const open = [...document.querySelectorAll<HTMLElement>('[data-scene][style*="--open"]')].map((e) => e.style.getPropertyValue('--open')).join(',');
         R.frames.push({ ts, y: window.scrollY, open });
       }, 0);
       requestAnimationFrame(loop);
@@ -88,7 +88,7 @@ test('the plates move with the page and stop with it: nothing drifts on once the
   const H = page.viewportSize()!.height;
   // The first plate (Visjon og misjon's), its centre 700 px below the middle of the screen: a gesture of 500 opens it most of the way.
   const centre = await page.evaluate(() => {
-    const r = document.querySelector<HTMLElement>('[style*="--open"]')!.getBoundingClientRect();
+    const r = document.querySelector<HTMLElement>('[data-scene][style*="--open"]')!.getBoundingClientRect();
     return r.top + window.scrollY + r.height / 2;
   });
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(centre - H / 2 - 700));
@@ -150,7 +150,7 @@ test('on a phone the plates move with the thumb and stop with the page: nothing 
   await open(page);
   const H = page.viewportSize()!.height;
   const centre = await page.evaluate(() => {
-    const r = document.querySelector<HTMLElement>('[style*="--open"]')!.getBoundingClientRect();
+    const r = document.querySelector<HTMLElement>('[data-scene][style*="--open"]')!.getBoundingClientRect();
     return r.top + window.scrollY + r.height / 2;
   });
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(centre - H / 2 - H * 0.7));
