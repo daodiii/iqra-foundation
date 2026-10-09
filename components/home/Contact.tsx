@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useRef } from 'react';
 import { Flat } from '@/components/materials/Flat';
 import { site } from '@/content/site.no';
-import { CIRCLE } from '@/lib/media';
 import { Arrive } from './Arrive';
 import styles from './contact.module.css';
 import plate from './plate.module.css';
@@ -25,26 +24,16 @@ const t = site.pages.home.contact;
  * every plate on the page and the sheet comes across by the same `--rise` (Scene.tsx), where two
  * plates used to slide in from the screen's edges and meet.
  *
- * STAND-IN: under the question, the film's own modern study circle (3.2 s into the loop), baked into
- * a navy duotone (scripts/dev/elite-media.mjs) — a circle of people in conversation under a question
- * about conversation. It is the film's generated frame, not a photograph of the foundation, and goes
- * when theirs exists (the review's item 1). ?bilde=0 takes it away (Switches.tsx).
+ * The plate is the navy ramp's deep step alone: no picture under the question until the foundation
+ * has a photograph of its own (the owner took the film's study circle out, 2026-10-09).
  */
 export function Contact() {
   // The sheet comes across by its own place on the screen: a still box round it (`.hand`), the sheet inside it moving.
   const hand = useRef<HTMLDivElement>(null);
   useReveal(hand);
-  const circle = (
-    <div className={styles.ground} aria-hidden="true" data-stand-in>
-      <picture>
-        <source type="image/avif" srcSet={CIRCLE.avif} />
-        <img className={styles.circle} src={CIRCLE.webp} alt="" loading="lazy" decoding="async" />
-      </picture>
-    </div>
-  );
   return (
     <Scene dark>
-      <Flat tint="navy-deep" className={`${plate.plate} ${styles.plate}`} art={circle}>
+      <Flat tint="navy-deep" className={`${plate.plate} ${styles.plate}`}>
         <Arrive as="section" id="kontakt" aria-labelledby="kontakt-tittel" className={`${plate.grid} ${styles.end}`}>
           <h2 id="kontakt-tittel" className={styles.question}><Words text={t.question} /></h2>
           <div ref={hand} className={styles.hand}>

@@ -280,21 +280,6 @@ body[data-scroll-locked] {
   animation: none;
 }
 
-/* The study's grid, shown with ?grid=1 (components/site/Switches.tsx): twelve columns between the two edges. */
-html[data-grid] body::after {
-  content: '';
-  position: fixed;
-  inset: 0 var(--edge);
-  z-index: 200;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    90deg,
-    rgb(171 82 97 / 0.09) 0 calc((100% - 11 * var(--col-gap)) / 12),
-    transparent calc((100% - 11 * var(--col-gap)) / 12) calc((100% - 11 * var(--col-gap)) / 12 + var(--col-gap))
-  );
-  box-shadow: -1px 0 0 rgb(171 82 97 / 0.6), 1px 0 0 rgb(171 82 97 / 0.6);
-}
-
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),

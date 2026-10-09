@@ -23,6 +23,3 @@ export const POSTER_WIDTHS = [480, 720, 960, 1280, 1600, 1920] as const;
 export const posterSet = (type: 'avif' | 'webp') => POSTER_WIDTHS.map((w) => `/media/${FILM}-poster-${w}.${type} ${w}w`).join(', ');
 export const POSTER_SIZES = '(max-width: 767px) 84vw, min(54vw, 66vh)';
 export const POSTER_FALLBACK = `/media/${FILM}-poster-960.webp`;
-
-/** STAND-IN (elite study): the film's modern study circle, baked into a navy duotone, under the closing question — until the foundation's own photograph exists. */
-export const CIRCLE = { avif: `/media/${FILM}-krets-1600.avif`, webp: `/media/${FILM}-krets-1600.webp`, small: `/media/${FILM}-krets-960.webp` };

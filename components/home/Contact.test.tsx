@@ -29,13 +29,4 @@ describe('Contact, the ending', () => {
     expect(plates).toHaveLength(1);
     expect(plates[0]).toHaveAttribute('data-ground', 'navy-deep');
   });
-
-  test('the study circle under it is a stand-in, decorative, and loaded lazily', () => {
-    const { container } = render(<Contact />);
-    const ground = container.querySelector('[data-stand-in]') as HTMLElement;
-    expect(ground).toHaveAttribute('aria-hidden', 'true');
-    const img = ground.querySelector('img') as HTMLImageElement;
-    expect(img).toHaveAttribute('alt', '');
-    expect(img).toHaveAttribute('loading', 'lazy');
-  });
 });

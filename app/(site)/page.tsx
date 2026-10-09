@@ -6,7 +6,6 @@ import { People } from '@/components/home/People';
 import styles from '@/components/home/scene.module.css';
 import { Sea } from '@/components/home/Sea';
 import { Seal } from '@/components/home/Seal';
-import { Switches } from '@/components/site/Switches';
 import { getEvents, getPeople, splitEvents, todayISO } from '@/lib/content';
 
 /**
@@ -45,7 +44,6 @@ export default function Home() {
         <People people={getPeople()} />
         <Contact />
       </div>
-      <Switches />
     </>
   );
 }
