@@ -6,8 +6,10 @@
  * invisible unless the line breaks at it.
  *
  * The joints are written out, not guessed: a dictionary of the compounds in content/brief.no.ts and
- * content/site.no.ts long enough to need one (13 letters and up). Running text only: a title and a
- * link keep their words whole, so the name a screen reader is given is the word as written.
+ * content/site.no.ts long enough to need one (13 letters and up). Running text, and a page's display
+ * title, which on a phone can be wider than the screen (`PageTitle`, Styringsdokumenter); the title
+ * keeps the word whole in its `aria-label`, so the name a screen reader is given is the word as
+ * written. A link keeps its words whole.
  */
 const JOINTS: Record<string, string> = {
   samfunnsdeltakelse: 'samfunns|deltakelse',

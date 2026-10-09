@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import styles from '@/components/site/page.module.css';
 import { site } from '@/content/site.no';
 import { getDocuments } from '@/lib/content';
+import { soft } from '@/lib/soft';
 
 export const metadata: Metadata = {
   title: site.pages.documents.title,
@@ -15,7 +16,8 @@ export default function Styringsdokumenter() {
   return (
     <article className={styles.page}>
       <p className={styles.eyebrow}>{t.label}</p>
-      <h1 className={styles.title}>{t.title}</h1>
+      {/* One long word: on a phone it breaks at its joint (`soft`, page.module.css), named whole. */}
+      <h1 className={styles.title} aria-label={t.title}>{soft(t.title)}</h1>
       <p className={styles.lede}>{t.description}</p>
       <section className={styles.section} aria-label={t.title}>
         {docs.length ? (

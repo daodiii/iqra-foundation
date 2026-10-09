@@ -213,6 +213,32 @@ test.describe('the collections are honest while empty', () => {
   });
 });
 
+test('phone: no page is wider than the screen at 320, 360 or 390, however long its title', async ({ page, isMobile }) => {
+  // 2026-10-09: «Styringsdokumenter» at the display size had nowhere to break; the page went 457 wide on a
+  // 390 phone and pushed «Meny» half off the screen («Arrangementer» did the same at 320).
+  test.skip(!isMobile, 'a phone only');
+  for (const width of [320, 360, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const item of site.links) {
+      if (item.href === '/') continue; // the home page has its own walk from the hero to the foot
+      await page.goto(item.href);
+      const wide = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, window.innerWidth));
+      expect(wide, `${item.href} at ${width}`).toBe(width);
+    }
+  }
+});
+
+test('a long one-word title breaks at its joint only where the screen is too narrow: on a wide screen it is one line, and its name is the word whole', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the wide screen');
+  for (const [href, title] of [['/styringsdokumenter', site.pages.documents.title], ['/arrangementer', site.pages.events.title]] as const) {
+    await page.goto(href);
+    const h1 = page.locator('h1');
+    await expect(h1).toHaveAccessibleName(title);
+    const lines = await h1.evaluate((el) => Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)));
+    expect(lines, href).toBe(1);
+  }
+});
+
 test('kontakt: seven cards in reading order — the map with the address on it, the address, the e-mail, the form under «Kontakt oss», the number, the hours, the way there — every value bracketed but the place, the form drawn, and no pin on a stand-in street', async ({ page }) => {
   await page.goto('/kontakt');
   await expect(page).toHaveTitle(T(site.pages.contact.title));

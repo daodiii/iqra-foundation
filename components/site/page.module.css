@@ -35,6 +35,15 @@
   line-height: var(--lead-display);
   letter-spacing: var(--track-display);
   max-width: 14ch;
+  /* A long compound in a title breaks at its soft hyphen (`soft`) on a phone only: a wider screen keeps it whole, as it always stood. */
+  hyphens: none;
+}
+
+/* Under 700px «Styringsdokumenter» at the display size is wider than the screen (at 640 it just fits). */
+@media (max-width: 699px) {
+  .title {
+    hyphens: manual;
+  }
 }
 
 .lede {
