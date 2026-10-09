@@ -23,7 +23,7 @@ describe('Events', () => {
     const name = within(section).getByRole('heading', { level: 2, name: t.title });
     expect(section).toHaveAttribute('aria-labelledby', name.id);
     // the name is the way on, to the page with everything, coming and past
-    expect(within(name).getByRole('link', { name: t.title })).toHaveAttribute('href', site.nav.find((n) => n.label === t.label)?.href);
+    expect(within(name).getByRole('link', { name: t.title })).toHaveAttribute('href', site.links.find((n) => n.label === t.label)?.href);
     expect(within(section).getAllByRole('link')).toHaveLength(1);
     expect(section).not.toHaveAttribute('data-empty');
     expect(section.closest('[data-material]')).toHaveAttribute('data-ground', 'navy-lift');
@@ -57,7 +57,7 @@ describe('Events', () => {
     const section = container.querySelector('section#arrangementer') as HTMLElement;
     expect(section).toHaveAttribute('data-empty');
     const name = within(section).getByRole('heading', { level: 2, name: t.title });
-    expect(within(name).getByRole('link', { name: t.title })).toHaveAttribute('href', site.nav.find((n) => n.label === t.label)?.href);
+    expect(within(name).getByRole('link', { name: t.title })).toHaveAttribute('href', site.links.find((n) => n.label === t.label)?.href);
     expect(within(section).getByText(t.emptyUpcoming)).toBeInTheDocument();
     expect(within(section).getByText(t.description)).toBeInTheDocument();
     expect(section.querySelector('dl')).toBeNull();

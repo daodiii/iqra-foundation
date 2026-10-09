@@ -15,8 +15,8 @@ import { AREA_LOOK, areaFloor, areas, fieldVars } from './areas';
 const tokens = readFileSync(path.resolve(process.cwd(), 'app/globals.css'), 'utf8');
 
 describe('every area of the brief has a colour and a logo variant', () => {
-  test('the brief’s four areas are all mapped, in the brief’s order', () => {
-    expect(areas.map((a) => a.key)).toEqual(brief.areas.map((a) => a.key));
+  test('the brief’s four areas are all mapped, in the home page’s order everywhere (the owner, 2026-10-09)', () => {
+    expect(areas.map((a) => a.key)).toEqual(['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser']);
     expect(Object.keys(AREA_LOOK).sort()).toEqual([...brief.areas.map((a) => a.key)].sort());
   });
 

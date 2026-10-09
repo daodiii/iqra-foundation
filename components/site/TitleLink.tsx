@@ -4,7 +4,7 @@ import { Morph } from './Morph';
 import styles from './title-link.module.css';
 
 /** A page's address, read from the menu by its label, so a section's way on goes where the menu goes. */
-export const pageHref = (label: string): string => site.nav.find((n) => n.label === label)?.href ?? '/';
+export const pageHref = (label: string): string => site.links.find((n) => n.label === label)?.href ?? '/';
 
 /** The name a title carries across a page change: the same on the section's title and on the page's heading (`PageTitle`). */
 export const morphName = (href: string) => `tittel-${href.replace(/[^a-z0-9]+/gi, '') || 'hjem'}`;

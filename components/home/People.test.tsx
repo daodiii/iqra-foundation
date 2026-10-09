@@ -51,7 +51,7 @@ describe('People', () => {
     const links = within(section).getAllByRole('link');
     expect(links).toHaveLength(1);
     expect(title).toContainElement(links[0]);
-    expect(links[0]).toHaveAttribute('href', site.nav.find((n) => n.label === t.label)?.href);
+    expect(links[0]).toHaveAttribute('href', site.links.find((n) => n.label === t.label)?.href);
     expect(within(section).queryByText(t.empty)).toBeNull();
   });
 

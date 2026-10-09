@@ -76,7 +76,7 @@ export const AREA_LOOK: Record<AreaKey, AreaLook> = {
 };
 
 export type Area = (typeof brief.areas)[number] & AreaLook & {
-  /** «01» to «04», the brief's order. */
+  /** «01» to «04», in `AREA_ORDER`. */
   number: string;
   /** Where the area is read in full. */
   href: `/vart-arbeid#${AreaKey}`;
@@ -84,8 +84,17 @@ export type Area = (typeof brief.areas)[number] & AreaLook & {
   tone: 'light' | 'dark';
 };
 
-/** The brief's four areas, in its order, each with its look. */
-export const areas: readonly Area[] = brief.areas.map((a, i) => ({
+/**
+ * The order the four come in, everywhere on the site: the home page's. The owner chose it for the
+ * sea on 2026-09-17 («navy, burgundy, turquoise and then end with white») and made it the site's on
+ * 2026-10-09 («home page»), so Vårt arbeid, the seal's ring and the footer's thread follow it too.
+ * The brief lists them Kunnskap, Dialog, Møteplasser, Samfunnsdeltakelse, and its prose keeps that
+ * order where a sentence names them.
+ */
+export const AREA_ORDER = ['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser'] as const satisfies readonly AreaKey[];
+
+/** The brief's four areas, in `AREA_ORDER`, each with its look. */
+export const areas: readonly Area[] = AREA_ORDER.map((key) => brief.areas.find((a) => a.key === key)!).map((a, i) => ({
   ...a,
   ...AREA_LOOK[a.key],
   number: String(i + 1).padStart(2, '0'),

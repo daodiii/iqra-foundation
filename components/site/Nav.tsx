@@ -17,10 +17,18 @@ import styles from './site.module.css';
  *
  * Which item is the current page is read from the URL; Støtt oss is a button in both
  * layouts, as the brief asks («bør være en tydelig knapp»).
+ *
+ * Styringsdokumenter stands under Ressurser (the owner, 2026-10-09). In the row it is a small
+ * plate that drops from Ressurser when Ressurser is pointed at or tabbed to; Escape puts it
+ * away again until the pointer or the focus leaves. In the drawer it is a line set in under
+ * Ressurser, always there. On a wide screen without a pointer that can hover it stands in the
+ * row beside Ressurser, as before, so a touch never has to find it.
  */
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // The list under an item, put away by Escape until the pointer or the focus leaves the item.
+  const [shut, setShut] = useState(false);
   const id = useId();
   const panel = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -93,6 +101,52 @@ export function Nav() {
         <ul className={styles.list}>
           {site.nav.map((item) => {
             const isButton = 'button' in item && item.button;
+            const under = 'children' in item ? item.children : null;
+            if (under) {
+              return (
+                <li
+                  key={item.href}
+                  className={styles.branch}
+                  data-shut={shut ? '' : undefined}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Escape' || open) return;
+                    setShut(true);
+                    e.currentTarget.querySelector<HTMLElement>('a')?.focus();
+                  }}
+                  onMouseLeave={() => setShut(false)}
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setShut(false);
+                  }}
+                >
+                  <Link
+                    href={item.href}
+                    prefetch={false}
+                    className={styles.link}
+                    aria-current={current(item.href) ? 'page' : undefined}
+                    data-branch={under.some((c) => current(c.href)) ? '' : undefined}
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.label}
+                    <span className={styles.caret} aria-hidden="true" />
+                  </Link>
+                  <ul className={styles.under}>
+                    {under.map((c) => (
+                      <li key={c.href}>
+                        <Link
+                          href={c.href}
+                          prefetch={false}
+                          className={`${styles.link} ${styles.underLink}`}
+                          aria-current={current(c.href) ? 'page' : undefined}
+                          onClick={() => setOpen(false)}
+                        >
+                          {c.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              );
+            }
             return (
               <li key={item.href} className={isButton ? styles.supportItem : undefined}>
                 <Link

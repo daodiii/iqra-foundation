@@ -26,7 +26,7 @@ describe('Seal', () => {
     expect(within(mission).getByText(brief.mission.paragraph)).toBeInTheDocument();
     expect(mission).toHaveAttribute('data-card');
     // Misjon is the way on to Vårt arbeid, whose lede is the mission; Visjon has no page of its own
-    expect(within(missionName).getByRole('link', { name: site.pages.home.missionLabel })).toHaveAttribute('href', site.nav.find((n) => n.label === site.pages.work.label)?.href);
+    expect(within(missionName).getByRole('link', { name: site.pages.home.missionLabel })).toHaveAttribute('href', site.links.find((n) => n.label === site.pages.work.label)?.href);
     expect(within(mission).getAllByRole('link')).toHaveLength(1);
     expect(within(vision).queryAllByRole('link')).toHaveLength(0);
   });

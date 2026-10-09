@@ -1,5 +1,4 @@
-import type { AreaKey } from '@/lib/content';
-import { areas, type Area } from './areas';
+import { AREA_ORDER, areas, type Area } from './areas';
 
 /**
  * The playhead of Havet (Sea.tsx): `u` runs 0 to STEPS, one whole number per field, driven by
@@ -9,15 +8,14 @@ import { areas, type Area } from './areas';
 
 /**
  * The order the four come in on the sea — the owner's, given 2026-09-17 after seeing it
- * live: «navy, burgundy, turquoise and then end with white». The brief's order (Kunnskap,
- * Dialog, Møteplasser, Samfunnsdeltakelse) stands everywhere else — the bands, the seal's
- * ring, the footer's line; here the tides run from the hero's white through the dark pair
- * and out to white again, above the seal's navy. Each area keeps its own colour.
+ * live: «navy, burgundy, turquoise and then end with white» — and, since 2026-10-09, the
+ * site's (`AREA_ORDER`). The tides run from the hero's white through the dark pair and out to
+ * white again, above the seal's navy. Each area keeps its own colour.
  */
-export const SEA_ORDER = ['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser'] as const satisfies readonly AreaKey[];
+export const SEA_ORDER = AREA_ORDER;
 
 /** The areas in the sea's order, each with its look. */
-export const seaAreas: readonly Area[] = SEA_ORDER.map((key) => areas.find((a) => a.key === key)!);
+export const seaAreas: readonly Area[] = areas;
 
 /** The four fields at u = 0, 1, 2, 3. */
 export const STEPS = 3;
