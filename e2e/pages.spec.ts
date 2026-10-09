@@ -53,11 +53,16 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   // four flat navy plates: the seal, Neste, the two sides of Kontakt's table
   await expect(main.locator('[data-material="flat"][data-ground="navy"]')).toHaveCount(4);
   await expect(main.locator('[data-material="ink"]')).toHaveCount(0);
-  // then the rest of the site: four sections in order, no links under them, the lists honest while empty
+  // then the rest of the site: four sections in order, each section's title its one way on (no pill under it), the lists honest while empty
   const ids = await main.locator('section[id]').evaluateAll((els) => els.map((e) => e.id));
   expect(ids.slice(-4)).toEqual(['om-oss', 'arrangementer', 'menneskene-bak', 'kontakt']);
   expect(ids).not.toContain('ressurser');
-  await expect(main.locator('section#om-oss a, section#menneskene-bak a')).toHaveCount(0);
+  const hrefOf = (label: string) => site.nav.find((n) => n.label === label)?.href ?? '';
+  for (const [id, label] of [['om-oss', site.pages.about.label], ['arrangementer', site.pages.events.label], ['menneskene-bak', site.pages.people.label], ['misjon', site.pages.work.label]] as const) {
+    await expect(main.locator(`section#${id} a`)).toHaveCount(1);
+    await expect(main.locator(`section#${id} h2 a`)).toHaveAttribute('href', hrefOf(label));
+  }
+  await expect(main.locator('section#visjon a')).toHaveCount(0);
   // the next event as Neste's statement while one is coming, the honest line while not (the build reads the same collection)
   const { upcoming } = splitEvents(getEvents(), todayISO());
   if (upcoming.length) await expect(main.locator('section#arrangementer h3').first()).toHaveText(upcoming[0].title);
@@ -108,6 +113,42 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   await main.getByRole('link', { name: brief.areas[3].name, exact: true }).click();
   await expect(page).toHaveURL(/\/vart-arbeid#samfunnsdeltakelse$/);
   await expect(page.locator('#samfunnsdeltakelse')).toBeInViewport();
+});
+
+/** Walk the page from the top to the foot in steps, letting each scroll-driven piece write its frame; `at` is read at every step. */
+async function walkDown<T>(page: Page, at: () => Promise<T>): Promise<T[]> {
+  const H = await page.evaluate(() => document.documentElement.scrollHeight);
+  const seen: T[] = [];
+  for (let y = 0; y <= H; y += 240) {
+    await page.evaluate((y) => window.scrollTo(0, y), y);
+    await page.waitForTimeout(80);
+    seen.push(await at());
+  }
+  return seen;
+}
+
+test('phone: the page is never wider than the screen, from the hero to the foot', async ({ page, isMobile }) => {
+  // A phone widens its layout to take in whatever overflows (the Om oss doors, turned, reached past the
+  // edge and pushed «Meny» off the screen); a desktop clips it, so only the phone can show this.
+  test.skip(!isMobile, 'a phone only');
+  await page.goto('/');
+  const width = page.viewportSize()?.width;
+  const widths = await walkDown(page, () => page.evaluate(() => Math.max(document.documentElement.scrollWidth, window.innerWidth)));
+  // the doors did turn on the way (the state that widened the page), and are open by the foot
+  await expect(page.locator('section#om-oss > div')).toHaveAttribute('data-open', '');
+  expect(Math.max(...widths)).toBe(width);
+  const menu = await page.getByRole('button', { name: site.header.open }).boundingBox();
+  expect((menu?.x ?? 0) + (menu?.width ?? 0)).toBeLessThanOrEqual(width ?? 0);
+});
+
+test('phone: a print on the board table is little more than half a screen tall', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'a phone only');
+  test.skip(getPeople().length === 0, 'no people published: the honest line stands instead of the table');
+  await page.goto('/');
+  const print = page.locator('section#menneskene-bak article').first();
+  await print.scrollIntoViewIfNeeded();
+  const h = await print.evaluate((el) => el.getBoundingClientRect().height / window.innerHeight);
+  expect(h).toBeLessThan(0.6);
 });
 
 test('vårt arbeid: the four areas, each its own section of water, each reachable by its anchor', async ({ page }) => {

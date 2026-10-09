@@ -171,8 +171,13 @@
       rotate(calc(var(--k) * 2.2deg * (1 - var(--open))));
   }
 
+  /* A shorter frame than the desktop's, so a print is a little over half a phone's screen, not most of it; a portrait keeps its face in the top of the frame. */
   .photo {
     height: auto;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 4 / 3;
+  }
+
+  .picture {
+    object-position: 50% 28%;
   }
 }

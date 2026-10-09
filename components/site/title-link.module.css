@@ -1,0 +1,46 @@
+/*
+ * A section's title as its link (TitleLink.tsx): the heading's own face, size and colour; the
+ * arrow is drawn in the title's colour at a fraction of its size, so a 15px label and a 58px
+ * title carry the same arrow in proportion.
+ */
+
+.link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.last {
+  white-space: nowrap;
+}
+
+.arrow {
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  margin-left: 0.24em;
+  vertical-align: 0.04em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: translateX(-0.18em);
+  transition:
+    opacity var(--dur-s) var(--ease-out),
+    transform var(--dur-m) var(--ease-out-expo);
+}
+
+.link:hover .arrow,
+.link:focus-visible .arrow {
+  opacity: 1;
+  transform: none;
+}
+
+/* A touch screen has no hover to find it by: the arrow stands. */
+@media (hover: none) {
+  .arrow {
+    opacity: 1;
+    transform: none;
+  }
+}

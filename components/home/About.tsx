@@ -3,7 +3,9 @@
 import { useRef } from 'react';
 import { MarkedLine } from '@/components/site/AreaMark';
 import { Logo } from '@/components/site/Logo';
+import { pageHref, TitleLink } from '@/components/site/TitleLink';
 import { brief } from '@/content/brief.no';
+import { site } from '@/content/site.no';
 import styles from './about.module.css';
 import { Arrive } from './Arrive';
 import { centreOf, useGlide } from './glide';
@@ -41,7 +43,8 @@ export function sentences(paragraph: string): string[] {
  * them, and the room is there behind, saying Om Iqra Foundation in words: the title,
  * the first paragraph as the statement, and three lines in columns under it — the second
  * paragraph, and the third paragraph's two sentences as two, so «Vi ønsker å bringe
- * mennesker sammen …» stands as the third line (the owner's order, 2026-09-21). The
+ * mennesker sammen …» stands as the third line (the owner's order, 2026-09-21). The title is the
+ * way on to /om-oss (`TitleLink`). The
  * fourth paragraph and the story of the name are /om-oss's alone. All of it on one
  * screen, in the page's flow — nothing pins, and a reader passes it or reads it as they
  * like. Open, it stays open; scrolled back below the middle, it closes again.
@@ -70,7 +73,9 @@ export function About() {
     <Arrive as="section" id="om-oss" className={styles.section} aria-labelledby="om-oss-tittel">
       <div ref={plate} className={styles.plate}>
         <div className={styles.room}>
-          <h2 id="om-oss-tittel" className={styles.title} data-title>{brief.about.title}</h2>
+          <h2 id="om-oss-tittel" className={styles.title} data-title>
+            <TitleLink href={pageHref(site.pages.about.label)}>{brief.about.title}</TitleLink>
+          </h2>
           <p className={styles.statement}>{statement}</p>
           <div className={styles.columns}>
             <p className={styles.col}><MarkedLine text={crossing} /></p>

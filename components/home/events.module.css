@@ -30,6 +30,23 @@
   color: rgb(240 240 241 / 0.72);
 }
 
+/*
+ * While nothing is coming the name is the plate's heading, at the size the next event's title would
+ * have, and the plate stands shorter: the honest line says what it must without a whole band of
+ * navy announcing it.
+ */
+.plate:has([data-empty]) {
+  --box-pad-y: clamp(44px, 6vh, 64px);
+}
+
+.wrap[data-empty] .name {
+  margin: 0 0 16px;
+  font: 600 clamp(30px, 3.8vw, 56px) / 1.06 var(--font-sans);
+  letter-spacing: -0.02em;
+  color: var(--color-white);
+  text-wrap: balance;
+}
+
 .text {
   margin: 0;
   max-width: 54ch;
@@ -160,7 +177,8 @@
     row-gap: 40px;
   }
 
-  .title {
+  .title,
+  .wrap[data-empty] .name {
     font-size: 30px;
   }
 }

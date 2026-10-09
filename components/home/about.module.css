@@ -10,9 +10,16 @@
  * reduced motion) there are no doors, only the room.
  */
 
+/*
+ * The doors turn away from the reader but their boxes still reach past the plate — on a 390px phone
+ * the right door's to x = 444 — and a phone widens its whole layout to take in what overflows: the
+ * page went 458px wide and the fixed header pushed «Meny» off the screen (review, 2026-10-09). The
+ * section clips across; `clip` is not a grouping property, so the doors still turn in 3D.
+ */
 .section {
   padding: 0 var(--box-inset) var(--gutter);
   scroll-margin-top: calc(var(--header-h) + 16px);
+  overflow-x: clip;
 }
 
 .plate {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useRef, type CSSProperties } from 'react';
+import { pageHref, TitleLink } from '@/components/site/TitleLink';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import type { Person, Picture } from '@/lib/content';
@@ -51,7 +52,9 @@ export function People({ people }: { people: Person[] }) {
   return (
     <Arrive as="section" id="menneskene-bak" aria-labelledby="menneskene-bak-tittel" className={styles.section}>
       <div className={styles.head}>
-        <h2 id="menneskene-bak-tittel" className={styles.title} data-title>{brief.people.title}</h2>
+        <h2 id="menneskene-bak-tittel" className={styles.title} data-title>
+          <TitleLink href={pageHref(t.label)}>{brief.people.title}</TitleLink>
+        </h2>
         <p className={styles.text} data-prose>{brief.people.paragraph}</p>
       </div>
       {seated.length ? (

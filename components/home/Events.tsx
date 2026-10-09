@@ -3,6 +3,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Flat } from '@/components/materials/Flat';
 import { AreaMark } from '@/components/site/AreaMark';
+import { pageHref, TitleLink } from '@/components/site/TitleLink';
 import { site } from '@/content/site.no';
 import type { Event } from '@/lib/content';
 import { timeLeft, writeDateTime, zonedTime } from '@/lib/dates';
@@ -16,8 +17,10 @@ import { Words } from './Words';
  * event is the statement — its date in a line, its title word by word at the vision's
  * size, its place and its area, and under it a count of the days, hours, minutes and
  * seconds until it starts, ticking. The two after it stand as small rows beside the
- * brief's paragraph. While nothing is coming: the honest line and the paragraph. The
- * home page shows three at most, as before.
+ * brief's paragraph. While nothing is coming: the name as the heading, the honest line and the
+ * paragraph, on a plate that stands shorter (`data-empty`) — no band announcing that nothing is
+ * happening. Either way the name is the way on to /arrangementer (`TitleLink`), where the past
+ * events are. The home page shows three at most, as before.
  */
 
 const t = site.pages.events;
@@ -70,9 +73,11 @@ export function Events({ upcoming }: { upcoming: Event[] }) {
     <Scene>
       <Flat tint="navy" className={styles.plate}>
         <Arrive as="div">
-          <section id="arrangementer" aria-labelledby="arrangementer-tittel" className={styles.wrap}>
+          <section id="arrangementer" aria-labelledby="arrangementer-tittel" className={styles.wrap} data-empty={next ? undefined : ''}>
             <div className={styles.main}>
-              <h2 id="arrangementer-tittel" className={styles.name} data-prose>{t.title}</h2>
+              <h2 id="arrangementer-tittel" className={styles.name} data-prose>
+                <TitleLink href={pageHref(t.label)}>{t.title}</TitleLink>
+              </h2>
               {next ? (
                 <>
                   <p className={styles.when} data-prose>{writeDateTime(next.start, next.time)}</p>

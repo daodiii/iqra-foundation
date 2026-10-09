@@ -44,7 +44,7 @@ describe('Hjem', () => {
     expect(container.querySelector('[data-material="ink"]')).toBeNull();
   });
 
-  test('then the rest of the site, in order: Om oss, Arrangementer, Menneskene bak, Kontakt — no labels, no links under them, the lists honest while empty and the next event when there is one', () => {
+  test('then the rest of the site, in order: Om oss, Arrangementer, Menneskene bak, Kontakt — no labels, each title its one way on (no pill under it), the lists honest while empty and the next event when there is one', () => {
     const { container } = render(<Home />);
     const t = site.pages;
     const ids = [...container.querySelectorAll('section[id]')].map((s) => s.id);
@@ -58,10 +58,14 @@ describe('Hjem', () => {
     expect(about).toHaveTextContent(brief.about.paragraphs[0]);
     expect(about).toHaveTextContent(brief.about.paragraphs[1]);
     expect(about.querySelectorAll('[data-area]')).toHaveLength(4);
-    expect(within(about).queryAllByRole('link')).toHaveLength(0);
+    const hrefOf = (label: string) => site.nav.find((n) => n.label === label)?.href;
+    expect(within(about).getAllByRole('link')).toHaveLength(1);
+    expect(within(aboutTitle).getByRole('link')).toHaveAttribute('href', hrefOf(t.about.label));
 
     const events = container.querySelector('section#arrangementer') as HTMLElement;
-    expect(within(events).getByRole('heading', { level: 2, name: t.events.title })).toBeInTheDocument();
+    const eventsTitle = within(events).getByRole('heading', { level: 2, name: t.events.title });
+    expect(within(eventsTitle).getByRole('link')).toHaveAttribute('href', hrefOf(t.events.label));
+    expect(within(events).getAllByRole('link')).toHaveLength(1);
     // The page renders the real collection: the next event as the statement while one is coming, the honest line while not.
     const { upcoming } = splitEvents(getEvents(), todayISO());
     if (upcoming.length) expect(events).toHaveTextContent(upcoming[0].title);
@@ -76,7 +80,8 @@ describe('Hjem', () => {
     const seated = getPeople().slice(0, SEATS);
     expect([...people.querySelectorAll('article h3')].map((h) => h.textContent)).toEqual(seated.map((p) => p.name));
     if (!seated.length) expect(people).toHaveTextContent(t.people.empty);
-    expect(within(people).queryAllByRole('link')).toHaveLength(0);
+    expect(within(people).getAllByRole('link')).toHaveLength(1);
+    expect(within(peopleTitle).getByRole('link')).toHaveAttribute('href', hrefOf(t.people.label));
 
     // The foot: the question as the heading, word by word, on our plate; the line and Kontakt, the only way on, on the sheet on yours; no numbers.
     const contact = container.querySelector('section#kontakt') as HTMLElement;

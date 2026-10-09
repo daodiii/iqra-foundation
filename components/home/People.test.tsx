@@ -27,7 +27,7 @@ describe('spread', () => {
 });
 
 describe('People', () => {
-  test('the title and the board paragraph, then the people as prints in order: the name, the role, the lines, and the photograph or «Bilde kommer»; no links', () => {
+  test('the title and the board paragraph, then the people as prints in order: the name, the role, the lines, and the photograph or «Bilde kommer»; the title the one link, to Menneskene bak', () => {
     const { container } = render(<People people={three} />);
     const section = container.querySelector('section#menneskene-bak') as HTMLElement;
     const title = within(section).getByRole('heading', { level: 2, name: brief.people.title });
@@ -55,7 +55,10 @@ describe('People', () => {
     expect(within(prints[0] as HTMLElement).getByText(t.photoMissing)).toBeInTheDocument();
     expect(within(prints[2] as HTMLElement).getByText(t.photoMissing)).toBeInTheDocument();
     expect(prints[0].querySelector('svg')).not.toBeNull();
-    expect(within(section).queryAllByRole('link')).toHaveLength(0);
+    const links = within(section).getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(title).toContainElement(links[0]);
+    expect(links[0]).toHaveAttribute('href', site.nav.find((n) => n.label === t.label)?.href);
     expect(within(section).queryByText(t.empty)).toBeNull();
   });
 

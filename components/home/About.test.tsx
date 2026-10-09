@@ -31,7 +31,7 @@ describe('sentences', () => {
 });
 
 describe('About', () => {
-  test('the room says the title, the statement, and three lines: the areas marked, then the third paragraph’s two sentences as two; not the fourth paragraph, not the story of the name; no links', () => {
+  test('the room says the title, the statement, and three lines: the areas marked, then the third paragraph’s two sentences as two; not the fourth paragraph, not the story of the name; the title the one link, to Om oss', () => {
     const { container } = render(<About />);
     const section = container.querySelector('section#om-oss') as HTMLElement;
     const title = within(section).getByRole('heading', { level: 2, name: brief.about.title });
@@ -49,7 +49,10 @@ describe('About', () => {
     expect(section).not.toHaveTextContent(site.pages.about.story.label);
     expect(section).not.toHaveTextContent(site.pages.about.story.text);
     expect(within(section).queryAllByRole('heading', { level: 3 })).toHaveLength(0);
-    expect(within(section).queryAllByRole('link')).toHaveLength(0);
+    const links = within(section).getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(title).toContainElement(links[0]);
+    expect(links[0]).toHaveAttribute('href', site.nav.find((n) => n.label === site.pages.about.label)?.href);
   });
 
   test('the doors carry the guide’s logo for white as decoration only, and are marked once the script runs', () => {
@@ -65,8 +68,9 @@ describe('About', () => {
       expect(door).toHaveTextContent('');
     }
     // the name is said once, in the room, by the heading
-    expect(within(plate).getAllByText(brief.about.title)).toHaveLength(1);
-    expect(within(plate).getAllByRole('heading', { level: 2 })).toHaveLength(1);
+    // (the heading's words are split round the link's arrow, so they are counted in the plate's text)
+    expect(plate.textContent?.split(brief.about.title)).toHaveLength(2);
+    expect(within(plate).getAllByRole('heading', { level: 2, name: brief.about.title })).toHaveLength(1);
   });
 
   test('under reduced motion there are no doors: the plate is never marked and --open is left to the sheet', () => {
