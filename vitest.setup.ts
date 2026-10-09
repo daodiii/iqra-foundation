@@ -64,3 +64,7 @@ class DOMMatrixStub { translate() { return this; } scale() { return this; } mult
 Object.defineProperty(window, 'DOMMatrix', { writable: true, value: DOMMatrixStub });
 
 Object.defineProperty(document, 'fonts', { value: { ready: Promise.resolve(), load: () => Promise.resolve([]) } });
+
+// The soft hyphens (lib/soft.ts, elite study) are invisible, but a text matcher sees them: the
+// components' tests read the brief's words as written, and lib/soft.test.ts tests the hyphens.
+vi.mock('@/lib/soft', () => ({ soft: (s: string) => s }));

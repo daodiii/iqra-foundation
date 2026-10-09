@@ -36,15 +36,12 @@ export default function Home() {
     <>
       <Hero />
       <Sea />
-      <div className={styles.stage}>
+      {/* Elite study: every section after the sea is a plate in one column, one gutter apart, and the footer the last plate (Scene.tsx). */}
+      <div className={styles.stage} data-plates>
         <Seal />
-      </div>
-      <About />
-      <div className={styles.stage}>
+        <About />
         <Events upcoming={upcoming} />
-      </div>
-      <People people={getPeople()} />
-      <div className={styles.stage}>
+        <People people={getPeople()} />
         <Contact />
       </div>
     </>

@@ -7,6 +7,8 @@
 
 .plate {
   --box-pad-y: clamp(64px, 9vh, 96px);
+  /* The seal as it was (the owner, 2026-10-09: «keep mission and vision how it was»), standing on the page's shared left edge. */
+  --box-pad-x: var(--edge);
 }
 
 .row {

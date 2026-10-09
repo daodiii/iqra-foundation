@@ -11,15 +11,18 @@
   max-width: calc(var(--measure) + 2 * var(--margin) + 160px);
 }
 
+/* A page's title is its one display line (globals.css). */
 .title {
-  font-size: clamp(32px, 4.2vw, 52px);
-  max-width: 20ch;
+  font-size: var(--display);
+  line-height: var(--lead-display);
+  letter-spacing: var(--track-display);
+  max-width: 14ch;
 }
 
 .lede {
-  margin-top: 20px;
+  margin-top: var(--space-4);
   max-width: var(--measure);
-  font-size: clamp(18px, 1.6vw, 21px);
+  font-size: var(--step-1);
   line-height: 1.5;
   color: var(--color-ink);
   text-wrap: pretty;

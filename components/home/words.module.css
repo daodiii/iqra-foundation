@@ -18,8 +18,8 @@
   opacity: 1;
   transform: none;
   transition:
-    opacity 520ms var(--ease-out) calc(var(--w, 0) * 38ms),
-    transform 760ms var(--ease-out-expo) calc(var(--w, 0) * 38ms);
+    opacity var(--dur-3) var(--ease) calc(var(--w, 0) * var(--stagger-word)),
+    transform var(--dur-3) var(--ease) calc(var(--w, 0) * var(--stagger-word));
 }
 
 .stop {

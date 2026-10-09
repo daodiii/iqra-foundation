@@ -34,9 +34,46 @@
   align-items: center;
   gap: 24px;
   height: var(--header-h);
-  padding: 0 var(--margin);
-  background: var(--color-white);
+  padding: 0 var(--edge);
+  background: var(--header-ground, var(--color-white));
   border-bottom: 1px solid var(--color-hairline);
+  /* Back on the way up: on the one curve, in two beats. */
+  transition:
+    transform var(--dur-2) var(--ease),
+    background-color var(--dur-2) var(--ease),
+    border-color var(--dur-2) var(--ease);
+}
+
+/* Away on the way down: the curve's mirror, as everything that leaves. */
+.header[data-away] {
+  transform: translateY(-101%);
+  transition-timing-function: var(--ease-in);
+}
+
+/* Over a navy plate the header takes that plate's own navy (HeaderMotion, `--header-ground`) and the reversed logo. */
+.header[data-dark] {
+  border-bottom-color: color-mix(in srgb, var(--color-light) 14%, transparent);
+}
+
+.header[data-dark] .logoOnWhite {
+  display: none;
+}
+
+.header[data-dark] .logoOnNavy {
+  display: block;
+}
+
+.header[data-dark] .link {
+  color: var(--color-light);
+}
+
+.header[data-dark] .link[aria-current='page']::after {
+  background: var(--color-light);
+}
+
+.header[data-dark] .menuButton {
+  border-color: color-mix(in srgb, var(--color-light) 40%, transparent);
+  color: var(--color-light);
 }
 
 .home {
@@ -44,6 +81,16 @@
   align-items: center;
   padding: 8px 6px;
   margin: -8px -6px;
+  transition: opacity var(--dur-2) var(--ease);
+}
+
+/* While the hero's lockup is on screen, the header's logo stands back: one name on the first screen. */
+.header[data-lockup] .home {
+  opacity: 0;
+}
+
+.header[data-lockup] .home:focus-visible {
+  opacity: 1;
 }
 
 .home img {
@@ -74,7 +121,7 @@
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-navy);
-  font: 500 14px/1 var(--font-sans);
+  font: 500 var(--step--1)/1 var(--font-sans);
   cursor: pointer;
 }
 
@@ -94,7 +141,7 @@
   align-items: center;
   height: 40px;
   padding: 0 11px;
-  font: 500 14px/1 var(--font-sans);
+  font: 500 var(--step--1)/1 var(--font-sans);
   letter-spacing: 0.005em;
   text-decoration: none;
   white-space: nowrap;
@@ -271,9 +318,15 @@
 
 /* ----- the footer ----- */
 
+/*
+ * The footer is the page's last plate (elite study): one gutter under the plate before it, inset
+ * and rounded as a closed plate is, on the navy ramp's deepest step, its words on the shared edge.
+ */
 .footer {
-  padding: 56px var(--margin) 40px;
-  background: var(--color-navy);
+  margin: var(--footer-gap) var(--plate-inset) 0;
+  padding: var(--space-5) calc(var(--edge) - var(--plate-inset)) var(--space-4);
+  border-radius: var(--plate-radius) var(--plate-radius) 0 0;
+  background: var(--color-navy-deepest);
   color: var(--color-light);
   font-family: var(--font-sans);
 }
@@ -308,7 +361,7 @@
 .footerLink {
   display: inline-block;
   padding: 6px 0;
-  font-size: 14px;
+  font-size: var(--step--1);
   font-weight: 500;
   text-decoration: none;
   color: var(--color-light);
@@ -338,15 +391,15 @@
 }
 
 .threadName {
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.14em;
-  font-size: 13px;
+  font-size: var(--step--1);
   color: var(--color-white);
 }
 
 .threadLine {
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--step--1);
   letter-spacing: 0.02em;
 }
 
@@ -374,7 +427,8 @@
   flex-wrap: wrap;
   gap: 16px 48px;
   margin: 28px 0 0;
-  font-size: 13px;
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
 }
 
 .facts dt {

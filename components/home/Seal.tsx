@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from 'react';
 import { Flat } from '@/components/materials/Flat';
+import { pageHref, TitleLink } from '@/components/site/TitleLink';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import { areas } from './areas';
@@ -15,7 +16,8 @@ import { Words } from './Words';
  * word by word, the full stop the logo's dot — inside the mark's ring, a turquoise
  * hairline that draws itself from twelve as the section arrives, the four areas' names
  * twice round it in slow orbit, the crimson dot at twelve; the vision's paragraph and the
- * mission in the column beside; stacked on a phone. R, the owner's choice of 2026-09-17.
+ * mission in the column beside; stacked on a phone. R, the owner's choice of 2026-09-17. Misjon's
+ * name is the way on to Vårt arbeid, whose lede is the mission; Visjon has no page of its own.
  */
 
 const t = site.pages.home;
@@ -27,7 +29,7 @@ const R_TEXT = 40.5;
 
 export function Seal() {
   return (
-    <Scene>
+    <Scene dark>
       <Flat tint="navy" className={styles.plate}>
         <Arrive as="div">
           <div className={styles.row}>
@@ -55,7 +57,9 @@ export function Seal() {
             </section>
             <section id="misjon" aria-labelledby="misjon-tittel" className={styles.mission} data-card style={{ '--i': 1 } as CSSProperties}>
               <hr className={styles.rule} />
-              <h2 id="misjon-tittel" className={styles.name}>{t.missionLabel}</h2>
+              <h2 id="misjon-tittel" className={styles.name}>
+                <TitleLink href={pageHref(site.pages.work.label)}>{t.missionLabel}</TitleLink>
+              </h2>
               <p className={styles.headline}>{brief.mission.headline}</p>
               <p className={styles.text}>{brief.mission.paragraph}</p>
             </section>

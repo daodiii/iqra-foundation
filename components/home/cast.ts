@@ -18,6 +18,7 @@ export type Frame = { src: CanvasImageSource; w: number; h: number } | null;
 
 /** The live frame, or the poster while the film is not yet playing (or was refused); null before either has a size. */
 export function frameOf(v: HTMLVideoElement, poster: HTMLImageElement): Frame {
+  // The still is a responsive <img>: what it shows is its currentSrc, sized by its natural size once decoded.
   const live = v.readyState >= 2 && !v.paused;
   const w = live ? v.videoWidth : poster.naturalWidth;
   const h = live ? v.videoHeight : poster.naturalHeight;
@@ -63,7 +64,7 @@ export function makeCast(c: HTMLCanvasElement, crimson: string) {
     ctx.scale(1, -1);
     ctx.save();
     ctx.clip(letters);
-    ctx.filter = 'saturate(1.2) brightness(1.15)';
+    // The colour lift (saturate, brighten) is the stylesheet's, in the same filter as the blur: one filter, not a canvas filter per frame.
     ctx.drawImage(frame.src, sx, sy, sw, sh, 0, 0, W, H);
     ctx.restore();
     ctx.fillStyle = crimson;

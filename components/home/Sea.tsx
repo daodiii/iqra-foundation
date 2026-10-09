@@ -14,8 +14,13 @@ import { tideClock } from './clock';
 import { openingEnd } from './Hero';
 import fields from './fields.module.css';
 import { useFit } from './fit';
+import { useGlide } from './glide';
+import { openness, plateOff } from './Scene';
 import styles from './sea.module.css';
 import { groundAt, HYST, inkAt, LANDED, LEFT, nearestPage, seaAreas, seaAt, STEPS } from './tide';
+
+/** The sea as a plate: only its shape; nothing on it waits for a reveal. */
+const writeOpen = (off: number, el: HTMLElement) => el.style.setProperty('--open', openness(off).toFixed(3));
 
 /** The longest of the four names: the index is sized by it. */
 const widest = seaAreas.reduce((a, b) => (b.name.length > a.name.length ? b : a));
@@ -129,6 +134,8 @@ export function Sea() {
   /** The frame on the screen. A water built later (near and quiet, lib/near.ts) is put straight onto it. */
   const shown = useRef<number | null>(null);
   const go = useRef<(k: number) => void>(() => {});
+  // The sea opens and closes as a plate (sea.module.css `[data-plate]`), on the page's one driver.
+  useGlide(stage, plateOff, writeOpen, 'data-plate');
 
   useEffect(() => {
     const el = stage.current;

@@ -21,6 +21,18 @@
   --color-white: #ffffff;
 
   /*
+   * The navy ramp (elite study, 2026-10-09): the guide's navy as the middle step, the others the
+   * same hue and chroma moved in OKLCH lightness (+0.035, -0.075, -0.105), so the dark plates down
+   * the page differ in depth instead of being one flat value five times: Visjon/Misjon on the navy
+   * itself, Arrangementer a step lifted, the closing plate deep, the footer deepest. White on the
+   * lightest is 10.2:1. `navy-line` (+0.07) is the hairline on any of them.
+   */
+  --color-navy-lift: #344255;
+  --color-navy-deep: #1b2635;
+  --color-navy-deepest: #141f2d;
+  --color-navy-line: #3d4c60;
+
+  /*
    * Tints, each mixed from one of the five with white or with navy, so it is traceable.
    * `ink` is the body text colour: navy is the brand's dark and reads as black at text
    * sizes; `ink-soft` is navy lifted for secondary lines — at 76% it still clears 4.5:1
@@ -65,39 +77,97 @@
   /* Type roles: headings tight, labels and legends tracked out a touch, as the guide tracks «Foundation». */
   --tracking-tight: -0.015em;
   --tracking-label: 0.02em;
-  --text-hero: clamp(30px, 3.6vw, 52px);
-  --text-card-title: clamp(24px, 2vw, 28px);
+  --text-hero: var(--step-4);
+  --text-card-title: var(--step-2);
 
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* One curve (see :root): the old names are kept so the other pages follow it too. */
+  --ease-out-expo: var(--ease);
+  --ease-out: var(--ease);
 }
 
 :root {
   --header-h: 72px;
-  --margin: clamp(20px, 5vw, 80px);
+
+  /*
+   * THE TYPE SCALE (elite study). One ratio, 1.25 (a major third), on a base that runs from 17px on
+   * a 390px phone to 18px on the owner's 1536px laptop, so every step is fluid and every step is
+   * the one below it times 1.25. Six steps, and nothing on the home page is set off them:
+   *   -1 labels, dates, the menu; 0 running text and buttons; 1 a section's first words, the
+   *   sea's reading; 2 the mission, the sheet, the board's names; 3 statements, the sea's four
+   *   names (navigation, so a step under what they open); 4 every section's title, the vision.
+   * General Sans for display and interface; Supreme for running text only.
+   */
+  --step-0: clamp(17px, 16.66px + 0.0873vw, 18px);
+  --step--1: calc(var(--step-0) / 1.25);
+  --step-1: calc(var(--step-0) * 1.25);
+  --step-2: calc(var(--step-0) * 1.5625);
+  --step-3: calc(var(--step-0) * 1.953125);
+  --step-4: calc(var(--step-0) * 2.44140625);
+  /* ... and ONE display size, off the scale on purpose, for one word or line per page: on the home page the closing question, on a page its title. */
+  --display: clamp(2.875rem, 1.6rem + 5.3vw, 6.5rem);
+  /* The tracking and leading that go with the sizes: tighter as they grow. */
+  --track-display: -0.032em;
+  --track-head: -0.022em;
+  --track-sub: -0.012em;
+  --lead-display: 0.98;
+  --lead-head: 1.06;
+  --lead-sub: 1.18;
+  --lead-text: 1.55;
+
+  /*
+   * THE LAYOUT. One shared left text edge down the page (`--edge`, from the viewport's edge: the
+   * header's logo, every title, every first word), a 12-column grid between the two edges, and
+   * plates: one inset when closed (half the edge, so a plate's padding is the other half), one
+   * radius, one gutter between plates, one padding inside them.
+   */
+  --edge: clamp(24px, 6.25vw, 112px);
+  --cols: 12;
+  --col-gap: clamp(16px, 2.1vw, 32px);
+  --plate-inset: calc(var(--edge) / 2);
+  --plate-radius: clamp(18px, 1.9vw, 30px);
+  --gutter: clamp(10px, 1.25vw, 20px);
+  /* The spacing scale, about x1.6 a step: inside a section, between its head and its body, a plate's own padding. */
+  --space-1: 8px;
+  --space-2: 14px;
+  --space-3: 22px;
+  --space-4: clamp(28px, 2.6vw, 40px);
+  --space-5: clamp(40px, 4.2vw, 64px);
+  --space-6: clamp(64px, 7.4vw, 112px);
   --measure: 62ch;
   --radius: 10px;
   --radius-pill: 999px;
-  --dur-s: 160ms;
-  --dur-m: 320ms;
-  /* The pen draws a frame in this long, once, when its box comes on screen. */
-  --dur-pen: 800ms;
 
   /*
-   * The boxes of material: their corner, how far they step in from the page's edge, and
-   * the white between one box and the next — the guide's own plates, stacked with a thin
-   * gutter, is the rhythm the page follows.
+   * THE MOTION. One curve for everything that arrives (an expo ease-out: quick, then settling), its
+   * mirror for what leaves or falls, and one timing scale in beats of 120ms: 1 beat a hover, 2 a
+   * move of the interface, 4 an arrival, 8 a drawing. Staggers are a half or a quarter beat. The
+   * plates' opening runs on the scroll, not the clock, and maps the scroll through the same curve.
    */
-  --box-radius: 30px;
-  --box-inset: var(--margin);
-  --gutter: clamp(12px, 1.6vw, 24px);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --beat: 120ms;
+  --dur-1: 120ms;
+  --dur-2: 240ms;
+  --dur-3: 480ms;
+  --dur-4: 960ms;
+  --stagger: 60ms;
+  --stagger-word: 30ms;
+
+  /* The old names, onto the new: every page reads one system. */
+  --margin: var(--edge);
+  --dur-s: var(--dur-1);
+  --dur-m: var(--dur-2);
+  /* The pen draws a frame in this long, once, when its box comes on screen. */
+  --dur-pen: 960ms;
+  --box-radius: var(--plate-radius);
+  --box-inset: var(--plate-inset);
   /* The frosted inside of a framed card: white at this alpha over ink, and over water. */
   --frost-ink: 0.3;
   --frost-water: 0.5;
   /* The i's dot, the one gesture: 10px, in crimson, wherever a thing is marked. */
   --dot: 10px;
-  /* The footer keeps its breath on a page of text; a page of plates closes the gap to one gutter. */
-  --footer-gap: 96px;
+  /* The footer is a plate: one gutter above it, on every page. */
+  --footer-gap: var(--gutter);
 }
 
 /*
@@ -111,11 +181,6 @@
   }
 }
 
-/* A page built of plates (the home page, Vårt arbeid) says so, and the footer becomes the last plate. */
-body:has([data-plates]) {
-  --footer-gap: var(--gutter);
-}
-
 html {
   background: var(--color-white);
   color: var(--color-ink);
@@ -125,10 +190,12 @@ html {
 body {
   margin: 0;
   font-family: var(--font-text);
-  font-size: 17px;
-  line-height: 1.55;
+  font-size: var(--step-0);
+  line-height: var(--lead-text);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* Long compounds break where the text marks them (soft hyphens, lib/soft.ts), never anywhere else. */
+  hyphens: manual;
 }
 
 /* The page is a document under a fixed header, so it starts below it. */
@@ -139,10 +206,15 @@ main {
 h1, h2, h3, h4 {
   font-family: var(--font-sans);
   font-weight: 600;
-  line-height: 1.12;
-  letter-spacing: var(--tracking-tight);
+  line-height: var(--lead-sub);
+  letter-spacing: var(--track-sub);
   margin: 0;
   text-wrap: balance;
+}
+
+/* Dates, counts and numbers line up. */
+time, .num {
+  font-variant-numeric: tabular-nums;
 }
 
 p {
@@ -176,14 +248,46 @@ body[data-scroll-locked] {
   overflow: hidden;
 }
 
-@media (max-width: 699px) {
-  :root {
-    --box-radius: 20px;
-    --box-inset: 12px;
-  }
+/*
+ * Page transitions (React's <ViewTransition>): the section title you click morphs into the page's
+ * heading (`TitleLink`, `PageTitle`), on the one curve, while the rest of the page crossfades in two
+ * beats. The header stays where it is: it is the frame the page changes inside.
+ */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(.morph) {
+  animation-duration: var(--dur-3);
+  animation-timing-function: var(--ease);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-2);
+}
+
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+
+::view-transition-old(site-header) {
+  display: none;
+}
+
+::view-transition-new(site-header) {
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

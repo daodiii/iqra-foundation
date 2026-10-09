@@ -24,8 +24,9 @@
    * The owner, choosing it: «maybe a bit more space between the different sections».
    */
   --page-h: 60svh;
-  --pad-x: clamp(24px, 3vw, 44px);
-  --gap: clamp(32px, 5vw, 80px);
+  /* The left page and the right pages stand on the page's grid, the names on the shared edge (elite study). */
+  --pad-x: var(--edge);
+  --gap: var(--col-gap);
   /*
    * The large viewport's height, not the small one's: when a phone's address bar hides, a view
    * sized to the small viewport leaves a band of the section's navy under it, which the pages'
@@ -33,10 +34,14 @@
    * the bar moves, so the water's canvas is not re-sized mid-scroll.
    */
   --view-h: calc(100lvh - var(--header-h));
-  /* The spread's sizes, on the section, so the index and the pages share them: the names, the statement, the reading. */
-  --index-size: clamp(34px, 4.6vw, 66px);
-  --say-size: clamp(32px, 4vw, 58px);
-  --text-size: clamp(19px, 1.65vw, 24px);
+  /*
+   * The spread's sizes, on the type scale (elite study): the statement a section title's step, the
+   * names a step under it (they are navigation; side by side at one size, 58 and 58 px, the eye had
+   * two places to land), the reading a lead's.
+   */
+  --index-size: var(--step-3);
+  --say-size: var(--step-4);
+  --text-size: var(--step-1);
   /* The dials, each named once. */
   /* The inks' fade: .index, .say, .text and .band all cross to the next field's colours on it. */
   --ink-fade: 0.45s;
@@ -44,10 +49,20 @@
   --name-dim: 0.38;
   /* The logo's opacity once it's on: .foot[data-on], at the foot of the left page or the band. */
   --logo-on: 0.85;
+  --open: 1;
   position: relative;
   /* The pages' layer above the screen's stays inside the section: nothing of it can rise over the header. */
   isolation: isolate;
   background: var(--color-navy);
+}
+
+/*
+ * The sea is a plate too (elite study): it comes up the screen inset and rounded like every plate
+ * on the page, is open to the edges for the whole time it fills the screen, and closes again as it
+ * leaves (Sea.tsx, `plateOff`). The scroll, the tide and the pages are untouched.
+ */
+.stage[data-plate] {
+  clip-path: inset(0 calc(var(--plate-inset) * (1 - var(--open))) round calc(var(--plate-radius) * (1 - var(--open))));
 }
 
 /*
@@ -107,15 +122,19 @@
 .spread {
   position: relative;
   display: grid;
-  grid-template-columns: 5fr 7fr;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   grid-template-rows: 1fr auto;
   column-gap: var(--gap);
   height: 100%;
   min-height: 0;
 }
 
+.fill {
+  --box-pad-x: var(--edge);
+}
+
 .left {
-  grid-column: 1;
+  grid-column: 1 / span 5;
   grid-row: 1;
   display: grid;
   min-height: 0;
@@ -130,8 +149,8 @@
   grid-template-rows: repeat(4, 1fr);
   align-items: center;
   min-width: 0;
-  font: 700 var(--fit, var(--index-size)) / 1 var(--font-sans);
-  letter-spacing: -0.025em;
+  font: 600 min(var(--index-size), var(--fit, var(--index-size))) / 1 var(--font-sans);
+  letter-spacing: var(--track-head);
   white-space: nowrap;
   color: var(--card-ink);
   transition: color var(--ink-fade) ease;
@@ -179,7 +198,7 @@
 
 /* The guide's logo for the field on the water, at the foot of the left page, one per field, crossing as the inks do. */
 .feet {
-  grid-column: 1;
+  grid-column: 1 / span 5;
   grid-row: 2;
   display: grid;
   justify-self: start;
@@ -203,7 +222,7 @@
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: 5fr 7fr;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   column-gap: var(--gap);
   padding: calc((var(--view-h) - var(--page-h)) / 2) var(--pad-x);
   pointer-events: none;
@@ -211,7 +230,7 @@
 
 /* A page: the statement and the reading, centred in its share of the scroll, the whole of it the link to its section. */
 .page {
-  grid-column: 2;
+  grid-column: 6 / -1;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -255,8 +274,8 @@
 
 .say {
   margin: 0;
-  font: 600 var(--say-size) / 1.12 var(--font-sans);
-  letter-spacing: -0.022em;
+  font: 600 var(--say-size) / var(--lead-head) var(--font-sans);
+  letter-spacing: var(--track-head);
   color: var(--card-ink);
   text-wrap: pretty;
   transition: color var(--ink-fade) ease;
@@ -266,7 +285,7 @@
   margin: 0;
   padding-top: clamp(24px, 4vh, 44px);
   max-width: 48ch;
-  font: 500 var(--text-size) / 1.48 var(--font-text);
+  font: 500 var(--text-size) / 1.45 var(--font-text);
   color: var(--card-text);
   text-wrap: pretty;
   transition: color var(--ink-fade) ease;
@@ -283,11 +302,7 @@
   display: none;
 }
 
-@media (max-width: 899px) {
-  .stage {
-    --index-size: clamp(26px, 5vw, 66px);
-  }
-}
+
 
 /*
  * A phone: one page, and no room for a left one beside it, so the left page is laid across the
@@ -303,10 +318,10 @@
      * «A: every text» had at 84svh: about 265 px on a 390 × 844 phone.
      */
     --page-h: 60svh;
-    --say-size: clamp(26px, 7.4vw, 32px);
-    --text-size: 17px;
+    --say-size: var(--step-2);
+    --text-size: var(--step-0);
     /* The band's names, their line, its padding, and so its height: four rows of them. */
-    --band-size: 26px;
+    --band-size: var(--step-2);
     --band-lh: 1.2;
     --band-pad-top: 16px;
     --band-pad-bottom: 18px;
@@ -317,7 +332,7 @@
 
   .spread,
   .pages {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   /* The middle is the middle of the water under the band: the first text is there as the section reaches the header, the last as it leaves. */
@@ -398,8 +413,8 @@
     display: grid;
     justify-items: start;
     min-width: 0;
-    font: 700 var(--band-size) / var(--band-lh) var(--font-sans);
-    letter-spacing: -0.025em;
+    font: 600 var(--band-size) / var(--band-lh) var(--font-sans);
+    letter-spacing: var(--track-head);
     white-space: nowrap;
   }
 
@@ -418,13 +433,13 @@
  */
 @media (max-width: 699px) and (max-height: 500px) {
   .stage {
-    --band-size: 16px;
+    --band-size: var(--step-0);
     --band-pad-top: 10px;
     --band-pad-bottom: 10px;
     /* One row, as tall as the logo. */
     --band-h: calc(var(--band-pad-top) + 28px + var(--band-pad-bottom));
-    --say-size: 24px;
-    --text-size: 15px;
+    --say-size: var(--step-1);
+    --text-size: var(--step--1);
   }
 
   .band {

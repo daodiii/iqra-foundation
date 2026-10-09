@@ -36,15 +36,14 @@ describe('Hjem', () => {
     const order = [...container.querySelectorAll('[data-fields], section#visjon')];
     expect(order[0]).toHaveAttribute('data-fields');
 
-    // One water, four flat navy plates: the seal, Arrangementer, the two sides of Kontakt's table. No ink anywhere.
+    // One water, and five flat plates in the page's order (elite study: every section a plate, the navy ramp's steps). No ink anywhere.
     expect(container.querySelectorAll('[data-material="water"]')).toHaveLength(1);
     const flats = container.querySelectorAll('[data-material="flat"]');
-    expect(flats).toHaveLength(4);
-    flats.forEach((f) => expect(f).toHaveAttribute('data-ground', 'navy'));
+    expect([...flats].map((f) => f.getAttribute('data-ground'))).toEqual(['navy', 'white', 'navy-lift', 'white', 'navy-deep']);
     expect(container.querySelector('[data-material="ink"]')).toBeNull();
   });
 
-  test('then the rest of the site, in order: Om oss, Arrangementer, Menneskene bak, Kontakt — no labels, no links under them, the lists honest while empty and the next event when there is one', () => {
+  test('then the rest of the site, in order: Om oss, Arrangementer, Menneskene bak, Kontakt — no labels, each title its one way on (no pill under it), the lists honest while empty and the next event when there is one', () => {
     const { container } = render(<Home />);
     const t = site.pages;
     const ids = [...container.querySelectorAll('section[id]')].map((s) => s.id);
@@ -58,10 +57,14 @@ describe('Hjem', () => {
     expect(about).toHaveTextContent(brief.about.paragraphs[0]);
     expect(about).toHaveTextContent(brief.about.paragraphs[1]);
     expect(about.querySelectorAll('[data-area]')).toHaveLength(4);
-    expect(within(about).queryAllByRole('link')).toHaveLength(0);
+    const hrefOf = (label: string) => site.nav.find((n) => n.label === label)?.href;
+    expect(within(about).getAllByRole('link')).toHaveLength(1);
+    expect(within(aboutTitle).getByRole('link')).toHaveAttribute('href', hrefOf(t.about.label));
 
     const events = container.querySelector('section#arrangementer') as HTMLElement;
-    expect(within(events).getByRole('heading', { level: 2, name: t.events.title })).toBeInTheDocument();
+    const eventsTitle = within(events).getByRole('heading', { level: 2, name: t.events.title });
+    expect(within(eventsTitle).getByRole('link')).toHaveAttribute('href', hrefOf(t.events.label));
+    expect(within(events).getAllByRole('link')).toHaveLength(1);
     // The page renders the real collection: the next event as the statement while one is coming, the honest line while not.
     const { upcoming } = splitEvents(getEvents(), todayISO());
     if (upcoming.length) expect(events).toHaveTextContent(upcoming[0].title);
@@ -76,7 +79,8 @@ describe('Hjem', () => {
     const seated = getPeople().slice(0, SEATS);
     expect([...people.querySelectorAll('article h3')].map((h) => h.textContent)).toEqual(seated.map((p) => p.name));
     if (!seated.length) expect(people).toHaveTextContent(t.people.empty);
-    expect(within(people).queryAllByRole('link')).toHaveLength(0);
+    expect(within(people).getAllByRole('link')).toHaveLength(1);
+    expect(within(peopleTitle).getByRole('link')).toHaveAttribute('href', hrefOf(t.people.label));
 
     // The foot: the question as the heading, word by word, on our plate; the line and Kontakt, the only way on, on the sheet on yours; no numbers.
     const contact = container.querySelector('section#kontakt') as HTMLElement;
@@ -84,10 +88,12 @@ describe('Hjem', () => {
     expect(contact).toHaveAttribute('aria-labelledby', contactTitle.id);
     expect(contactTitle).toHaveTextContent(t.home.contact.question);
     expect(contact).toHaveTextContent(t.home.contact.line);
-    expect(within(contact).getAllByRole('link')).toHaveLength(1);
+    // the ending's two actions (elite study): Kontakt and Støtt oss
+    expect(within(contact).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/kontakt', '/stott-oss']);
     expect(within(contact).getByRole('link', { name: site.cta.contact.label })).toHaveAttribute('href', '/kontakt');
     expect(contact).not.toHaveTextContent(site.support.vipps.value);
-    expect(contact.querySelectorAll('[data-material="flat"][data-ground="navy"]')).toHaveLength(2);
+    // one deep navy plate holds the ending (elite study); the section is inside it
+    expect(contact.closest('[data-material="flat"]')).toHaveAttribute('data-ground', 'navy-deep');
     expect(container.querySelector('section#stott-oss')).toBeNull();
 
     // Nothing of the thread or its knots, no eyebrow labels.

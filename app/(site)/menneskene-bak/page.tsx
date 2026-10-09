@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import styles from '@/components/site/page.module.css';
+import { PageTitle } from '@/components/site/PageTitle';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import { getPeople } from '@/lib/content';
@@ -19,8 +20,7 @@ export default function MenneskeneBak() {
   const t = site.pages.people;
   return (
     <article className={styles.page}>
-      <p className={styles.eyebrow}>{t.label}</p>
-      <h1 className={styles.title}>{brief.people.title}</h1>
+      <PageTitle href="/menneskene-bak" className={styles.title}>{brief.people.title}</PageTitle>
       <p className={styles.lede}>{brief.people.paragraph}</p>
       <section className={styles.section} aria-label={t.title}>
         {people.length ? (
