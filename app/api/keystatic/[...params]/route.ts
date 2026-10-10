@@ -4,10 +4,12 @@ import { keystaticEnabled } from '@/lib/keystatic';
 
 /**
  * The admin's API. Same rule as the admin itself (`lib/keystatic.ts`): it answers where
- * Keystatic can save and is a 404 everywhere else.
+ * Keystatic can save and is a 404 everywhere else. The handler is made only where it is
+ * enabled: in GitHub mode without all of the GitHub App's values Keystatic throws as the
+ * handler is made, and `next build` loads this module, so making it first would fail the build.
  */
-const handler = makeRouteHandler({ config });
+const handler = keystaticEnabled() ? makeRouteHandler({ config }) : null;
 const gone = () => new Response(null, { status: 404 });
 
-export const GET = keystaticEnabled() ? handler.GET : gone;
-export const POST = keystaticEnabled() ? handler.POST : gone;
+export const GET = handler?.GET ?? gone;
+export const POST = handler?.POST ?? gone;
