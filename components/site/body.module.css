@@ -5,6 +5,8 @@
   font-size: var(--step-0);
   line-height: 1.6;
   color: var(--color-ink);
+  /* A pasted link whose text is the address is one word with no place to break; on a phone it widened the page. */
+  overflow-wrap: break-word;
 }
 
 .body > * + * {
