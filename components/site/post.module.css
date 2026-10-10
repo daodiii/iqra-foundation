@@ -1,0 +1,37 @@
+/* A post's page: the subpage's frame (page.module.css), a title sized for a sentence rather than one word. */
+.back {
+  margin: 0 0 24px;
+  font: 500 15px/1.4 var(--font-sans);
+}
+
+.back a {
+  color: var(--color-navy);
+  text-decoration: none;
+}
+
+.back a:hover {
+  text-decoration: underline;
+}
+
+.title {
+  max-width: 22ch;
+  font-size: var(--step-4);
+  line-height: 1.1;
+  overflow-wrap: break-word;
+}
+
+.picture {
+  margin-top: 28px;
+  max-width: var(--measure);
+}
+
+.action {
+  margin-top: 32px;
+  font: 500 var(--step-0) / 1.4 var(--font-sans);
+}
+
+.action a {
+  color: var(--color-navy);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
