@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AreaMark } from '@/components/site/AreaMark';
+import { COLUMN_SIZES } from '@/components/site/column';
 import { Frame } from '@/components/site/Frame';
 import { Linked } from '@/components/site/Linked';
 import styles from '@/components/site/page.module.css';
@@ -22,9 +23,6 @@ export const metadata: Metadata = {
  */
 export const revalidate = 3600;
 
-/** A card's picture: as wide as the card, at most. */
-const CARD = '(max-width: 700px) 100vw, 640px';
-
 /** An event's card. Its title goes to its own page when it has a full text, else to its sign-up link when it has one. */
 function EventItem({ e }: { e: Event }) {
   return (
@@ -43,7 +41,7 @@ function EventItem({ e }: { e: Event }) {
         {e.place}
       </p>
       <p>{e.summary}</p>
-      {e.image && <Frame picture={e.image} sizes={CARD} className={styles.picture} />}
+      {e.image && <Frame picture={e.image} sizes={COLUMN_SIZES} className={styles.picture} />}
     </li>
   );
 }
@@ -64,7 +62,7 @@ function NewsCard({ n }: { n: NewsItem }) {
         <time dateTime={n.date}>{writeDate(n.date)}</time>
       </p>
       <p>{n.summary}</p>
-      {n.image && <Frame picture={n.image} sizes={CARD} className={styles.picture} />}
+      {n.image && <Frame picture={n.image} sizes={COLUMN_SIZES} className={styles.picture} />}
     </li>
   );
 }

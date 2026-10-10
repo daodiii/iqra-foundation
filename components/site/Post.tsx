@@ -3,12 +3,10 @@ import type { ReactNode } from 'react';
 import type { AreaKey, Picture } from '@/lib/content';
 import { AreaMark } from './AreaMark';
 import { Body } from './Body';
+import { COLUMN_SIZES } from './column';
 import { Frame } from './Frame';
 import page from './page.module.css';
 import styles from './post.module.css';
-
-/** As wide as the text column; the whole screen on a phone. */
-const SIZES = '(max-width: 700px) 100vw, 640px';
 
 /**
  * One post's page — an event, a news item or an article, one layout for all three, in the
@@ -49,7 +47,7 @@ export function Post({
           <AreaMark area={area} />
         </p>
       )}
-      {image && <Frame picture={image} sizes={SIZES} className={styles.picture} eager />}
+      {image && <Frame picture={image} sizes={COLUMN_SIZES} className={styles.picture} eager />}
       <Body source={body} />
       {action && (
         <p className={styles.action}>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AreaMark } from '@/components/site/AreaMark';
+import { COLUMN_SIZES } from '@/components/site/column';
 import { Frame } from '@/components/site/Frame';
 import { Linked } from '@/components/site/Linked';
 import styles from '@/components/site/page.module.css';
@@ -11,9 +12,6 @@ export const metadata: Metadata = {
   title: site.pages.resources.title,
   description: site.pages.resources.description,
 };
-
-/** A card's picture: as wide as the card, at most. */
-const CARD = '(max-width: 700px) 100vw, 640px';
 
 /**
  * Ressurser: publications, articles, reports, presentations, videos — the `ressurser`
@@ -45,7 +43,7 @@ export default function Ressurser() {
                   {t.kinds[r.kind]} · <time dateTime={r.date}>{writeDate(r.date)}</time>
                 </p>
                 <p>{r.summary}</p>
-                {r.image && <Frame picture={r.image} sizes={CARD} className={styles.picture} />}
+                {r.image && <Frame picture={r.image} sizes={COLUMN_SIZES} className={styles.picture} />}
               </li>
             ))}
           </ul>
