@@ -50,7 +50,8 @@ nettsiden, og du kan gjøre det ferdig senere.
 - **Endre:** åpne innlegget, gjør endringen og trykk «Save».
 - **Ta ned:** fjern krysset i «Publiser på nettsiden» og trykk «Save». Innlegget blir liggende
   som et utkast.
-- **Slette:** åpne innlegget og velg «Delete». Det kan ikke angres.
+- **Slette:** åpne innlegget, trykk på søppelbøtta øverst til høyre («Delete entry…») og svar
+  «Yes, delete». Det kan ikke angres.
 
 ## Utkast er ikke hemmelige
 
