@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { AreaMark } from '@/components/site/AreaMark';
+import { Frame } from '@/components/site/Frame';
+import { Linked } from '@/components/site/Linked';
 import styles from '@/components/site/page.module.css';
 import { site } from '@/content/site.no';
 import { getResources } from '@/lib/content';
@@ -10,7 +12,14 @@ export const metadata: Metadata = {
   description: site.pages.resources.description,
 };
 
-/** Ressurser: publications, articles, reports, presentations, videos — the `ressurser` collection. */
+/** A card's picture: as wide as the card, at most. */
+const CARD = '(max-width: 700px) 100vw, 640px';
+
+/**
+ * Ressurser: publications, articles, reports, presentations, videos — the `ressurser`
+ * collection, published only. An article written here (a full text) goes to its own page;
+ * the rest go to their file or their address elsewhere.
+ */
 export default function Ressurser() {
   const items = getResources();
   const t = site.pages.resources;
@@ -25,13 +34,18 @@ export default function Ressurser() {
             {items.map((r) => (
               <li key={r.slug} className={styles.item}>
                 <h3>
-                  <a href={r.file ?? r.url ?? '#'}>{r.title}</a>
+                  <Linked href={r.body ? `/ressurser/${r.slug}` : (r.file ?? r.url)}>{r.title}</Linked>
                 </h3>
-                {r.area && <p className={styles.meta}><AreaMark area={r.area} /></p>}
+                {r.area && (
+                  <p className={styles.meta}>
+                    <AreaMark area={r.area} />
+                  </p>
+                )}
                 <p className={styles.meta}>
                   {t.kinds[r.kind]} · <time dateTime={r.date}>{writeDate(r.date)}</time>
                 </p>
                 <p>{r.summary}</p>
+                {r.image && <Frame picture={r.image} sizes={CARD} className={styles.picture} />}
               </li>
             ))}
           </ul>

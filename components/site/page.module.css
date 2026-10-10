@@ -159,3 +159,8 @@
 .buttonSecondary:hover {
   background: var(--color-light);
 }
+
+/* A card's picture (Frame), under its text. */
+.picture {
+  margin-top: 14px;
+}
