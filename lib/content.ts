@@ -192,10 +192,17 @@ const isoDate = (file: string, raw: Raw, key: string): string => {
   return v;
 };
 const optIsoDate = (file: string, raw: Raw, key: string): string | null => (optStr(file, raw, key) === null ? null : isoDate(file, raw, key));
+/**
+ * A time as Norwegians write it — `18:00`, `18.00`, `9:30`, `9.30` — read as `HH:MM`. «Klokkeslett»
+ * is a free text field and the admin holds it to the same four forms; a range or words around
+ * the time are still a broken record.
+ */
 const optTime = (file: string, raw: Raw, key: string): string | null => {
   const v = optStr(file, raw, key);
-  if (v !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(v)) throw new RecordError(file, `«${key}» must be a time, HH:MM`);
-  return v;
+  if (v === null) return null;
+  const m = /^([01]?\d|2[0-3])[:.]([0-5]\d)$/.exec(v);
+  if (!m) throw new RecordError(file, `«${key}» must be a time, HH:MM`);
+  return `${m[1].padStart(2, '0')}:${m[2]}`;
 };
 const int = (file: string, raw: Raw, key: string): number => {
   const v = raw[key];

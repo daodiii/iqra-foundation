@@ -62,6 +62,12 @@ test('the three kinds of post share the Publiser box, a full text, and a picture
   }
 });
 
+test('«Klokkeslett» takes a time as Norwegians write it, or nothing, and refuses the rest with its message', () => {
+  const time = (config.collections!.arrangementer as unknown as { schema: { time: { validate: (v: string) => unknown } } }).schema.time;
+  for (const ok of ['18.00', '9:30', '18:00', '9.30', '']) expect(() => time.validate(ok), ok).not.toThrow();
+  for (const bad of ['18:00–21:00', 'kl 18', '24:00', '18']) expect(() => time.validate(bad), bad).toThrow('Skriv klokkeslettet som for eksempel 18:00.');
+});
+
 test('the sidebar groups the posts under Innlegg and the rest under Stiftelsen', () => {
   expect(config.ui?.navigation).toEqual({
     Innlegg: ['arrangementer', 'nyheter', 'ressurser'],

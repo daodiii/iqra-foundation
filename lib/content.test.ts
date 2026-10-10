@@ -158,6 +158,24 @@ describe('arrangementer', () => {
     expect(problems[0]).toMatch(/a\/index\.json: «start» must be an ISO date/);
     expect(problems[1]).toMatch(/b\/index\.json: «time» must be a time, HH:MM/);
   });
+  test('a time written the Norwegian way is read, and written out as HH:MM', () => {
+    const times = { a: '9:30', b: '18:00', c: '9.30', d: '18.00', e: '0.05', f: '23:59' };
+    for (const [slug, time] of Object.entries(times)) post(slug, event({ title: slug, time }));
+    const { problems, skip } = listen();
+    expect(getEvents(dir, skip).map((e) => [e.title, e.time])).toEqual([
+      ['e', '00:05'], ['a', '09:30'], ['c', '09:30'], ['b', '18:00'], ['d', '18:00'], ['f', '23:59'],
+    ]);
+    expect(problems).toEqual([]);
+  });
+  test('a range, words around the time, or an hour past 23 is still a broken record', () => {
+    post('a', event({ time: '18:00–21:00' }));
+    post('b', event({ time: 'kl 18' }));
+    post('c', event({ time: '24.00' }));
+    post('d', event({ time: '18:60' }));
+    const { problems, skip } = listen();
+    expect(getEvents(dir, skip)).toEqual([]);
+    expect(problems).toEqual(['a', 'b', 'c', 'd'].map((s) => `content/arrangementer/${s}/index.json: «time» must be a time, HH:MM`));
+  });
   test('events are in date order, then by time', () => {
     post('b', event({ title: 'B', start: '2027-03-01', time: '19:00' }));
     post('a', event({ title: 'A', start: '2027-03-01', time: '10:00' }));

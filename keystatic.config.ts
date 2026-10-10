@@ -138,7 +138,13 @@ export default config({
       schema: {
         title: title(),
         start: fields.date({ label: 'Dato', validation: { isRequired: true } }),
-        time: fields.text({ label: 'Klokkeslett', description: 'Timer og minutter, for eksempel 18:00. Kan stå tomt.' }),
+        time: fields.text({
+          label: 'Klokkeslett',
+          description: 'Timer og minutter, for eksempel 18:00. Kan stå tomt.',
+          // The four forms `lib/content.ts` reads (18:00, 18.00, 9:30, 9.30), or nothing: Keystatic
+          // tests the pattern against an empty field too, so empty has to match for it to stay optional.
+          validation: { pattern: { regex: /^(?:([01]?\d|2[0-3])[:.][0-5]\d)?$/, message: 'Skriv klokkeslettet som for eksempel 18:00.' } },
+        }),
         end: fields.date({ label: 'Sluttdato', description: 'Bare for arrangementer over flere dager.' }),
         place: fields.text({ label: 'Sted', validation: { isRequired: true } }),
         summary: summary(),
