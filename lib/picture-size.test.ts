@@ -39,6 +39,8 @@ test('nothing for a file that is not there', () => {
 
 test('nothing for an outside address', () => {
   expect(pictureSize('https://example.org/a.png', root)).toBeNull();
+  // Read as a path, its `..`s fold it back onto the real `et bilde.png` under public/.
+  expect(pictureSize('https://example.org/../../opplastet/nyheter/et%20bilde.png', root)).toBeNull();
   expect(pictureSize('//example.org/a.png', root)).toBeNull();
 });
 
