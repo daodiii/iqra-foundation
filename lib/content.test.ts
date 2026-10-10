@@ -188,9 +188,9 @@ describe('splitEvents', () => {
   const e = (start: string, end: string | null = null) => ({ slug: start, title: start, start, time: null, end, place: 'O', summary: 'S', link: null, image: null, area: null, body: null });
 
   test('kommende from today on, tidligere before it, the past newest first', () => {
-    const { upcoming, past } = splitEvents([e('2027-01-01'), e('2027-02-01'), e('2027-03-01')], '2027-02-01');
+    const { upcoming, past } = splitEvents([e('2026-12-01'), e('2027-01-01'), e('2027-02-01'), e('2027-03-01')], '2027-02-01');
     expect(upcoming.map((x) => x.start)).toEqual(['2027-02-01', '2027-03-01']);
-    expect(past.map((x) => x.start)).toEqual(['2027-01-01']);
+    expect(past.map((x) => x.start)).toEqual(['2027-01-01', '2026-12-01']);
   });
   test('an event over several days is upcoming until its last day is over', () => {
     const { upcoming } = splitEvents([e('2027-01-01', '2027-01-03')], '2027-01-03');
