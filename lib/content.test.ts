@@ -1,13 +1,14 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { getDocuments, getEvents, getPeople, getResources, splitEvents, todayISO } from './content';
+import { getDocuments, getEvents, getNews, getPeople, getResources, splitEvents, todayISO } from './content';
 
 /*
  * The readers against a fixture directory: what a well-formed record becomes, what a
- * malformed one is refused for, and how the lists are ordered. The real collections ship
- * empty, so this is where the shapes are exercised.
+ * malformed one is left out for (and how that is reported), what a draft is, and how the
+ * lists are ordered. `lib/fixtures/keystatic` is what the admin itself wrote (Task 1 of the
+ * Innlegg plan, 2026-10-10); the rest is written here.
  */
 let dir: string;
 beforeEach(() => {
@@ -17,138 +18,266 @@ afterEach(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-const write = (name: string, record: unknown) => {
+/** A post on disk: a folder with its record and, when given, its full text. */
+const post = (slug: string, record: unknown, body?: string) => {
+  mkdirSync(path.join(dir, slug), { recursive: true });
+  writeFileSync(path.join(dir, slug, 'index.json'), JSON.stringify(record), 'utf8');
+  if (body !== undefined) writeFileSync(path.join(dir, slug, 'body.mdoc'), body, 'utf8');
+};
+/** A flat record: menneskene and styringsdokumenter. */
+const flat = (name: string, record: unknown) => {
   mkdirSync(dir, { recursive: true });
   writeFileSync(path.join(dir, name), JSON.stringify(record), 'utf8');
 };
+/** What a reader reports, instead of the build log. */
+const listen = () => {
+  const problems: string[] = [];
+  return { problems, skip: (p: string) => void problems.push(p) };
+};
+
+const event = (more: Record<string, unknown> = {}) => ({ title: 'A', start: '2027-01-20', place: 'Oslo', summary: 'S', publish: true, ...more });
+const news = (more: Record<string, unknown> = {}) => ({ title: 'N', date: '2027-01-20', summary: 'S', publish: true, ...more });
+const resource = (more: Record<string, unknown> = {}) => ({ title: 'R', kind: 'rapport', date: '2026-05-01', summary: 'S', file: 'r.pdf', publish: true, ...more });
+
+const FIXTURES = path.join(process.cwd(), 'lib', 'fixtures', 'keystatic');
 
 describe('an empty collection', () => {
   test('a directory that does not exist is an empty list, not an error', () => {
     expect(getEvents(path.join(dir, 'nowhere'))).toEqual([]);
   });
-  test('a directory with only a README is empty too', () => {
+  test('a README, a stray file or a folder without a record is not an entry', () => {
     writeFileSync(path.join(dir, 'README.md'), '# x', 'utf8');
-    expect(getResources(dir)).toEqual([]);
+    mkdirSync(path.join(dir, 'tom'));
+    const { problems, skip } = listen();
+    expect(getNews(dir, skip)).toEqual([]);
+    expect(problems).toEqual([]);
+  });
+});
+
+describe('drafts', () => {
+  test('only a post ticked «Publiser» is read; unticked or without the box it is a draft, left out without a word', () => {
+    post('ute', news({ title: 'Ute' }));
+    post('av', news({ title: 'Av', publish: false }));
+    post('uten', news({ title: 'Uten', publish: undefined }));
+    post('tekst', news({ title: 'Tekst', publish: 'true' }));
+    const { problems, skip } = listen();
+    expect(getNews(dir, skip).map((n) => n.title)).toEqual(['Ute']);
+    expect(problems).toEqual([]);
+  });
+  test('a broken draft is not reported: it is not on the site either way', () => {
+    post('halv', { title: 'Halv', publish: false });
+    const { problems, skip } = listen();
+    expect(getNews(dir, skip)).toEqual([]);
+    expect(problems).toEqual([]);
+  });
+});
+
+describe('a broken record', () => {
+  test('is left out and reported with its file and field; the rest are read', () => {
+    post('god', event({ title: 'God' }));
+    post('uten-sted', event({ title: 'Uten sted', place: undefined }));
+    const { problems, skip } = listen();
+    expect(getEvents(dir, skip).map((e) => e.title)).toEqual(['God']);
+    expect(problems).toEqual(['content/arrangementer/uten-sted/index.json: «place» must be a non-empty string']);
+  });
+  test('invalid JSON is left out and reported with the file', () => {
+    mkdirSync(path.join(dir, 'x'));
+    writeFileSync(path.join(dir, 'x', 'index.json'), '{ not json', 'utf8');
+    const { problems, skip } = listen();
+    expect(getEvents(dir, skip)).toEqual([]);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/^content\/arrangementer\/x\/index\.json: is not valid JSON/);
+  });
+  test('without a listener the report goes to the build log as a warning', () => {
+    post('uten-sted', event({ place: undefined }));
+    const warned: unknown[] = [];
+    const original = console.warn;
+    console.warn = (...args: unknown[]) => void warned.push(args.join(' '));
+    try {
+      expect(getEvents(dir)).toEqual([]);
+    } finally {
+      console.warn = original;
+    }
+    expect(warned).toEqual(['[innhold] hoppet over content/arrangementer/uten-sted/index.json: «place» must be a non-empty string']);
   });
 });
 
 describe('arrangementer', () => {
-  test('a record becomes an event, the slug from the file name, optional fields null', () => {
-    write('apen-kveld.json', { title: 'Åpen kveld', start: '2027-01-20', place: 'Oslo', text: 'Tekst.' });
+  test('a record becomes an event, the slug from the folder, optional fields null, no full text null', () => {
+    post('apen-kveld', event({ title: 'Åpen kveld', summary: 'Kort.' }));
     expect(getEvents(dir)).toEqual([
-      { slug: 'apen-kveld', title: 'Åpen kveld', start: '2027-01-20', time: null, end: null, place: 'Oslo', text: 'Tekst.', link: null, image: null, area: null },
+      { slug: 'apen-kveld', title: 'Åpen kveld', start: '2027-01-20', time: null, end: null, place: 'Oslo', summary: 'Kort.', link: null, image: null, area: null, body: null },
     ]);
   });
+  test('the full text is read as it is written; one that is only blank is none', () => {
+    post('a', event(), '## Program\n\nTekst.\n');
+    post('b', event({ title: 'B', start: '2027-02-01' }), '  \n');
+    const [a, b] = getEvents(dir);
+    expect(a.body).toBe('## Program\n\nTekst.\n');
+    expect(b.body).toBeNull();
+  });
   test('an area is carried when it is one of the four, null when absent or empty, refused otherwise', () => {
-    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', area: 'dialog' });
+    post('a', event({ area: 'dialog' }));
     expect(getEvents(dir)[0].area).toBe('dialog');
-    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', area: '' });
+    post('a', event({ area: '' }));
     expect(getEvents(dir)[0].area).toBeNull();
-    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T' });
-    expect(getEvents(dir)[0].area).toBeNull();
-    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', area: 'sport' });
-    expect(() => getEvents(dir)).toThrow(/«area» must be one of kunnskap, dialog, moteplasser, samfunnsdeltakelse/);
+    post('a', event({ area: 'sport' }));
+    const { problems, skip } = listen();
+    expect(getEvents(dir, skip)).toEqual([]);
+    expect(problems[0]).toMatch(/«area» must be one of kunnskap, dialog, moteplasser, samfunnsdeltakelse/);
   });
-  test('a picture carries its alt, and a file name gets the public path', () => {
-    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', image: { src: 'bilde.jpg', alt: 'Et bilde' } });
-    expect(getEvents(dir)[0].image).toEqual({ src: '/opplastet/arrangementer/bilde.jpg', alt: 'Et bilde' });
-  });
-  test('a picture without alt text is refused, naming the file and the field', () => {
-    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', image: { src: 'bilde.jpg', alt: '' } });
-    expect(() => getEvents(dir)).toThrow(/a\.json: «image» has a picture and no alt text/);
-  });
-  test('an empty picture object is no picture', () => {
-    write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', image: { src: '', alt: '' } });
+  test('a picture as Keystatic writes it — ticked, with its file and words — or unticked, none', () => {
+    post('a', event({ image: { discriminant: true, value: { src: '/opplastet/arrangementer/a/image/src.jpg', alt: 'Et bilde' } } }));
+    expect(getEvents(dir)[0].image).toEqual({ src: '/opplastet/arrangementer/a/image/src.jpg', alt: 'Et bilde' });
+    post('a', event({ image: { discriminant: false } }));
+    expect(getEvents(dir)[0].image).toBeNull();
+    post('a', event({ image: { discriminant: false, value: null } }));
     expect(getEvents(dir)[0].image).toBeNull();
   });
-  test('a bad date, a bad time and a missing place are each refused with the field named', () => {
-    write('a.json', { title: 'A', start: '20.01.2027', place: 'Oslo', text: 'T' });
-    expect(() => getEvents(dir)).toThrow(/«start» must be an ISO date/);
-    write('a.json', { title: 'A', start: '2027-01-20', time: '18', place: 'Oslo', text: 'T' });
-    expect(() => getEvents(dir)).toThrow(/«time» must be a time, HH:MM/);
-    write('a.json', { title: 'A', start: '2027-01-20', text: 'T' });
-    expect(() => getEvents(dir)).toThrow(/«place» must be a non-empty string/);
+  test('a picture as written by hand — { src, alt } — and a bare file name gets the public path', () => {
+    post('a', event({ image: { src: 'bilde.jpg', alt: 'Et bilde' } }));
+    expect(getEvents(dir)[0].image).toEqual({ src: '/opplastet/arrangementer/bilde.jpg', alt: 'Et bilde' });
   });
-  test('invalid JSON is refused with the file named', () => {
-    writeFileSync(path.join(dir, 'x.json'), '{ not json', 'utf8');
-    expect(() => getEvents(dir)).toThrow(/x\.json: is not valid JSON/);
+  test('a picture without its words is left out, naming the file and the field', () => {
+    post('a', event({ image: { discriminant: true, value: { src: '/opplastet/arrangementer/a.jpg', alt: '' } } }));
+    const { problems, skip } = listen();
+    expect(getEvents(dir, skip)).toEqual([]);
+    expect(problems).toEqual(['content/arrangementer/a/index.json: «image» has a picture and no alt text']);
+  });
+  test('a bad date and a bad time are each reported with the field named', () => {
+    post('a', event({ start: '20.01.2027' }));
+    post('b', event({ time: '18' }));
+    const { problems, skip } = listen();
+    expect(getEvents(dir, skip)).toEqual([]);
+    expect(problems[0]).toMatch(/a\/index\.json: «start» must be an ISO date/);
+    expect(problems[1]).toMatch(/b\/index\.json: «time» must be a time, HH:MM/);
   });
   test('events are in date order, then by time', () => {
-    write('b.json', { title: 'B', start: '2027-03-01', time: '19:00', place: 'O', text: 'T' });
-    write('a.json', { title: 'A', start: '2027-03-01', time: '10:00', place: 'O', text: 'T' });
-    write('c.json', { title: 'C', start: '2027-01-01', place: 'O', text: 'T' });
+    post('b', event({ title: 'B', start: '2027-03-01', time: '19:00' }));
+    post('a', event({ title: 'A', start: '2027-03-01', time: '10:00' }));
+    post('c', event({ title: 'C', start: '2027-01-01' }));
     expect(getEvents(dir).map((e) => e.title)).toEqual(['C', 'A', 'B']);
   });
 });
 
 describe('splitEvents', () => {
-  const ev = (title: string, start: string, end: string | null = null) =>
-    ({ slug: title, title, start, time: null, end, place: 'O', text: 'T', link: null, image: null, area: null });
+  const e = (start: string, end: string | null = null) => ({ slug: start, title: start, start, time: null, end, place: 'O', summary: 'S', link: null, image: null, area: null, body: null });
+
   test('kommende from today on, tidligere before it, the past newest first', () => {
-    // In date order, as getEvents hands them over.
-    const { upcoming, past } = splitEvents([ev('older', '2026-08-01'), ev('gone', '2026-09-01'), ev('today', '2026-09-15'), ev('soon', '2026-10-01')], '2026-09-15');
-    expect(upcoming.map((e) => e.title)).toEqual(['today', 'soon']);
-    expect(past.map((e) => e.title)).toEqual(['gone', 'older']);
+    const { upcoming, past } = splitEvents([e('2027-01-01'), e('2027-02-01'), e('2027-03-01')], '2027-02-01');
+    expect(upcoming.map((x) => x.start)).toEqual(['2027-02-01', '2027-03-01']);
+    expect(past.map((x) => x.start)).toEqual(['2027-01-01']);
   });
   test('an event over several days is upcoming until its last day is over', () => {
-    const { upcoming } = splitEvents([ev('week', '2026-09-10', '2026-09-16')], '2026-09-15');
-    expect(upcoming.map((e) => e.title)).toEqual(['week']);
+    const { upcoming } = splitEvents([e('2027-01-01', '2027-01-03')], '2027-01-03');
+    expect(upcoming).toHaveLength(1);
+  });
+});
+
+describe('nyheter', () => {
+  test('a record becomes a news item; newest first, then by title', () => {
+    post('b', news({ title: 'B', date: '2027-01-20' }));
+    post('a', news({ title: 'A', date: '2027-01-20' }));
+    post('c', news({ title: 'C', date: '2027-03-01', area: 'kunnskap' }), 'Hele teksten.');
+    const items = getNews(dir);
+    expect(items.map((n) => n.title)).toEqual(['C', 'A', 'B']);
+    expect(items[0]).toEqual({ slug: 'c', title: 'C', date: '2027-03-01', summary: 'S', image: null, area: 'kunnskap', body: 'Hele teksten.' });
+  });
+  test('a bad date is reported', () => {
+    post('a', news({ date: 'i går' }));
+    const { problems, skip } = listen();
+    expect(getNews(dir, skip)).toEqual([]);
+    expect(problems[0]).toMatch(/«date» must be an ISO date/);
   });
 });
 
 describe('ressurser', () => {
-  test('a resource needs a file or a link, and the file gets its public path', () => {
-    write('r.json', { title: 'Rapport', kind: 'rapport', date: '2026-05-01', summary: 'S', file: 'rapport.pdf' });
-    expect(getResources(dir)[0]).toMatchObject({ kind: 'rapport', file: '/files/ressurser/rapport.pdf', url: null, area: null });
-    write('r.json', { title: 'Rapport', kind: 'rapport', date: '2026-05-01', summary: 'S' });
-    expect(() => getResources(dir)).toThrow(/needs either «file» or «url»/);
+  test('a resource has a file, a link or a full text; the file gets its public path', () => {
+    post('fil', resource({ title: 'Fil' }));
+    post('lenke', resource({ title: 'Lenke', file: undefined, url: 'https://example.org/r' }));
+    post('artikkel', resource({ title: 'Artikkel', kind: 'artikkel', file: undefined }), '## Innledning\n');
+    post('ingenting', resource({ title: 'Ingenting', file: undefined }));
+    const { problems, skip } = listen();
+    const items = getResources(dir, skip);
+    expect(items.map((r) => r.title).sort()).toEqual(['Artikkel', 'Fil', 'Lenke']);
+    expect(items.find((r) => r.title === 'Fil')!.file).toBe('/files/ressurser/r.pdf');
+    expect(items.find((r) => r.title === 'Artikkel')!.body).toBe('## Innledning\n');
+    expect(problems).toEqual(['content/ressurser/ingenting/index.json: needs a «file», a «url» or a full text']);
   });
-  test('an area is carried when it is one of the four, null when absent or empty, refused otherwise', () => {
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: 'kunnskap' });
-    expect(getResources(dir)[0].area).toBe('kunnskap');
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: '' });
-    expect(getResources(dir)[0].area).toBeNull();
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y' });
-    expect(getResources(dir)[0].area).toBeNull();
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: 'sport' });
-    expect(() => getResources(dir)).toThrow(/«area» must be one of kunnskap, dialog, moteplasser, samfunnsdeltakelse/);
-  });
-  test('an unknown kind is refused', () => {
-    write('r.json', { title: 'X', kind: 'podkast', date: '2026-05-01', summary: 'S', url: 'https://example.no' });
-    expect(() => getResources(dir)).toThrow(/«kind» must be one of publikasjon, artikkel/);
+  test('an unknown kind is reported', () => {
+    post('a', resource({ kind: 'bok' }));
+    const { problems, skip } = listen();
+    expect(getResources(dir, skip)).toEqual([]);
+    expect(problems[0]).toMatch(/«kind» must be one of/);
   });
   test('newest first', () => {
-    write('a.json', { title: 'A', kind: 'artikkel', date: '2026-01-01', summary: 'S', url: 'https://a.no' });
-    write('b.json', { title: 'B', kind: 'artikkel', date: '2026-06-01', summary: 'S', url: 'https://b.no' });
+    post('a', resource({ title: 'A', date: '2025-01-01' }));
+    post('b', resource({ title: 'B', date: '2026-01-01' }));
     expect(getResources(dir).map((r) => r.title)).toEqual(['B', 'A']);
   });
 });
 
 describe('styringsdokumenter', () => {
   test('a document has a year and a file; newest year first, then by title', () => {
-    write('v.json', { title: 'Vedtekter', kind: 'vedtekter', year: 2025, file: 'vedtekter.pdf' });
-    write('r.json', { title: 'Årsrapport', kind: 'arsrapport', year: 2026, file: 'aarsrapport-2026.pdf' });
+    flat('b.json', { title: 'Vedtekter', kind: 'vedtekter', year: 2025, file: 'v.pdf' });
+    flat('a.json', { title: 'Årsrapport', kind: 'arsrapport', year: 2026, file: 'a.pdf' });
     expect(getDocuments(dir).map((d) => [d.title, d.file])).toEqual([
-      ['Årsrapport', '/files/styringsdokumenter/aarsrapport-2026.pdf'],
-      ['Vedtekter', '/files/styringsdokumenter/vedtekter.pdf'],
+      ['Årsrapport', '/files/styringsdokumenter/a.pdf'],
+      ['Vedtekter', '/files/styringsdokumenter/v.pdf'],
     ]);
   });
-  test('a year that is not a whole number is refused', () => {
-    write('v.json', { title: 'Vedtekter', kind: 'vedtekter', year: '2025', file: 'v.pdf' });
-    expect(() => getDocuments(dir)).toThrow(/«year» must be a whole number/);
+  test('a year that is not a whole number is reported', () => {
+    flat('a.json', { title: 'X', kind: 'annet', year: '2025', file: 'x.pdf' });
+    const { problems, skip } = listen();
+    expect(getDocuments(dir, skip)).toEqual([]);
+    expect(problems[0]).toMatch(/content\/styringsdokumenter\/a\.json: «year» must be a whole number/);
   });
 });
 
 describe('menneskene', () => {
   test('people are ordered by `order`, then by name', () => {
-    write('b.json', { name: 'B', role: 'Styremedlem', bio: 'x', order: 20 });
-    write('a.json', { name: 'A', role: 'Styreleder', bio: 'x', order: 10 });
-    write('c.json', { name: 'C', role: 'Styremedlem', bio: 'x', order: 20 });
-    expect(getPeople(dir).map((p) => p.name)).toEqual(['A', 'B', 'C']);
+    flat('b.json', { name: 'Bente', role: 'R', bio: 'B', order: 2 });
+    flat('a.json', { name: 'Arne', role: 'R', bio: 'B', order: 2 });
+    flat('c.json', { name: 'Cato', role: 'R', bio: 'B', order: 1 });
+    expect(getPeople(dir).map((p) => p.name)).toEqual(['Cato', 'Arne', 'Bente']);
   });
   test('a photo is a picture with its alt and public path', () => {
-    write('a.json', { name: 'A', role: 'R', bio: 'x', order: 1, photo: { src: 'a.jpg', alt: 'A smiler' } });
-    expect(getPeople(dir)[0].photo).toEqual({ src: '/media/menneskene/a.jpg', alt: 'A smiler' });
+    flat('a.json', { name: 'A', role: 'R', bio: 'B', order: 1, photo: { src: 'a.jpg', alt: 'Et portrett' } });
+    expect(getPeople(dir)[0].photo).toEqual({ src: '/media/menneskene/a.jpg', alt: 'Et portrett' });
+  });
+});
+
+describe('what the admin wrote (lib/fixtures/keystatic)', () => {
+  test('an event with its picture, its full text and its sign-up link', () => {
+    const { problems, skip } = listen();
+    const events = getEvents(path.join(FIXTURES, 'arrangementer'), skip);
+    expect(problems).toEqual([]);
+    expect(events).toHaveLength(1);
+    const [e] = events;
+    expect(e).toMatchObject({
+      slug: 'testkveld', title: 'Testkveld', start: '2027-01-20', time: '18:00', end: null, place: 'Oslo',
+      summary: 'En kveld for å prøve redigeringen.', area: 'dialog', link: 'https://example.org/pamelding',
+    });
+    expect(e.image?.alt).toBe('Et tomt møterom');
+    expect(e.image?.src).toMatch(/^\/opplastet\/arrangementer\//);
+    expect(e.body).toContain('## Program');
+  });
+  test('news: the published item is read with a picture in its full text, the draft left out without a word', () => {
+    const { problems, skip } = listen();
+    const items = getNews(path.join(FIXTURES, 'nyheter'), skip);
+    expect(problems).toEqual([]);
+    expect(items.map((n) => n.slug)).toEqual(['testnyhet']);
+    expect(items[0]).toMatchObject({ title: 'Testnyhet', date: '2027-01-21', summary: 'En nyhet for å prøve redigeringen.', image: null });
+    expect(items[0].body).toContain('## Bakgrunn');
+    expect(items[0].body).toMatch(/!\[[^\]]*\]\(\/opplastet\/nyheter\//);
+  });
+  test('an article: a resource with a full text and neither file nor link', () => {
+    const { problems, skip } = listen();
+    const items = getResources(path.join(FIXTURES, 'ressurser'), skip);
+    expect(problems).toEqual([]);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ slug: 'testartikkel', title: 'Testartikkel', kind: 'artikkel', date: '2027-01-23', file: null, url: null });
+    expect(items[0].body).toContain('## Innledning');
   });
 });
 
