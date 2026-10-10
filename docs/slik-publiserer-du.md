@@ -27,6 +27,7 @@ som drifter nettsiden.
 1. Velg Arrangementer, Nyheter eller Ressurser under «Innlegg» i menyen til venstre.
 2. Trykk «Add».
 3. Fyll ut **Tittel**, **Dato** og **Sammendrag**. Et arrangement trenger også **Sted**.
+   En ressurs trenger også **Type**, og en **Fil**, en **Lenke** eller en brødtekst.
    Sammendraget er den korte teksten som står på kortet i listen.
 4. Skriv hele teksten i **Brødtekst**. Med knappene over feltet lager du overskrifter, fet og
    kursiv skrift, lenker, lister, sitater og bilder. Står brødteksten tom, er sammendraget hele

@@ -31,9 +31,10 @@ natively, so on an older Node the build fails in `prebuild`, before Next starts.
   and held to it by `content/brief.test.ts`: change a word on either side and `npm test`
   fails. Nothing on the site says anything in its own words except the functional microcopy
   in `content/site.no.ts` (labels, buttons, empty states, titles, descriptions).
-- `content/<collection>/` — what changes over time: `arrangementer`, `ressurser`,
-  `styringsdokumenter`, `menneskene`. One JSON file per entry, named by slug. Read by the
-  pages through `lib/content.ts` only; written by hand or by Keystatic.
+- `content/<collection>/` — what changes over time: `arrangementer`, `nyheter`, `ressurser`
+  (one folder per post: `index.json`, and `body.mdoc` for a full text), `styringsdokumenter`,
+  `menneskene` (one JSON file per entry), named by slug. Read by the pages through
+  `lib/content.ts` only; written by hand or by Keystatic.
 - `brand/` — the guide (`guide/iqra-branding-2025.pdf`), the eight logo PNGs, and the two
   typefaces (General Sans and Supreme, WOFF2, with the ITF Free Font License beside them).
   `public/brand/` holds the logo as SVG, one file per colour combination the guide gives;
@@ -70,7 +71,7 @@ them; a record that fails is left off the site and named in a build warning, and
   "place": "Oslo",
   "summary": "…",               // the card's short text
   "link": "https://…",          // optional: sign-up or more information
-  "image": { "src": "/opplastet/arrangementer/apen-kveld.jpg", "alt": "…" },  // optional; alt required with a picture
+  "image": { "discriminant": true, "value": { "src": "/opplastet/arrangementer/apen-kveld/image/value/src.jpg", "alt": "…" } },  // optional; alt required with a picture
   "area": "dialog",             // optional: kunnskap | dialog | moteplasser | samfunnsdeltakelse, or left out
   "publish": true               // without it the post is a draft and is not shown
 }
@@ -88,10 +89,11 @@ them; a record that fails is left off the site and named in a build warning, and
 { "name": "…", "role": "…", "bio": "…", "order": 10, "photo": { "src": "/media/menneskene/….jpg", "alt": "…" } }
 ```
 
-Keystatic writes a ticked picture as `{ "discriminant": true, "value": { "src", "alt" } }`; the
-reader takes that and the plain `{ "src", "alt" }` alike. Files go under `public/`: an editor's
-pictures in `public/opplastet/<collection>/` (not `public/media/`, which is cached as immutable
-for a year), PDFs in `public/files/<collection>/`. Arrangementer are split into kommende and
+A post's picture is written the way Keystatic writes it, the shape above: Keystatic will not
+open a post whose picture is the plain `{ "src", "alt" }`. The reader also takes the plain
+shape, which is what Menneskene's photos use. Files go under `public/`: a post's pictures in
+`public/opplastet/<collection>/` (not `public/media/`, which is cached as immutable for a
+year), PDFs in `public/files/<collection>/`. Arrangementer are split into kommende and
 tidligere by the day the page is rendered (hourly).
 
 ### Editing in the browser (Keystatic)
@@ -106,12 +108,13 @@ static and nothing needs a database. The editors' own guide, in Norwegian, is
   on `main` by the editor's GitHub account; Vercel rebuilds and the change is live in a minute
   or two. The admin and its API are 404 until it is switched on (`lib/keystatic.ts`). Once:
   1. **The GitHub App.** On this machine, with no Keystatic variables in `.env`, run
-     `$env:NEXT_PUBLIC_KEYSTATIC_STORAGE='github'; npm run dev` (PowerShell) and open
-     http://localhost:3000/keystatic. Keystatic's setup screen creates a GitHub App on your
-     account and writes its four values into `.env` (which is not committed). If it does not,
-     the app's page on GitHub shows its Client ID and makes a Client secret; `KEYSTATIC_SECRET`
-     is any long random string; the slug is the app's name as its URL writes it. In the app's
-     settings on GitHub, add the live callback URL
+     `$env:NEXT_PUBLIC_KEYSTATIC_STORAGE='github'; npm run dev` (PowerShell, in a window of its
+     own, closed afterwards: the variable stays set in that window, and a later `npm run dev`
+     there would save to GitHub) and open http://localhost:3000/keystatic. Keystatic's setup
+     screen creates a GitHub App on your account and writes its four values into `.env` (which
+     is not committed). If it does not, the app's page on GitHub shows its Client ID and makes
+     a Client secret; `KEYSTATIC_SECRET` is any long random string; the slug is the app's name
+     as its URL writes it. In the app's settings on GitHub, add the live callback URL
      `https://<site>/api/keystatic/github/oauth/callback`, and install the app on
      `daodiii/iqra-foundation`.
   2. **Vercel** (Settings → Environment Variables, Production): `NEXT_PUBLIC_KEYSTATIC_STORAGE`
