@@ -54,26 +54,33 @@ values in, delete `build.env.ALLOW_PLACEHOLDERS` from `vercel.json` and the `rob
 
 ### Adding an item by hand
 
-Drop a JSON file in the collection's directory; it is on the page at the next build. The
-shapes (`lib/content.ts` checks them and names the field when something is wrong):
+Make a folder named by the slug in the collection's directory, with an `index.json` (and, for a
+post with a full text, a `body.mdoc` in Markdoc); it is on the page at the next build. Menneskene
+and styringsdokumenter are a single `<slug>.json` instead. The shapes (`lib/content.ts` checks
+them; a record that fails is left off the site and named in a build warning, and
+`lib/content.real.test.ts` fails on it):
 
 ```jsonc
-// content/arrangementer/apen-kveld.json
+// content/arrangementer/apen-kveld/index.json   (+ body.mdoc for the full text, optional)
 {
   "title": "Åpen kveld",
   "start": "2027-01-20",        // ISO date; written out as «20. januar 2027»
   "time": "18:00",              // optional
   "end": "2027-01-21",          // optional, for several days
   "place": "Oslo",
-  "text": "…",
-  "link": "https://…",          // optional
-  "image": { "src": "/media/arrangementer/apen-kveld.jpg", "alt": "…" },  // optional; alt required with a picture
-  "area": "dialog"              // optional: kunnskap | dialog | moteplasser | samfunnsdeltakelse, or left out
+  "summary": "…",               // the card's short text
+  "link": "https://…",          // optional: sign-up or more information
+  "image": { "src": "/opplastet/arrangementer/apen-kveld.jpg", "alt": "…" },  // optional; alt required with a picture
+  "area": "dialog",             // optional: kunnskap | dialog | moteplasser | samfunnsdeltakelse, or left out
+  "publish": true               // without it the post is a draft and is not shown
 }
-// content/ressurser/rapport-2026.json
-{ "title": "…", "kind": "rapport", "date": "2026-05-01", "summary": "…", "file": "/files/ressurser/rapport-2026.pdf" }
-// kind: publikasjon | artikkel | rapport | presentasjon | video | annet; "url" instead of "file" for something hosted elsewhere
-// "area" as on an event: one of the four areas, or left out; the card then carries the area's mark
+// content/nyheter/ny-styreleder/index.json   (+ body.mdoc)
+{ "title": "…", "date": "2027-01-21", "summary": "…", "publish": true }
+// image and area as on an event
+// content/ressurser/rapport-2026/index.json   (+ body.mdoc for an article written here)
+{ "title": "…", "kind": "rapport", "date": "2026-05-01", "summary": "…", "file": "/files/ressurser/rapport-2026.pdf", "publish": true }
+// kind: publikasjon | artikkel | rapport | presentasjon | video | annet
+// one of: "file", "url" (hosted elsewhere), or a body.mdoc (the full text is the resource)
 // content/styringsdokumenter/vedtekter.json
 { "title": "Vedtekter", "kind": "vedtekter", "year": 2025, "file": "/files/styringsdokumenter/vedtekter.pdf" }
 // kind: vedtekter | arsrapport | arsregnskap | strategi | annet
@@ -81,32 +88,44 @@ shapes (`lib/content.ts` checks them and names the field when something is wrong
 { "name": "…", "role": "…", "bio": "…", "order": 10, "photo": { "src": "/media/menneskene/….jpg", "alt": "…" } }
 ```
 
-Files go under `public/`: pictures in `public/media/<collection>/`, PDFs in
-`public/files/<collection>/`. Arrangementer are split into kommende and tidligere by the
-day of the build.
+Keystatic writes a ticked picture as `{ "discriminant": true, "value": { "src", "alt" } }`; the
+reader takes that and the plain `{ "src", "alt" }` alike. Files go under `public/`: an editor's
+pictures in `public/opplastet/<collection>/` (not `public/media/`, which is cached as immutable
+for a year), PDFs in `public/files/<collection>/`. Arrangementer are split into kommende and
+tidligere by the day the page is rendered (hourly).
 
 ### Editing in the browser (Keystatic)
 
 Keystatic is a git-based editor: every save is a file in the repository, so the site stays
-static and nothing needs a database.
+static and nothing needs a database. The editors' own guide, in Norwegian, is
+`docs/slik-publiserer-du.md`.
 
 - **On this machine:** `npm run dev`, then http://localhost:3000/keystatic. Local mode
   writes the same files as above; commit them.
-- **In production (from the browser, for the foundation):** GitHub mode, which needs a
-  one-time setup. The admin and its API are not served until it is done
-  (`lib/keystatic.ts`), because a local-mode admin on Vercel has no disk to write to.
-  1. A GitHub account with write access to `daodiii/iqra-foundation` for each editor.
-  2. A GitHub App: with the variables below unset, open `/keystatic` on a local `npm run
-     dev`, switch `keystatic.config.ts` to `storage: { kind: 'github', repo: { owner:
-     'daodiii', name: 'iqra-foundation' } }` and follow Keystatic's own setup screen, which
-     creates the app and prints the variables; or create the app by hand at
-     github.com/settings/apps with the callback URL `https://<site>/api/keystatic/github/oauth/callback`
-     and repository permission «Contents: read and write».
-  3. Four environment variables on Vercel (Settings → Environment Variables):
-     `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET`
-     (any long random string) and `NEXT_PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`.
-  4. Redeploy. `/keystatic` then asks editors to sign in with GitHub; a save becomes a
-     commit on `main`, and Vercel rebuilds the site.
+- **In production (from the browser, for the foundation):** GitHub mode. A save is a commit
+  on `main` by the editor's GitHub account; Vercel rebuilds and the change is live in a minute
+  or two. The admin and its API are 404 until it is switched on (`lib/keystatic.ts`). Once:
+  1. **The GitHub App.** On this machine, with no Keystatic variables in `.env`, run
+     `$env:NEXT_PUBLIC_KEYSTATIC_STORAGE='github'; npm run dev` (PowerShell) and open
+     http://localhost:3000/keystatic. Keystatic's setup screen creates a GitHub App on your
+     account and writes its four values into `.env` (which is not committed). If it does not,
+     the app's page on GitHub shows its Client ID and makes a Client secret; `KEYSTATIC_SECRET`
+     is any long random string; the slug is the app's name as its URL writes it. In the app's
+     settings on GitHub, add the live callback URL
+     `https://<site>/api/keystatic/github/oauth/callback`, and install the app on
+     `daodiii/iqra-foundation`.
+  2. **Vercel** (Settings → Environment Variables, Production): `NEXT_PUBLIC_KEYSTATIC_STORAGE`
+     = `github`, and the four from `.env`: `KEYSTATIC_GITHUB_CLIENT_ID`,
+     `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET`, `NEXT_PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`.
+     The mode is read from a `NEXT_PUBLIC_` variable on purpose: the admin's config also runs
+     in the browser, where a server-only variable is always undefined.
+  3. **Editors:** each one a GitHub account, added to the repository with write access.
+  4. **Redeploy**, open `https://<site>/keystatic`, sign in, publish a test post, see it on the
+     site, then untick «Publiser på nettsiden» and save to take it down.
+- **The repository is public**, so a draft is readable on GitHub even though the site never
+  shows it. Keeping it private needs Vercel Pro: on the Hobby plan Vercel will not deploy a
+  private repository's commits by anyone but the account owner, and Keystatic commits as the
+  editor.
 
 `keystatic.config.ts` declares the same collections as `lib/content.ts` reads, from one
 declaration in `content/collections.ts`; `content/collections.test.ts` holds the two to it.
