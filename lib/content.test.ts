@@ -52,6 +52,12 @@ describe('an empty collection', () => {
     expect(getNews(dir, skip)).toEqual([]);
     expect(problems).toEqual([]);
   });
+  test('a post written flat, as <slug>.json, is left out and reported with where it belongs', () => {
+    flat('apen-kveld.json', event({ title: 'Åpen kveld' }));
+    const { problems, skip } = listen();
+    expect(getEvents(dir, skip)).toEqual([]);
+    expect(problems).toEqual(['content/arrangementer/apen-kveld.json: a post is a folder, apen-kveld/index.json']);
+  });
 });
 
 describe('drafts', () => {

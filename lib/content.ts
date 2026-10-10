@@ -117,7 +117,8 @@ type Entry = { file: string; slug: string; raw: Raw; body: string | null };
 /**
  * A collection's entries in slug order. A folder collection's entry is a folder holding an
  * `index.json` (its README, or a folder without a record, is not an entry); a flat
- * collection's is a `.json` file. A record that is not a JSON object is reported and left out.
+ * collection's is a `.json` file. A record that is not a JSON object is reported and left out,
+ * and so is a post written flat, as `<slug>.json`: it would otherwise vanish without a word.
  */
 function readCollection(name: CollectionName, dir: string, skip: Skip): Entry[] {
   let names: string[];
@@ -129,6 +130,10 @@ function readCollection(name: CollectionName, dir: string, skip: Skip): Entry[] 
   const folder = COLLECTIONS[name].layout === 'folder';
   const entries: Entry[] = [];
   for (const n of names.sort()) {
+    if (folder && n.endsWith('.json')) {
+      skip(`${COLLECTIONS[name].dir}/${n}: a post is a folder, ${n.slice(0, -'.json'.length)}/index.json`);
+      continue;
+    }
     const slug = folder ? n : n.endsWith('.json') ? n.slice(0, -'.json'.length) : null;
     if (slug === null) continue;
     const at = folder ? path.join(dir, n, 'index.json') : path.join(dir, n);
