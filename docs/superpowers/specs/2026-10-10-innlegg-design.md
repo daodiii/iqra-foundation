@@ -53,7 +53,7 @@ and the plain `{ src, alt }` that hand-written files and Menneskene use.
 
 - **Arrangementer** keeps `time`, `end`, `place` (required), `link` (labelled «Påmeldingslenke»).
   Its `text` field becomes `summary`.
-- **Nyheter** is new: the shared fields only. Pictures under `public/media/nyheter/`.
+- **Nyheter** is new: the shared fields only.
 - **Ressurser** keeps `kind`, `file`, `url`. «Enten fil eller lenke» loosens to «a file, a
   link, or a full text»: a resource with a `body` is an article written on the site. A resource
   with none of the three is a broken record (see the reading layer).
@@ -62,9 +62,18 @@ and the plain `{ src, alt }` that hand-written files and Menneskene use.
 
 The three Innlegg collections move to the folder layout (`path: 'content/<name>/*/'`), so a
 post is a folder: `content/<name>/<slug>/index.json` for the fields and
-`content/<name>/<slug>/body.mdoc` for the full text when there is one. Pictures inside the
-full text go under `public/media/<name>/`. Menneskene and Styringsdokumenter stay flat
-(`<slug>.json`) and are not touched.
+`content/<name>/<slug>/body.mdoc` for the full text when there is one. Menneskene and
+Styringsdokumenter stay flat (`<slug>.json`) and are not touched.
+
+**Uploads go to `public/opplastet/<name>/`, not `public/media/`** (amended while planning).
+`next.config.ts` serves everything under `/media` as `immutable` for a year, which is right for
+the film — a new film is a new name — and wrong for an editor's picture: Keystatic names a
+post's picture after its field (`src.jpg`), so a replaced picture keeps its name, and a
+returning visitor would see the old one for a year. Outside `/media` the default
+`max-age=0, must-revalidate` applies; Vercel's image cache keys local images by content hash,
+so a replaced picture is new on the next deploy. Pictures inside the full text also get a
+unique name at upload (`transformFilename`). Menneskene's photos stay under `/media` — held,
+see the end.
 
 The one existing event moves from `content/arrangementer/<slug>.json` to
 `content/arrangementer/<slug>/index.json`, `text` renamed `summary`, `"publish": true` added.
@@ -98,8 +107,12 @@ without a full text has no page; its card is the whole post. `/nyheter` alone re
 to its sign-up link when it has one).
 
 **Pictures** — the post's own and those in its full text — are served resized through Next's
-image optimiser, with their dimensions read at build so nothing jumps while loading. (Next 16
-differs from earlier versions: read `node_modules/next/dist/docs/` before writing the code.)
+image optimiser (`next/image`), and nothing jumps while they load. A post's own picture stands
+in a 3:2 frame (`fill`, `object-fit: cover`), on cards and on its page: Arrangementer
+regenerates hourly on Vercel, where `public/` is not on the function's disk, so a list cannot
+read a picture's size. Pictures in a full text keep their own proportions; post pages are
+built once per deploy, so their size is read from the file then. (Next 16 differs from
+earlier versions: read `node_modules/next/dist/docs/` before writing the code.)
 
 **Drafts** appear on no list and no page, and do not count toward the home page's next event.
 
@@ -126,13 +139,20 @@ before a PR.
 **What a save does:** a commit on `main` by the editor's GitHub account; Vercel rebuilds; the
 change is live in about one to two minutes. A draft's save rebuilds too and shows nothing.
 
-**Switching on GitHub mode.** `keystatic.config.ts` and `lib/keystatic.ts` already switch on
-`KEYSTATIC_GITHUB_CLIENT_ID`. The steps that need the owner's logins, which the owner does
-and the plan writes out as a checklist:
+**Switching on GitHub mode.** Today `keystatic.config.ts` picks the storage from
+`KEYSTATIC_GITHUB_CLIENT_ID` — a server-only variable. The config is also evaluated in the
+browser (the admin is a client app, `app/keystatic/keystatic.tsx`), where that variable is
+always undefined, so on the live site the admin would run as local mode against a GitHub-mode
+server (found while planning). The switch becomes `NEXT_PUBLIC_KEYSTATIC_STORAGE === 'github'`,
+which Next inlines into the browser bundle; `lib/keystatic.ts` serves the admin in production
+only when that is set and `KEYSTATIC_GITHUB_CLIENT_ID` is too. The steps that need the owner's
+logins, which the owner does and the plan writes out as a checklist:
 
-1. Create the GitHub App from Keystatic's setup screen, signed in as the repo's owner.
-2. Paste its four values into Vercel (`KEYSTATIC_GITHUB_CLIENT_ID`,
-   `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET`, `NEXT_PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`).
+1. Create the GitHub App from Keystatic's setup screen, signed in as the repo's owner
+   (a local `npm run dev` with `NEXT_PUBLIC_KEYSTATIC_STORAGE=github` shows it).
+2. Put five values into Vercel: `NEXT_PUBLIC_KEYSTATIC_STORAGE=github` and the app's four
+   (`KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET`,
+   `NEXT_PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`).
 3. Add each editor to the repo on GitHub.
 4. Redeploy, then sign in at `/keystatic` on the live site and publish a test post.
 
@@ -163,3 +183,5 @@ not the account owner — a private repo needs Vercel Pro with each editor as a 
 - A design round (mocks) for the post pages; they ship in the subpages' plain style.
 - A draft switch for Menneskene bak and Styringsdokumenter.
 - Keystatic Cloud (email sign-in) instead of GitHub accounts.
+- Menneskene's photos under `/media/menneskene/`: the same year-long cache would keep a
+  replaced photo old for returning visitors. Moving them is a small change, not made unasked.
