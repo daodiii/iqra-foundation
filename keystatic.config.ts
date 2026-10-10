@@ -51,6 +51,19 @@ const area = () =>
     defaultValue: '',
   });
 
+/**
+ * A picture's words, required. The post's own picture will not save without them. A picture in
+ * a full text asks for them in its «Image details» dialog (the pencil on the picture), which will
+ * not close without them; but the Image button inserts the picture without opening that dialog,
+ * and Keystatic 0.6.9 saves the entry with `![](…)` all the same, so the editors' guide has to ask.
+ */
+const altText = () =>
+  fields.text({
+    label: 'Bildebeskrivelse',
+    description: 'Hva bildet viser, for dem som ikke ser det.',
+    validation: { isRequired: true },
+  });
+
 /** A picture and its words, one field: ticked, the form will not save without both. */
 const picture = (where: Upload) =>
   fields.conditional(fields.checkbox({ label: 'Bilde', description: 'Kryss av for å legge ved et bilde.' }), {
@@ -62,11 +75,7 @@ const picture = (where: Upload) =>
           publicPath: where.publicPath,
           validation: { isRequired: true },
         }),
-        alt: fields.text({
-          label: 'Bildebeskrivelse',
-          description: 'Hva bildet viser, for dem som ikke ser det.',
-          validation: { isRequired: true },
-        }),
+        alt: altText(),
       },
       { label: 'Bildet' },
     ),
@@ -93,7 +102,12 @@ const body = (where: Upload) =>
       divider: true,
       table: false,
       codeBlock: false,
-      image: { directory: where.directory, publicPath: where.publicPath, transformFilename: uniqueName },
+      image: {
+        directory: where.directory,
+        publicPath: where.publicPath,
+        transformFilename: uniqueName,
+        schema: { alt: altText() },
+      },
     },
   });
 
