@@ -51,7 +51,7 @@ describe('arrangementer', () => {
   });
   test('a picture carries its alt, and a file name gets the public path', () => {
     write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', image: { src: 'bilde.jpg', alt: 'Et bilde' } });
-    expect(getEvents(dir)[0].image).toEqual({ src: '/media/arrangementer/bilde.jpg', alt: 'Et bilde' });
+    expect(getEvents(dir)[0].image).toEqual({ src: '/opplastet/arrangementer/bilde.jpg', alt: 'Et bilde' });
   });
   test('a picture without alt text is refused, naming the file and the field', () => {
     write('a.json', { title: 'A', start: '2027-01-20', place: 'Oslo', text: 'T', image: { src: 'bilde.jpg', alt: '' } });

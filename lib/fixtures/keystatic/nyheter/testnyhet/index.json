@@ -1,0 +1,10 @@
+{
+  "title": "Testnyhet",
+  "date": "2027-01-21",
+  "summary": "En nyhet for å prøve redigeringen.",
+  "area": "",
+  "image": {
+    "discriminant": false
+  },
+  "publish": true
+}

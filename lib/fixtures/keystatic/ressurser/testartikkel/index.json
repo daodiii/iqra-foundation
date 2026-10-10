@@ -1,0 +1,11 @@
+{
+  "title": "Testartikkel",
+  "kind": "artikkel",
+  "date": "2027-01-23",
+  "summary": "En artikkel skrevet på nettsiden.",
+  "area": "",
+  "image": {
+    "discriminant": false
+  },
+  "publish": true
+}
