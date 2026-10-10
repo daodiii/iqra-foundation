@@ -92,9 +92,9 @@ them; a record that fails is left off the site and named in a build warning, and
 A post's picture is written the way Keystatic writes it, the shape above: Keystatic will not
 open a post whose picture is the plain `{ "src", "alt" }`. The reader also takes the plain
 shape, which is what Menneskene's photos use. Files go under `public/`: a post's pictures in
-`public/opplastet/<collection>/` (not `public/media/`, which is cached as immutable for a
-year), PDFs in `public/files/<collection>/`. Arrangementer are split into kommende and
-tidligere by the day the page is rendered (hourly).
+`public/opplastet/<collection>/<slug>/`, as the example shows (not `public/media/`, which is
+cached as immutable for a year), PDFs in `public/files/<collection>/`. Arrangementer are split
+into kommende and tidligere by the day the page is rendered (hourly).
 
 ### Editing in the browser (Keystatic)
 

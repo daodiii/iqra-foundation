@@ -32,7 +32,7 @@ som drifter nettsiden.
 4. Skriv hele teksten i **Brødtekst**. Med knappene over feltet lager du overskrifter, fet og
    kursiv skrift, lenker, lister, sitater og bilder. Står brødteksten tom, er sammendraget hele
    innlegget, og det får ingen egen side.
-5. Har du lagt inn et bilde i brødteksten? Trykk på blyanten på bildet og skriv en
+5. Har du lagt inn et bilde i brødteksten? Trykk på bildet og så på blyanten og skriv en
    **Bildebeskrivelse**: hva bildet viser, for dem som ikke ser det. Det er lett å glemme, for
    redigeringen spør ikke om det selv.
 6. Vil du ha et bilde øverst? Kryss av for **Bilde**, velg bildefilen og skriv en kort
