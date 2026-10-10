@@ -32,6 +32,13 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  /*
+   * News lives on Arrangementer (the owner, 2026-10-10); a news item's own page is
+   * /nyheter/<slug>, so /nyheter alone goes to where the news stands.
+   */
+  async redirects() {
+    return [{ source: '/nyheter', destination: '/arrangementer#nyheter', permanent: false }];
+  },
 };
 
 export default nextConfig;

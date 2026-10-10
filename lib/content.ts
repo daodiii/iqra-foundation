@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { brief } from '@/content/brief.no';
 import { COLLECTIONS, type CollectionName } from '@/content/collections';
@@ -6,28 +6,41 @@ import { COLLECTIONS, type CollectionName } from '@/content/collections';
 /**
  * The one door the pages read the collections through.
  *
- * Everything that changes over time — events, resources, governing documents, people — is
- * a typed collection: one JSON file per entry under `content/<collection>/`, in the shape
- * `content/collections.ts` declares and Keystatic (`keystatic.config.ts`) writes. Pages
- * never read files themselves; they call `getEvents()` and the rest, which read, check and
- * sort. A record that is not what the type says fails the build with its path and the
- * field, rather than reaching a visitor half-formed.
+ * Everything that changes over time — events, news, resources, governing documents, people —
+ * is a typed collection under `content/<collection>/`, in the shape `content/collections.ts`
+ * declares and Keystatic (`keystatic.config.ts`) writes. The three kinds of post (arrangementer,
+ * nyheter, ressurser) are a folder each — `<slug>/index.json`, and `<slug>/body.mdoc` when there
+ * is a full text — and are read only when ticked «Publiser»; menneskene and styringsdokumenter
+ * are one `<slug>.json` each. Pages never read files themselves; they call `getEvents()` and the
+ * rest, which read, check and sort.
  *
- * Adding an item by hand is one file: copy the shape from the README, drop it in the
- * directory, and it is on the page at the next build. Through Keystatic it is the same
- * file, written by the admin.
+ * A record that is not what its type says is left out and named in a warning in the build log,
+ * with its file and the field, and the rest are read: editors save straight to `main`, and one
+ * bad save must not stop every later one from reaching the site. `lib/content.real.test.ts`
+ * holds the real content to having no such record, so our own mistakes still fail the tests.
  */
 
 /** One picture with its words: one field, so a photograph cannot arrive without an alt. */
 export type Picture = { src: string; alt: string };
 
-/** The four areas' keys, from the brief; an event or a resource may carry one. */
+/** The four areas' keys, from the brief; a post may carry one. */
 export const AREA_KEYS = brief.areas.map((a) => a.key) as readonly AreaKey[];
 export type AreaKey = (typeof brief.areas)[number]['key'];
 
-export type Event = {
+/** What every post — an event, a news item, a resource — carries. */
+export type PostFields = {
   slug: string;
   title: string;
+  /** The short text on the card and in the list. */
+  summary: string;
+  image: Picture | null;
+  /** One of the four areas, when the post belongs to one. */
+  area: AreaKey | null;
+  /** The full text as Keystatic writes it (Markdoc), when there is one; a post with one has a page of its own. */
+  body: string | null;
+};
+
+export type Event = PostFields & {
   /** ISO date, `YYYY-MM-DD`; written out on the page. */
   start: string;
   /** `HH:MM`, when there is one. */
@@ -35,26 +48,23 @@ export type Event = {
   /** ISO date; for an event over more than one day. */
   end: string | null;
   place: string;
-  text: string;
+  /** Sign-up or more information. */
   link: string | null;
-  image: Picture | null;
-  /** One of the four areas, when the item belongs to one. */
-  area: AreaKey | null;
+};
+
+export type NewsItem = PostFields & {
+  /** ISO date. */
+  date: string;
 };
 
 export type ResourceKind = 'publikasjon' | 'artikkel' | 'rapport' | 'presentasjon' | 'video' | 'annet';
-export type Resource = {
-  slug: string;
-  title: string;
+export type Resource = PostFields & {
   kind: ResourceKind;
   /** ISO date. */
   date: string;
-  summary: string;
-  /** A file under `public/`, as its public path; or a URL elsewhere. One of the two. */
+  /** A file under `public/`, as its public path; or a URL elsewhere; or neither, when the full text is the resource. */
   file: string | null;
   url: string | null;
-  /** One of the four areas, when the item belongs to one. */
-  area: AreaKey | null;
 };
 
 export type DocumentKind = 'vedtekter' | 'arsrapport' | 'arsregnskap' | 'strategi' | 'annet';
@@ -97,28 +107,72 @@ class RecordError extends Error {
   }
 }
 
-function readCollection(name: CollectionName, dir = collectionDir(name)): { file: string; slug: string; raw: Raw }[] {
+/** Where a left-out record is reported: the build log, unless the caller (a test) listens itself. */
+export type Skip = (problem: string) => void;
+const warn: Skip = (problem) => console.warn(`[innhold] hoppet over ${problem}`);
+
+/** One entry as it lies on disk: its slug, its record's file (for messages), the record, and its full text if any. */
+type Entry = { file: string; slug: string; raw: Raw; body: string | null };
+
+/**
+ * A collection's entries in slug order. A folder collection's entry is a folder holding an
+ * `index.json` (its README, or a folder without a record, is not an entry); a flat
+ * collection's is a `.json` file. A record that is not a JSON object is reported and left out,
+ * and so is a post written flat, as `<slug>.json`: it would otherwise vanish without a word.
+ */
+function readCollection(name: CollectionName, dir: string, skip: Skip): Entry[] {
   let names: string[];
   try {
     names = readdirSync(dir);
   } catch {
     return []; // no directory yet is the same as an empty one
   }
-  return names
-    .filter((n) => n.endsWith('.json'))
-    .sort()
-    .map((n) => {
-      const file = path.join(COLLECTIONS[name].dir, n);
-      let raw: unknown;
-      try {
-        raw = JSON.parse(readFileSync(path.join(dir, n), 'utf8'));
-      } catch (e) {
-        throw new RecordError(file, `is not valid JSON (${(e as Error).message})`);
-      }
-      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new RecordError(file, 'is not an object');
-      return { file, slug: n.slice(0, -'.json'.length), raw: raw as Raw };
-    });
+  const folder = COLLECTIONS[name].layout === 'folder';
+  const entries: Entry[] = [];
+  for (const n of names.sort()) {
+    if (folder && n.endsWith('.json')) {
+      skip(`${COLLECTIONS[name].dir}/${n}: a post is a folder, ${n.slice(0, -'.json'.length)}/index.json`);
+      continue;
+    }
+    const slug = folder ? n : n.endsWith('.json') ? n.slice(0, -'.json'.length) : null;
+    if (slug === null) continue;
+    const at = folder ? path.join(dir, n, 'index.json') : path.join(dir, n);
+    if (folder && !existsSync(at)) continue;
+    const file = folder ? `${COLLECTIONS[name].dir}/${n}/index.json` : `${COLLECTIONS[name].dir}/${n}`;
+    let raw: unknown;
+    try {
+      raw = JSON.parse(readFileSync(at, 'utf8'));
+    } catch (e) {
+      skip(`${file}: is not valid JSON (${(e as Error).message})`);
+      continue;
+    }
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      skip(`${file}: is not an object`);
+      continue;
+    }
+    const bodyAt = path.join(dir, n, 'body.mdoc');
+    const text = folder && existsSync(bodyAt) ? readFileSync(bodyAt, 'utf8') : '';
+    entries.push({ file, slug, raw: raw as Raw, body: text.trim() ? text : null });
+  }
+  return entries;
 }
+
+/** Each entry through its reader; a record the reader refuses is reported and left out, and the rest go on. */
+function read<T>(entries: Entry[], skip: Skip, reader: (e: Entry) => T): T[] {
+  const out: T[] = [];
+  for (const e of entries) {
+    try {
+      out.push(reader(e));
+    } catch (err) {
+      if (!(err instanceof RecordError)) throw err;
+      skip(err.message);
+    }
+  }
+  return out;
+}
+
+/** A post is read only when ticked «Publiser»; unticked, or without the box at all, it is a draft. */
+const published = (e: Entry) => e.raw.publish === true;
 
 /* Field readers: each says what it wants and names the field when it is not there. */
 const str = (file: string, raw: Raw, key: string): string => {
@@ -138,10 +192,17 @@ const isoDate = (file: string, raw: Raw, key: string): string => {
   return v;
 };
 const optIsoDate = (file: string, raw: Raw, key: string): string | null => (optStr(file, raw, key) === null ? null : isoDate(file, raw, key));
+/**
+ * A time as Norwegians write it — `18:00`, `18.00`, `9:30`, `9.30` — read as `HH:MM`. «Klokkeslett»
+ * is a free text field and the admin holds it to the same four forms; a range or words around
+ * the time are still a broken record.
+ */
 const optTime = (file: string, raw: Raw, key: string): string | null => {
   const v = optStr(file, raw, key);
-  if (v !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(v)) throw new RecordError(file, `«${key}» must be a time, HH:MM`);
-  return v;
+  if (v === null) return null;
+  const m = /^([01]?\d|2[0-3])[:.]([0-5]\d)$/.exec(v);
+  if (!m) throw new RecordError(file, `«${key}» must be a time, HH:MM`);
+  return `${m[1].padStart(2, '0')}:${m[2]}`;
 };
 const int = (file: string, raw: Raw, key: string): number => {
   const v = raw[key];
@@ -165,11 +226,21 @@ const publicPath = (name: CollectionName, key: string, v: string): string => {
   if (!dir) throw new Error(`${name}.${key} has no public path`);
   return dir.publicPath + v;
 };
+/**
+ * A picture, in either shape it comes in: Keystatic's ticked box — `{ discriminant: true,
+ * value: { src, alt } }`, or `{ discriminant: false }` for none — or `{ src, alt }` as written
+ * by hand and as Menneskene's photos are.
+ */
 const picture = (name: CollectionName, file: string, raw: Raw, key: string): Picture | null => {
   const v = raw[key];
   if (v === undefined || v === null) return null;
   if (typeof v !== 'object' || Array.isArray(v)) throw new RecordError(file, `«${key}» must be { src, alt }`);
-  const o = v as Raw;
+  let o = v as Raw;
+  if ('discriminant' in o) {
+    if (o.discriminant !== true) return null;
+    if (!o.value || typeof o.value !== 'object' || Array.isArray(o.value)) return null;
+    o = o.value as Raw;
+  }
   const src = optStr(file, o, 'src');
   if (src === null) return null;
   const alt = optStr(file, o, 'alt');
@@ -177,23 +248,28 @@ const picture = (name: CollectionName, file: string, raw: Raw, key: string): Pic
   return { src: publicPath(name, key, src), alt };
 };
 
+/** The fields every post shares. */
+const postFields = (name: CollectionName, { file, slug, raw, body }: Entry): PostFields => ({
+  slug,
+  title: str(file, raw, 'title'),
+  summary: str(file, raw, 'summary'),
+  image: picture(name, file, raw, 'image'),
+  area: optOneOf(file, raw, 'area', AREA_KEYS),
+  body,
+});
+
 /* ----- the collections ----- */
 
-export function getEvents(dir?: string): Event[] {
-  return readCollection('arrangementer', dir)
-    .map(({ file, slug, raw }) => ({
-      slug,
-      title: str(file, raw, 'title'),
-      start: isoDate(file, raw, 'start'),
-      time: optTime(file, raw, 'time'),
-      end: optIsoDate(file, raw, 'end'),
-      place: str(file, raw, 'place'),
-      text: str(file, raw, 'text'),
-      link: optStr(file, raw, 'link'),
-      image: picture('arrangementer', file, raw, 'image'),
-      area: optOneOf(file, raw, 'area', AREA_KEYS),
-    }))
-    .sort((a, b) => a.start.localeCompare(b.start) || (a.time ?? '').localeCompare(b.time ?? ''));
+export function getEvents(dir = collectionDir('arrangementer'), skip: Skip = warn): Event[] {
+  const entries = readCollection('arrangementer', dir, skip).filter(published);
+  return read(entries, skip, (e) => ({
+    ...postFields('arrangementer', e),
+    start: isoDate(e.file, e.raw, 'start'),
+    time: optTime(e.file, e.raw, 'time'),
+    end: optIsoDate(e.file, e.raw, 'end'),
+    place: str(e.file, e.raw, 'place'),
+    link: optStr(e.file, e.raw, 'link'),
+  })).sort((a, b) => a.start.localeCompare(b.start) || (a.time ?? '').localeCompare(b.time ?? ''));
 }
 
 /**
@@ -206,49 +282,49 @@ export function splitEvents(events: Event[], today: string): { upcoming: Event[]
   return { upcoming, past };
 }
 
-export function getResources(dir?: string): Resource[] {
-  return readCollection('ressurser', dir)
-    .map(({ file, slug, raw }) => {
-      const f = optStr(file, raw, 'file');
-      const url = optStr(file, raw, 'url');
-      if (!f && !url) throw new RecordError(file, 'needs either «file» or «url»');
-      return {
-        slug,
-        title: str(file, raw, 'title'),
-        kind: oneOf(file, raw, 'kind', RESOURCE_KINDS),
-        date: isoDate(file, raw, 'date'),
-        summary: str(file, raw, 'summary'),
-        file: f === null ? null : publicPath('ressurser', 'file', f),
-        url,
-        area: optOneOf(file, raw, 'area', AREA_KEYS),
-      };
-    })
-    .sort((a, b) => b.date.localeCompare(a.date));
+export function getNews(dir = collectionDir('nyheter'), skip: Skip = warn): NewsItem[] {
+  const entries = readCollection('nyheter', dir, skip).filter(published);
+  return read(entries, skip, (e) => ({
+    ...postFields('nyheter', e),
+    date: isoDate(e.file, e.raw, 'date'),
+  })).sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title, 'nb'));
 }
 
-export function getDocuments(dir?: string): GoverningDocument[] {
-  return readCollection('styringsdokumenter', dir)
-    .map(({ file, slug, raw }) => ({
-      slug,
-      title: str(file, raw, 'title'),
-      kind: oneOf(file, raw, 'kind', DOCUMENT_KINDS),
-      year: int(file, raw, 'year'),
-      file: publicPath('styringsdokumenter', 'file', str(file, raw, 'file')),
-    }))
-    .sort((a, b) => b.year - a.year || a.title.localeCompare(b.title, 'nb'));
+export function getResources(dir = collectionDir('ressurser'), skip: Skip = warn): Resource[] {
+  const entries = readCollection('ressurser', dir, skip).filter(published);
+  return read(entries, skip, (e) => {
+    const f = optStr(e.file, e.raw, 'file');
+    const url = optStr(e.file, e.raw, 'url');
+    if (!f && !url && !e.body) throw new RecordError(e.file, 'needs a «file», a «url» or a full text');
+    return {
+      ...postFields('ressurser', e),
+      kind: oneOf(e.file, e.raw, 'kind', RESOURCE_KINDS),
+      date: isoDate(e.file, e.raw, 'date'),
+      file: f === null ? null : publicPath('ressurser', 'file', f),
+      url,
+    };
+  }).sort((a, b) => b.date.localeCompare(a.date));
 }
 
-export function getPeople(dir?: string): Person[] {
-  return readCollection('menneskene', dir)
-    .map(({ file, slug, raw }) => ({
-      slug,
-      name: str(file, raw, 'name'),
-      role: str(file, raw, 'role'),
-      photo: picture('menneskene', file, raw, 'photo'),
-      bio: str(file, raw, 'bio'),
-      order: int(file, raw, 'order'),
-    }))
-    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, 'nb'));
+export function getDocuments(dir = collectionDir('styringsdokumenter'), skip: Skip = warn): GoverningDocument[] {
+  return read(readCollection('styringsdokumenter', dir, skip), skip, ({ file, slug, raw }) => ({
+    slug,
+    title: str(file, raw, 'title'),
+    kind: oneOf(file, raw, 'kind', DOCUMENT_KINDS),
+    year: int(file, raw, 'year'),
+    file: publicPath('styringsdokumenter', 'file', str(file, raw, 'file')),
+  })).sort((a, b) => b.year - a.year || a.title.localeCompare(b.title, 'nb'));
+}
+
+export function getPeople(dir = collectionDir('menneskene'), skip: Skip = warn): Person[] {
+  return read(readCollection('menneskene', dir, skip), skip, ({ file, slug, raw }) => ({
+    slug,
+    name: str(file, raw, 'name'),
+    role: str(file, raw, 'role'),
+    photo: picture('menneskene', file, raw, 'photo'),
+    bio: str(file, raw, 'bio'),
+    order: int(file, raw, 'order'),
+  })).sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, 'nb'));
 }
 
 /** Today as an ISO date in Oslo's time zone, which is where the events are. */
