@@ -10,4 +10,14 @@ test('a post’s picture in its 3:2 frame, filled and resized by Next, with its 
   const frame = img.parentElement!;
   expect(frame).toHaveAttribute('data-frame');
   expect(frame).toHaveClass('x');
+  // A card's picture waits until it is near the screen; only a page's lead picture is eager.
+  expect(img).toHaveAttribute('loading', 'lazy');
+  expect(img).not.toHaveAttribute('fetchpriority');
+});
+
+test('a page’s lead picture loads at once, first in line', () => {
+  render(<Frame picture={{ src: '/opplastet/nyheter/a/src.jpg', alt: 'Et rom' }} sizes="640px" eager />);
+  const img = screen.getByRole('img', { name: 'Et rom' });
+  expect(img).toHaveAttribute('loading', 'eager');
+  expect(img).toHaveAttribute('fetchpriority', 'high');
 });

@@ -49,7 +49,7 @@ export function Post({
           <AreaMark area={area} />
         </p>
       )}
-      {image && <Frame picture={image} sizes={SIZES} className={styles.picture} />}
+      {image && <Frame picture={image} sizes={SIZES} className={styles.picture} eager />}
       <Body source={body} />
       {action && (
         <p className={styles.action}>

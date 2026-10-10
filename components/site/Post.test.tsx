@@ -19,7 +19,10 @@ test('a post’s page: the way back, the title, the date, the area, the picture,
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Åpen kveld');
   expect(screen.getByText('20. januar 2027')).toHaveAttribute('datetime', '2027-01-20');
   expect(screen.getByText(areas.find((a) => a.key === 'dialog')!.name)).toBeInTheDocument();
-  expect(screen.getByRole('img', { name: 'Et rom' })).toBeInTheDocument();
+  // The lead picture sits under the title, likely the largest thing on the first screen: eager, high priority.
+  const lead = screen.getByRole('img', { name: 'Et rom' });
+  expect(lead).toHaveAttribute('loading', 'eager');
+  expect(lead).toHaveAttribute('fetchpriority', 'high');
   expect(screen.getByRole('heading', { level: 2, name: 'Program' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Påmelding eller mer informasjon' })).toHaveAttribute('href', 'https://example.org/pamelding');
 });
