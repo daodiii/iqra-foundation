@@ -74,7 +74,7 @@ const clampUnit = (v: number) => Math.max(0, Math.min(1, v));
 /**
  * A reveal that waits until the plate is up the screen, so the whole of it is seen: nothing while
  * the plate's top is below `from` (in screen heights from the top), all of it by `to`, on the site's
- * one curve. The owner, 2026-10-16: the Visjon and Om oss animations should start «when the screen
+ * one curve. The owner, 2026-10-16: the Om oss doors should start «when the screen
  * is like halfway down to see the entire thing … they don't get the love they deserve».
  */
 export function revealUp(from: number, to: number) {
