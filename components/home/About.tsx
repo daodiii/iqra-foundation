@@ -10,7 +10,17 @@ import { soft } from '@/lib/soft';
 import styles from './about.module.css';
 import { Arrive } from './Arrive';
 import plate from './plate.module.css';
-import { Scene } from './Scene';
+import { revealUp, Scene } from './Scene';
+
+/**
+ * The doors keep their own time (2026-10-16, the owner: start them «when the screen is like halfway
+ * down to see the entire thing»). They were the plate's opening: they began with 39% of the plate on
+ * a laptop's screen and were open with 74% of it. Now they stay shut until the plate's top is up to
+ * the middle of the screen and are open as it nears the top, so the whole plate is seen as they turn.
+ */
+export const DOORS_FROM = 0.5;
+export const DOORS_TO = 0.12;
+const doors = revealUp(DOORS_FROM, DOORS_TO);
 
 /** A paragraph's sentences, each with its full stop: the brief's words untouched, only parted where a sentence ends. */
 export function sentences(paragraph: string): string[] {
@@ -40,7 +50,7 @@ export function sentences(paragraph: string): string[] {
 export function About() {
   const [statement, crossing, arena] = brief.about.paragraphs;
   const [open, wish] = sentences(arena);
-  const doors = (
+  const pair = (
     <>
       <div className={`${styles.door} ${styles.left}`} aria-hidden="true">
         <Logo height={200} decorative className={styles.emblem} />
@@ -52,8 +62,8 @@ export function About() {
   );
   return (
     <Arrive as="section" id="om-oss" className={styles.section} aria-labelledby="om-oss-tittel">
-      <Scene>
-        <Flat tint="white" className={`${plate.plate} ${styles.plate}`} art={doors}>
+      <Scene reveal={doors}>
+        <Flat tint="white" className={`${plate.plate} ${styles.plate}`} art={pair}>
           <div className={`${plate.grid} ${styles.room}`}>
             <div className={plate.head}>
               <div className={styles.name}>

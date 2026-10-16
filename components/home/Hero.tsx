@@ -6,7 +6,6 @@ import ReactDOM from 'react-dom';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import { pickSource, POSTER_FALLBACK, POSTER_SIZES, posterSet } from '@/lib/media';
-import { frameOf, makeCast, token } from './cast';
 import styles from './hero.module.css';
 import { LOCKUP_VIEWBOX, LOCKUP_WORD } from './lockup';
 import { MARK_ACCENTS, MARK_LETTERS } from './mark';
@@ -31,13 +30,16 @@ const CUTS = [
 /** The word's ten, by their place in `CUTS`: the navy floor under them is clipped to these alone. */
 const WORD = CUTS.slice(MARK_LETTERS.length);
 
+/** The film's speed: three quarters, to go with the cut at half speed. */
+const FILM_RATE = 0.75;
+
 /**
  * When the hero's opening has played out, on the page's clock (`performance.now()`): its last
- * beat, the word's last piece, lands 1.6 s after the first paint (hero.module.css, on the timing
+ * beat, the word's last piece, lands 3.3 s after the first paint (hero.module.css, on the timing
  * scale's 120ms beats). Heavy work that can wait — the sea's water being built — waits for it, so
  * it does not stall the blades mid-cut.
  */
-export const openingEnd = () => (performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? performance.now()) + 1600;
+export const openingEnd = () => (performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? performance.now()) + 3300;
 
 /**
  * The hero: the lockup cut out of the paper, the film in the letters.
@@ -49,18 +51,22 @@ export const openingEnd = () => (performance.getEntriesByName('first-contentful-
  * its top edge and falls once its outline is closed, leaving a window with the film in
  * it. The film is one `<video>` under everything, clipped to all fourteen letters from
  * the first frame, so nothing of it shows until its piece of paper has gone. Under the
- * open windows the film's light falls on the paper (`cast.ts`, multiplied and blurred),
- * and the copy stands in it: the brief's paragraph as a wide statement in the headings'
- * face and the two buttons, printed left to right by a head that passes across them. The
- * lockup is the heading — the h1 holds the art, named for the logo; the brief's headline
- * is not on the page. The beats are the stylesheet's, two seconds from the first paint.
+ * lockup the copy: the brief's paragraph as a statement in the headings' face and the two
+ * buttons, printed left to right by a head that passes across them while the name is cut.
+ * The lockup is the heading — the h1 holds the art, named for the logo; the brief's headline
+ * is not on the page. The beats are the stylesheet's, 3.3 s from the first paint.
+ *
+ * Hero A (the owner, 2026-10-15, after a review that found the moment small and quick: «Build A
+ * into the real hero»): the lockup as wide as the screen allows with the copy still on the first
+ * screen (71% of a 1536 × 960 laptop, where it was 41%), the cut at half speed, the film at three
+ * quarters. The film's light on the paper under the windows (the cast) went with it: at this size
+ * there is no paper under the windows for it to fall on.
  *
  * The film plays once and rests on its last frame. Its source is picked after hydration
  * (`pickSource`: 720p on a phone, WebM where it plays) and never before, so with JavaScript off the `<video>` has no source and its
- * poster stands in the letters; under reduced motion the same, and no cast is made. In
- * both the stylesheet opens the windows at once (no blades, no pieces) and prints the
- * copy at once. Autoplay refused: the poster stands in the letters and the cast is drawn
- * from it. Nothing pins and nothing scrubs.
+ * poster stands in the letters; under reduced motion the same. In both the stylesheet opens
+ * the windows at once (no blades, no pieces) and prints the copy at once. Autoplay refused:
+ * the poster stands in the letters. Nothing pins and nothing scrubs.
  */
 export function Hero() {
   // The poster fills the letters until the film has decoded, so it is asked for early, at the width
@@ -68,16 +74,12 @@ export function Hero() {
   ReactDOM.preload(POSTER_FALLBACK, { as: 'image', type: 'image/avif', imageSrcSet: posterSet('avif'), imageSizes: POSTER_SIZES, fetchPriority: 'high' });
   const hero = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
-  const still = useRef<HTMLImageElement>(null);
-  const cast = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const section = hero.current;
     const v = video.current;
-    const c = cast.current;
-    const poster = still.current;
-    if (!section || !v || !c || !poster) return;
-    // Reduced motion: no source, no cast; the stylesheet has already opened the windows.
+    if (!section || !v) return;
+    // Reduced motion: no source; the stylesheet has already opened the windows.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     v.src = pickSource({
       narrow: window.matchMedia('(max-width: 767px)').matches,
@@ -85,31 +87,20 @@ export function Hero() {
     });
     v.muted = true;
     v.load();
-    // Autoplay refused: the poster stands in the letters, and `frameOf` gives the cast the poster too.
+    // At three quarters of its speed (5.04 s → 6.7 s), to go with the cut at half its speed (Hero A).
+    v.defaultPlaybackRate = FILM_RATE;
+    v.playbackRate = FILM_RATE;
+    // Autoplay refused: the poster stands in the letters.
     Promise.resolve(v.play()).catch(() => {});
-    // The film covers the still once it plays; until then the still is what the letters (and the cast) show.
+    // The film covers the still once it plays; until then the still is what the letters show.
     const playing = () => section.setAttribute('data-playing', '');
     v.addEventListener('playing', playing, { once: true });
-    const draw = makeCast(c, token('--color-crimson', '#ab5261'));
-    let raf = 0;
-    const tick = () => {
-      raf = requestAnimationFrame(tick);
-      draw(frameOf(v, poster));
-    };
-    raf = requestAnimationFrame(tick);
-    // Played to its end, the film rests on its last frame (the owner, 2026-10-09: «stop»). The cast
-    // keeps the light of the last frame it drew, and is drawn no more.
-    const rest = () => {
-      cancelAnimationFrame(raf);
-      raf = 0;
-    };
-    v.addEventListener('ended', rest);
     /*
-     * Scrolled past, the film rests and its light is not drawn. It had played on under the rest
-     * of the page: a trace of a read-through (2026-09-25) found its decoding holding the GPU for
-     * 46 to 76 ms at a time, twice with the hero long off the screen, each a dropped frame of the
-     * scroll; and the cast was drawn every frame for no one. Back on the screen both go on, the
-     * film from where it stopped.
+     * Scrolled past, the film rests. It had played on under the rest of the page: a trace of a
+     * read-through (2026-09-25) found its decoding holding the GPU for 46 to 76 ms at a time, twice
+     * with the hero long off the screen, each a dropped frame of the scroll. Back on the screen it
+     * goes on from where it stopped — unless it has played to its end (the owner, 2026-10-09:
+     * «stop»), when it stays on its last frame.
      */
     let shown = true;
     const io = typeof IntersectionObserver === 'function'
@@ -118,23 +109,17 @@ export function Hero() {
           if (on === shown) return;
           shown = on;
           if (on) {
-            // A film that has played to its end stays on its last frame.
             if (v.ended) return;
             Promise.resolve(v.play()).catch(() => {});
-            if (!raf) raf = requestAnimationFrame(tick);
           } else {
             v.pause();
-            cancelAnimationFrame(raf);
-            raf = 0;
           }
         })
       : null;
     io?.observe(section);
     return () => {
       io?.disconnect();
-      cancelAnimationFrame(raf);
       v.removeEventListener('playing', playing);
-      v.removeEventListener('ended', rest);
       v.pause();
     };
   }, []);
@@ -145,7 +130,6 @@ export function Hero() {
         <picture>
           <source type="image/avif" srcSet={posterSet('avif')} sizes={POSTER_SIZES} />
           <img
-            ref={still}
             className={styles.film}
             style={{ clipPath: 'url(#hero-letters)' }}
             src={POSTER_FALLBACK}
@@ -209,7 +193,6 @@ export function Hero() {
             />
           ))}
         </div>
-        <canvas ref={cast} className={styles.cast} data-cast aria-hidden="true" />
       </div>
       <div className={styles.print}>
         <div className={styles.copy}>

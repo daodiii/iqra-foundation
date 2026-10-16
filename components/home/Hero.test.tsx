@@ -2,7 +2,6 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
-import { CAST_W } from './cast';
 import { Hero } from './Hero';
 
 const realMatchMedia = window.matchMedia;
@@ -64,6 +63,9 @@ describe('Hero', () => {
     expect(video).toHaveAttribute('playsinline');
     expect(video.muted).toBe(true);
     expect(video.getAttribute('src')).toBe('/media/iqra-ilm-1080.webm');
+    // Hero A: at three quarters of its speed, to go with the cut at half speed
+    expect(video.playbackRate).toBe(0.75);
+    expect(video.defaultPlaybackRate).toBe(0.75);
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
     expect(vi.mocked(HTMLMediaElement.prototype.play).mock.instances[0]).toBe(video);
   });
@@ -74,14 +76,12 @@ describe('Hero', () => {
     expect(container.querySelector('video')!.getAttribute('src')).toBe('/media/iqra-ilm-720.webm');
   });
 
-  test('the cast: a canvas under the lockup, made at mount to take the film’s light', () => {
+  test('no light is cast on the paper: the hero draws nothing every frame (Hero A)', () => {
     const { container } = render(<Hero />);
-    const cast = container.querySelector<HTMLCanvasElement>('canvas[data-cast]')!;
-    expect(cast).toHaveAttribute('aria-hidden', 'true');
-    expect(cast.width).toBe(CAST_W);
+    expect(container.querySelector('canvas')).toBeNull();
   });
 
-  test('scrolled past, the film rests and its light is no longer drawn; back on screen, both go on', () => {
+  test('scrolled past, the film rests; back on screen, it goes on', () => {
     // A controllable IntersectionObserver: the test says when the hero is on the screen. The setup's stub never fires.
     const told: IntersectionObserverCallback[] = [];
     const realIO = window.IntersectionObserver;
@@ -90,8 +90,6 @@ describe('Hero', () => {
       observe() {} unobserve() {} disconnect() {} takeRecords() { return []; }
     }
     Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: IO });
-    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 11);
-    const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
     try {
       const { container } = render(<Hero />);
       const video = container.querySelector('video')!;
@@ -101,19 +99,14 @@ describe('Hero', () => {
       onScreen(false);
       expect(HTMLMediaElement.prototype.pause).toHaveBeenCalledTimes(1);
       expect(vi.mocked(HTMLMediaElement.prototype.pause).mock.instances[0]).toBe(video);
-      expect(caf).toHaveBeenCalledWith(11);
-      raf.mockClear();
       onScreen(true);
       expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(2);
-      expect(raf).toHaveBeenCalledTimes(1);
     } finally {
-      raf.mockRestore();
-      caf.mockRestore();
       Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: realIO });
     }
   });
 
-  test('played to its end, the film rests on its last frame: its light is drawn no more, and coming back on screen does not start it again', () => {
+  test('played to its end, the film rests on its last frame: coming back on screen does not start it again', () => {
     const told: IntersectionObserverCallback[] = [];
     const realIO = window.IntersectionObserver;
     class IO {
@@ -121,8 +114,6 @@ describe('Hero', () => {
       observe() {} unobserve() {} disconnect() {} takeRecords() { return []; }
     }
     Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: IO });
-    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 11);
-    const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
     const ended = vi.spyOn(HTMLMediaElement.prototype, 'ended', 'get');
     try {
       const { container } = render(<Hero />);
@@ -130,17 +121,12 @@ describe('Hero', () => {
       const onScreen = (on: boolean) => act(() => told.forEach((cb) => cb([{ isIntersecting: on } as IntersectionObserverEntry], {} as IntersectionObserver)));
       ended.mockReturnValue(true);
       act(() => { video.dispatchEvent(new Event('ended')); });
-      expect(caf).toHaveBeenCalledWith(11);
       onScreen(false);
       vi.mocked(HTMLMediaElement.prototype.play).mockClear();
-      raf.mockClear();
       onScreen(true);
       expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
-      expect(raf).not.toHaveBeenCalled();
     } finally {
       ended.mockRestore();
-      raf.mockRestore();
-      caf.mockRestore();
       Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: realIO });
     }
   });
@@ -152,14 +138,13 @@ describe('Hero', () => {
     expect(container.querySelector('img[data-still]')).toHaveAttribute('src', '/media/iqra-ilm-poster-960.webp');
   });
 
-  test('under reduced motion the video gets no source, nothing plays and no cast is made: the poster stands in the open letters (the stylesheet opens them) and the copy is printed', () => {
+  test('under reduced motion the video gets no source and nothing plays: the poster stands in the open letters (the stylesheet opens them) and the copy is printed', () => {
     reduced();
     const { container } = render(<Hero />);
     const video = container.querySelector('video')!;
     expect(video.getAttribute('src')).toBeNull();
     expect(container.querySelector('img[data-still]')).toHaveAttribute('srcset', expect.stringContaining('/media/iqra-ilm-poster-480.webp 480w'));
     expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
-    expect(container.querySelector<HTMLCanvasElement>('canvas[data-cast]')!.width).not.toBe(CAST_W);
     expect(screen.getByText(brief.home.paragraph)).toBeInTheDocument();
   });
 });

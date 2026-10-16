@@ -230,6 +230,15 @@ a {
   outline-offset: 3px;
 }
 
+/*
+ * On a dark ground (the plates and the footer that mark themselves for the header) the crimson ring
+ * is 2.3:1 on the navy, under the 3:1 a focus ring needs; its lifted crimson is 5.2:1 and still the
+ * brand's colour.
+ */
+[data-header='dark'] :focus-visible {
+  outline-color: var(--color-crimson-lift);
+}
+
 /* Text that is for a screen reader alone — the full stop a crimson dot stands in for. */
 .visually-hidden {
   position: absolute;

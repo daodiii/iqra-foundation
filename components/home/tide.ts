@@ -1,4 +1,4 @@
-import { AREA_ORDER, areas, type Area } from './areas';
+import { AREA_LOOK, AREA_ORDER, areas, type Area, type AreaGround } from './areas';
 
 /**
  * The playhead of Havet (Sea.tsx): `u` runs 0 to STEPS, one whole number per field, driven by
@@ -9,13 +9,27 @@ import { AREA_ORDER, areas, type Area } from './areas';
 /**
  * The order the four come in on the sea — the owner's, given 2026-09-17 after seeing it
  * live: «navy, burgundy, turquoise and then end with white» — and, since 2026-10-09, the
- * site's (`AREA_ORDER`). The tides run from the hero's white through the dark pair and out to
- * white again, above the seal's navy. Each area keeps its own colour.
+ * site's (`AREA_ORDER`).
  */
 export const SEA_ORDER = AREA_ORDER;
 
-/** The areas in the sea's order, each with its look. */
-export const seaAreas: readonly Area[] = areas;
+/**
+ * The colour each field wears on the sea, by its place: navy and white in turn. The owner,
+ * 2026-10-16: «instead of making two of them burgundy and turquoise, how about we try to keep it
+ * between white and blue … Blue, white, blue, white» (after paler versions of the four colours were
+ * tried and navy went grey at every strength). So on the sea an area does not wear its own colour;
+ * Vårt arbeid's bands, the seal's ring and the footer's thread still do.
+ */
+export const SEA_GROUNDS = ['navy', 'light', 'navy', 'light'] as const satisfies readonly AreaGround[];
+
+/** The look the guide gives a ground (`AREA_LOOK`: its token, its inks, its ring), whichever area owns it. */
+const lookOf = (ground: AreaGround) => Object.values(AREA_LOOK).find((l) => l.ground === ground)!;
+
+/** The areas in the sea's order, each in the look of the ground it wears there (`SEA_GROUNDS`): its name, text and link its own. */
+export const seaAreas: readonly Area[] = areas.map((a, k) => {
+  const look = lookOf(SEA_GROUNDS[k]);
+  return { ...a, ...look, tone: look.ground === 'navy' ? 'dark' : 'light' };
+});
 
 /** The four fields at u = 0, 1, 2, 3. */
 export const STEPS = 3;

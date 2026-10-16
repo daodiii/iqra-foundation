@@ -51,11 +51,34 @@ export function writePlate(off: number, el: HTMLElement) {
   return open;
 }
 
-/** A reveal's frame: only `--rise`, held, and its mark. */
-function writeRise(off: number, el: HTMLElement) {
-  const rise = held(off);
+/** A reveal's frame: `--rise` and its mark. */
+function writeRiseValue(rise: number, el: HTMLElement) {
   el.style.setProperty('--rise', rise.toFixed(3));
   el.toggleAttribute('data-risen', rise >= 0.995);
+}
+
+/** A reveal's frame: only `--rise`, held, and its mark. */
+function writeRise(off: number, el: HTMLElement) {
+  writeRiseValue(held(off), el);
+}
+
+/** The plate's shape alone (`--open`), for a plate whose reveal keeps its own time (`reveal`). */
+function writeShape(off: number, el: HTMLElement) {
+  const open = openness(off);
+  el.style.setProperty('--open', open.toFixed(3));
+  return open;
+}
+
+const clampUnit = (v: number) => Math.max(0, Math.min(1, v));
+
+/**
+ * A reveal that waits until the plate is up the screen, so the whole of it is seen: nothing while
+ * the plate's top is below `from` (in screen heights from the top), all of it by `to`, on the site's
+ * one curve. The owner, 2026-10-16: the Visjon and Om oss animations should start «when the screen
+ * is like halfway down to see the entire thing … they don't get the love they deserve».
+ */
+export function revealUp(from: number, to: number) {
+  return (r: { top: number }, H: number) => ease(clampUnit((from - r.top / H) / (from - to)));
 }
 
 /**
@@ -76,6 +99,11 @@ type Props = {
   dark?: boolean;
   /** For an anchor that lands on the plate. */
   id?: string;
+  /**
+   * What the plate holds keeps its own time (`--rise` from this, not held to the plate's opening):
+   * how far revealed, 0-1, from the plate's rect and the screen's height. `revealUp` makes one.
+   */
+  reveal?: (rect: DOMRect, H: number) => number;
   children: ReactNode;
 };
 
@@ -89,20 +117,29 @@ type Props = {
  * beside it. Driven where the page is (`useGlide`). Under reduced motion nothing is listened to and
  * the stylesheet's defaults hold: the plate inset, everything it holds revealed.
  */
-export function Scene({ className, onOpen, dark = false, id, children }: Props) {
+export function Scene({ className, onOpen, dark = false, id, reveal, children }: Props) {
   const wasOpen = useRef(false);
   const ref = useRef<HTMLDivElement>(null);
+  const own = !!reveal;
   useGlide(
     ref,
     useCallback((r: DOMRect, H: number) => plateOff(r, H), []),
     useCallback((off: number, el: HTMLElement) => {
-      const isOpen = writePlate(off, el) > 0.97;
+      const isOpen = (own ? writeShape(off, el) : writePlate(off, el)) > 0.97;
       if (isOpen !== wasOpen.current) {
         wasOpen.current = isOpen;
         onOpen?.(isOpen);
       }
-    }, [onOpen]),
+    }, [onOpen, own]),
     'data-live',
+  );
+  // A reveal of its own: driven where the page is like the plate, written only when there is one.
+  useGlide(
+    ref,
+    useCallback((r: DOMRect, H: number) => (reveal ? reveal(r, H) : 1), [reveal]),
+    useCallback((rise: number, el: HTMLElement) => {
+      if (own) writeRiseValue(rise, el);
+    }, [own]),
   );
   return (
     <div ref={ref} id={id} className={`${styles.scene} ${className ?? ''}`} data-scene data-header={dark ? 'dark' : undefined}>

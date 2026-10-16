@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { held, openness, Scene } from './Scene';
+import { held, openness, revealUp, Scene } from './Scene';
 
 const realMatchMedia = window.matchMedia;
 afterEach(() => { window.matchMedia = realMatchMedia; });
@@ -25,6 +25,19 @@ describe('openness', () => {
     expect(held(0)).toBe(1);
     expect(held(-0.4)).toBe(1);
     expect(held(-0.9)).toBe(1);
+  });
+});
+
+describe('revealUp', () => {
+  test('nothing while the top is below `from`, all by `to`, rising between (the Om oss doors: from the middle of the screen to near its top)', () => {
+    const doors = revealUp(0.5, 0.12);
+    const at = (top: number) => doors({ top: top * 1000 }, 1000);
+    expect(at(0.9)).toBe(0);
+    expect(at(0.5)).toBe(0);
+    expect(at(0.12)).toBe(1);
+    expect(at(-0.3)).toBe(1);
+    const mid = [0.45, 0.35, 0.25, 0.15].map(at);
+    for (let i = 1; i < mid.length; i++) expect(mid[i]).toBeGreaterThan(mid[i - 1]);
   });
 });
 

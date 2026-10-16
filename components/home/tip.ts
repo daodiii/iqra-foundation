@@ -20,7 +20,16 @@ export const tipY = () => window.scrollY + window.innerHeight * LEAD;
  * the tip. Under reduced motion it is arrived at once and left alone. `onChange` is told
  * both ways.
  */
-export function useArrive(ref: RefObject<HTMLElement | null>, onChange?: (arrived: boolean) => void, after = 32) {
+/**
+ * `part`: arrive by a part of the element instead of its top — once as much of that part is on the
+ * screen as the screen can hold (all of it, or nine tenths of the screen if it is taller), above a
+ * margin at the foot; cleared again once it has gone wholly below the screen. For an animation that
+ * should be seen whole (the Visjon ring, 2026-10-16: «start when the screen is like halfway down to
+ * see the entire thing»).
+ */
+export const PART_FOOT = 0.95;
+
+export function useArrive(ref: RefObject<HTMLElement | null>, onChange?: (arrived: boolean) => void, after = 32, part?: string) {
   const cb = useRef(onChange);
   useEffect(() => {
     cb.current = onChange;
@@ -41,7 +50,16 @@ export function useArrive(ref: RefObject<HTMLElement | null>, onChange?: (arrive
       cb.current?.(now);
     };
     const firstScreen = el.getBoundingClientRect().top + window.scrollY < window.innerHeight;
+    const target = part ? el.querySelector<HTMLElement>(part) : null;
     const check = () => {
+      if (target) {
+        const r = target.getBoundingClientRect();
+        const H = window.innerHeight;
+        const whole = r.top + Math.min(r.height, H * 0.9) <= H * PART_FOOT;
+        if (!arrived && whole) set(true);
+        else if (arrived && r.top > H && !firstScreen) set(false);
+        return;
+      }
       const top = el.getBoundingClientRect().top + window.scrollY;
       const t = tipY();
       if (!arrived && t >= top + after) set(true);
@@ -56,5 +74,5 @@ export function useArrive(ref: RefObject<HTMLElement | null>, onChange?: (arrive
       window.removeEventListener('scroll', check);
       window.removeEventListener('resize', check);
     };
-  }, [ref, after]);
+  }, [ref, after, part]);
 }
