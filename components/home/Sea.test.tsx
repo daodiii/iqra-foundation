@@ -123,7 +123,8 @@ describe('Havet as Bladene', () => {
       expect(page.querySelector('img')).toBeNull();
     });
     // a veil per field in its own field's colour, and a foot logo per field; the foot's found by their own attribute (Logo puts `data-logo` on its img)
-    expect(all('[data-veil]').map((v) => v.style.getPropertyValue('--ground'))).toEqual(seaAreas.map((a) => `var(${AREA_LOOK[a.key].token})`));
+    // navy, white, navy, white (2026-10-16): each field in the look of the ground it wears
+    expect(all('[data-veil]').map((v) => v.style.getPropertyValue('--ground'))).toEqual(['kunnskap', 'moteplasser', 'kunnskap', 'moteplasser'].map((k) => `var(--color-area-${k})`));
     expect(all(FEET).map((f) => f.querySelector('img')?.getAttribute('data-logo'))).toEqual(seaAreas.map((a) => a.ground));
     // every logo on the sea is decorative, the screen's and the band's: the names say what it shows
     expect(all(`${FEET} img, ${BAND_FEET} img`).map((img) => img.getAttribute('alt'))).toEqual(Array(8).fill(''));
@@ -147,7 +148,7 @@ describe('Havet as Bladene', () => {
     expect(lit('[data-band] [data-item]')).toEqual(only(0));
     expect(on(BAND_FEET)).toEqual(only(0));
     expect(band().style.getPropertyValue('--band')).toBe(groundAt(0));
-    expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK[seaAreas[0].key].headingInk})`);
+    expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK.kunnskap.headingInk})`);
   });
 
   test('scrolled so the third page is on the reading line, its name lights and the tide goes there on its own clock, whole: the veil, the foot logo, the inks, the ground', () => {
@@ -163,12 +164,13 @@ describe('Havet as Bladene', () => {
     expect(on('[data-veil]')).toEqual(only(2));
     expect(on(FEET)).toEqual(only(2));
     expect(box().style.getPropertyValue('--ground')).toBe(groundAt(2));
-    expect(sheet().style.getPropertyValue('--card-text')).toBe('var(--color-navy)');
-    expect(sheet()).toHaveAttribute('data-tone', 'light');
+    // the third field is navy again: light type
+    expect(sheet().style.getPropertyValue('--card-text')).toBe('var(--color-light)');
+    expect(sheet()).toHaveAttribute('data-tone', 'dark');
     expect(lit('[data-band] [data-item]')).toEqual(only(2));
     expect(on(BAND_FEET)).toEqual(only(2));
     expect(band().style.getPropertyValue('--band')).toBe(groundAt(2));
-    expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK[seaAreas[2].key].headingInk})`);
+    expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK.kunnskap.headingInk})`);
   });
 
   test('a page that opens already inside the sea (a reload, a way back) stands on the field at the reading line at once, with no tide from the first', () => {

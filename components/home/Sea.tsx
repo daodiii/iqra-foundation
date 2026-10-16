@@ -9,7 +9,7 @@ import type { InkHandle } from '@/lib/ink';
 import { scrollToY } from '@/lib/smooth';
 import { sentences } from '@/lib/text';
 import type { WaterHandle } from '@/lib/water';
-import { AREA_LOOK, areaFloor, type Area } from './areas';
+import { areaFloor, type Area } from './areas';
 import { tideClock } from './clock';
 import { openingEnd } from './Hero';
 import fields from './fields.module.css';
@@ -28,10 +28,9 @@ const widest = seaAreas.reduce((a, b) => (b.name.length > a.name.length ? b : a)
 /** On a phone the stone drops into the water this far past the band's soft foot (px, `--band-edge`), below the lit name: under the band it would not be seen. */
 const PAST_FOOT = 8;
 
-/** A field's colours: its ground for the veil, and the inks that read on it. */
+/** A field's colours: the ground it wears on the sea (tide.ts `SEA_GROUNDS`) for the veil, and the inks that read on it. */
 function inks(area: Area): CSSProperties {
-  const look = AREA_LOOK[area.key];
-  return { '--ground': `var(${look.token})`, '--card-ink': `var(${look.headingInk})`, '--card-text': `var(${look.ink})` } as CSSProperties;
+  return { '--ground': `var(${area.token})`, '--card-ink': `var(${area.headingInk})`, '--card-text': `var(${area.ink})` } as CSSProperties;
 }
 
 /** The water on the frame at `u`: the floor from field i's to the next's, t of the way across. */

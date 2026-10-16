@@ -14,12 +14,14 @@ import { useArrive } from './tip';
 type Props = HTMLAttributes<HTMLElement> & {
   as?: 'div' | 'section';
   onArrive?: (arrived: boolean) => void;
+  /** Arrive by this part (a selector inside), once it is on screen whole, not by the top (tip.ts `useArrive`). */
+  part?: string;
   children: ReactNode;
 };
 
-export function Arrive({ as = 'div', className, onArrive, children, ...rest }: Props) {
+export function Arrive({ as = 'div', className, onArrive, part, children, ...rest }: Props) {
   const ref = useRef<HTMLElement>(null);
-  useArrive(ref, onArrive);
+  useArrive(ref, onArrive, 32, part);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;

@@ -10,10 +10,14 @@ describe('the stage', () => {
 });
 
 describe('the order on the sea', () => {
-  test('the owner’s: navy, burgundy, turquoise, and white last — every area once, each in its own colour', () => {
+  test('the owner’s order, every area once, in navy and white in turn', () => {
     expect(SEA_ORDER).toEqual(['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser']);
-    expect(seaAreas.map((a) => a.ground)).toEqual(['navy', 'crimson', 'turquoise', 'light']);
-    expect([...seaAreas].sort((a, b) => a.key.localeCompare(b.key))).toEqual([...areas].sort((a, b) => a.key.localeCompare(b.key)));
+    // navy and white in turn (2026-10-16: «Blue, white, blue, white»), in the guide's look for each ground
+    expect(seaAreas.map((a) => a.ground)).toEqual(['navy', 'light', 'navy', 'light']);
+    expect(seaAreas.map((a) => a.tone)).toEqual(['dark', 'light', 'dark', 'light']);
+    expect(seaAreas.map((a) => a.token)).toEqual(['kunnskap', 'moteplasser', 'kunnskap', 'moteplasser'].map((k) => `--color-area-${k}`));
+    // each area's name, text and link its own
+    expect(seaAreas.map((a) => [a.key, a.name, a.text, a.href])).toEqual(SEA_ORDER.map((k) => areas.find((a) => a.key === k)!).map((a) => [a.key, a.name, a.text, a.href]));
   });
 
 });
@@ -38,9 +42,9 @@ describe('seaAt', () => {
 
 describe('groundAt', () => {
   test('the CSS ground is the next area’s token over the current one’s, the tide as a percentage', () => {
-    expect(groundAt(0)).toBe('color-mix(in srgb, var(--color-area-samfunnsdeltakelse) 0.0%, var(--color-area-kunnskap))');
-    expect(groundAt(1.25)).toBe('color-mix(in srgb, var(--color-area-dialog) 25.0%, var(--color-area-samfunnsdeltakelse))');
-    expect(groundAt(3)).toBe('color-mix(in srgb, var(--color-area-moteplasser) 100.0%, var(--color-area-dialog))');
+    expect(groundAt(0)).toBe('color-mix(in srgb, var(--color-area-moteplasser) 0.0%, var(--color-area-kunnskap))');
+    expect(groundAt(1.25)).toBe('color-mix(in srgb, var(--color-area-kunnskap) 25.0%, var(--color-area-moteplasser))');
+    expect(groundAt(3)).toBe('color-mix(in srgb, var(--color-area-moteplasser) 100.0%, var(--color-area-kunnskap))');
   });
 });
 

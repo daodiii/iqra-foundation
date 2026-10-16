@@ -37,16 +37,20 @@
   /*
    * The spread's sizes, on the type scale (elite study): the statement a section title's step, the
    * names a step under it (they are navigation; side by side at one size, 58 and 58 px, the eye had
-   * two places to land), the reading a lead's.
+   * two places to land), the reading a lead's. Both a step down since 2026-10-15: at step 4 the
+   * statements ran to three and four lines on a laptop, a wall of large type (the review).
    */
-  --index-size: var(--step-3);
-  --say-size: var(--step-4);
+  --index-size: var(--step-2);
+  --say-size: var(--step-3);
   --text-size: var(--step-1);
   /* The dials, each named once. */
   /* The inks' fade: .index, .say, .text and .band all cross to the next field's colours on it. */
   --ink-fade: 0.45s;
-  /* The dimmed names' opacity: .item (the left page's and the band's), for the field not on the water. */
-  --name-dim: 0.38;
+  /*
+   * The dimmed names' opacity: .item (the left page's and the band's), for the field not on the
+   * water. 0.6 since 2026-10-15: at 0.38 the three names at rest were hard to read over the water.
+   */
+  --name-dim: 0.6;
   /* The logo's opacity once it's on: .foot[data-on], at the foot of the left page or the band. */
   --logo-on: 0.85;
   --open: 1;
@@ -302,6 +306,16 @@
   display: none;
 }
 
+/*
+ * A tablet and a small laptop: the right pages are narrow there, and at step 3 the statements still
+ * ran to five lines at 768 (2026-10-15). A step down, the names with them.
+ */
+@media (min-width: 700px) and (max-width: 1099px) {
+  .stage {
+    --index-size: var(--step-1);
+    --say-size: var(--step-2);
+  }
+}
 
 
 /*

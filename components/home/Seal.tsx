@@ -31,10 +31,11 @@ export function Seal() {
   return (
     <Scene dark>
       <Flat tint="navy" className={styles.plate}>
-        <Arrive as="div">
+        {/* By the ring, whole on screen (2026-10-16): it began drawing with half of it below the screen. */}
+        <Arrive as="div" part="[data-seal]">
           <div className={styles.row}>
             <section id="visjon" aria-labelledby="visjon-tittel" className={styles.vision}>
-              <div className={styles.seal}>
+              <div className={styles.seal} data-seal>
                 <svg className={styles.ring} viewBox="0 0 100 100" aria-hidden="true">
                   <defs>
                     <path id="segl-bane" d={`M50,50 m-${R_TEXT},0 a${R_TEXT},${R_TEXT} 0 1,1 ${R_TEXT * 2},0 a${R_TEXT},${R_TEXT} 0 1,1 -${R_TEXT * 2},0`} />

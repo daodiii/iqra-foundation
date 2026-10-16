@@ -17,9 +17,11 @@ export function pickSource({ narrow, webm }: { narrow: boolean; webm: boolean })
 /**
  * The poster at the widths a screen asks for (scripts/dev/elite-media.mjs), AVIF and WebP: a phone
  * takes a 21 KB file where it took the 142 KB JPEG, which was its LCP element. `POSTER_SIZES` is
- * the lockup's box (hero.module.css `--mark-w`): 84vw on a phone, 54vw held back on a short screen.
+ * the lockup's box (hero.module.css `--mark-w`): the screen less 28px on a phone; on a wider screen
+ * the page's edges, held back on a short screen so the copy fits under it (the header 72px + the
+ * copy 290px).
  */
 export const POSTER_WIDTHS = [480, 720, 960, 1280, 1600, 1920] as const;
 export const posterSet = (type: 'avif' | 'webp') => POSTER_WIDTHS.map((w) => `/media/${FILM}-poster-${w}.${type} ${w}w`).join(', ');
-export const POSTER_SIZES = '(max-width: 767px) 84vw, min(54vw, 66vh)';
+export const POSTER_SIZES = '(max-width: 767px) calc(100vw - 28px), min(88vw, calc((100vh - 362px) * 1.822))';
 export const POSTER_FALLBACK = `/media/${FILM}-poster-960.webp`;
