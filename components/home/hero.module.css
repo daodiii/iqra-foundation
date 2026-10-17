@@ -58,20 +58,24 @@
 
 /*
  * Two wrappers, one move each: the outer goes back to the header with the scroll, the inner plays the
- * greeting. Above the header (z 60) so the name is seen going into it, and never a target: it is a
- * picture of the name, and over the phone's drawer it took the taps meant for its links. While the
- * drawer is open it stands under it.
+ * greeting. Above the header (z 60) once the script moves it, so the name is seen going into it; not
+ * before, so where nothing moves it (reduced motion, no script) it scrolls under the header like the
+ * rest of the page instead of over its menu. Never a target: it is a picture of the name, and over the
+ * phone's drawer it took the taps meant for its links. While the drawer is open it stands under it.
  */
 .dock {
   position: relative;
-  z-index: 61;
   display: block;
   transform-origin: 0 0;
   will-change: transform;
   pointer-events: none;
 }
 
-:global(body[data-menu-open]) .dock {
+.hero[data-in] .dock {
+  z-index: 61;
+}
+
+:global(body[data-menu-open]) .hero[data-in] .dock {
   z-index: auto;
 }
 
@@ -102,10 +106,12 @@
   }
 }
 
+/* `--shown` tells the script the name already stands here (Hero.tsx): it does not send it back to greet. */
 @keyframes appear {
   to {
     opacity: 1;
     transform: none;
+    --shown: 1;
   }
 }
 

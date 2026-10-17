@@ -1,5 +1,5 @@
 import { act, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { LOGO_ON_NAVY_CRIMSON } from '@/components/site/Logo';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
@@ -9,7 +9,11 @@ const realMatchMedia = window.matchMedia;
 afterEach(() => {
   window.matchMedia = realMatchMedia;
   document.getElementById('topp')?.remove();
+  vi.restoreAllMocks();
 });
+
+const rect = (left: number, top: number, width: number, height: number) =>
+  ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON() {} }) as DOMRect;
 
 const reduced = () => {
   window.matchMedia = ((q: string) => ({ ...realMatchMedia(q), matches: q.includes('prefers-reduced-motion') })) as typeof window.matchMedia;
@@ -59,6 +63,42 @@ describe('Hero', () => {
     expect(picture.getAttribute('srcset')).toContain('/hero/staden-1920.webp 1920w');
     expect(container.querySelector('video')).toBeNull();
     expect(container.querySelector('canvas')).toBeNull();
+    // a phone takes its own crop, the middle at full height, not the 1920 file its 3× screen would pick by width
+    const phone = container.querySelector('picture source')!;
+    expect(phone).toHaveAttribute('media', '(max-width: 767px)');
+    expect(phone).toHaveAttribute('srcset', '/hero/staden-phone.webp');
+  });
+
+  test('the greeting sets off from the header’s logo measured against the header, so a header still sliding back in (`data-away`) does not put it above the screen', () => {
+    header();
+    // the header 73px up, mid-slide; its logo 16px down inside it; the name in the hero at 200, 300, 900 wide
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.id === 'topp') return rect(0, -73, 1536, 72);
+      if (this.hasAttribute('data-logo')) return this.getAttribute('data-logo') === 'navy' ? rect(96, -57, 72.9, 40) : rect(0, 0, 0, 0);
+      if (this.parentElement?.id === 'hovedtekst') return rect(200, 300, 900, 494);
+      return rect(0, 0, 0, 0);
+    });
+    render(<Hero />);
+    const greet = document.getElementById('hovedtekst')!.firstElementChild as HTMLElement;
+    expect(greet.style.getPropertyValue('--gx')).toBe('-104.00px');
+    // 16 - 300, where the screen's -57 would have said -357
+    expect(greet.style.getPropertyValue('--gy')).toBe('-284.00px');
+  });
+
+  test('a name the stylesheet has already shown in place (a phone slower than its 1.5 s) is not sent back into the header to greet again', () => {
+    header();
+    const real = window.getComputedStyle;
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
+      const style = real(el, pseudo);
+      if (el.parentElement?.id !== 'hovedtekst') return style;
+      // what the stylesheet's `appear` leaves on it at 1.5 s
+      return new Proxy(style, {
+        get: (t, p) => (p === 'getPropertyValue' ? (name: string) => (name === '--shown' ? '1' : t.getPropertyValue(name)) : Reflect.get(t, p)),
+      });
+    });
+    render(<Hero />);
+    const greet = document.getElementById('hovedtekst')!.firstElementChild as HTMLElement;
+    for (const v of ['--gx', '--gy', '--gs']) expect(greet.style.getPropertyValue(v)).toBe('');
   });
 
   test('with the header there, the name is set to step out of the header’s logo and the greeting starts on the next frame', async () => {

@@ -14,6 +14,8 @@ const DOCK = 0.45;
 const DEPTH = 0.35;
 /** The logo's intrinsic height for its width and height attributes; the stylesheet sizes it. */
 const HEIGHT = 400;
+/** A phone's crop of the picture (public/hero/staden-phone.webp): the middle of the 1920 file, its full height. */
+const PHONE_CROP = { width: 720, height: 1072 };
 
 const smooth = (t: number) => {
   const u = Math.min(1, Math.max(0, t));
@@ -78,15 +80,24 @@ export function Hero() {
       o = { x: m ? r.left - m.e : r.left, y: (m ? r.top - m.f : r.top) + window.scrollY, w: m ? r.width / m.a : r.width };
       const target = home();
       if (!target) return;
+      // Against the header, not the screen: the header is fixed at the top left and only ever moves by
+      // its own transform, and coming back to the home page from a page read to its foot it is still
+      // sliding back in (`data-away`), so the screen put the logo 57px above the top for good.
       const hr = target.getBoundingClientRect();
-      to = { x: hr.left, y: hr.top, w: hr.width };
+      const hb = header.getBoundingClientRect();
+      to = { x: hr.left - hb.left, y: hr.top - hb.top, w: hr.width };
     };
     measure();
 
-    // The greeting: out of the header's logo, into the hero.
-    g.style.setProperty('--gx', `${(to.x - o.x).toFixed(2)}px`);
-    g.style.setProperty('--gy', `${(to.y - (o.y - window.scrollY)).toFixed(2)}px`);
-    g.style.setProperty('--gs', (to.w / o.w).toFixed(5));
+    // The greeting: out of the header's logo, into the hero. Unless the name is already standing there:
+    // a phone that took longer than the stylesheet's 1.5 s to run this has shown it in place
+    // (`appear`, which sets `--shown`), and set off from the header now it would jump back into it and
+    // come out again.
+    if (getComputedStyle(g).getPropertyValue('--shown').trim() !== '1') {
+      g.style.setProperty('--gx', `${(to.x - o.x).toFixed(2)}px`);
+      g.style.setProperty('--gy', `${(to.y - (o.y - window.scrollY)).toFixed(2)}px`);
+      g.style.setProperty('--gs', (to.w / o.w).toFixed(5));
+    }
     const id = requestAnimationFrame(() => h.setAttribute('data-in', ''));
 
     let raf = 0;
@@ -133,17 +144,22 @@ export function Hero() {
   return (
     <section ref={hero} className={styles.hero} aria-labelledby="hovedtekst" data-header="dark" data-hero>
       <div ref={picture} className={styles.picture} aria-hidden="true">
-        <img
-          className={styles.ink}
-          src="/hero/staden-960.webp"
-          srcSet="/hero/staden-960.webp 960w, /hero/staden-1920.webp 1920w"
-          sizes="100vw"
-          alt=""
-          width={1920}
-          height={1072}
-          decoding="async"
-          data-picture
-        />
+        {/* A phone shows the middle of the picture at its full height (cover, on a tall screen): its own crop of
+            it, not the whole 1920 file a 3× screen picked by width (759 KB for a ground at 17%). */}
+        <picture>
+          <source media="(max-width: 767px)" srcSet="/hero/staden-phone.webp" width={PHONE_CROP.width} height={PHONE_CROP.height} />
+          <img
+            className={styles.ink}
+            src="/hero/staden-960.webp"
+            srcSet="/hero/staden-960.webp 960w, /hero/staden-1920.webp 1920w"
+            sizes="100vw"
+            alt=""
+            width={1920}
+            height={1072}
+            decoding="async"
+            data-picture
+          />
+        </picture>
       </div>
       <h1 className={styles.mark}>
         {/* The id is on the part that moves: the header watches it, and shows its own logo once this has landed on it. */}
