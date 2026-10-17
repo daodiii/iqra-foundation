@@ -17,7 +17,7 @@ import { useFit } from './fit';
 import { useGlide } from './glide';
 import { openness, plateOff } from './Scene';
 import styles from './sea.module.css';
-import { groundAt, HYST, inkAt, LANDED, LEFT, nearestPage, seaAreas, seaAt, STEPS } from './tide';
+import { groundAt, HYST, inkAt, LANDED, LEFT, nearestPage, seaAreas, seaAt, STEPS, veilAt } from './tide';
 
 /** The sea as a plate: only its shape; nothing on it waits for a reveal. */
 const writeOpen = (off: number, el: HTMLElement) => el.style.setProperty('--open', openness(off).toFixed(3));
@@ -124,7 +124,7 @@ function Page({ area, k }: { area: Area; k: number }) {
  *
  * Under reduced motion the sea goes to a field at once: the name, the inks and the colour, with no
  * tide, no stone and no glide (the site's stylesheet drops every transition there too). Without
- * script the sticky screen is CSS alone, and the pages scroll over the navy in the first field's
+ * script the sticky screen is CSS alone, and the pages scroll over the first field's water in its
  * inks.
  */
 export function Sea() {
@@ -177,7 +177,7 @@ export function Sea() {
       shown.current = u;
       el.dataset.u = u.toFixed(3);
       tune(live.current, u);
-      // On the box itself: it declares its own `--ground` (`.field.navy`), so a ground set on anything above it never showed.
+      // On the box itself: it declares its own `--ground` (`.field.<ground>`), so a ground set on anything above it never showed.
       box.style.setProperty('--ground', groundAt(u));
       // The phone's band wears the fields' own colours as the tide crosses, the same mix as the box's
       // CSS ground, not a step behind it. (The water drawn over that ground has floors of its own.)
@@ -193,8 +193,10 @@ export function Sea() {
         }
         sheet.dataset.tone = area.tone;
         index.dataset.tone = area.tone;
-        veils.forEach((v, j) => v.toggleAttribute('data-on', j === k));
-        feet.forEach((f) => f.toggleAttribute('data-on', own(f, 'foot') === k));
+        // The same ground's veil and logo stay on across a field that wears it too (`veilAt`).
+        const lit = veilAt(k);
+        veils.forEach((v, j) => v.toggleAttribute('data-on', j === lit));
+        feet.forEach((f) => f.toggleAttribute('data-on', own(f, 'foot') === lit));
       }
       seaAreas.forEach((_, j) => {
         const d = Math.abs(u - j);

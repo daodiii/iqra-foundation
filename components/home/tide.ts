@@ -75,6 +75,18 @@ export function groundAt(u: number): string {
   return `color-mix(in srgb, var(${seaAreas[i + 1].token}) ${(t * 100).toFixed(1)}%, var(${seaAreas[i].token}))`;
 }
 
+/**
+ * The field whose veil and foot logo stand lit while field `k`'s inks are on: the first of the run of
+ * neighbours that wear the same ground. The two navy fields side by side are one colour, and handed
+ * from one veil and logo to identical ones the two fades summed to less than one layer: the logo
+ * dipped from 0.85 to about 0.66 and the veil thinned while only the words changed.
+ */
+export function veilAt(k: number): number {
+  let j = k;
+  while (j > 0 && seaAreas[j - 1].token === seaAreas[k].token) j--;
+  return j;
+}
+
 /** The field whose inks the words and the names wear at playhead `u`. */
 export function inkAt(u: number): number {
   const i = Math.max(0, Math.min(STEPS, Math.floor(u)));

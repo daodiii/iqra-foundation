@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { areas } from './areas';
-import { groundAt, INK_AT, inkAt, nearestPage, SEA_ORDER, seaAreas, seaAt, STEPS } from './tide';
+import { groundAt, INK_AT, inkAt, nearestPage, SEA_ORDER, seaAreas, seaAt, STEPS, veilAt } from './tide';
 
 describe('the stage', () => {
   test('three steps between the four fields, and the stage is built for exactly that', () => {
@@ -46,6 +46,12 @@ describe('groundAt', () => {
     // the two navy fields in the middle: the tide between them keeps the one colour
     expect(groundAt(1.25)).toBe('color-mix(in srgb, var(--color-area-kunnskap) 25.0%, var(--color-area-kunnskap))');
     expect(groundAt(3)).toBe('color-mix(in srgb, var(--color-area-moteplasser) 100.0%, var(--color-area-kunnskap))');
+  });
+});
+
+describe('veilAt', () => {
+  test('a field keeps the veil and logo of the neighbour before it that wears the same ground: the two navy fields share the second’s', () => {
+    expect([0, 1, 2, 3].map(veilAt)).toEqual([0, 1, 1, 3]);
   });
 });
 

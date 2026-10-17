@@ -84,6 +84,30 @@ describe('useArrive', () => {
     expect(onChange).toHaveBeenCalledTimes(2);
   });
 
+  test('with `seen`, a page that opens with the plate only peeking in waits for the mark rather than arriving at mount', () => {
+    // opened at scrollY 200: the element's top at 800 on a 900 screen, inside it; the screen's foot at 1100, short of the mark at 1150
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 200 });
+    const onChange = vi.fn();
+    const { getByTestId } = render(<Probe onChange={onChange} seen={0.25} />);
+    expect(getByTestId('el')).not.toHaveAttribute('data-arrived');
+    expect(onChange).not.toHaveBeenCalled();
+    scrollTo(250);
+    expect(getByTestId('el')).toHaveAttribute('data-arrived');
+  });
+
+  test('with `seen`, a height-only resize on a phone (its toolbar showing) does not move the line: the seal is not cleared and drawn again', () => {
+    const onChange = vi.fn();
+    const { getByTestId } = render(<Probe onChange={onChange} seen={0.25} />);
+    scrollTo(260);
+    expect(getByTestId('el')).toHaveAttribute('data-arrived');
+    // the toolbar shows (900 to 760) on a scroll back up to 200: judged live the foot would be at 960, below the leaving line at 1030
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 760 });
+    act(() => { window.dispatchEvent(new Event('resize')); });
+    scrollTo(200);
+    expect(getByTestId('el')).toHaveAttribute('data-arrived');
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
   test('what stands on the first screen is already there: arrived on mount, told once, and a scroll does not clear it', () => {
     top = 600;
     const onChange = vi.fn();

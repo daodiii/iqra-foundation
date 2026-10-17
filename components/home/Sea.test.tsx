@@ -5,7 +5,7 @@ import { site } from '@/content/site.no';
 import { sentences } from '@/lib/text';
 import { AREA_LOOK, areaFloor } from './areas';
 import { Sea } from './Sea';
-import { groundAt, seaAreas } from './tide';
+import { groundAt, seaAreas, veilAt } from './tide';
 
 /*
  * The water is built when the box is near and the page quiet (lib/near.ts), and jsdom has no
@@ -162,14 +162,16 @@ describe('Havet as Bladene', () => {
     expect(lit('[data-page]')).toEqual(only(2));
     // the frames ran at once: the tide has landed, on the field exactly
     expect(region().dataset.u).toBe('2.000');
-    expect(on('[data-veil]')).toEqual(only(2));
-    expect(on(FEET)).toEqual(only(2));
+    // the third field wears the second's navy: the second's veil and logo stay on rather than fading into identical ones
+    expect(veilAt(2)).toBe(1);
+    expect(on('[data-veil]')).toEqual(only(1));
+    expect(on(FEET)).toEqual(only(1));
     expect(box().style.getPropertyValue('--ground')).toBe(groundAt(2));
     // the third field is navy, as the second: light type
     expect(sheet().style.getPropertyValue('--card-text')).toBe('var(--color-light)');
     expect(sheet()).toHaveAttribute('data-tone', 'dark');
     expect(lit('[data-band] [data-item]')).toEqual(only(2));
-    expect(on(BAND_FEET)).toEqual(only(2));
+    expect(on(BAND_FEET)).toEqual(only(1));
     expect(band().style.getPropertyValue('--band')).toBe(groundAt(2));
     expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK.kunnskap.headingInk})`);
   });
@@ -180,7 +182,8 @@ describe('Havet as Bladene', () => {
     expect(lit('[data-page]')).toEqual(only(2));
     expect(lit('[data-index] [data-item]')).toEqual(only(2));
     expect(region().dataset.u).toBe('2.000');
-    expect(on('[data-veil]')).toEqual(only(2));
+    // the third field wears the second's navy, so the second's veil is the one on (`veilAt`)
+    expect(on('[data-veil]')).toEqual(only(veilAt(2)));
     // a tide of two fields is dozens of frames; standing on the field at once is one or two
     expect(vi.mocked(window.requestAnimationFrame).mock.calls.length).toBeLessThan(5);
   });
