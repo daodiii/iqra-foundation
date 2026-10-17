@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
-import { getEvents, getPeople, splitEvents, todayISO } from '../lib/content';
+import { getEvents, getNews, getPeople, getResources, splitEvents, todayISO } from '../lib/content';
 import { isPlaceholder } from '../lib/placeholder';
 import { sentences } from '../lib/text';
 import { groundAt, seaAreas } from '../components/home/tide';
@@ -179,22 +179,25 @@ test('om oss: the brief’s text and the story of the name', async ({ page }) =>
 });
 
 test.describe('the collections are honest while empty', () => {
-  test('arrangementer: kommende and tidligere, each with its own line while empty, each listing what is published', async ({ page }) => {
+  test('arrangementer: kommende, nyheter and tidligere, in that order, each listing what is published or saying it is empty', async ({ page }) => {
     await page.goto('/arrangementer');
-    await expect(page).toHaveTitle(T(site.pages.events.title));
-    await expect(page.getByRole('heading', { name: site.pages.events.upcoming })).toBeVisible();
-    await expect(page.getByRole('heading', { name: site.pages.events.past })).toBeVisible();
+    const t = site.pages.events;
+    await expect(page).toHaveTitle(T(t.title));
+    expect(await page.getByRole('main').locator('h2').allTextContents()).toEqual([t.upcoming, t.news, t.past]);
     const { upcoming, past } = splitEvents(getEvents(), todayISO());
-    if (upcoming.length) for (const e of upcoming) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
-    else await expect(page.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeVisible();
-    if (past.length) for (const e of past) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
-    else await expect(page.getByText(site.pages.events.emptyPast, { exact: true })).toBeVisible();
+    const news = getNews();
+    for (const [items, empty] of [[upcoming, t.emptyUpcoming], [news, t.emptyNews], [past, t.emptyPast]] as const) {
+      if (items.length) for (const x of items) await expect(page.getByRole('heading', { level: 3, name: x.title, exact: true })).toBeVisible();
+      else await expect(page.getByText(empty, { exact: true })).toBeVisible();
+    }
   });
-  test('ressurser', async ({ page }) => {
+  test('ressurser: every published resource, or the empty line', async ({ page }) => {
     await page.goto('/ressurser');
     await expect(page).toHaveTitle(T(site.pages.resources.title));
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', brief.resources);
-    await expect(page.getByText(site.pages.resources.empty, { exact: true })).toBeVisible();
+    const items = getResources();
+    if (items.length) for (const r of items) await expect(page.getByRole('heading', { level: 3, name: r.title, exact: true })).toBeVisible();
+    else await expect(page.getByText(site.pages.resources.empty, { exact: true })).toBeVisible();
   });
   test('menneskene bak: the board paragraph, then everyone in the collection, or the empty line', async ({ page }) => {
     await page.goto('/menneskene-bak');
@@ -211,6 +214,34 @@ test.describe('the collections are honest while empty', () => {
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', brief.documents);
     await expect(page.getByText(site.pages.documents.empty, { exact: true })).toBeVisible();
   });
+});
+
+test('every post with a full text has its own page, reached from its card', async ({ page }) => {
+  // With no such post in content/ this has nothing to walk; Task 7 of the Innlegg plan runs it with three.
+  const { upcoming, past } = splitEvents(getEvents(), todayISO());
+  const posts = [
+    ...[...upcoming, ...past].filter((e) => e.body).map((e) => ({ list: '/arrangementer', href: `/arrangementer/${e.slug}`, title: e.title })),
+    ...getNews().filter((n) => n.body).map((n) => ({ list: '/arrangementer', href: `/nyheter/${n.slug}`, title: n.title })),
+    ...getResources().filter((r) => r.body).map((r) => ({ list: '/ressurser', href: `/ressurser/${r.slug}`, title: r.title })),
+  ];
+  test.info().annotations.push({ type: 'posts walked', description: String(posts.length) });
+  for (const p of posts) {
+    await page.goto(p.list);
+    await page.getByRole('link', { name: p.title, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${p.href}$`));
+    await expect(page.locator('h1')).toHaveText(p.title);
+    await expect(page).toHaveTitle(T(p.title));
+  }
+});
+
+test('an address that is not a published post with a full text is a 404, and /nyheter is the news on Arrangementer', async ({ page }) => {
+  for (const href of ['/arrangementer/finnes-ikke', '/nyheter/finnes-ikke', '/ressurser/finnes-ikke']) {
+    const response = await page.goto(href);
+    expect(response?.status(), href).toBe(404);
+  }
+  await page.goto('/nyheter');
+  await expect(page).toHaveURL(/\/arrangementer#nyheter$/);
+  await expect(page.getByRole('heading', { level: 2, name: site.pages.events.news, exact: true })).toBeVisible();
 });
 
 test('phone: no page is wider than the screen at 320, 360 or 390, however long its title', async ({ page, isMobile }) => {

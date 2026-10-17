@@ -3,5 +3,6 @@
   "start": "2026-11-01",
   "time": "00:00",
   "place": "Oslo",
-  "text": "Nettsiden er komplett og overleveres til Iqra foundation."
+  "summary": "Nettsiden er komplett og overleveres til Iqra foundation.",
+  "publish": true
 }

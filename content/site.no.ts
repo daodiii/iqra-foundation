@@ -142,6 +142,10 @@ export const site = {
       past: 'Tidligere',
       emptyUpcoming: 'Ingen arrangementer er publisert ennå.',
       emptyPast: 'Ingen tidligere arrangementer er publisert ennå.',
+      news: 'Nyheter',
+      emptyNews: 'Ingen nyheter er publisert ennå.',
+      /** An event's sign-up link on its page; the words Keystatic's field already uses. */
+      link: 'Påmelding eller mer informasjon',
       place: 'Sted',
       time: 'Tid',
       more: 'Les mer',
