@@ -91,8 +91,8 @@ describe('Havet as Bladene', () => {
     expect(region()).toHaveAttribute('data-fields');
     const waters = region().querySelectorAll('[data-material="water"]');
     expect(waters).toHaveLength(1);
-    expect(waters[0]).toHaveAttribute('data-ground', 'navy');
-    expect(waters[0]).toHaveAttribute('data-tone', 'dark');
+    expect(waters[0]).toHaveAttribute('data-ground', 'light');
+    expect(waters[0]).toHaveAttribute('data-tone', 'light');
     expect(seaAreas.map((a) => a.key)).toEqual(['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser']);
 
     // the left page: one list of the four names, each a button; no landmark of its own (it would need a label, and a label is copy)
@@ -123,8 +123,8 @@ describe('Havet as Bladene', () => {
       expect(page.querySelector('img')).toBeNull();
     });
     // a veil per field in its own field's colour, and a foot logo per field; the foot's found by their own attribute (Logo puts `data-logo` on its img)
-    // navy, white, navy, white (2026-10-16): each field in the look of the ground it wears
-    expect(all('[data-veil]').map((v) => v.style.getPropertyValue('--ground'))).toEqual(['kunnskap', 'moteplasser', 'kunnskap', 'moteplasser'].map((k) => `var(--color-area-${k})`));
+    // white, navy, navy, white (2026-10-17): each field in the look of the ground it wears
+    expect(all('[data-veil]').map((v) => v.style.getPropertyValue('--ground'))).toEqual(['moteplasser', 'kunnskap', 'kunnskap', 'moteplasser'].map((k) => `var(--color-area-${k})`));
     expect(all(FEET).map((f) => f.querySelector('img')?.getAttribute('data-logo'))).toEqual(seaAreas.map((a) => a.ground));
     // every logo on the sea is decorative, the screen's and the band's: the names say what it shows
     expect(all(`${FEET} img, ${BAND_FEET} img`).map((img) => img.getAttribute('alt'))).toEqual(Array(8).fill(''));
@@ -142,13 +142,14 @@ describe('Havet as Bladene', () => {
     expect(on(FEET)).toEqual(only(0));
     // on the box itself: it declares its own `--ground`, and one set above it never showed
     expect(box().style.getPropertyValue('--ground')).toBe(groundAt(0));
-    expect(sheet().style.getPropertyValue('--card-text')).toBe('var(--color-light)');
-    expect(sheet()).toHaveAttribute('data-tone', 'dark');
+    // the first field is white: navy type
+    expect(sheet().style.getPropertyValue('--card-text')).toBe('var(--color-navy)');
+    expect(sheet()).toHaveAttribute('data-tone', 'light');
     // the phone's band the same: its name and logo, the water's colour, the field's inks
     expect(lit('[data-band] [data-item]')).toEqual(only(0));
     expect(on(BAND_FEET)).toEqual(only(0));
     expect(band().style.getPropertyValue('--band')).toBe(groundAt(0));
-    expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK.kunnskap.headingInk})`);
+    expect(band().style.getPropertyValue('--card-ink')).toBe(`var(${AREA_LOOK.moteplasser.headingInk})`);
   });
 
   test('scrolled so the third page is on the reading line, its name lights and the tide goes there on its own clock, whole: the veil, the foot logo, the inks, the ground', () => {
@@ -164,7 +165,7 @@ describe('Havet as Bladene', () => {
     expect(on('[data-veil]')).toEqual(only(2));
     expect(on(FEET)).toEqual(only(2));
     expect(box().style.getPropertyValue('--ground')).toBe(groundAt(2));
-    // the third field is navy again: light type
+    // the third field is navy, as the second: light type
     expect(sheet().style.getPropertyValue('--card-text')).toBe('var(--color-light)');
     expect(sheet()).toHaveAttribute('data-tone', 'dark');
     expect(lit('[data-band] [data-item]')).toEqual(only(2));

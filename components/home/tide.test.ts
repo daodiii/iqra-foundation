@@ -10,12 +10,12 @@ describe('the stage', () => {
 });
 
 describe('the order on the sea', () => {
-  test('the owner’s order, every area once, in navy and white in turn', () => {
+  test('the owner’s order, every area once, white at both ends and navy between', () => {
     expect(SEA_ORDER).toEqual(['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser']);
-    // navy and white in turn (2026-10-16: «Blue, white, blue, white»), in the guide's look for each ground
-    expect(seaAreas.map((a) => a.ground)).toEqual(['navy', 'light', 'navy', 'light']);
-    expect(seaAreas.map((a) => a.tone)).toEqual(['dark', 'light', 'dark', 'light']);
-    expect(seaAreas.map((a) => a.token)).toEqual(['kunnskap', 'moteplasser', 'kunnskap', 'moteplasser'].map((k) => `--color-area-${k}`));
+    // white, navy, navy, white (2026-10-17: «the first and the last are white, and the two in the middle are blue»), in the guide's look for each ground
+    expect(seaAreas.map((a) => a.ground)).toEqual(['light', 'navy', 'navy', 'light']);
+    expect(seaAreas.map((a) => a.tone)).toEqual(['light', 'dark', 'dark', 'light']);
+    expect(seaAreas.map((a) => a.token)).toEqual(['moteplasser', 'kunnskap', 'kunnskap', 'moteplasser'].map((k) => `--color-area-${k}`));
     // each area's name, text and link its own
     expect(seaAreas.map((a) => [a.key, a.name, a.text, a.href])).toEqual(SEA_ORDER.map((k) => areas.find((a) => a.key === k)!).map((a) => [a.key, a.name, a.text, a.href]));
   });
@@ -42,8 +42,9 @@ describe('seaAt', () => {
 
 describe('groundAt', () => {
   test('the CSS ground is the next area’s token over the current one’s, the tide as a percentage', () => {
-    expect(groundAt(0)).toBe('color-mix(in srgb, var(--color-area-moteplasser) 0.0%, var(--color-area-kunnskap))');
-    expect(groundAt(1.25)).toBe('color-mix(in srgb, var(--color-area-kunnskap) 25.0%, var(--color-area-moteplasser))');
+    expect(groundAt(0)).toBe('color-mix(in srgb, var(--color-area-kunnskap) 0.0%, var(--color-area-moteplasser))');
+    // the two navy fields in the middle: the tide between them keeps the one colour
+    expect(groundAt(1.25)).toBe('color-mix(in srgb, var(--color-area-kunnskap) 25.0%, var(--color-area-kunnskap))');
     expect(groundAt(3)).toBe('color-mix(in srgb, var(--color-area-moteplasser) 100.0%, var(--color-area-kunnskap))');
   });
 });
