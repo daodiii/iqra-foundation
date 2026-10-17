@@ -23,6 +23,12 @@ import { Words } from './Words';
 const t = site.pages.home;
 /** The four names twice round: once round fell short of the circle and was stretched letter by letter. */
 export const INSCRIPTION = (areas.map((a) => a.name).join('  ·  ') + '  ·  ').repeat(2);
+/**
+ * The seal arrives (the ring draws, the words come, the dot pops) once this share of its plate is on
+ * the screen. The owner, 2026-10-17: «it opens up way too late now. Make it so that it opens up when
+ * you can see 25% of the page.» At the tip line it waited for half the plate on a laptop.
+ */
+export const SEEN = 0.25;
 /** The ring's radius and the inscription's, in the seal's 100-unit box. */
 const R = 47;
 const R_TEXT = 40.5;
@@ -31,7 +37,7 @@ export function Seal() {
   return (
     <Scene dark>
       <Flat tint="navy" className={styles.plate}>
-        <Arrive as="div">
+        <Arrive as="div" seen={SEEN}>
           <div className={styles.row}>
             <section id="visjon" aria-labelledby="visjon-tittel" className={styles.vision}>
               <div className={styles.seal}>
