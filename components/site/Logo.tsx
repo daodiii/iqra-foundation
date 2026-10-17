@@ -32,10 +32,19 @@ type Props = {
   className?: string;
   /** Decorative where the name is already in the text beside it. */
   decorative?: boolean;
+  /**
+   * On navy, the reversed logo with the crimson accents in place of the guide's turquoise (and
+   * FOUNDATION in the light ink): the hero's logo, which the header must match exactly, since the
+   * hero's name lands on it. The owner, 2026-10-17: «use the one that has not turquoise, but red».
+   */
+  crimson?: boolean;
 };
 
-export function Logo({ ground = 'white', mark = false, height, className, decorative = false }: Props) {
-  const src = mark ? '/brand/iqra-mark.svg' : FILE[ground];
+/** The guide's on-navy file with the two accents recoloured crimson and the word light; the guide does not draw it. */
+export const LOGO_ON_NAVY_CRIMSON = '/brand/iqra-logo-on-navy-crimson.svg';
+
+export function Logo({ ground = 'white', mark = false, height, className, decorative = false, crimson = false }: Props) {
+  const src = mark ? '/brand/iqra-mark.svg' : crimson && ground === 'navy' ? LOGO_ON_NAVY_CRIMSON : FILE[ground];
   const ratio = mark ? MARK_RATIO : LOGO_RATIO;
   return (
     <img

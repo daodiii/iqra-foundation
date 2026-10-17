@@ -168,14 +168,19 @@ test('on a phone the plates move with the thumb and stop with the page: nothing 
   expect(new Set(after).size, `after the page stopped: ${[...new Set(after)].join(' | ')}`).toBe(1);
 });
 
-test('the hero’s film rests once the hero is scrolled past, and plays again back at the top', async ({ page }) => {
+test('the name goes back into the header on the scroll and lands exactly on the header’s logo, which takes over', async ({ page }) => {
   await open(page);
-  const paused = () => page.locator('section[aria-labelledby="hovedtekst"] video').evaluate((v) => (v as HTMLVideoElement).paused);
-  await expect.poll(paused, { timeout: 10_000 }).toBe(false);
-  await page.evaluate(() => window.scrollTo(0, window.innerHeight * 3));
-  await expect.poll(paused).toBe(true);
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await expect.poll(paused).toBe(false);
+  // The greeting has played (1.7 s from hydration); then half a screen down, past the dock's end.
+  await page.waitForTimeout(2500);
+  await page.evaluate(() => window.scrollTo(0, Math.round(window.innerHeight * 0.5)));
+  const off = () =>
+    page.evaluate(() => {
+      const name = document.getElementById('hovedtekst')!.getBoundingClientRect();
+      const logo = [...document.querySelectorAll<HTMLElement>('#topp img[data-logo]')].find((el) => el.getBoundingClientRect().width > 0)!.getBoundingClientRect();
+      return Math.max(Math.abs(name.left - logo.left), Math.abs(name.top - logo.top), Math.abs(name.width - logo.width));
+    });
+  await expect.poll(off, { timeout: 10_000 }).toBeLessThan(1.5);
+  await expect(page.locator('#topp')).not.toHaveAttribute('data-lockup');
 });
 
 test('a phone keeps its own scroll: no glide', async ({ page, isMobile }) => {

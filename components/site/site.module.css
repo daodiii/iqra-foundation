@@ -50,28 +50,38 @@
   transition-timing-function: var(--ease-in);
 }
 
+/*
+ * The first paint, before the header's watcher has run: with the home page's navy hero under it, the
+ * header is navy from the start (it showed white for 50 ms on a laptop and up to 1.5 s on a slow
+ * phone before the script turned it). HeaderMotion marks the header `data-watched` once it has, and
+ * from then on `data-dark` decides.
+ */
+.header:not([data-watched]):has(~ main > [data-hero]:first-child) {
+  background: var(--hero-ground);
+}
+
 /* Over a navy plate the header takes that plate's own navy (HeaderMotion, `--header-ground`) and the reversed logo. */
-.header[data-dark] {
+.header:is([data-dark], :not([data-watched]):has(~ main > [data-hero]:first-child)) {
   border-bottom-color: color-mix(in srgb, var(--color-light) 14%, transparent);
 }
 
-.header[data-dark] .logoOnWhite {
+.header:is([data-dark], :not([data-watched]):has(~ main > [data-hero]:first-child)) .logoOnWhite {
   display: none;
 }
 
-.header[data-dark] .logoOnNavy {
+.header:is([data-dark], :not([data-watched]):has(~ main > [data-hero]:first-child)) .logoOnNavy {
   display: block;
 }
 
-.header[data-dark] .link {
+.header:is([data-dark], :not([data-watched]):has(~ main > [data-hero]:first-child)) .link {
   color: var(--color-light);
 }
 
-.header[data-dark] .link[aria-current='page']::after {
+.header:is([data-dark], :not([data-watched]):has(~ main > [data-hero]:first-child)) .link[aria-current='page']::after {
   background: var(--color-light);
 }
 
-.header[data-dark] .menuButton {
+.header:is([data-dark], :not([data-watched]):has(~ main > [data-hero]:first-child)) .menuButton {
   border-color: color-mix(in srgb, var(--color-light) 40%, transparent);
   color: var(--color-light);
 }
@@ -239,7 +249,7 @@
   transform: translateY(-4px);
 }
 
-.header[data-dark] .under {
+.header:is([data-dark], :not([data-watched]):has(~ main > [data-hero]:first-child)) .under {
   border-color: color-mix(in srgb, var(--color-light) 14%, transparent);
 }
 
@@ -255,7 +265,7 @@
   background: var(--color-navy);
 }
 
-.header[data-dark] .link[data-branch]::after {
+.header:is([data-dark], :not([data-watched]):has(~ main > [data-hero]:first-child)) .link[data-branch]::after {
   background: var(--color-light);
 }
 
