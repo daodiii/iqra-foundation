@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { groundAt, seaAreas } from '../components/home/tide';
+import { groundAt, seaAreas, veilAt } from '../components/home/tide';
 
 /**
  * Havet is Bladene (2026-09-23): the four right pages scroll natively over one sticky screen of
@@ -186,10 +186,12 @@ test('on a phone the four names stand in one band under the header while the tex
     // pinned: whichever text is going by, the band stands under the header
     expect(Math.round(await band.evaluate((el) => el.getBoundingClientRect().top))).toBe(header);
     await expect.poll(() => band.evaluate((el) => (el as HTMLElement).style.getPropertyValue('--band')), { timeout: 10_000 }).toBe(groundAt(k));
-    // the same write as the colour's lights the field's logo, and it fades up (0.6 s) while the others stay out
-    await expect(band.locator(`[data-foot="${k}"]`)).toHaveAttribute('data-on', '');
-    await expect.poll(() => shown(k), { timeout: 10_000 }).toBeGreaterThan(0.8);
-    for (const j of seaAreas.keys()) if (j !== k) await expect.poll(() => shown(j), { timeout: 10_000 }).toBe(0);
+    // the same write as the colour's lights the field's logo, and it fades up (0.6 s) while the others stay out;
+    // a field on the same ground as the one before it keeps that one's logo (`veilAt`: the two navy fields)
+    const v = veilAt(k);
+    await expect(band.locator(`[data-foot="${v}"]`)).toHaveAttribute('data-on', '');
+    await expect.poll(() => shown(v), { timeout: 10_000 }).toBeGreaterThan(0.8);
+    for (const j of seaAreas.keys()) if (j !== v) await expect.poll(() => shown(j), { timeout: 10_000 }).toBe(0);
   }
   // a text going under it is out of sight: the band is what lies over it, and the band is solid
   const g = await geometry(page);

@@ -11,7 +11,7 @@
  * The section is the pages' height: half a screen of margin, four pages of --page-h, half a
  * screen of margin. So the first page is in the middle of the screen as the section reaches the
  * header, and the last is there as it leaves. None of this needs script: without it the pages
- * scroll over the navy screen in the first field's inks. `[data-live]` dims the pages not being
+ * scroll over the first field's screen in its inks. `[data-live]` dims the pages not being
  * read.
  *
  * A phone has no room for a left page beside the pages, so it lays it across the head of the

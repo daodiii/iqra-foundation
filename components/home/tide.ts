@@ -14,13 +14,15 @@ import { AREA_LOOK, AREA_ORDER, areas, type Area, type AreaGround } from './area
 export const SEA_ORDER = AREA_ORDER;
 
 /**
- * The colour each field wears on the sea, by its place: navy and white in turn. The owner,
- * 2026-10-16: «instead of making two of them burgundy and turquoise, how about we try to keep it
- * between white and blue … Blue, white, blue, white» (after paler versions of the four colours were
- * tried and navy went grey at every strength). So on the sea an area does not wear its own colour;
- * Vårt arbeid's bands, the seal's ring and the footer's thread still do.
+ * The colour each field wears on the sea, by its place: white at both ends, navy in the middle. The
+ * owner, 2026-10-16: «instead of making two of them burgundy and turquoise, how about we try to keep
+ * it between white and blue … Blue, white, blue, white» (after paler versions of the four colours
+ * were tried and navy went grey at every strength); then, 2026-10-17, under the new navy hero: «white,
+ * blue, blue, white, in that order. So the first and the last are white, and the two in the middle are
+ * blue.» So on the sea an area does not wear its own colour; Vårt arbeid's bands, the seal's ring and
+ * the footer's thread still do.
  */
-export const SEA_GROUNDS = ['navy', 'light', 'navy', 'light'] as const satisfies readonly AreaGround[];
+export const SEA_GROUNDS = ['light', 'navy', 'navy', 'light'] as const satisfies readonly AreaGround[];
 
 /** The look the guide gives a ground (`AREA_LOOK`: its token, its inks, its ring), whichever area owns it. */
 const lookOf = (ground: AreaGround) => Object.values(AREA_LOOK).find((l) => l.ground === ground)!;
@@ -71,6 +73,18 @@ export function seaAt(u: number): SeaFrame {
 export function groundAt(u: number): string {
   const { i, t } = seaAt(u);
   return `color-mix(in srgb, var(${seaAreas[i + 1].token}) ${(t * 100).toFixed(1)}%, var(${seaAreas[i].token}))`;
+}
+
+/**
+ * The field whose veil and foot logo stand lit while field `k`'s inks are on: the first of the run of
+ * neighbours that wear the same ground. The two navy fields side by side are one colour, and handed
+ * from one veil and logo to identical ones the two fades summed to less than one layer: the logo
+ * dipped from 0.85 to about 0.66 and the veil thinned while only the words changed.
+ */
+export function veilAt(k: number): number {
+  let j = k;
+  while (j > 0 && seaAreas[j - 1].token === seaAreas[k].token) j--;
+  return j;
 }
 
 /** The field whose inks the words and the names wear at playhead `u`. */

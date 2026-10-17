@@ -32,7 +32,7 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   for (const link of await support.all()) await expect(link).toHaveAttribute('href', site.cta.support.href);
   await expect(main.locator('section#kontakt').getByRole('link', { name: site.cta.contact.label })).toHaveAttribute('href', site.cta.contact.href);
   await expect(main.locator('section#kontakt').getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', site.cta.support.href);
-  // the four fields on one sea first, in the sea's order (navy · burgundy · turquoise · white): one water, one list of the four names, four pages of text over it, the first lit
+  // the four fields on one sea first, in the sea's order (white · navy · navy · white): one water, one list of the four names, four pages of text over it, the first lit
   const sea = main.locator('[data-fields]');
   await expect(sea).toHaveAttribute('data-live', '');
   await expect(sea.locator('[data-material="water"]')).toHaveCount(1);
