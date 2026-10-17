@@ -30,6 +30,8 @@
   --color-navy-lift: #344255;
   --color-navy-deep: #1b2635;
   --color-navy-deepest: #141f2d;
+  /* The home page's hero: the darker of the two navies the owner saw (2026-10-17, «just have the darkest of the two»); the header takes it over the hero. */
+  --hero-ground: #222e3e;
   --color-navy-line: #3d4c60;
 
   /*

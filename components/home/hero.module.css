@@ -1,214 +1,159 @@
 /*
- * The hero: white paper, the first screen. The lockup (the name with FOUNDATION under
- * it) as large as the screen allows, the copy centred under it. The blade runs round each
- * letter (a draw-on hairline, pathLength 1, widths in user units — the word's glyphs are
- * em squares under a 90-unit matrix, so their width is the name's over 90), the piece
- * behind it falls once the cut is closed, and the head prints the copy.
- *
- * The beats (Hero A, 2026-10-15: the cut at half speed), all on the site's timing scale of
- * 120ms beats and its one curve — the blades cut on `--ease`, the pieces fall on its mirror
- * `--ease-in`: the name's four one at a time, blades at 2 beats + i·4, 4 beats each, their
- * pieces from the blade's end, 6 beats falling; the word's blades from 17 beats at half a beat
- * apart, 2 beats each, their pieces 2 beats after, 4 beats falling; the print from 6 beats, 6
- * long, while the name is cut, so the buttons can be pressed early. The copy is printed by
- * 1.44 s, as it was, and the last piece lands at 3.3 s (it was 1.59 s).
+ * The hero (mock 25, chosen 2026-10-17): one navy ground under the header, the owner's picture as
+ * faint pale-blue ink over it, and on the centre line the logo as large as the first screen allows,
+ * the brief's paragraph and the two buttons. The name greets the visitor out of the header's logo
+ * (the greeting, 200ms late, 1500ms long) and goes back into it on the scroll (Hero.tsx).
  */
 .hero {
   position: relative;
+  overflow: clip;
   display: grid;
-  align-content: center;
-  justify-items: center;
-  row-gap: clamp(20px, 3.5vh, 40px);
-  min-height: calc(100dvh - var(--header-h));
-  padding: clamp(16px, 2.5vh, 32px) var(--edge) clamp(24px, 3.5vh, 40px);
-  background: var(--color-white);
-  overflow: hidden;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  row-gap: clamp(24px, 4vh, 44px);
+  margin-top: calc(-1 * var(--header-h));
+  min-height: 100svh;
+  padding: calc(var(--header-h) + clamp(24px, 5vh, 64px)) var(--edge) clamp(28px, 5vh, 56px);
+  background: var(--hero-ground);
+  color: var(--color-light);
 }
 
-/*
- * The lockup's box: as wide as the page's edges allow, held back so the copy (about 290px with
- * the gaps) still fits under it on the first screen — 71% of a 1536 × 960 laptop, where it was
- * 41%. The aspect is the lockup's viewBox. `POSTER_SIZES` (lib/media.ts) says the same to the
- * browser.
- */
-.stage {
-  --mark-w: min(calc(100vw - 2 * var(--edge)), calc((100svh - var(--header-h) - 290px) * 1.822));
-  position: relative;
-  width: var(--mark-w);
-  aspect-ratio: 728.806 / 400;
-}
-
-/* The film, under everything, clipped to the fourteen letters (inline, to the SVG's clip); the still under it until it plays. */
-.film {
+/* The picture, over the whole hero, a little taller than it for the scroll's lag. */
+.picture {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero[data-playing] [data-still] {
-  visibility: hidden;
-}
-
-/*
- * FOUNDATION's floor: navy laid over the film inside the word's ten letters alone. On the
- * courtyard's bright frames the small letters went beige and faint on the white paper; at half
- * the navy their brightest is a mid blue-grey (2.8:1 on the paper where it was 1.2:1), and the
- * word reads as the guide's navy «Foundation» with the film inside it.
- */
-.floor {
-  position: absolute;
-  inset: 0;
-  background: var(--color-navy);
-  opacity: 0.5;
+  inset: -4% 0 0;
+  z-index: 0;
+  will-change: transform;
   pointer-events: none;
 }
 
-/* The heading is the art: the h1 holds the SVG, the stage's size, over the pieces. */
-.mark {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.mark svg {
+/* Already in its ink (baked into the file); it settles from a little larger as the name arrives. */
+.ink {
   display: block;
   width: 100%;
   height: 100%;
-  overflow: visible;
+  object-fit: cover;
+  object-position: 50% 40%;
+  opacity: 0;
+  transform: scale(1.06);
+  animation: settle 2600ms var(--ease) 120ms forwards;
 }
 
-/* The blade: drawn round the letter, then the hairline the window keeps. */
-.blade {
-  fill: none;
-  stroke: var(--color-navy);
-  stroke-width: 1.2px;
-  stroke-linejoin: round;
-  opacity: 0.6;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: cut var(--dur-3) var(--ease) both;
-  animation-delay: calc(var(--beat) * 2 + var(--i) * var(--beat) * 4);
-}
-
-/* The word's ten, small and quicker, after the name. */
-.blade[data-small] {
-  stroke-width: 0.0134px;
-  animation-duration: var(--dur-2);
-  animation-delay: calc(var(--beat) * 17 + var(--i) * var(--beat) * 0.5);
-}
-
-@keyframes cut {
-  from {
-    stroke-dashoffset: 1;
-  }
-
+@keyframes settle {
   to {
-    stroke-dashoffset: 0;
+    opacity: 0.17;
+    transform: none;
   }
 }
 
-.accent {
-  fill: var(--color-crimson);
+/* The name, centred, as large as the first screen allows over the copy. No z-index here: the name must rise above the header (61 over 60) on its way back into it. */
+.mark {
+  position: relative;
+  grid-row: 1;
+  align-self: end;
+  justify-self: center;
+  width: min(100%, calc((100svh - var(--header-h) - 360px) * 1.8237));
+  margin: 0;
 }
 
-/* The pieces of paper: one white div per letter, clipped to it, tipping over its top edge. */
-.pieces {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  perspective: 1400px;
-  transform-style: preserve-3d;
+/*
+ * Two wrappers, one move each: the outer goes back to the header with the scroll, the inner plays the
+ * greeting. Above the header (z 60) once the script moves it, so the name is seen going into it; not
+ * before, so where nothing moves it (reduced motion, no script) it scrolls under the header like the
+ * rest of the page instead of over its menu. Never a target: it is a picture of the name, and over the
+ * phone's drawer it took the taps meant for its links. While the drawer is open it stands under it.
+ */
+.dock {
+  position: relative;
+  display: block;
+  transform-origin: 0 0;
+  will-change: transform;
   pointer-events: none;
 }
 
-.piece {
-  position: absolute;
-  inset: 0;
-  background: var(--color-white);
-  transform-origin: 50% 0;
-  animation: fall calc(var(--beat) * 6) var(--ease-in) both;
-  animation-delay: calc(var(--beat) * 6 + var(--i) * var(--beat) * 4);
-  will-change: transform, opacity;
+.hero[data-in] .dock {
+  z-index: 61;
 }
 
-/* The word's pieces hinge where the word is, and fall a shorter way. */
-.piece[data-small] {
-  transform-origin: 50% 82%;
-  animation: fallSmall var(--dur-3) var(--ease-in) both;
-  animation-delay: calc(var(--beat) * 19 + var(--i) * var(--beat) * 0.5);
+:global(body[data-menu-open]) .hero[data-in] .dock {
+  z-index: auto;
 }
 
-@keyframes fall {
-  0% {
+/* Landed: the header's own logo has faded in over it (two beats); then this one steps aside. */
+.hero[data-docked] .dock {
+  opacity: 0;
+  transition: opacity 0s var(--dur-2);
+}
+
+/* Before the script measures, the name waits unseen (the header's logo is on screen); without it, it stands in the hero after a moment. */
+.greet {
+  display: block;
+  transform-origin: 0 0;
+  transform: translate(var(--gx, 0), var(--gy, 0)) scale(var(--gs, 1));
+  opacity: 0;
+  animation: appear 0s 1.5s forwards;
+}
+
+.hero[data-in] .greet {
+  opacity: 1;
+  transform: none;
+  animation: greet 1500ms cubic-bezier(0.7, 0, 0.2, 1) 200ms both;
+}
+
+@keyframes greet {
+  from {
+    transform: translate(var(--gx, 0), var(--gy, 0)) scale(var(--gs, 1));
+  }
+}
+
+/* `--shown` tells the script the name already stands here (Hero.tsx): it does not send it back to greet. */
+@keyframes appear {
+  to {
+    opacity: 1;
     transform: none;
-    opacity: 1;
-  }
-
-  55% {
-    opacity: 1;
-  }
-
-  100% {
-    transform: rotateX(-96deg) translateY(260px);
-    opacity: 0;
+    --shown: 1;
   }
 }
 
-@keyframes fallSmall {
-  0% {
-    transform: none;
-    opacity: 1;
-  }
-
-  55% {
-    opacity: 1;
-  }
-
-  100% {
-    transform: rotateX(-96deg) translateY(90px);
-    opacity: 0;
-  }
+.greet img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
-/* The print: the copy revealed left to right behind a head that passes across it. */
-.print {
+/* The copy on the centre line: the paragraph, then the two buttons. */
+.copy {
   position: relative;
   z-index: 1;
-  width: min(100%, 940px);
+  grid-row: 2;
+  display: grid;
+  justify-items: center;
+  row-gap: clamp(22px, 3.4vh, 34px);
+  text-align: center;
+  animation: rise 800ms var(--ease) 150ms both;
 }
 
-/* The statement: centred under the lockup, in the headings' face, navy, balanced; smaller than it was, so the lockup can be large. */
-.copy {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  width: 100%;
-  text-align: center;
-  clip-path: inset(-8px 100% -8px 0);
-  animation: print calc(var(--beat) * 6) var(--ease) calc(var(--beat) * 6) both;
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
 }
 
 .lede {
-  width: 100%;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: clamp(18px, 1.45vw, 23px);
-  line-height: 1.34;
-  letter-spacing: var(--track-sub);
-  color: var(--color-navy);
-  text-wrap: balance;
+  max-width: 64ch;
+  margin: 0;
+  font: 500 clamp(19px, 1.6vw, 26px) / 1.4 var(--font-sans);
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
 }
 
 .buttons {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
+  margin: 0;
 }
 
 .work,
@@ -217,131 +162,94 @@
   align-items: center;
   justify-content: center;
   height: 52px;
-  padding: 0 28px;
+  padding: 0 26px;
   border-radius: var(--radius-pill);
-  font: 500 var(--step-0)/1 var(--font-sans);
-  letter-spacing: 0;
-  color: var(--color-white);
+  font: 500 var(--step-0) / 1 var(--font-sans);
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color var(--dur-1) var(--ease);
+  transition:
+    background-color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
 }
 
 .work {
-  background: var(--color-navy);
+  background: var(--color-light);
+  color: var(--color-navy);
 }
 
 .work:hover {
-  background: var(--color-crimson);
+  background: var(--color-white);
 }
 
 /* Støtt oss is always crimson on this site: the brief's «tydelig knapp». */
 .support {
   background: var(--color-crimson);
+  color: var(--color-white);
 }
 
 .support:hover {
   background: var(--color-crimson-deep);
 }
 
-@keyframes print {
-  to {
-    clip-path: inset(-8px 0 -8px 0);
-  }
+.work:active,
+.support:active {
+  transform: scale(0.97);
 }
 
-/*
- * The print head: a hairline of the turquoise (the accent), the copy's own height, passing with the
- * print on the same curve and gone as it ends — where it was a 2px navy bar taller than the copy,
- * which read as a cursor left on the page.
- */
-.head {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 1px;
-  background: var(--color-turquoise);
-  opacity: 0;
-  animation: head calc(var(--beat) * 6) var(--ease) calc(var(--beat) * 6) both;
-}
-
-@keyframes head {
-  0% {
-    left: 0;
-    opacity: 0;
-  }
-
-  6% {
-    opacity: 1;
-  }
-
-  80% {
-    opacity: 1;
-  }
-
-  100% {
-    left: 100%;
-    opacity: 0;
-  }
-}
-
-/* Reduced motion, or no script: the windows open, the hairlines drawn, the copy printed. */
-@media (prefers-reduced-motion: reduce), (scripting: none) {
-  .blade,
-  .piece,
-  .copy,
-  .head {
-    animation: none;
-  }
-
-  .blade {
-    stroke-dashoffset: 0;
-  }
-
-  .piece,
-  .head {
-    display: none;
-  }
-
-  .copy {
-    clip-path: none;
-  }
+.work:focus-visible,
+.support:focus-visible {
+  outline: 2px solid var(--color-crimson-lift);
+  outline-offset: 4px;
 }
 
 @media (max-width: 767px) {
   .hero {
-    padding: 16px 14px calc(24px + 56px);
+    grid-template-rows: auto 1fr;
+    row-gap: 28px;
+    padding-top: calc(var(--header-h) + 7vh);
   }
 
-  /* Edge to edge less 14px a side (it was 84vw). */
-  .stage {
-    --mark-w: calc(100vw - 28px);
-  }
-
-  .blade {
-    stroke-width: 2.4px;
-  }
-
-  .blade[data-small] {
-    stroke-width: 0.0267px;
-  }
-
-  .print {
+  .mark {
+    align-self: start;
     width: 100%;
   }
 
   .copy {
-    gap: 22px;
+    align-self: end;
+    row-gap: 22px;
   }
 
   .lede {
-    font-size: var(--step-1);
-    line-height: 1.36;
+    font-size: clamp(17px, 4.6vw, 19px);
   }
 
   .buttons {
     flex-direction: column;
-    align-self: stretch;
+    justify-self: stretch;
+  }
+
+  .ink {
+    object-position: 50% 50%;
+  }
+}
+
+/* Reduced motion, or no script: the name stands in the hero, the picture at rest, the copy in place. */
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .greet,
+  .hero[data-in] .greet,
+  .copy,
+  .ink {
+    animation: none;
+  }
+
+  .greet,
+  .hero[data-in] .greet {
+    opacity: 1;
+    transform: none;
+  }
+
+  .ink {
+    opacity: 0.17;
+    transform: none;
   }
 }

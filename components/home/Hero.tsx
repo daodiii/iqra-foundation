@@ -2,207 +2,179 @@
 
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
-import { pickSource, POSTER_FALLBACK, POSTER_SIZES, posterSet } from '@/lib/media';
+import { LOGO_ON_NAVY_CRIMSON, LOGO_RATIO } from '@/components/site/Logo';
+import { onScroll } from '@/lib/smooth';
 import styles from './hero.module.css';
-import { LOCKUP_VIEWBOX, LOCKUP_WORD } from './lockup';
-import { MARK_ACCENTS, MARK_LETTERS } from './mark';
 
-const [VX, VY, VW, VH] = LOCKUP_VIEWBOX.split(' ').map(Number);
-/** A path's transform into the box's own units (0..1 both ways), for a clip in `objectBoundingBox`. */
-const box = (t: string) => `scale(${1 / VW} ${1 / VH}) translate(${-VX} ${-VY}) ${t}`;
+/** The name goes back into the header over this share of the screen's height of scrolling. */
+const DOCK = 0.45;
+/** The picture lags the page by this much as the hero scrolls away. */
+const DEPTH = 0.35;
+/** The logo's intrinsic height for its width and height attributes; the stylesheet sizes it. */
+const HEIGHT = 400;
+/** A phone's crop of the picture (public/hero/staden-phone.webp): the middle of the 1920 file, its full height. */
+const PHONE_CROP = { width: 720, height: 1072 };
+
+const smooth = (t: number) => {
+  const u = Math.min(1, Math.max(0, t));
+  return u * u * (3 - 2 * u);
+};
 
 /**
- * The fourteen letters the blade cuts, in the art's order: the name's four, then the
- * word's ten. `i` is each one's place in the blade's order — the name is written i, Q, R,
- * a though the art lists a, i, Q, R — and the word's ten are `small`: the glyphs are em
- * squares under a 90-unit matrix, so their blade is the name's over 90 and their piece
- * falls a shorter way from a lower hinge.
+ * When the hero's opening has played out, on the page's clock (`performance.now()`): the name
+ * has stepped out of the header and landed by 1.9 s after the first paint (its greeting is 200ms
+ * late and 1500ms long, hero.module.css). Heavy work that can wait — the sea's water being built —
+ * waits for it, so it does not stall the greeting.
  */
-const WRITE = [3, 0, 1, 2];
-const CUTS = [
-  ...MARK_LETTERS.map((p, k) => ({ ...p, i: WRITE[k], small: false })),
-  ...LOCKUP_WORD.map((p, k) => ({ ...p, i: k, small: true })),
-];
-
-/** The word's ten, by their place in `CUTS`: the navy floor under them is clipped to these alone. */
-const WORD = CUTS.slice(MARK_LETTERS.length);
-
-/** The film's speed: three quarters, to go with the cut at half speed. */
-const FILM_RATE = 0.75;
+export const openingEnd = () => (performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? performance.now()) + 2000;
 
 /**
- * When the hero's opening has played out, on the page's clock (`performance.now()`): its last
- * beat, the word's last piece, lands 3.3 s after the first paint (hero.module.css, on the timing
- * scale's 120ms beats). Heavy work that can wait — the sea's water being built — waits for it, so
- * it does not stall the blades mid-cut.
- */
-export const openingEnd = () => (performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? performance.now()) + 3300;
-
-/**
- * The hero: the lockup cut out of the paper, the film in the letters.
+ * The hero (mock 25 Staden, midtstilt, chosen by the owner 2026-10-17: «25 … That was the one I
+ * was happy with … take away the time … And then we can do it»).
  *
- * The first screen is white paper. The guide's lockup — «iQRa» with FOUNDATION under it —
- * is not printed on it but cut out of it: a blade (a navy hairline drawn round each
- * letter in turn, pathLength 1) runs the name in reading order and then the word, and
- * behind each cut a piece of the white — a div clipped to that one letter — tips over on
- * its top edge and falls once its outline is closed, leaving a window with the film in
- * it. The film is one `<video>` under everything, clipped to all fourteen letters from
- * the first frame, so nothing of it shows until its piece of paper has gone. Under the
- * lockup the copy: the brief's paragraph as a statement in the headings' face and the two
- * buttons, printed left to right by a head that passes across them while the name is cut.
- * The lockup is the heading — the h1 holds the art, named for the logo; the brief's headline
- * is not on the page. The beats are the stylesheet's, 3.3 s from the first paint.
+ * One navy ground, the darker of the guide's two («just have the darkest of the two»), with the
+ * header on it; on it, so faint it is felt more than seen, the owner's own picture of a city of
+ * domes, arcades and a crowded court, as pale-blue ink (public/hero/staden-*.webp: the picture's
+ * dark as the ink's strength, baked in; a CSS mask did the same and cost frames). The guide's
+ * logo, reversed with the crimson accents, is the heading, centred and as large as the first
+ * screen allows; under it, centred, the brief's paragraph and its two buttons.
  *
- * Hero A (the owner, 2026-10-15, after a review that found the moment small and quick: «Build A
- * into the real hero»): the lockup as wide as the screen allows with the copy still on the first
- * screen (71% of a 1536 × 960 laptop, where it was 41%), the cut at half speed, the film at three
- * quarters. The film's light on the paper under the windows (the cast) went with it: at this size
- * there is no paper under the windows for it to fall on.
- *
- * The film plays once and rests on its last frame. Its source is picked after hydration
- * (`pickSource`: 720p on a phone, WebM where it plays) and never before, so with JavaScript off the `<video>` has no source and its
- * poster stands in the letters; under reduced motion the same. In both the stylesheet opens
- * the windows at once (no blades, no pieces) and prints the copy at once. Autoplay refused:
- * the poster stands in the letters. Nothing pins and nothing scrubs.
+ * The name comes out to meet the visitor: the page opens with the logo where it always is, small in
+ * the header, and it steps out of the header, growing as it comes, into the hero. Scrolled on, it
+ * goes back the way it came, straight across the screen into the header's logo — the same file —
+ * and the header's own logo takes over (HeaderMotion watches `#hovedtekst`, which is the part that
+ * moves). The picture settles from a little larger as the name arrives and lags the page on the way
+ * down. Under reduced motion, or without JavaScript, the name stands in the hero from the start and
+ * nothing moves.
  */
 export function Hero() {
-  // The poster fills the letters until the film has decoded, so it is asked for early, at the width
-  // the screen needs (elite study: AVIF from 21 KB on a phone; it was a 142 KB JPEG, the phone's LCP).
-  ReactDOM.preload(POSTER_FALLBACK, { as: 'image', type: 'image/avif', imageSrcSet: posterSet('avif'), imageSizes: POSTER_SIZES, fetchPriority: 'high' });
   const hero = useRef<HTMLElement>(null);
-  const video = useRef<HTMLVideoElement>(null);
+  const dock = useRef<HTMLSpanElement>(null);
+  const greet = useRef<HTMLSpanElement>(null);
+  const picture = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const section = hero.current;
-    const v = video.current;
-    if (!section || !v) return;
-    // Reduced motion: no source; the stylesheet has already opened the windows.
+    const h = hero.current;
+    const d = dock.current;
+    const g = greet.current;
+    const pic = picture.current;
+    const header = document.getElementById('topp');
+    if (!h || !d || !g || !pic || !header) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    v.src = pickSource({
-      narrow: window.matchMedia('(max-width: 767px)').matches,
-      webm: v.canPlayType('video/webm; codecs="vp9"') !== '',
-    });
-    v.muted = true;
-    v.load();
-    // At three quarters of its speed (5.04 s → 6.7 s), to go with the cut at half its speed (Hero A).
-    v.defaultPlaybackRate = FILM_RATE;
-    v.playbackRate = FILM_RATE;
-    // Autoplay refused: the poster stands in the letters.
-    Promise.resolve(v.play()).catch(() => {});
-    // The film covers the still once it plays; until then the still is what the letters show.
-    const playing = () => section.setAttribute('data-playing', '');
-    v.addEventListener('playing', playing, { once: true });
-    /*
-     * Scrolled past, the film rests. It had played on under the rest of the page: a trace of a
-     * read-through (2026-09-25) found its decoding holding the GPU for 46 to 76 ms at a time, twice
-     * with the hero long off the screen, each a dropped frame of the scroll. Back on the screen it
-     * goes on from where it stopped — unless it has played to its end (the owner, 2026-10-09:
-     * «stop»), when it stays on its last frame.
-     */
-    let shown = true;
-    const io = typeof IntersectionObserver === 'function'
-      ? new IntersectionObserver((entries) => {
-          const on = entries[entries.length - 1].isIntersecting;
-          if (on === shown) return;
-          shown = on;
-          if (on) {
-            if (v.ended) return;
-            Promise.resolve(v.play()).catch(() => {});
-          } else {
-            v.pause();
-          }
-        })
-      : null;
-    io?.observe(section);
+
+    // From the name's place in the hero (in the page, unscrolled) to the header's logo (fixed on the screen).
+    // Either of the header's two logos: they stand in the same place, one shown.
+    const home = () => [...header.querySelectorAll<HTMLElement>('img[data-logo]')].find((el) => el.getBoundingClientRect().width > 0);
+    let o = { x: 0, y: 0, w: 1 };
+    let to = { x: 0, y: 0, w: 1 };
+    const measure = () => {
+      const prev = d.style.transform;
+      d.style.transform = 'none';
+      const r = g.getBoundingClientRect();
+      d.style.transform = prev;
+      // The greeting may still be playing: read the name's box without it.
+      const gs = getComputedStyle(g).transform;
+      const m = gs && gs !== 'none' ? new DOMMatrixReadOnly(gs) : null;
+      o = { x: m ? r.left - m.e : r.left, y: (m ? r.top - m.f : r.top) + window.scrollY, w: m ? r.width / m.a : r.width };
+      const target = home();
+      if (!target) return;
+      // Against the header, not the screen: the header is fixed at the top left and only ever moves by
+      // its own transform, and coming back to the home page from a page read to its foot it is still
+      // sliding back in (`data-away`), so the screen put the logo 57px above the top for good.
+      const hr = target.getBoundingClientRect();
+      const hb = header.getBoundingClientRect();
+      to = { x: hr.left - hb.left, y: hr.top - hb.top, w: hr.width };
+    };
+    measure();
+
+    // The greeting: out of the header's logo, into the hero. Unless the name is already standing there:
+    // a phone that took longer than the stylesheet's 1.5 s to run this has shown it in place
+    // (`appear`, which sets `--shown`), and set off from the header now it would jump back into it and
+    // come out again.
+    if (getComputedStyle(g).getPropertyValue('--shown').trim() !== '1') {
+      g.style.setProperty('--gx', `${(to.x - o.x).toFixed(2)}px`);
+      g.style.setProperty('--gy', `${(to.y - (o.y - window.scrollY)).toFixed(2)}px`);
+      g.style.setProperty('--gs', (to.w / o.w).toFixed(5));
+    }
+    const id = requestAnimationFrame(() => h.setAttribute('data-in', ''));
+
+    let raf = 0;
+    let docked = false;
+    const place = () => {
+      raf = 0;
+      const y = window.scrollY;
+      const p = smooth(y / (window.innerHeight * DOCK));
+      if (y <= 0) {
+        d.style.transform = '';
+        pic.style.transform = '';
+      } else {
+        // On the screen, a straight way from where the name stood to the header's logo; the page scrolls under it.
+        const s = 1 + (to.w / o.w - 1) * p;
+        d.style.transform = `translate3d(${((to.x - o.x) * p).toFixed(2)}px, ${(y + (to.y - o.y) * p).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
+        pic.style.transform = `translate3d(0, ${(Math.min(y, window.innerHeight * 1.2) * DEPTH).toFixed(1)}px, 0)`;
+      }
+      // Landed: the header's own logo has faded in over it; this one steps aside.
+      if ((p >= 1) !== docked) {
+        docked = p >= 1;
+        h.toggleAttribute('data-docked', docked);
+      }
+    };
+    const onMove = () => {
+      if (!raf) raf = requestAnimationFrame(place);
+    };
+    const off = onScroll(onMove);
+    window.addEventListener('scroll', onMove, { passive: true });
+    const onResize = () => {
+      measure();
+      place();
+    };
+    window.addEventListener('resize', onResize);
+    place();
     return () => {
-      io?.disconnect();
-      v.removeEventListener('playing', playing);
-      v.pause();
+      cancelAnimationFrame(id);
+      cancelAnimationFrame(raf);
+      off();
+      window.removeEventListener('scroll', onMove);
+      window.removeEventListener('resize', onResize);
     };
   }, []);
 
   return (
-    <section ref={hero} className={styles.hero} aria-labelledby="hovedtekst">
-      <div className={styles.stage}>
+    <section ref={hero} className={styles.hero} aria-labelledby="hovedtekst" data-header="dark" data-hero>
+      <div ref={picture} className={styles.picture} aria-hidden="true">
+        {/* A phone shows the middle of the picture at its full height (cover, on a tall screen): its own crop of
+            it, not the whole 1920 file a 3× screen picked by width (759 KB for a ground at 17%). */}
         <picture>
-          <source type="image/avif" srcSet={posterSet('avif')} sizes={POSTER_SIZES} />
+          <source media="(max-width: 767px)" srcSet="/hero/staden-phone.webp" width={PHONE_CROP.width} height={PHONE_CROP.height} />
           <img
-            className={styles.film}
-            style={{ clipPath: 'url(#hero-letters)' }}
-            src={POSTER_FALLBACK}
-            srcSet={posterSet('webp')}
-            sizes={POSTER_SIZES}
+            className={styles.ink}
+            src="/hero/staden-960.webp"
+            srcSet="/hero/staden-960.webp 960w, /hero/staden-1920.webp 1920w"
+            sizes="100vw"
             alt=""
-            aria-hidden="true"
-            fetchPriority="high"
+            width={1920}
+            height={1072}
             decoding="async"
-            data-still
+            data-picture
           />
         </picture>
-        <video ref={video} className={styles.film} style={{ clipPath: 'url(#hero-letters)' }} preload="metadata" muted playsInline aria-hidden="true" />
-        {/* The word's floor: navy over the film inside FOUNDATION's ten letters alone, so the small word holds on the film's brightest frames. */}
-        <div className={styles.floor} style={{ clipPath: 'url(#hero-word)' }} aria-hidden="true" />
-        <h1 id="hovedtekst" className={styles.mark}>
-          <svg viewBox={LOCKUP_VIEWBOX} role="img" aria-label={site.logoAlt}>
-            <defs>
-              {/* All fourteen for the film; each on its own for its piece of paper. In the box's units: the video and the pieces are the stage's size, as the art is. */}
-              <clipPath id="hero-letters" clipPathUnits="objectBoundingBox">
-                {CUTS.map((p, k) => (
-                  <path key={k} transform={box(p.transform)} d={p.d} />
-                ))}
-              </clipPath>
-              <clipPath id="hero-word" clipPathUnits="objectBoundingBox">
-                {WORD.map((p, k) => (
-                  <path key={k} transform={box(p.transform)} d={p.d} />
-                ))}
-              </clipPath>
-              {CUTS.map((p, k) => (
-                <clipPath key={k} id={`hero-cut-${k}`} clipPathUnits="objectBoundingBox">
-                  <path transform={box(p.transform)} d={p.d} />
-                </clipPath>
-              ))}
-            </defs>
-            {CUTS.map((p, k) => (
-              <path
-                key={k}
-                className={styles.blade}
-                style={{ '--i': p.i } as React.CSSProperties}
-                transform={p.transform}
-                d={p.d}
-                pathLength={1}
-                data-blade
-                data-small={p.small ? '' : undefined}
-              />
-            ))}
-            {MARK_ACCENTS.map((p, i) => (
-              <path key={i} className={styles.accent} transform={p.transform} d={p.d} data-accent />
-            ))}
-          </svg>
-        </h1>
-        <div className={styles.pieces} aria-hidden="true">
-          {CUTS.map((p, k) => (
-            <div
-              key={k}
-              className={styles.piece}
-              style={{ clipPath: `url(#hero-cut-${k})`, '--i': p.i } as React.CSSProperties}
-              data-piece
-              data-small={p.small ? '' : undefined}
-            />
-          ))}
-        </div>
       </div>
-      <div className={styles.print}>
-        <div className={styles.copy}>
-          <p className={styles.lede}>{brief.home.paragraph}</p>
-          <p className={styles.buttons}>
-            <Link href={site.cta.work.href} prefetch={false} className={styles.work}>{site.cta.work.label}</Link>
-            <Link href={site.cta.support.href} prefetch={false} className={styles.support}>{site.cta.support.label}</Link>
-          </p>
-        </div>
-        <span className={styles.head} aria-hidden="true" />
+      <h1 className={styles.mark}>
+        {/* The id is on the part that moves: the header watches it, and shows its own logo once this has landed on it. */}
+        <span ref={dock} id="hovedtekst" className={styles.dock}>
+          <span ref={greet} className={styles.greet}>
+            <img src={LOGO_ON_NAVY_CRIMSON} alt={site.logoAlt} width={Math.round(HEIGHT * LOGO_RATIO)} height={HEIGHT} decoding="async" fetchPriority="high" />
+          </span>
+        </span>
+      </h1>
+      <div className={styles.copy}>
+        <p className={styles.lede}>{brief.home.paragraph}</p>
+        <p className={styles.buttons}>
+          <Link href={site.cta.work.href} prefetch={false} className={styles.work}>{site.cta.work.label}</Link>
+          <Link href={site.cta.support.href} prefetch={false} className={styles.support}>{site.cta.support.label}</Link>
+        </p>
       </div>
     </section>
   );

@@ -78,6 +78,8 @@ export function HeaderMotion() {
             else dark.delete(e.target);
           }
           const ground = [...dark.values()].pop();
+          // From here the watcher decides; until now the stylesheet held a navy hero's header navy.
+          header.setAttribute('data-watched', '');
           header.toggleAttribute('data-dark', !!ground);
           if (ground) header.style.setProperty('--header-ground', ground);
           else header.style.removeProperty('--header-ground');
@@ -109,6 +111,7 @@ export function HeaderMotion() {
       header.removeAttribute('data-away');
       header.removeAttribute('data-dark');
       header.removeAttribute('data-lockup');
+      header.removeAttribute('data-watched');
       header.style.removeProperty('--header-ground');
     };
   }, [path]);
