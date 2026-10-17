@@ -22,13 +22,23 @@ const smooth = (t: number) => {
   return u * u * (3 - 2 * u);
 };
 
+/** The greeting's delay and length (hero.module.css) with a little to spare. */
+const GREETING_MS = 200 + 1500 + 100;
+/** How long a greeting cut short by a scroll takes to finish, if the visitor comes back to the top. */
+const GIVE_WAY_MS = 500;
+/** When the greeting began on the page's clock; null until the hero has mounted. No greeting (reduced motion): long past. */
+let greetingBegan: number | null = null;
+
 /**
  * When the hero's opening has played out, on the page's clock (`performance.now()`): the name
- * has stepped out of the header and landed by 1.9 s after the first paint (its greeting is 200ms
- * late and 1500ms long, hero.module.css). Heavy work that can wait — the sea's water being built —
- * waits for it, so it does not stall the greeting.
+ * has stepped out of the header and landed by then. Heavy work that can wait — the sea's water
+ * being built — waits for it, so it does not stall the greeting. It counts from the greeting's
+ * own start once the hero has mounted; before that, from the first paint.
  */
-export const openingEnd = () => (performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? performance.now()) + 2000;
+export const openingEnd = () =>
+  greetingBegan !== null
+    ? greetingBegan + GREETING_MS
+    : (performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? performance.now()) + 2000;
 
 /**
  * The hero (mock 25 Staden, midtstilt, chosen by the owner 2026-10-17: «25 … That was the one I
@@ -62,14 +72,19 @@ export function Hero() {
     const pic = picture.current;
     const header = document.getElementById('topp');
     if (!h || !d || !g || !pic || !header) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      greetingBegan = -GREETING_MS;
+      return;
+    }
 
     // From the name's place in the hero (in the page, unscrolled) to the header's logo (fixed on the screen).
     // Either of the header's two logos: they stand in the same place, one shown.
     const home = () => [...header.querySelectorAll<HTMLElement>('img[data-logo]')].find((el) => el.getBoundingClientRect().width > 0);
     let o = { x: 0, y: 0, w: 1 };
+    let heroHeight = 0;
     let to = { x: 0, y: 0, w: 1 };
     const measure = () => {
+      heroHeight = h.offsetHeight;
       const prev = d.style.transform;
       d.style.transform = 'none';
       const r = g.getBoundingClientRect();
@@ -78,6 +93,9 @@ export function Hero() {
       const gs = getComputedStyle(g).transform;
       const m = gs && gs !== 'none' ? new DOMMatrixReadOnly(gs) : null;
       o = { x: m ? r.left - m.e : r.left, y: (m ? r.top - m.f : r.top) + window.scrollY, w: m ? r.width / m.a : r.width };
+      // The name leaves the flow once the page scrolls (`data-fly`): its box keeps the heading's height.
+      h.style.setProperty('--fly-w', `${o.w.toFixed(2)}px`);
+      h.style.setProperty('--fly-h', `${(m ? r.height / m.d : r.height).toFixed(2)}px`);
       const target = home();
       if (!target) return;
       // Against the header, not the screen: the header is fixed at the top left and only ever moves by
@@ -98,22 +116,70 @@ export function Hero() {
       g.style.setProperty('--gy', `${(to.y - (o.y - window.scrollY)).toFixed(2)}px`);
       g.style.setProperty('--gs', (to.w / o.w).toFixed(5));
     }
-    const id = requestAnimationFrame(() => h.setAttribute('data-in', ''));
+    const id = requestAnimationFrame(() => {
+      greetingBegan = performance.now();
+      h.setAttribute('data-in', '');
+    });
 
-    let raf = 0;
     let docked = false;
+    let flying = false;
+    let raf = 0;
+    // The share of the way to the header the greeting had left when a scroll cut it short, and how it gives way.
+    let carry = 0;
+    let carryFrom = 0;
+    let carryAt = 0;
+    let seized = false;
+    const seize = () => {
+      seized = true;
+      const running = g.getAnimations();
+      if (!running.length || !h.hasAttribute('data-in')) return;
+      // The greeting and the scroll's path were two moves added together, and the sum went past the header
+      // and back. Take over where the greeting stands (`carry`: its share of the way to the header) and
+      // go on from there.
+      const grow = to.w / o.w - 1;
+      const m = new DOMMatrixReadOnly(getComputedStyle(g).transform);
+      const left = Math.abs(grow) > 0.01 ? (m.a - 1) / grow : to.x - o.x ? m.e / (to.x - o.x) : 0;
+      running.forEach((a) => a.cancel());
+      carryFrom = carry = Math.min(1, Math.max(0, left));
+      carryAt = performance.now();
+    };
     const place = () => {
+      cancelAnimationFrame(raf);
       raf = 0;
       const y = window.scrollY;
-      const p = smooth(y / (window.innerHeight * DOCK));
-      if (y <= 0) {
+      // Docked and far below: nothing on it moves any more.
+      if (docked && carry <= 0 && y > heroHeight * 1.2) return;
+      if (y > 0 && !seized) seize();
+      const p0 = smooth(y / (window.innerHeight * DOCK));
+      if (carry > 0) {
+        const now = performance.now();
+        if (p0 > 0) {
+          // Scrolling: hold where the greeting stood and go on from there, straight for the header.
+          carryFrom = carry;
+          carryAt = now;
+        } else {
+          // Back at the top: the greeting carries on to its place.
+          const t = (now - carryAt) / GIVE_WAY_MS;
+          carry = t >= 1 ? 0 : carryFrom * (1 - smooth(t));
+          if (carry > 0) raf = requestAnimationFrame(place);
+        }
+      }
+      const p = carry + (1 - carry) * p0;
+      const fly = y > 0 || carry > 0;
+      if (fly !== flying) {
+        flying = fly;
+        h.toggleAttribute('data-fly', flying);
+      }
+      if (!fly) {
         d.style.transform = '';
         pic.style.transform = '';
       } else {
         // On the screen, a straight way from where the name stood to the header's logo; the page scrolls under it.
+        // Fixed to the screen, not cancelling the scroll by hand: a counter-translation by `scrollY` is a frame
+        // behind the page whenever the glide (or a phone's own scrolling) moves it ahead of this script.
         const s = 1 + (to.w / o.w - 1) * p;
-        d.style.transform = `translate3d(${((to.x - o.x) * p).toFixed(2)}px, ${(y + (to.y - o.y) * p).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
-        pic.style.transform = `translate3d(0, ${(Math.min(y, window.innerHeight * 1.2) * DEPTH).toFixed(1)}px, 0)`;
+        d.style.transform = `translate3d(${(o.x + (to.x - o.x) * p).toFixed(2)}px, ${(o.y + (to.y - o.y) * p).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
+        pic.style.transform = y > 0 ? `translate3d(0, ${(Math.min(y, window.innerHeight * 1.2) * DEPTH).toFixed(1)}px, 0)` : '';
       }
       // Landed: the header's own logo has faded in over it; this one steps aside.
       if ((p >= 1) !== docked) {
@@ -121,9 +187,8 @@ export function Hero() {
         h.toggleAttribute('data-docked', docked);
       }
     };
-    const onMove = () => {
-      if (!raf) raf = requestAnimationFrame(place);
-    };
+    // At once, not in a frame of its own: the glide tells us inside the frame it moved the page, before it is painted.
+    const onMove = place;
     const off = onScroll(onMove);
     window.addEventListener('scroll', onMove, { passive: true });
     const onResize = () => {
