@@ -78,6 +78,9 @@ export function Hero() {
       const gs = getComputedStyle(g).transform;
       const m = gs && gs !== 'none' ? new DOMMatrixReadOnly(gs) : null;
       o = { x: m ? r.left - m.e : r.left, y: (m ? r.top - m.f : r.top) + window.scrollY, w: m ? r.width / m.a : r.width };
+      // The name leaves the flow once the page scrolls (`data-fly`): its box keeps the heading's height.
+      h.style.setProperty('--fly-w', `${o.w.toFixed(2)}px`);
+      h.style.setProperty('--fly-h', `${(m ? r.height / m.d : r.height).toFixed(2)}px`);
       const target = home();
       if (!target) return;
       // Against the header, not the screen: the header is fixed at the top left and only ever moves by
@@ -100,19 +103,24 @@ export function Hero() {
     }
     const id = requestAnimationFrame(() => h.setAttribute('data-in', ''));
 
-    let raf = 0;
     let docked = false;
+    let flying = false;
     const place = () => {
-      raf = 0;
       const y = window.scrollY;
       const p = smooth(y / (window.innerHeight * DOCK));
+      if ((y > 0) !== flying) {
+        flying = y > 0;
+        h.toggleAttribute('data-fly', flying);
+      }
       if (y <= 0) {
         d.style.transform = '';
         pic.style.transform = '';
       } else {
         // On the screen, a straight way from where the name stood to the header's logo; the page scrolls under it.
+        // Fixed to the screen, not cancelling the scroll by hand: a counter-translation by `scrollY` is a frame
+        // behind the page whenever the glide (or a phone's own scrolling) moves it ahead of this script.
         const s = 1 + (to.w / o.w - 1) * p;
-        d.style.transform = `translate3d(${((to.x - o.x) * p).toFixed(2)}px, ${(y + (to.y - o.y) * p).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
+        d.style.transform = `translate3d(${(o.x + (to.x - o.x) * p).toFixed(2)}px, ${(o.y + (to.y - o.y) * p).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
         pic.style.transform = `translate3d(0, ${(Math.min(y, window.innerHeight * 1.2) * DEPTH).toFixed(1)}px, 0)`;
       }
       // Landed: the header's own logo has faded in over it; this one steps aside.
@@ -121,9 +129,8 @@ export function Hero() {
         h.toggleAttribute('data-docked', docked);
       }
     };
-    const onMove = () => {
-      if (!raf) raf = requestAnimationFrame(place);
-    };
+    // At once, not in a frame of its own: the glide tells us inside the frame it moved the page, before it is painted.
+    const onMove = place;
     const off = onScroll(onMove);
     window.addEventListener('scroll', onMove, { passive: true });
     const onResize = () => {
@@ -134,7 +141,6 @@ export function Hero() {
     place();
     return () => {
       cancelAnimationFrame(id);
-      cancelAnimationFrame(raf);
       off();
       window.removeEventListener('scroll', onMove);
       window.removeEventListener('resize', onResize);

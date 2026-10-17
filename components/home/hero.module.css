@@ -75,6 +75,18 @@
   z-index: 61;
 }
 
+/* Scrolled: the name is fixed to the screen and the script places it; the heading keeps its height. */
+.hero[data-fly] .mark {
+  min-height: var(--fly-h);
+}
+
+.hero[data-fly] .dock {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--fly-w);
+}
+
 :global(body[data-menu-open]) .hero[data-in] .dock {
   z-index: auto;
 }
