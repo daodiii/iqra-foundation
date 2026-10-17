@@ -1,0 +1,166 @@
+/* MOCK 15 Hilsenen: the name steps out of the header to meet the visitor, and goes back as they read on. */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 21vw);
+  align-content: center;
+  align-items: end;
+  column-gap: clamp(32px, 4.5vw, 80px);
+  min-height: calc(100svh - var(--header-h));
+  padding: clamp(24px, 5vh, 64px) var(--edge) clamp(28px, 5vh, 56px);
+  background: var(--color-white);
+}
+
+/* The name, as large as the first screen allows beside the copy. */
+.mark {
+  width: min(100%, calc((100svh - var(--header-h) - 140px) * 1.8237));
+  margin: 0;
+}
+
+/*
+ * Two wrappers, one move each: the outer goes back to the header with the scroll, the inner plays
+ * the greeting. Above the header (z 60) so the name is seen going into it, not under it.
+ */
+.dock {
+  position: relative;
+  z-index: 61;
+  display: block;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* Landed: the header's own logo has faded in over it (two beats); then this one steps aside. */
+.hero[data-docked] .dock {
+  opacity: 0;
+  transition: opacity 0s var(--dur-2);
+}
+
+.greet {
+  display: block;
+  transform-origin: 0 0;
+  transform: translate(var(--gx, 0), var(--gy, 0)) scale(var(--gs, 1));
+  opacity: 0;
+  animation: appear 0s 1.5s forwards;
+}
+
+.hero[data-in] .greet {
+  opacity: 1;
+  transform: none;
+  animation: greet 1500ms cubic-bezier(0.7, 0, 0.2, 1) 200ms both;
+}
+
+@keyframes greet {
+  from {
+    transform: translate(var(--gx, 0), var(--gy, 0)) scale(var(--gs, 1));
+  }
+}
+
+@keyframes appear {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.greet img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The copy beside the name, standing on FOUNDATION's line. */
+.copy {
+  display: grid;
+  row-gap: clamp(20px, 3vh, 32px);
+  padding-bottom: 0.4%;
+  animation: rise 800ms var(--ease) 150ms both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.lede {
+  margin: 0;
+  font: 500 clamp(17px, 1.2vw, 20px) / 1.5 var(--font-sans);
+  color: var(--color-navy);
+  text-wrap: pretty;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  font: 500 var(--step-0) / 1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 200ms var(--ease),
+    transform 200ms var(--ease);
+}
+
+.work {
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+.work:hover {
+  background: var(--color-navy-deep);
+}
+
+.support {
+  background: var(--color-crimson);
+  color: var(--color-white);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+.work:active,
+.support:active {
+  transform: scale(0.97);
+}
+
+.work:focus-visible,
+.support:focus-visible {
+  outline: 2px solid var(--color-crimson);
+  outline-offset: 4px;
+}
+
+@media (max-width: 767px) {
+  .hero {
+    grid-template-columns: 1fr;
+    align-content: space-between;
+    row-gap: 32px;
+    padding-top: 8vh;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .greet,
+  .hero[data-in] .greet,
+  .copy {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}

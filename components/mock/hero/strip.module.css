@@ -1,0 +1,53 @@
+/* MOCK: the switch between the takes, a small tab at the bottom left that opens upward. */
+.strip {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 1000;
+  font: 500 14px/1 var(--font-sans);
+}
+
+.tab {
+  display: block;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgb(20 31 45 / 0.88);
+  color: #fff;
+  list-style: none;
+  cursor: pointer;
+}
+
+.tab::-webkit-details-marker {
+  display: none;
+}
+
+.tab::before {
+  content: '▴  ';
+}
+
+.strip[open] .tab::before {
+  content: '▾  ';
+}
+
+.takes {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 18px;
+  background: rgb(20 31 45 / 0.92);
+  white-space: nowrap;
+}
+
+.take {
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.take[aria-current='page'] {
+  background: var(--color-crimson);
+}

@@ -1,0 +1,153 @@
+/* MOCK 12 Vekten: the headline on navy, alive in weight only. */
+.hero {
+  margin-top: calc(-1 * var(--header-h));
+  padding: calc(var(--header-h) + clamp(28px, 6vh, 72px)) var(--edge) clamp(28px, 5vh, 56px);
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  row-gap: clamp(28px, 5vh, 56px);
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+.title {
+  align-self: center;
+  display: grid;
+  margin: 0;
+  font-family: var(--font-gs-var), var(--font-sans);
+  font-weight: 430;
+  font-size: clamp(38px, 7.5vw, 150px);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+.line {
+  display: block;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(0.3em);
+}
+
+.hero[data-in] .line {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 700ms var(--ease),
+    transform 1000ms var(--ease);
+}
+
+.hero[data-in] .line:nth-child(2) {
+  transition-delay: 90ms;
+}
+
+.hero[data-in] .line:nth-child(3) {
+  transition-delay: 180ms;
+}
+
+.hero[data-in] .line:nth-child(4) {
+  transition-delay: 270ms;
+}
+
+.l {
+  display: inline-block;
+  white-space: pre;
+}
+
+.foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: clamp(32px, 5vw, 96px);
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.hero[data-in] .foot {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 700ms var(--ease) 500ms,
+    transform 900ms var(--ease) 500ms;
+}
+
+.lede {
+  max-width: 56ch;
+  margin: 0;
+  font: 500 clamp(16px, 1.2vw, 20px) / 1.5 var(--font-sans);
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  font: 500 var(--step-0) / 1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 200ms var(--ease),
+    transform 200ms var(--ease);
+}
+
+.work {
+  background: var(--color-white);
+  color: var(--color-navy);
+}
+
+.work:hover {
+  background: var(--color-light);
+}
+
+.support {
+  background: var(--color-crimson);
+  color: var(--color-white);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+.work:active,
+.support:active {
+  transform: scale(0.97);
+}
+
+.work:focus-visible,
+.support:focus-visible {
+  outline: 2px solid var(--color-crimson-lift);
+  outline-offset: 4px;
+}
+
+@media (max-width: 767px) {
+  .title {
+    font-size: 9.2vw;
+    align-self: start;
+  }
+
+  .foot {
+    grid-template-columns: 1fr;
+    row-gap: 22px;
+  }
+
+  .buttons {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line,
+  .foot {
+    opacity: 1;
+    transform: none;
+    transition: none !important;
+  }
+}

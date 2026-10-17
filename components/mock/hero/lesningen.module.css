@@ -1,0 +1,186 @@
+/* MOCK 5 Lesningen: the paragraph reads itself; the four area words become windows on the film. */
+.hero {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  row-gap: clamp(28px, 5vh, 64px);
+  min-height: calc(100svh - var(--header-h));
+  padding: clamp(28px, 6vh, 72px) var(--edge) clamp(28px, 5vh, 56px);
+  background: var(--color-white);
+}
+
+.hidden {
+  /* taste-skill-ignore: a visually hidden heading, not a rule */
+  position: absolute;
+  width: 1px;
+  height: 1px; /* taste-skill-ignore: visually hidden heading */
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.manifesto {
+  align-self: center;
+  max-width: 16.5em;
+  margin: 0;
+  font: 600 clamp(31px, 5.05vw, 104px) / 1.12 var(--font-sans);
+  letter-spacing: -0.035em;
+  color: var(--color-navy);
+}
+
+.w,
+.win {
+  display: inline-block;
+}
+
+/* Before it is read, a word is a faint print; read, it comes up and settles. */
+.w,
+.plain {
+  opacity: 0.13;
+  transform: translateY(0.14em);
+}
+
+.hero[data-in] .w {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 520ms var(--ease),
+    transform 800ms var(--ease);
+  transition-delay: calc(300ms + var(--k) * 95ms);
+}
+
+.win {
+  position: relative;
+  cursor: pointer;
+}
+
+.film {
+  position: absolute;
+  inset: -0.06em -0.02em -0.2em;
+  overflow: hidden;
+  isolation: isolate;
+  /* Two pixels in from the box: its antialiased edge drew a hairline round each word. */
+  clip-path: inset(2px);
+  opacity: 0;
+  transform: translateY(0.14em);
+}
+
+.hero[data-in] .film {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 700ms var(--ease),
+    transform 800ms var(--ease);
+  transition-delay: calc(300ms + var(--k) * 95ms);
+}
+
+.film video {
+  position: absolute;
+  inset: -20% -10%;
+  width: 120%;
+  height: 140%;
+  object-fit: cover;
+  /* Each shot printed to read in a stroke: the dark rooms lifted, the bright ones deepened. */
+  filter: brightness(var(--lift, 1)) contrast(1.12) saturate(1.2);
+}
+
+.win[data-shot='kunnskap'] {
+  --lift: 1.55;
+}
+
+.win[data-shot='dialog'] {
+  --lift: 1.6;
+}
+
+.win[data-shot='moteplasser'] {
+  --lift: 0.82;
+}
+
+.win[data-shot='samfunnsdeltakelse'] {
+  --lift: 0.78;
+}
+
+/* The letters knock out of white: black on white, screened over the film, leaves the film in the letters only. */
+.ink {
+  position: relative;
+  display: block;
+  padding: 0.06em 0.02em 0.2em;
+  background: #fff;
+  color: #000;
+  mix-blend-mode: screen;
+  white-space: nowrap;
+}
+
+.foot {
+  display: flex;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.hero[data-in] .foot {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 700ms var(--ease) 3100ms,
+    transform 900ms var(--ease) 3100ms;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 54px;
+  padding: 0 28px;
+  border-radius: 999px;
+  font: 500 var(--step-0) / 1 var(--font-sans);
+  color: var(--color-white);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 200ms var(--ease),
+    transform 200ms var(--ease);
+}
+
+.work {
+  background: var(--color-navy);
+}
+
+.work:hover {
+  background: var(--color-navy-deep);
+}
+
+.support {
+  background: var(--color-crimson);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+.work:active,
+.support:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 767px) {
+  .manifesto {
+    align-self: start;
+    font-size: clamp(30px, 8.6vw, 40px);
+    line-height: 1.12;
+  }
+
+  .foot {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .w,
+  .film,
+  .foot {
+    opacity: 1;
+    transform: none;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,64 @@
+/* MOCKS 19 and 20 Bagdad: al-Wasiti's library, in ink of the guide's crimson or a pale blue, under 18 Skyggen. */
+.rod {
+  --ink-strength: 0.3;
+}
+
+.bla {
+  --ink-strength: 0.17;
+}
+
+/* The floor under the horizon at the name's baseline, a step darker than the ground. */
+.floor {
+  position: absolute;
+  inset: var(--horizon, 62%) 0 0;
+  z-index: 0;
+  background: var(--floor);
+}
+
+/* The drawing over the whole hero, sky and floor alike, a little taller than it for the scroll's lag. */
+.library {
+  position: absolute;
+  inset: -4% 0 0;
+  z-index: 0;
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* The drawing, already in its ink; covering the hero like a photograph would. */
+.ink {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--at, 50% 42%);
+  opacity: 0;
+  transform: scale(1.06);
+  animation: settle 2600ms var(--ease) 120ms forwards;
+}
+
+@keyframes settle {
+  to {
+    opacity: var(--ink-strength);
+    transform: none;
+  }
+}
+
+.credit {
+  margin: 0;
+  font: 400 13px / 1.4 var(--font-sans);
+  opacity: 0.72;
+}
+
+@media (max-width: 767px) {
+  .ink {
+    object-position: var(--phone-at, 62% 50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink {
+    opacity: var(--ink-strength);
+    transform: none;
+    animation: none;
+  }
+}

@@ -1,0 +1,231 @@
+/* MOCK 8 Konstruksjonen: the eight-pointed star constructed, then the lattice spreading from it. */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  min-height: calc(100svh - var(--header-h));
+  background: var(--color-white);
+}
+
+.copy {
+  align-self: end;
+  display: grid;
+  row-gap: clamp(22px, 3.6vh, 36px);
+  padding: clamp(32px, 6vh, 72px) clamp(28px, 4vw, 72px) clamp(32px, 6vh, 72px) var(--edge);
+}
+
+.copy > * {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: rise 900ms var(--ease) both;
+}
+
+.copy > :nth-child(1) {
+  animation-delay: 200ms;
+}
+
+.copy > :nth-child(2) {
+  animation-delay: 330ms;
+}
+
+.copy > :nth-child(3) {
+  animation-delay: 430ms;
+}
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.mark {
+  width: min(100%, 460px);
+  margin: 0;
+}
+
+.mark svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.letter {
+  fill: var(--color-navy);
+}
+
+.accent {
+  fill: var(--color-crimson);
+}
+
+.lede {
+  max-width: 44ch;
+  margin: 0;
+  font: 500 clamp(16px, 1.2vw, 20px) / 1.5 var(--font-sans);
+  color: var(--color-navy);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  font: 500 var(--step-0) / 1 var(--font-sans);
+  color: var(--color-white);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 200ms var(--ease),
+    transform 200ms var(--ease);
+}
+
+.work {
+  background: var(--color-navy);
+}
+
+.work:hover {
+  background: var(--color-navy-deep);
+}
+
+.support {
+  background: var(--color-crimson);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+.work:active,
+.support:active {
+  transform: scale(0.97);
+}
+
+/* The field: navy lines on the light ground, the lattice. */
+.field {
+  position: relative;
+  min-height: 0;
+  background: var(--color-light);
+  overflow: hidden;
+}
+
+.field svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.guides path,
+.guides circle {
+  fill: none;
+  stroke: var(--color-crimson);
+  stroke-width: 1.2; /* taste-skill-ignore: construction lines are the drawing itself */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.hero[data-in] .guides path,
+.hero[data-in] .guides circle {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 520ms cubic-bezier(0.45, 0, 0.25, 1);
+  transition-delay: calc(250ms + var(--g) * 260ms);
+}
+
+.hero[data-in] .guides {
+  opacity: 0;
+  transition: opacity 900ms var(--ease) 3200ms;
+}
+
+.line {
+  fill: none;
+  stroke: var(--color-navy);
+  stroke-width: 2.4; /* taste-skill-ignore: the pattern's lines are the picture */
+  stroke-linejoin: miter;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.hero[data-in] .line {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 760ms cubic-bezier(0.45, 0, 0.25, 1);
+  transition-delay: calc(1350ms + var(--w) * 150ms);
+}
+
+/* Every star filled white on the light ground, so the stars read as stars and not as a fence;
+   each comes in just after its lines. The first is crimson, the one under the pointer turquoise. */
+.fill {
+  fill: var(--color-white);
+  opacity: 0;
+}
+
+.hero[data-in] .fill {
+  opacity: 1;
+  transition:
+    opacity 600ms var(--ease) calc(1900ms + var(--w) * 150ms),
+    fill 300ms var(--ease);
+}
+
+.cell[data-first] .fill {
+  fill: var(--color-crimson);
+}
+
+.hero[data-in] .cell[data-lit] .fill {
+  fill: var(--color-turquoise);
+  transition:
+    opacity 600ms var(--ease) calc(1900ms + var(--w) * 150ms),
+    fill 160ms var(--ease);
+}
+
+@media (max-width: 767px) {
+  .hero {
+    grid-template-columns: 1fr;
+    grid-template-rows: 40svh auto;
+  }
+
+  .field {
+    grid-row: 1;
+  }
+
+  .copy {
+    grid-row: 2;
+    align-self: start;
+    padding: 28px var(--edge) 36px;
+  }
+
+  .mark {
+    width: 64%;
+  }
+
+  .buttons {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy > *,
+  .line {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    stroke-dashoffset: 0;
+    transition: none !important;
+  }
+
+  .guides {
+    display: none;
+  }
+
+  .fill {
+    opacity: 1;
+  }
+}

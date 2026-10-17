@@ -1,0 +1,83 @@
+/* MOCK 17 Ordene: the red thread's line, huge and tone on tone, drifting in the sky. */
+.ordene {
+  --tone: var(--color-white);
+  --tone-mix: 4.5%;
+}
+
+.ordene[data-ink='dark'] {
+  --tone: var(--color-navy);
+  --tone-mix: 4%;
+}
+
+.words {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  align-items: center;
+  overflow: hidden;
+  padding: calc(var(--header-h) * 0.6) 0 0;
+  color: color-mix(in srgb, var(--sky), var(--tone) var(--tone-mix));
+  font: 600 min(21svh, 15vw) / 1 var(--font-sans);
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+
+/* Each row comes in on its own beat, a few seconds after the name. */
+.row {
+  opacity: 0;
+  transform: translateX(3vw);
+  animation: drift-in 1800ms var(--ease) calc(500ms + var(--k) * 140ms) forwards;
+}
+
+@keyframes drift-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The line twice, so the loop has no seam; the track moves by one line's width. */
+.track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: run var(--secs) linear calc(var(--secs) * var(--from)) infinite;
+}
+
+.track[data-back] {
+  animation-direction: reverse;
+}
+
+.track span {
+  padding-right: 0.5em;
+}
+
+@keyframes run {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.words[data-off] .track {
+  animation-play-state: paused;
+}
+
+@media (max-width: 767px) {
+  .words {
+    font-size: 17svh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .track {
+    animation-play-state: paused;
+  }
+}

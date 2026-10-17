@@ -1,0 +1,264 @@
+/* MOCK 2 Søylen: the i as tall as the screen, the headline's four words as the chapters. */
+.hero {
+  --col: clamp(110px, 10.5vw, 200px);
+  display: grid;
+  grid-template-columns: var(--col) minmax(0, 1fr);
+  column-gap: clamp(40px, 6vw, 120px);
+  align-items: stretch;
+  min-height: calc(100svh - var(--header-h));
+  padding: clamp(20px, 3.5vh, 44px) var(--edge) clamp(24px, 4vh, 48px);
+  background: var(--color-white);
+}
+
+.pillar {
+  display: grid;
+  grid-template-rows: var(--col) calc(var(--col) * 0.25) minmax(0, 1fr);
+}
+
+.dot {
+  grid-row: 1;
+  display: block;
+  border-radius: 50%;
+  background: var(--color-crimson);
+  transform: translateY(calc(-100% - 60vh));
+}
+
+.stem {
+  grid-row: 3;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-navy);
+  clip-path: inset(100% 0 0 0);
+}
+
+.film {
+  position: absolute;
+  inset: 0;
+  transform: scale(1.12);
+}
+
+.hero[data-in] .stem {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 1300ms var(--ease) 150ms;
+}
+
+.hero[data-in] .film {
+  transform: none;
+  transition: transform 2600ms var(--ease) 150ms;
+}
+
+.hero[data-in] .dot {
+  animation: drop 900ms 650ms both;
+}
+
+@keyframes drop {
+  0% {
+    transform: translateY(calc(-100% - 60vh));
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.4);
+  }
+
+  62% {
+    transform: translateY(0) scale(1.08, 0.88);
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  80% {
+    transform: translateY(-6%) scale(0.98, 1.03);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+/* The headline level with the dot, the paragraph and the buttons level with the stem's foot. */
+.text {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+}
+
+.foot {
+  align-self: end;
+  display: grid;
+  row-gap: clamp(22px, 3.4vh, 36px);
+}
+
+.keep {
+  white-space: nowrap;
+}
+
+.text > * {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+.hero[data-in] .text > * {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 800ms var(--ease),
+    transform 1000ms var(--ease);
+}
+
+.hero[data-in] .title {
+  transition-delay: 450ms;
+}
+
+.hero[data-in] .foot {
+  transition-delay: 650ms;
+}
+
+.title {
+  margin: 0;
+  /* As large as «samfunnsdeltakelse» allows on one line: four lines, the dot's top to the copy. */
+  max-width: 9.6em;
+  margin-top: calc(var(--col) * -0.1);
+  font: 600 clamp(36px, 6.6vw, 132px) / 0.98 var(--font-sans);
+  letter-spacing: -0.04em;
+  color: var(--color-navy);
+  text-wrap: balance;
+}
+
+.word {
+  position: relative;
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Every area word wears a faint track; the playing one fills in crimson. */
+.word::before,
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.04em;
+  height: 0.065em;
+  border-radius: 0.04em;
+}
+
+.word::before {
+  content: '';
+  background: color-mix(in srgb, var(--color-navy) 12%, transparent);
+  transition: background-color 200ms var(--ease);
+}
+
+.word:hover::before {
+  background: color-mix(in srgb, var(--color-navy) 30%, transparent);
+}
+
+.bar {
+  background: var(--color-crimson);
+  transform-origin: left center;
+  transform: scaleX(var(--p, 0));
+}
+
+.word:focus-visible {
+  outline: 2px solid var(--color-crimson);
+  outline-offset: 6px;
+  border-radius: 4px;
+}
+
+.lede {
+  max-width: 56ch;
+  margin: 0;
+  font: 400 clamp(17px, 1.2vw, 20px) / 1.55 var(--font-text);
+  color: var(--color-navy);
+  text-wrap: pretty;
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 54px;
+  padding: 0 28px;
+  border-radius: 999px;
+  font: 500 var(--step-0) / 1 var(--font-sans);
+  color: var(--color-white);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 200ms var(--ease),
+    transform 200ms var(--ease);
+}
+
+.work {
+  background: var(--color-navy);
+}
+
+.work:hover {
+  background: var(--color-navy-deep);
+}
+
+.support {
+  background: var(--color-crimson);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+.work:active,
+.support:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 767px) {
+  .hero {
+    --col: 44px;
+    column-gap: 16px;
+    padding-top: 20px;
+  }
+
+  .title {
+    max-width: none;
+    margin-top: 0;
+    font-size: clamp(24px, 6.9vw, 30px);
+    line-height: 1.08;
+  }
+
+  .hero {
+    min-height: 0;
+  }
+
+  .text {
+    grid-template-rows: auto auto;
+    row-gap: 28px;
+  }
+
+  .lede {
+    font-size: 16px;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot,
+  .stem,
+  .film,
+  .text > * {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+    animation: none !important;
+    transition: none !important;
+  }
+}

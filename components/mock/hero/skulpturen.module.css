@@ -1,0 +1,258 @@
+/* MOCK 4 Skulpturen: the lockup as a lit object in a white studio. */
+.hero {
+  position: relative;
+  overflow: hidden;
+  min-height: calc(100svh - var(--header-h));
+  display: grid;
+  grid-template-rows: 1fr auto;
+  background: #f4f4f2;
+}
+
+.hidden {
+  /* taste-skill-ignore: a visually hidden heading, not a rule */
+  position: absolute;
+  width: 1px;
+  height: 1px; /* taste-skill-ignore: visually hidden heading */
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.canvas {
+  grid-row: 1 / -1;
+  grid-column: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.canvas canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.fallback {
+  display: none;
+}
+
+.hero[data-nogl] .fallback {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  margin: 0;
+  font: 600 10vw / 1 var(--font-sans);
+  color: var(--color-navy);
+}
+
+.films {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The four areas at the right edge, a film index. */
+.chapters {
+  position: absolute;
+  right: var(--edge);
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  z-index: 1;
+}
+
+.chapters li {
+  opacity: 0;
+  transform: translateX(16px);
+  animation: in 800ms var(--ease) both;
+  animation-delay: calc(1700ms + var(--i) * 80ms);
+}
+
+@keyframes in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.chapter {
+  display: grid;
+  justify-items: end;
+  row-gap: 8px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--color-navy);
+}
+
+.name {
+  font: 500 var(--step-0) / 1 var(--font-sans);
+  opacity: 0.45;
+  transition: opacity 300ms var(--ease);
+}
+
+.chapter:hover .name {
+  opacity: 0.8;
+}
+
+.chapter[aria-pressed='true'] .name {
+  opacity: 1;
+}
+
+.track {
+  position: relative;
+  display: block;
+  width: 120px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-navy) 14%, transparent);
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  background: var(--color-navy);
+  transform-origin: right center;
+  transform: scaleX(var(--p, 0));
+}
+
+.chapter:focus-visible {
+  outline: 2px solid var(--color-crimson);
+  outline-offset: 4px;
+}
+
+.band {
+  grid-row: 2;
+  grid-column: 1;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: 64px;
+  padding: 0 var(--edge) clamp(24px, 4.5vh, 52px);
+}
+
+.band > * {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: in 900ms var(--ease) both;
+}
+
+.lede {
+  max-width: 52ch;
+  margin: 0;
+  font: 500 clamp(16px, 1.15vw, 19px) / 1.5 var(--font-sans);
+  color: var(--color-navy);
+  animation-delay: 1900ms;
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  animation-delay: 2000ms;
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  font: 500 var(--step-0) / 1 var(--font-sans);
+  color: var(--color-white);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 200ms var(--ease),
+    transform 200ms var(--ease);
+}
+
+.work {
+  background: var(--color-navy);
+}
+
+.work:hover {
+  background: var(--color-navy-deep);
+}
+
+.support {
+  background: var(--color-crimson);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+.work:active,
+.support:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 767px) {
+  .hero {
+    min-height: 0;
+    grid-template-rows: 34svh auto auto;
+  }
+
+  .canvas {
+    grid-row: 1;
+  }
+
+  .chapters {
+    position: static;
+    translate: none;
+    grid-row: 2;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 16px;
+    padding: 0 var(--edge) 12px;
+  }
+
+  .chapter {
+    justify-items: start;
+  }
+
+  .track {
+    width: 100%;
+  }
+
+  .fill {
+    transform-origin: left center;
+  }
+
+  .band {
+    grid-row: 3;
+    grid-template-columns: 1fr;
+    row-gap: 20px;
+  }
+
+  .buttons {
+    flex-direction: column;
+  }
+
+  .work,
+  .support {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapters li,
+  .band > * {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

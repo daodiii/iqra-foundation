@@ -1,0 +1,247 @@
+/* MOCK 10 Plakaten: the lockup taken apart into a Swiss poster. */
+.hero {
+  --px: 0;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: auto auto 1fr;
+  column-gap: clamp(16px, 2vw, 32px);
+  min-height: calc(100svh - var(--header-h));
+  padding: clamp(28px, 5vh, 56px) var(--edge) 0;
+  background: var(--color-white);
+}
+
+/* FOUNDATION as the masthead: the word's own glyphs, spaced across the full measure. */
+.masthead {
+  grid-column: 1 / span 5;
+  grid-row: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  fill: var(--color-navy);
+}
+
+.masthead path {
+  opacity: 0;
+  animation: in 700ms var(--ease) both;
+  animation-delay: calc(80ms + var(--k) * 40ms);
+}
+
+.lede {
+  grid-column: 1 / span 6;
+  grid-row: 2;
+  margin: clamp(28px, 5vh, 56px) 0 0;
+  font: 500 clamp(18px, 1.55vw, 26px) / 1.38 var(--font-sans);
+  letter-spacing: -0.01em;
+  color: var(--color-navy);
+  text-wrap: pretty;
+  opacity: 0;
+  animation: rise 900ms var(--ease) 350ms both;
+}
+
+.buttons {
+  grid-column: 9 / -1;
+  grid-row: 2;
+  align-self: start;
+  justify-self: end;
+  display: flex;
+  gap: 12px;
+  margin: clamp(28px, 5vh, 56px) 0 0;
+  opacity: 0;
+  animation: rise 900ms var(--ease) 450ms both;
+}
+
+@keyframes in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The name: the screen's width, standing on the bottom edge and cut by it. */
+.mark {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  align-self: end;
+  margin: clamp(24px, 4vh, 48px) 0 -4%;
+}
+
+.mark svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.letter,
+.tail,
+.dot {
+  fill: var(--color-navy);
+  transform-box: view-box;
+}
+
+.tail,
+.dot {
+  fill: var(--color-crimson);
+}
+
+/* Set one at a time: each rises out of the bottom edge on the site's curve. */
+.letter {
+  transform: translate(calc(var(--px) * var(--z) * 12px), 110%);
+}
+
+.hero[data-in] .letter {
+  transform: translate(calc(var(--px) * var(--z) * 12px), 0);
+  transition: transform 1150ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(250ms + var(--o) * 120ms);
+}
+
+.hero[data-in][data-done] .letter {
+  transition: none;
+}
+
+/* The tail drawn out of the Q, from its root to its end. */
+.tail {
+  clip-path: inset(0 100% 0 0);
+  transform: translateX(calc(var(--px) * var(--z) * 12px));
+}
+
+.hero[data-in] .tail {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 700ms cubic-bezier(0.65, 0, 0.35, 1) 900ms;
+}
+
+/* The dot dropped onto the i, last. */
+.dot {
+  transform: translate(calc(var(--px) * var(--z) * 12px), -260%);
+  opacity: 0;
+}
+
+.hero[data-in] .dot {
+  animation: drop 900ms 1350ms both;
+}
+
+@keyframes drop {
+  0% {
+    opacity: 1;
+    transform: translate(0, -260%);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.4);
+  }
+
+  60% {
+    transform: translate(0, 0) scale(1.06, 0.9);
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  78% {
+    transform: translate(0, -9%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(calc(var(--px) * var(--z) * 12px), 0);
+  }
+}
+
+.work,
+.support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  font: 500 var(--step-0) / 1 var(--font-sans);
+  color: var(--color-white);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 200ms var(--ease),
+    transform 200ms var(--ease);
+}
+
+.work {
+  background: var(--color-navy);
+}
+
+.work:hover {
+  background: var(--color-navy-deep);
+}
+
+.support {
+  background: var(--color-crimson);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+.work:active,
+.support:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 767px) {
+  .hero {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto 1fr;
+    row-gap: 24px;
+    padding-top: 24px;
+  }
+
+  .masthead,
+  .lede,
+  .buttons,
+  .mark {
+    grid-column: 1;
+  }
+
+  .lede {
+    grid-row: 2;
+    margin: 4px 0 0;
+  }
+
+  .buttons {
+    grid-row: 3;
+    justify-self: stretch;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .mark {
+    grid-row: 4;
+  }
+
+  .masthead {
+    width: 70%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .masthead path,
+  .lede,
+  .buttons,
+  .dot {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+
+  .letter,
+  .tail {
+    transform: none;
+    clip-path: none;
+    transition: none !important;
+  }
+}

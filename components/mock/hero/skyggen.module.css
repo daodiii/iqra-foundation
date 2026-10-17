@@ -1,0 +1,11 @@
+/* MOCK 18 Skyggen: the floor under Oslo's sky, from the horizon behind the name's baseline down. */
+.skyggen {
+  --floor: var(--color-navy-deep);
+}
+
+.floor {
+  position: absolute;
+  inset: var(--horizon, 62%) 0 0;
+  z-index: 0;
+  background: var(--floor);
+}
