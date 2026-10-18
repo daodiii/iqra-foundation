@@ -176,22 +176,19 @@ export function Hero() {
         }
       }
       const p = carry + (1 - carry) * p0;
-      const fly = y > 0 || carry > 0;
-      if (fly !== flying) {
-        flying = fly;
-        h.toggleAttribute('data-fly', flying);
+      // The name is fixed to the screen from the first frame, standing where it stands in the flow. Switching it
+      // over at the first scroll let a phone, which scrolls the page itself before this script hears of it, move
+      // the name up with the page for a frame or two and then snap it back to its place: the stutter.
+      if (!flying) {
+        flying = true;
+        h.setAttribute('data-fly', '');
       }
-      if (!fly) {
-        d.style.transform = '';
-        pic.style.transform = '';
-      } else {
-        // On the screen, a straight way from where the name stood to the header's logo; the page scrolls under it.
-        // Fixed to the screen, not cancelling the scroll by hand: a counter-translation by `scrollY` is a frame
-        // behind the page whenever the glide (or a phone's own scrolling) moves it ahead of this script.
-        const s = 1 + (to.w / o.w - 1) * p;
-        d.style.transform = `translate3d(${(o.x + (to.x - o.x) * p).toFixed(2)}px, ${(o.y + (to.y - o.y) * p).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
-        pic.style.transform = y > 0 ? `translate3d(0, ${(Math.min(y, vh * 1.2) * DEPTH).toFixed(1)}px, 0)` : '';
-      }
+      // On the screen, a straight way from where the name stood to the header's logo; the page scrolls under it.
+      // Fixed to the screen, not cancelling the scroll by hand: a counter-translation by `scrollY` is a frame
+      // behind the page whenever the glide (or a phone's own scrolling) moves it ahead of this script.
+      const s = 1 + (to.w / o.w - 1) * p;
+      d.style.transform = `translate3d(${(o.x + (to.x - o.x) * p).toFixed(2)}px, ${(o.y + (to.y - o.y) * p).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
+      pic.style.transform = y > 0 ? `translate3d(0, ${(Math.min(y, vh * 1.2) * DEPTH).toFixed(1)}px, 0)` : '';
       // Landed: the header's own logo has faded in over it; this one steps aside.
       if ((p >= 1) !== docked) {
         docked = p >= 1;
@@ -202,15 +199,23 @@ export function Hero() {
     const onMove = place;
     const off = onScroll(onMove);
     window.addEventListener('scroll', onMove, { passive: true });
-    const onResize = () => {
-      // Only the height changed: a phone's address bar folding away. Nothing here has moved.
-      if (window.innerWidth === vw) return;
+    const remeasure = () => {
       measure();
       place();
     };
+    const onResize = () => {
+      // Only the height changed: a phone's address bar folding away. Nothing here has moved.
+      if (window.innerWidth === vw) return;
+      remeasure();
+    };
     window.addEventListener('resize', onResize);
+    // The flow can still move after the first measure (a font arriving reflows the copy under the name): the
+    // name is fixed now, so it has to be told.
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(remeasure);
+    ro?.observe(h);
     place();
     return () => {
+      ro?.disconnect();
       cancelAnimationFrame(id);
       cancelAnimationFrame(raf);
       off();
