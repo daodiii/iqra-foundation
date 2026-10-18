@@ -82,13 +82,24 @@ export function Hero() {
     const home = () => [...header.querySelectorAll<HTMLElement>('img[data-logo]')].find((el) => el.getBoundingClientRect().width > 0);
     let o = { x: 0, y: 0, w: 1 };
     let heroHeight = 0;
+    // The screen's height as the path is laid out: not read again in a scroll frame, because a phone's
+    // address bar folds away as the page scrolls and `innerHeight` grows with it, which moved the name's
+    // progress under the visitor's finger (it stopped, went back, then went on).
+    let vh = window.innerHeight;
+    let vw = window.innerWidth;
     let to = { x: 0, y: 0, w: 1 };
     const measure = () => {
+      vh = window.innerHeight;
+      vw = window.innerWidth;
       heroHeight = h.offsetHeight;
+      // The name's place in the flow, not where it flies: read it with the fixed positioning off.
+      const flew = h.hasAttribute('data-fly');
+      if (flew) h.removeAttribute('data-fly');
       const prev = d.style.transform;
       d.style.transform = 'none';
       const r = g.getBoundingClientRect();
       d.style.transform = prev;
+      if (flew) h.setAttribute('data-fly', '');
       // The greeting may still be playing: read the name's box without it.
       const gs = getComputedStyle(g).transform;
       const m = gs && gs !== 'none' ? new DOMMatrixReadOnly(gs) : null;
@@ -150,7 +161,7 @@ export function Hero() {
       // Docked and far below: nothing on it moves any more.
       if (docked && carry <= 0 && y > heroHeight * 1.2) return;
       if (y > 0 && !seized) seize();
-      const p0 = smooth(y / (window.innerHeight * DOCK));
+      const p0 = smooth(y / (vh * DOCK));
       if (carry > 0) {
         const now = performance.now();
         if (p0 > 0) {
@@ -179,7 +190,7 @@ export function Hero() {
         // behind the page whenever the glide (or a phone's own scrolling) moves it ahead of this script.
         const s = 1 + (to.w / o.w - 1) * p;
         d.style.transform = `translate3d(${(o.x + (to.x - o.x) * p).toFixed(2)}px, ${(o.y + (to.y - o.y) * p).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
-        pic.style.transform = y > 0 ? `translate3d(0, ${(Math.min(y, window.innerHeight * 1.2) * DEPTH).toFixed(1)}px, 0)` : '';
+        pic.style.transform = y > 0 ? `translate3d(0, ${(Math.min(y, vh * 1.2) * DEPTH).toFixed(1)}px, 0)` : '';
       }
       // Landed: the header's own logo has faded in over it; this one steps aside.
       if ((p >= 1) !== docked) {
@@ -192,6 +203,8 @@ export function Hero() {
     const off = onScroll(onMove);
     window.addEventListener('scroll', onMove, { passive: true });
     const onResize = () => {
+      // Only the height changed: a phone's address bar folding away. Nothing here has moved.
+      if (window.innerWidth === vw) return;
       measure();
       place();
     };
