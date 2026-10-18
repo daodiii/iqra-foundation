@@ -103,6 +103,21 @@
   opacity: 1;
 }
 
+/*
+ * The hero's script (Hero.tsx) shows and hides the logo itself once it has begun: hidden while the
+ * hero's name is out of the header or on its way back, shown in the very frame that name lands on it.
+ * No fade and no observer between the two, so there is never a frame with both or neither.
+ */
+.header[data-handoff] .home {
+  opacity: 0;
+  transition: none;
+}
+
+.header[data-handoff][data-landed] .home,
+.header[data-handoff] .home:focus-visible {
+  opacity: 1;
+}
+
 .home img {
   height: 40px;
   width: auto;

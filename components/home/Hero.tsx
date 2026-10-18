@@ -130,6 +130,8 @@ export function Hero() {
     const id = requestAnimationFrame(() => {
       greetingBegan = performance.now();
       h.setAttribute('data-in', '');
+      // From here the header's logo is this script's to show and hide (site.module.css, `data-handoff`).
+      header.setAttribute('data-handoff', '');
     });
 
     let docked = false;
@@ -190,9 +192,12 @@ export function Hero() {
       d.style.transform = `translate3d(${(o.x + (to.x - o.x) * p).toFixed(2)}px, ${(o.y + (to.y - o.y) * p).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
       pic.style.transform = y > 0 ? `translate3d(0, ${(Math.min(y, vh * 1.2) * DEPTH).toFixed(1)}px, 0)` : '';
       // Landed: the header's own logo has faded in over it; this one steps aside.
+      // Both in this one call, so one frame shows the one logo or the other, never both and never neither: an
+      // observer and two fades did it before, and on a phone they drifted apart just before the header.
       if ((p >= 1) !== docked) {
         docked = p >= 1;
         h.toggleAttribute('data-docked', docked);
+        header.toggleAttribute('data-landed', docked);
       }
     };
     // At once, not in a frame of its own: the glide tells us inside the frame it moved the page, before it is painted.
@@ -215,6 +220,8 @@ export function Hero() {
     ro?.observe(h);
     place();
     return () => {
+      header.removeAttribute('data-handoff');
+      header.removeAttribute('data-landed');
       ro?.disconnect();
       cancelAnimationFrame(id);
       cancelAnimationFrame(raf);
