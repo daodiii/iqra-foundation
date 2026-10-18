@@ -22,11 +22,6 @@ const smooth = (t: number) => {
   return u * u * (3 - 2 * u);
 };
 
-/** On a phone the name goes into the header by itself over this long, once the page is scrolled this share of a screen (and back out above the second line). */
-const GLIDE_MS = 420;
-const TOUCH_IN = 0.1;
-const TOUCH_OUT = 0.04;
-
 /** The greeting's delay and length (hero.module.css) with a little to spare. */
 const GREETING_MS = 200 + 1500 + 100;
 /** How long a greeting cut short by a scroll takes to finish, if the visitor comes back to the top. */
@@ -205,88 +200,6 @@ export function Hero() {
         header.toggleAttribute('data-landed', docked);
       }
     };
-    // A phone scrolls the page on its own thread and tells this script afterwards, so a path laid by the scroll is
-    // always a few frames behind it, most of all at the end, where the name is small and has to land exactly on
-    // the header's logo (the owner's Samsung S22, 2026-10-18: it lags just before the navbar). There the scroll only
-    // starts the move: a little way down the page the name goes into the header by itself on a timed transition,
-    // which the browser runs off the main thread, and it comes back out when the visitor is at the top again.
-    if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
-      const at = (q: number) =>
-        `translate3d(${(o.x + (to.x - o.x) * q).toFixed(2)}px, ${(o.y + (to.y - o.y) * q).toFixed(2)}px, 0) scale(${(1 + (to.w / o.w - 1) * q).toFixed(5)})`;
-      let target = false;
-      let timer = 0;
-      const land = (v: boolean) => {
-        if (v === docked) return;
-        docked = v;
-        h.toggleAttribute('data-docked', v);
-        header.toggleAttribute('data-landed', v);
-      };
-      const set = (instant: boolean) => {
-        clearTimeout(timer);
-        const q = target ? 1 : 0;
-        if (instant) {
-          d.style.transition = 'none';
-          d.style.transform = at(q);
-          land(target);
-          return;
-        }
-        // On its way back out the header's logo gives way at once; the name is on top of it, and the same picture.
-        if (!target) land(false);
-        // Cut short mid-greeting: go on from where the greeting stands.
-        if (!seized) seize();
-        if (carry > 0) {
-          d.style.transition = 'none';
-          d.style.transform = at(carry);
-          void d.offsetWidth;
-          carry = 0;
-        }
-        d.style.transition = `transform ${GLIDE_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`;
-        d.style.transform = at(q);
-        if (target) timer = window.setTimeout(() => target && land(true), GLIDE_MS + 40);
-      };
-      const onEnd = (e: TransitionEvent) => {
-        if (e.target === d && e.propertyName === 'transform' && target) {
-          clearTimeout(timer);
-          land(true);
-        }
-      };
-      d.addEventListener('transitionend', onEnd);
-      const touchPlace = (instant = false) => {
-        const y = window.scrollY;
-        pic.style.transform = y > 0 ? `translate3d(0, ${(Math.min(y, vh * 1.2) * DEPTH).toFixed(1)}px, 0)` : '';
-        // Two lines, so a finger resting between them does not make the name go in and out.
-        const want = target ? y > vh * TOUCH_OUT : y > vh * TOUCH_IN;
-        if (want === target && !instant) return;
-        target = want;
-        set(instant);
-      };
-      const onTouchScroll = () => touchPlace();
-      window.addEventListener('scroll', onTouchScroll, { passive: true });
-      const remeasure = () => {
-        measure();
-        d.style.transition = 'none';
-        d.style.transform = at(target ? 1 : 0);
-      };
-      const onTouchResize = () => {
-        if (window.innerWidth !== vw) remeasure();
-      };
-      window.addEventListener('resize', onTouchResize);
-      const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(remeasure);
-      ro?.observe(h);
-      h.setAttribute('data-fly', '');
-      d.style.transform = at(0);
-      touchPlace(true);
-      return () => {
-        clearTimeout(timer);
-        cancelAnimationFrame(id);
-        window.removeEventListener('scroll', onTouchScroll);
-        window.removeEventListener('resize', onTouchResize);
-        d.removeEventListener('transitionend', onEnd);
-        ro?.disconnect();
-        header.removeAttribute('data-handoff');
-        header.removeAttribute('data-landed');
-      };
-    }
     // At once, not in a frame of its own: the glide tells us inside the frame it moved the page, before it is painted.
     const onMove = place;
     const off = onScroll(onMove);
