@@ -91,10 +91,9 @@
   z-index: auto;
 }
 
-/* Landed: the header's own logo has faded in over it (two beats); then this one steps aside. */
+/* Landed: the header's own logo takes over in the same frame (Hero.tsx sets `data-landed` with this); this one steps aside. */
 .hero[data-docked] .dock {
   opacity: 0;
-  transition: opacity 0s var(--dur-2);
 }
 
 /* Before the script measures, the name waits unseen (the header's logo is on screen); without it, it stands in the hero after a moment. */
