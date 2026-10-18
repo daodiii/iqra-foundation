@@ -39,12 +39,19 @@ const nav = [
 /** All nine, in the menu's reading order (an item, then what stands under it): the footer's list, and every page a link can name. */
 const links: readonly { label: string; href: string }[] = nav.flatMap<{ label: string; href: string }>((item) => ('children' in item ? [item, ...item.children] : [item]));
 
+/** The two legal pages: not in the menu (the brief's nine are the menu), reached from the foot of every page. */
+const legal = [
+  { label: 'Personvern', href: '/personvern' },
+  { label: 'Vilkår', href: '/vilkar' },
+] as const;
+
 export const site = {
   lang: 'nb',
   name: 'Iqra Foundation',
   place: 'Oslo',
   nav,
   links,
+  legal,
   /** The two buttons under the home page's text (brief 2), and where they go; and Kontakt, the way on from the foot of the home page. */
   cta: {
     work: { label: brief.home.buttons[0], href: '/vart-arbeid' },
@@ -60,6 +67,7 @@ export const site = {
   },
   footer: {
     navLabel: 'Sider',
+    legalLabel: 'Juridisk',
     orgnrLabel: 'Organisasjonsnummer',
     emailLabel: 'E-post',
   },

@@ -38,12 +38,14 @@ type Props = {
    * hero's name lands on it. The owner, 2026-10-17: «use the one that has not turquoise, but red».
    */
   crimson?: boolean;
+  /** The header's logos: the page's first paint, fetched ahead of everything else. */
+  priority?: boolean;
 };
 
 /** The guide's on-navy file with the two accents recoloured crimson and the word light; the guide does not draw it. */
 export const LOGO_ON_NAVY_CRIMSON = '/brand/iqra-logo-on-navy-crimson.svg';
 
-export function Logo({ ground = 'white', mark = false, height, className, decorative = false, crimson = false }: Props) {
+export function Logo({ ground = 'white', mark = false, height, className, decorative = false, crimson = false, priority = false }: Props) {
   const src = mark ? '/brand/iqra-mark.svg' : crimson && ground === 'navy' ? LOGO_ON_NAVY_CRIMSON : FILE[ground];
   const ratio = mark ? MARK_RATIO : LOGO_RATIO;
   return (
@@ -54,6 +56,7 @@ export function Logo({ ground = 'white', mark = false, height, className, decora
       height={height}
       className={className}
       decoding="async"
+      fetchPriority={priority ? 'high' : undefined}
       data-logo={mark ? 'mark' : ground}
     />
   );

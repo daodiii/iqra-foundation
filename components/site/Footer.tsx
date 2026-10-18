@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { areas } from '@/components/home/areas';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
+import { isPlaceholder } from '@/lib/placeholder';
 import { Logo } from './Logo';
 import styles from './site.module.css';
 
@@ -66,7 +67,7 @@ export function Footer() {
         <div>
           <dt>{site.footer.emailLabel}</dt>
           <dd>
-            <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
+            {isPlaceholder(site.contact.email) ? site.contact.email : <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a>}
           </dd>
         </div>
         <div>
@@ -74,6 +75,17 @@ export function Footer() {
           <dd>{site.place}</dd>
         </div>
       </dl>
+      <nav aria-label={site.footer.legalLabel}>
+        <ul className={styles.legalList}>
+          {site.legal.map((item) => (
+            <li key={item.href}>
+              <Link href={item.href} prefetch={false} className={styles.legalLink}>
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </footer>
   );
 }

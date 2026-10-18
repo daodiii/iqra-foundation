@@ -24,8 +24,8 @@ export function Header() {
       </a>
       <header id="topp" className={styles.header} style={{ viewTransitionName: 'site-header' }}>
         <Link href="/" prefetch={false} className={styles.home} aria-label={site.header.homeLabel}>
-          <Logo ground="white" height={40} decorative className={styles.logoOnWhite} />
-          <Logo ground="navy" crimson height={40} decorative className={styles.logoOnNavy} />
+          <Logo ground="white" height={40} decorative priority className={styles.logoOnWhite} />
+          <Logo ground="navy" crimson height={40} decorative priority className={styles.logoOnNavy} />
         </Link>
         <Nav />
       </header>

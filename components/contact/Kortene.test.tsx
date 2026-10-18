@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { site } from '@/content/site.no';
+import { isPlaceholder } from '@/lib/placeholder';
 import { Kart, Kortene } from './Kortene';
 
 const t = site.pages.contact;
@@ -25,8 +26,13 @@ describe('Kontakt: the cards', () => {
     expect(card('adresse').getByText(c.address.street)).toBeInTheDocument();
     expect(card('adresse').getByText(secondLine)).toBeInTheDocument();
     expect(card('adresse').getByText(`${t.orgnrLabel} ${c.orgnr}`)).toBeInTheDocument();
-    expect(card('epost').getByRole('link', { name: c.email })).toHaveAttribute('href', `mailto:${c.email}`);
-    expect(card('telefon').getByRole('link', { name: c.phone })).toHaveAttribute('href', `tel:${c.phone.replace(/\s/g, '')}`);
+    // A link once the value is real; the text it is, never a link that goes nowhere, while it is bracketed.
+    const mail = card('epost').getByText(c.email).closest('a');
+    const tel = card('telefon').getByText(c.phone).closest('a');
+    if (isPlaceholder(c.email)) expect(mail).toBeNull();
+    else expect(mail).toHaveAttribute('href', `mailto:${c.email}`);
+    if (isPlaceholder(c.phone)) expect(tel).toBeNull();
+    else expect(tel).toHaveAttribute('href', `tel:${c.phone.replace(/\s/g, '')}`);
     expect(card('tider').getByText(c.hours)).toBeInTheDocument();
     expect(card('vei').getByText(c.transit)).toBeInTheDocument();
   });
@@ -36,7 +42,7 @@ describe('Kontakt: the cards', () => {
     const epost = container.querySelector('[data-card="epost"]') as HTMLElement;
     expect(epost).toHaveTextContent(t.followLabel);
     for (const l of c.follow) expect(within(epost).getByText(l.name)).toBeInTheDocument();
-    expect(epost.querySelectorAll('a')).toHaveLength(1);
+    expect(epost.querySelectorAll('a')).toHaveLength(isPlaceholder(c.email) ? 0 : 1);
   });
 
   test('the map card: the map at both widths with its alt, the licence’s credit as a link, the address written on it — and NO pin while the address is bracketed', () => {
