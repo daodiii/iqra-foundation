@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
+import { isPlaceholder } from '../lib/placeholder';
 
 /**
  * The shell on every page: the header with the brief's nine items, the drawer on a phone,
@@ -173,7 +174,8 @@ test('the footer carries the logo reversed, the nine links, the red thread and t
   await expect(footer.locator('[data-thread]')).toContainText('Kunnskap');
   await expect(footer.locator('[data-thread]')).toContainText('Samfunnsdeltakelse');
   await expect(footer).toContainText(site.contact.orgnr);
-  await expect(footer.getByRole('link', { name: site.contact.email })).toHaveAttribute('href', `mailto:${site.contact.email}`);
+  await expect(footer).toContainText(site.contact.email);
+  await expect(footer.locator('a[href^="mailto:"]')).toHaveCount(isPlaceholder(site.contact.email) ? 0 : 1);
   await expect(footer).toContainText(site.place);
 });
 
