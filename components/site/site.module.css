@@ -603,6 +603,31 @@
   text-underline-offset: 4px;
 }
 
+/* Personvern and Vilkår: small, under the facts, not part of the nine. */
+.legalList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--step--1);
+}
+
+.legalLink {
+  display: inline-block;
+  padding: 8px 0;
+  color: rgb(240 240 241 / 0.8);
+  text-decoration: none;
+}
+
+.legalLink:hover {
+  color: var(--color-white);
+  text-decoration: underline;
+  text-decoration-color: var(--color-turquoise);
+  text-underline-offset: 4px;
+}
+
 @media (max-width: 899px) {
   .footerList {
     grid-template-columns: repeat(2, auto);

@@ -38,6 +38,20 @@ natively, so on an older Node the build fails in `prebuild`, before Next starts.
   typefaces (General Sans and Supreme, WOFF2, with the ITF Free Font License beside them).
   `public/brand/` holds the logo as SVG, one file per colour combination the guide gives;
   `components/site/Logo.tsx` picks the variant for the ground.
+- `content/legal.no.ts` — Personvern and Vilkår (`/personvern`, `/vilkar`), linked from the foot of
+  every page. A **draft** written from what the site does today; the foundation must read it
+  before the site is announced, and it must change the day a cookie, a form that sends mail or a
+  second tracking tool arrives. `app/(site)/…/page.tsx` only renders it (`LegalPage`).
+- `app/robots.ts`, `app/sitemap.ts`, `lib/site-url.ts` — robots.txt and the sitemap, built from the
+  site's own address (`NEXT_PUBLIC_SITE_URL`, else Vercel's production host). The sitemap lists the
+  menu's nine pages and the two legal ones. `app/layout.tsx` gives every page its canonical link.
+- `next.config.ts` — the security headers (HSTS, a content policy naming this site as the only
+  source, no framing, no camera/microphone/location) on every page but the editor under /keystatic.
+- `components/site/Analytics.tsx` — Vercel Web Analytics: no cookie, no browser storage, so no
+  consent banner. It loads on the production deploy only and counts nothing until Analytics is
+  switched on in the Vercel project's settings.
+- `app/icon.svg`, `app/favicon.ico`, `app/apple-icon.png` — the guide's mark on its turquoise plate,
+  made by `node scripts/dev/icons.mjs` from `public/brand/iqra-mark.svg`.
 - `app/globals.css` — the design tokens: the guide's five colours and their named tints, the
   two faces, spacing, radius, motion. Components read tokens and never write a literal.
 
@@ -120,6 +134,15 @@ settings in `lighthouserc.json` (performance ≥ 0.90, accessibility ≥ 0.95, C
 **`npm run media` is not part of the build.** It needs `ffmpeg` and reads the master film
 from a path near the top of `scripts/media.mjs` that exists only on the machine the film was
 made on. Everything it produces is committed under `public/media`.
+
+**There is no cookie banner on purpose, and no working contact form yet.** Nothing on the site sets a
+cookie or stores anything in the browser, so there is nothing to ask consent for; add the banner
+the day that changes (and update `content/legal.no.ts`). The form on Kontakt is drawn, not wired:
+when it is, it needs server-side validation, spam protection (a honeypot and a rate limit, or a
+challenge) and a mail service whose key lives in a server-only environment variable.
+
+**The hero pictures are shown at 17% opacity**, which is why `public/hero/staden-*.webp` are saved
+at quality 55: against the navy ground the largest difference from the original is 1.5 of 255.
 
 **The share card is a committed PNG.** `scripts/share-image.mjs` renders it with headless
 Chromium from the repo's own logo and fonts; run it after changing either.

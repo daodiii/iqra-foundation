@@ -1,3 +1,4 @@
+import { Analytics } from '@/components/site/Analytics';
 import { Footer } from '@/components/site/Footer';
 import { Header } from '@/components/site/Header';
 import { Smooth } from '@/components/site/Smooth';
@@ -12,6 +13,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <Smooth />
+      <Analytics />
       <Header />
       <main id="innhold">{children}</main>
       <Footer />

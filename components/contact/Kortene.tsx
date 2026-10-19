@@ -136,7 +136,7 @@ export function Kortene() {
           <p className={styles.cardSmall}>{t.orgnrLabel} {c.orgnr}</p>
         </Card>
         <Card area="epost" label={t.emailLabel}>
-          <p className={styles.cardValue}><a href={`mailto:${c.email}`}>{c.email}</a></p>
+          <p className={styles.cardValue}>{isPlaceholder(c.email) ? c.email : <a href={`mailto:${c.email}`}>{c.email}</a>}</p>
           <p className={styles.cardSmall}>{t.followLabel} <Follow /></p>
         </Card>
         <Card area="skjema" className={styles.formCard}>
@@ -144,7 +144,7 @@ export function Kortene() {
           <Form />
         </Card>
         <Card area="telefon" label={t.phoneLabel}>
-          <p className={styles.cardValue}><a href={`tel:${c.phone.replace(/\s/g, '')}`}>{c.phone}</a></p>
+          <p className={styles.cardValue}>{isPlaceholder(c.phone) ? c.phone : <a href={`tel:${c.phone.replace(/\s/g, '')}`}>{c.phone}</a>}</p>
         </Card>
         <Card area="tider" label={t.hoursLabel}>
           <p className={styles.cardValue}>{c.hours}</p>

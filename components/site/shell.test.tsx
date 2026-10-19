@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { areas } from '@/components/home/areas';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
+import { isPlaceholder } from '@/lib/placeholder';
 import { Footer } from './Footer';
 import { Header } from './Header';
 
@@ -87,8 +88,16 @@ describe('the footer', () => {
     expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(site.links.map((n) => n.label));
     expect(site.links.map((n) => n.label).sort()).toEqual([...brief.menu].sort());
     expect(screen.getByText(site.contact.orgnr)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: site.contact.email })).toHaveAttribute('href', `mailto:${site.contact.email}`);
+    const mail = screen.getByText(site.contact.email).closest('a');
+    if (isPlaceholder(site.contact.email)) expect(mail).toBeNull();
+    else expect(mail).toHaveAttribute('href', `mailto:${site.contact.email}`);
     expect(screen.getByText(site.place)).toBeInTheDocument();
+  });
+
+  test('Personvern and Vilkår stand under the facts, in a nav of their own: the nine stay the nine', () => {
+    render(<Footer />);
+    const legal = screen.getByRole('navigation', { name: site.footer.legalLabel });
+    expect(within(legal).getAllByRole('link').map((l) => [l.textContent, l.getAttribute('href')])).toEqual(site.legal.map((l) => [l.label, l.href]));
   });
 
   test('the red thread reads the brief’s name and its four words in the home page’s order, each word in its area’s colour', () => {

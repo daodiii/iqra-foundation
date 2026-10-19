@@ -248,8 +248,11 @@ test('kontakt: seven cards in reading order — the map with the address on it, 
   await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.addressLabel, t.emailLabel, t.form.title, t.phoneLabel, t.hoursLabel, t.transitLabel]);
   await expect(main.getByRole('heading', { level: 2, name: t.form.title })).toBeVisible();
   expect(await main.locator('[data-card]').evaluateAll((els) => els.map((e) => e.getAttribute('data-card')))).toEqual(['kart', 'adresse', 'epost', 'skjema', 'telefon', 'tider', 'vei']);
-  await expect(main.getByRole('link', { name: site.contact.email })).toHaveAttribute('href', `mailto:${site.contact.email}`);
-  await expect(main.getByRole('link', { name: site.contact.phone })).toHaveAttribute('href', `tel:${site.contact.phone.replace(/\s/g, '')}`);
+  // A link once the value is real; the text it is while it is bracketed — never a link that goes nowhere.
+  await expect(main).toContainText(site.contact.email);
+  await expect(main).toContainText(site.contact.phone);
+  await expect(main.locator('a[href^="mailto:"]')).toHaveCount(isPlaceholder(site.contact.email) ? 0 : 1);
+  await expect(main.locator('a[href^="tel:"]')).toHaveCount(isPlaceholder(site.contact.phone) ? 0 : 1);
   await expect(main).toContainText(site.contact.address.street);
   await expect(main).toContainText(`${site.contact.address.postcode} ${site.place}`);
   await expect(main).toContainText(site.contact.orgnr);
@@ -320,8 +323,11 @@ test('the share card is the logo, on every route', async ({ page }) => {
     expect(res.status()).toBe(200);
     expect(res.headers()['content-type']).toContain('image/png');
   }
-  const icon = page.locator('link[rel="icon"]');
-  await expect(icon).toHaveAttribute('href', /icon\.svg/);
+  // The mark as an SVG for tabs, and the .ico and the apple icon for what does not read an SVG.
+  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute('href', /icon\.svg/);
+  await expect(page.locator('link[rel="icon"][href*="favicon.ico"]')).toHaveCount(1);
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', /apple-icon/);
+  for (const file of ['/favicon.ico', '/apple-icon.png']) expect((await page.request.get(file)).status()).toBe(200);
 });
 
 /**
@@ -392,4 +398,29 @@ test('reduced motion: the pages render and nothing is hidden waiting for an anim
   await page.goto('/vart-arbeid');
   for (const a of brief.areas) await expect(page.locator(`#${a.key}`)).toContainText(a.text);
   await context.close();
+});
+
+test('Personvern and Vilkår, robots.txt, the sitemap and the security headers', async ({ page }) => {
+  for (const item of site.legal) {
+    const res = await page.goto(item.href);
+    expect(res!.status()).toBe(200);
+    await expect(page).toHaveTitle(T(item.label));
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toHaveText(item.label);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new RegExp(`${item.href}$`));
+    // from the foot of any page
+    await expect(page.getByRole('contentinfo').getByRole('link', { name: item.label })).toHaveAttribute('href', item.href);
+  }
+  const robots = await (await page.request.get('/robots.txt')).text();
+  expect(robots).toMatch(/Allow: \//);
+  expect(robots).toMatch(/Disallow: \/keystatic/);
+  expect(robots).toMatch(/Sitemap: .*\/sitemap\.xml/);
+  expect(robots).not.toMatch(/Disallow: \/\s*$/m);
+  const sitemap = await (await page.request.get('/sitemap.xml')).text();
+  for (const item of [...site.links, ...site.legal]) expect(sitemap).toContain(item.href === '/' ? '<loc>' : `${item.href}</loc>`);
+  const headers = (await page.request.get('/')).headers();
+  expect(headers['strict-transport-security']).toMatch(/max-age=\d+/);
+  expect(headers['x-content-type-options']).toBe('nosniff');
+  expect(headers['x-frame-options']).toBe('DENY');
+  expect(headers['content-security-policy']).toContain("frame-ancestors 'none'");
+  expect(headers['x-powered-by']).toBeUndefined();
 });

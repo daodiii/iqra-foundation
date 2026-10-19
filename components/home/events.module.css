@@ -100,7 +100,7 @@
   font: 500 var(--step--1) / 1 var(--font-sans);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgb(240 240 241 / 0.6);
+  color: rgb(240 240 241 / 0.74);
 }
 
 [data-live]:not([data-arrived]) .count {

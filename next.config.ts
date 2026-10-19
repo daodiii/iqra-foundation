@@ -1,6 +1,50 @@
 import type { NextConfig } from "next";
 
+/**
+ * The headers every public page goes out with.
+ *
+ * HTTPS is forced twice over: Vercel answers every plain-http request with a redirect to
+ * https, and `Strict-Transport-Security` tells the browser not to try http again for two
+ * years (no `preload`: that is a promise to browsers' lists which is hard to take back, and
+ * the owner has not asked for it). The rest is the usual hardening: no sniffing of types,
+ * no framing of the site by others, nothing sent to other sites beyond the origin, and no
+ * camera, microphone or location (the site asks for none).
+ *
+ * The content policy names where things may come from: this site only. `unsafe-inline` is
+ * the price of a static Next site, whose own bootstrap script is inline and cannot carry a
+ * per-request nonce without making every page dynamic; the policy still shuts the door on
+ * scripts, frames, plug-ins and form posts from anywhere else. Not applied to the content
+ * editor under /keystatic, which loads GitHub's own scripts and talks to its API.
+ */
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "media-src 'self'",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+  'upgrade-insecure-requests',
+].join('; ');
+
+const securityHeaders = [
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
+  { key: 'Content-Security-Policy', value: csp },
+];
+
 const nextConfig: NextConfig = {
+  /** The server does not announce what it is made of. */
+  poweredByHeader: false,
+  /** Visit counting runs on the production deploy only (components/site/Analytics.tsx). */
+  env: { NEXT_PUBLIC_ANALYTICS: process.env.VERCEL_ENV === 'production' ? '1' : '' },
   /*
    * The home page and Arrangementer regenerate hourly (`revalidate`), and at that moment
    * they read the collections from disk — `lib/content.ts` joins `process.cwd()` with the
@@ -24,6 +68,7 @@ const nextConfig: NextConfig = {
    */
   async headers() {
     return [
+      { source: '/((?!keystatic|api/keystatic).*)', headers: securityHeaders },
       {
         source: '/media/:file*',
         headers: [
