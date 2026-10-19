@@ -217,7 +217,7 @@
   .hero {
     grid-template-rows: auto 1fr;
     row-gap: 28px;
-    padding-top: calc(var(--header-h) + 7vh);
+    padding-top: calc(var(--header-h) + 7svh);
   }
 
   .mark {

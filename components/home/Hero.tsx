@@ -89,8 +89,6 @@ export function Hero() {
     let vw = window.innerWidth;
     let to = { x: 0, y: 0, w: 1 };
     const measure = () => {
-      vh = window.innerHeight;
-      vw = window.innerWidth;
       heroHeight = h.offsetHeight;
       // The name's place in the flow, not where it flies: read it with the fixed positioning off.
       const flew = h.hasAttribute('data-fly');
@@ -211,6 +209,11 @@ export function Hero() {
     const onResize = () => {
       // Only the height changed: a phone's address bar folding away. Nothing here has moved.
       if (window.innerWidth === vw) return;
+      // A new width (including rotation) needs a new path. A ResizeObserver callback
+      // may update the layout too, but must retain this scroll distance when the
+      // browser toolbar changes height or the logo jumps back along its path.
+      vh = window.innerHeight;
+      vw = window.innerWidth;
       remeasure();
     };
     window.addEventListener('resize', onResize);

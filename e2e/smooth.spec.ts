@@ -183,6 +183,36 @@ test('the name goes back into the header on the scroll and lands exactly on the 
   await expect(page.locator('#topp')).not.toHaveAttribute('data-lockup');
 });
 
+test('phone: the logo keeps its place when the browser toolbar resizes the hero during docking', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'the phone’s browser toolbar');
+  await open(page);
+  await page.waitForTimeout(2500);
+  await page.evaluate(() => window.scrollTo(0, Math.round(window.innerHeight * 0.3)));
+  const logo = page.locator('#hovedtekst');
+  const before = await logo.boundingBox();
+  expect(before).not.toBeNull();
+
+  await page.evaluate(async () => {
+    const hero = document.querySelector<HTMLElement>('[data-hero]')!;
+    // A collapsing toolbar changes innerHeight without changing the screen width.
+    // Let the hero resize too: its ResizeObserver must not restart the dock's path.
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: innerHeight + 100 });
+    hero.style.minHeight = `${hero.offsetHeight + 100}px`;
+    window.dispatchEvent(new Event('resize'));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  const after = await logo.boundingBox();
+  expect(after).not.toBeNull();
+  expect(Math.abs(after!.y - before!.y)).toBeLessThan(1);
+  expect(Math.abs(after!.width - before!.width)).toBeLessThan(1);
+
+  // Continuing downward still lands on the header; returning restores the hero logo.
+  await page.evaluate(() => window.scrollTo(0, Math.round(window.innerHeight * 0.5)));
+  await expect(page.locator('#topp')).toHaveAttribute('data-landed', '');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(page.locator('#topp')).not.toHaveAttribute('data-landed');
+});
+
 test('a phone keeps its own scroll: no glide', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'the phone');
   await open(page);
