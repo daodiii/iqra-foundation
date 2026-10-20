@@ -5,7 +5,7 @@ import type { Event } from '@/lib/content';
 import { Events } from './Events';
 
 const event = (n: number, start: string, time: string | null, area: Event['area'] = null): Event => ({
-  slug: `e${n}`, title: `Arrangement ${n}`, start, time, end: null, place: `Sted ${n}`, text: '', link: null, image: null, area,
+  slug: `e${n}`, title: `Arrangement ${n}`, start, time, end: null, place: `Sted ${n}`, summary: '', link: null, image: null, area, body: null,
 });
 const three = [event(1, '2026-09-24', '18:00', 'dialog'), event(2, '2026-09-30', '19:00'), event(3, '2026-10-08', null)];
 const t = site.pages.events;

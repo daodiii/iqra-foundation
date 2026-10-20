@@ -1,0 +1,8 @@
+/* A post's picture: 3:2, the site's corner, the hairline's colour behind it while it loads. */
+.frame {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--color-hairline);
+}

@@ -94,6 +94,13 @@
   padding: 18px 20px;
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius);
+  /*
+   * An address pasted into a summary is one word with no place to break; it may break anywhere
+   * rather than widen a phone's page. The card is a grid item, which is never narrower than its
+   * longest word unless told it may be: without min-width the card grew to the address's width.
+   */
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .item h3 {
@@ -158,4 +165,9 @@
 
 .buttonSecondary:hover {
   background: var(--color-light);
+}
+
+/* A card's picture (Frame), under its text. */
+.picture {
+  margin-top: 14px;
 }

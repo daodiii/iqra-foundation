@@ -1,0 +1,17 @@
+{
+  "title": "Testkveld",
+  "start": "2027-01-20",
+  "time": "18:00",
+  "place": "Oslo",
+  "summary": "En kveld for å prøve redigeringen.",
+  "area": "dialog",
+  "link": "https://example.org/pamelding",
+  "image": {
+    "discriminant": true,
+    "value": {
+      "src": "/opplastet/arrangementer/testkveld/image/value/src.png",
+      "alt": "Et tomt møterom"
+    }
+  },
+  "publish": true
+}
