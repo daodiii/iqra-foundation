@@ -220,6 +220,50 @@ test('phone: a little scroll sends the logo into the header by itself, on the cl
   expect(Math.abs(back.width - start.width)).toBeLessThan(1);
 });
 
+test('phone: a quick scroll to the hero’s foot lets the logo land in a white header, as the white header’s logo', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'the phone’s timed glide');
+  await open(page);
+  await page.waitForTimeout(2500);
+  // The owner's case (2026-10-20): a flick that stops with the hero's foot, the two buttons, under the header,
+  // so the header turns white and would go away while the logo is still on its way in.
+  const foot = await page.evaluate(() => {
+    const hero = document.querySelector('[data-hero]')!;
+    return Math.round(hero.getBoundingClientRect().bottom - document.getElementById('topp')!.getBoundingClientRect().height / 2 + 6);
+  });
+  // First a flick that stops short of the foot, past the line where the header goes away on the way down (0.6
+  // of a screen) but before the sea, under which it stays: the header must wait for the logo.
+  for (let k = 1; k <= 4; k++) {
+    await page.evaluate((y) => window.scrollTo(0, y), Math.round((foot * 0.85 * k) / 4));
+    await page.waitForTimeout(20);
+  }
+  await page.waitForTimeout(40);
+  const early = await page.evaluate(() => ({
+    landed: document.getElementById('topp')!.hasAttribute('data-landed'),
+    away: document.getElementById('topp')!.hasAttribute('data-away'),
+  }));
+  expect(early.landed, 'still on its way').toBe(false);
+  expect(early.away, 'the header waits for the logo').toBe(false);
+  // Then on to the foot: the header turns white while the logo is still on its way.
+  await page.evaluate((y) => window.scrollTo(0, y), foot);
+  // Past the cross-fade (--dur-2, 240 ms), still inside the 700 ms glide.
+  await page.waitForTimeout(260);
+  const mid = await page.evaluate(() => {
+    const header = document.getElementById('topp')!;
+    const imgs = [...document.querySelectorAll<HTMLImageElement>('#hovedtekst img')];
+    return {
+      away: header.hasAttribute('data-away'),
+      dark: header.hasAttribute('data-dark'),
+      shown: imgs.map((i) => Number(getComputedStyle(i).opacity)),
+    };
+  });
+  expect(mid.away, 'the header waits for the logo').toBe(false);
+  expect(mid.dark, 'the header is white over the page').toBe(false);
+  // The white ground's logo (the second) is what flies in; the navy ground's, white letters, is not seen.
+  expect(mid.shown[1]).toBeGreaterThan(0.9);
+  expect(mid.shown[0]).toBeLessThan(0.1);
+  await expect(page.locator('#topp')).toHaveAttribute('data-landed', '', { timeout: 1500 });
+});
+
 test('a phone keeps its own scroll: no glide', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'the phone');
   await open(page);

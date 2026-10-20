@@ -5,6 +5,9 @@ import { useEffect, useRef } from 'react';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import { LOGO_ON_NAVY_CRIMSON, LOGO_RATIO } from '@/components/site/Logo';
+
+/** The header's logo on a white ground (Logo.tsx, `ground="white"`): the name lands as this when the header is white. */
+const LOGO_ON_WHITE = '/brand/iqra-logo.svg';
 import { onScroll, WHERE } from '@/lib/smooth';
 import styles from './hero.module.css';
 
@@ -152,6 +155,14 @@ export function Hero() {
       header.setAttribute('data-handoff', '');
     });
 
+    // The name in flight wears the header's colours: over a white header it is the white ground's logo. A quick
+    // scroll that ended with the hero's foot under the header turned the header white while the name was on its way,
+    // and the navy ground's logo, white letters, flew in as a ghost over the white page and then swapped on landing
+    // (the owner, 2026-10-20: «if the color is to change exactly when it goes in, it becomes like a bit weird»).
+    const wear = () => h.toggleAttribute('data-light', header.hasAttribute('data-watched') && !header.hasAttribute('data-dark'));
+    const colours = new MutationObserver(wear);
+    colours.observe(header, { attributes: true, attributeFilter: ['data-dark', 'data-watched'] });
+    wear();
     const glides = window.matchMedia(WHERE);
     let docked = false;
     let flying = false;
@@ -292,6 +303,8 @@ export function Hero() {
       touchPlace(true);
       return () => {
         clearTimeout(timer);
+        colours.disconnect();
+        h.removeAttribute('data-light');
         cancelAnimationFrame(id);
         window.removeEventListener('scroll', onTouchScroll);
         window.removeEventListener('resize', onTouchResize);
@@ -326,6 +339,8 @@ export function Hero() {
     ro?.observe(h);
     place();
     return () => {
+      colours.disconnect();
+      h.removeAttribute('data-light');
       header.removeAttribute('data-handoff');
       header.removeAttribute('data-landed');
       ro?.disconnect();
@@ -362,6 +377,8 @@ export function Hero() {
         <span ref={dock} id="hovedtekst" className={styles.dock}>
           <span ref={greet} className={styles.greet}>
             <img src={LOGO_ON_NAVY_CRIMSON} alt={site.logoAlt} width={Math.round(HEIGHT * LOGO_RATIO)} height={HEIGHT} decoding="async" fetchPriority="high" />
+            {/* The header's own logo for a white ground, laid over the first: shown while the header is white (`data-light`). */}
+            <img className={styles.onLight} src={LOGO_ON_WHITE} alt="" aria-hidden="true" width={Math.round(HEIGHT * LOGO_RATIO)} height={HEIGHT} decoding="async" />
           </span>
         </span>
       </h1>
