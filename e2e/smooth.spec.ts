@@ -183,62 +183,41 @@ test('the name goes back into the header on the scroll and lands exactly on the 
   await expect(page.locator('#topp')).not.toHaveAttribute('data-lockup');
 });
 
-test('phone: the logo keeps its place when the browser toolbar resizes the hero during docking', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'the phone’s browser toolbar');
+test('phone: a little scroll sends the logo into the header by itself, on the clock, and the top brings it back out', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'the phone’s timed glide');
   await open(page);
   await page.waitForTimeout(2500);
-  await page.evaluate(() => window.scrollTo(0, Math.round(window.innerHeight * 0.3)));
   const logo = page.locator('#hovedtekst');
-  const before = await logo.boundingBox();
-  expect(before).not.toBeNull();
-
-  await page.evaluate(async () => {
-    const hero = document.querySelector<HTMLElement>('[data-hero]')!;
-    // A collapsing toolbar changes innerHeight without changing the screen width.
-    // Let the hero resize too: its ResizeObserver must not restart the dock's path.
-    Object.defineProperty(window, 'innerHeight', { configurable: true, value: innerHeight + 100 });
-    hero.style.minHeight = `${hero.offsetHeight + 100}px`;
-    window.dispatchEvent(new Event('resize'));
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  const start = (await logo.boundingBox())!;
+  // A small scroll, then the finger stops: the logo must still go all the way in (Hero.tsx GLIDE_MS, TOUCH_IN).
+  await page.evaluate(() => window.scrollTo(0, Math.round(innerHeight * 0.15)));
+  await page.waitForTimeout(200);
+  // At 200 ms of 700 it is on its way: smaller than it stood, still larger than the header's logo, not landed.
+  const mid = await page.evaluate(() => {
+    const home = [...document.querySelectorAll<HTMLElement>('#topp img[data-logo]')].find((el) => el.getBoundingClientRect().width > 0)!;
+    return { w: document.getElementById('hovedtekst')!.getBoundingClientRect().width, home: home.getBoundingClientRect().width, landed: document.getElementById('topp')!.hasAttribute('data-landed') };
   });
-  const after = await logo.boundingBox();
-  expect(after).not.toBeNull();
-  expect(Math.abs(after!.y - before!.y)).toBeLessThan(1);
-  expect(Math.abs(after!.width - before!.width)).toBeLessThan(1);
-
-  // Continuing downward still lands on the header; returning restores the hero logo.
-  await page.evaluate(() => window.scrollTo(0, Math.round(window.innerHeight * 0.5)));
-  await expect(page.locator('#topp')).toHaveAttribute('data-landed', '');
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await expect(page.locator('#topp')).not.toHaveAttribute('data-landed');
-});
-
-test('phone: the logo keeps the finger’s pace into the header instead of creeping the last stretch', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'the phone’s own scroll');
-  await open(page);
-  await page.waitForTimeout(2500);
-  // How much of its way the logo has left at 90% of the docking scroll (Hero.tsx, DOCK 0.45).
-  // At the finger's pace it is 10%; the old curve, slowing to a stop, left 2.8% and crept it.
-  const left = await page.evaluate(async () => {
-    const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-    const logo = document.getElementById('hovedtekst')!;
-    const box = () => {
-      const r = logo.getBoundingClientRect();
-      return [r.top, r.left, r.width];
-    };
-    const dist = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
-    window.scrollTo(0, 0);
-    await frame();
-    const start = box();
-    window.scrollTo(0, Math.round(innerHeight * 0.45 * 0.9));
-    await frame();
-    const near = box();
+  expect(mid.w, 'a glide, not a jump').toBeLessThan(start.width - 1);
+  expect(mid.w, 'a glide, not a jump').toBeGreaterThan(mid.home + 1);
+  expect(mid.landed).toBe(false);
+  await expect(page.locator('#topp')).toHaveAttribute('data-landed', '', { timeout: 1500 });
+  // It lands exactly on the header's logo.
+  const at = await page.evaluate(() => {
+    const r = document.getElementById('hovedtekst')!.getBoundingClientRect();
     const home = [...document.querySelectorAll<HTMLElement>('#topp img[data-logo]')].find((el) => el.getBoundingClientRect().width > 0)!;
     const h = home.getBoundingClientRect();
-    const end = [h.top, h.left, h.width];
-    return dist(near, end) / dist(start, end);
+    return { dx: Math.abs(r.left - h.left), dy: Math.abs(r.top - h.top), dw: Math.abs(r.width - h.width) };
   });
-  expect(left).toBeGreaterThan(0.07);
+  expect(at.dx).toBeLessThan(1);
+  expect(at.dy).toBeLessThan(1);
+  expect(at.dw).toBeLessThan(1);
+  // Back at the top it comes out again, to where it stood.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(page.locator('#topp')).not.toHaveAttribute('data-landed');
+  await page.waitForTimeout(1000);
+  const back = (await logo.boundingBox())!;
+  expect(Math.abs(back.y - start.y)).toBeLessThan(1);
+  expect(Math.abs(back.width - start.width)).toBeLessThan(1);
 });
 
 test('a phone keeps its own scroll: no glide', async ({ page, isMobile }) => {
