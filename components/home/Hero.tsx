@@ -100,8 +100,18 @@ export function Hero() {
     let vh = window.innerHeight;
     let vw = window.innerWidth;
     let to = { x: 0, y: 0, w: 1 };
+    // How much of Chrome's address bar (Android) has folded away: the visual viewport's growth past `innerHeight`.
+    // Chrome hides the bar by holding the page still on the screen and taking the bar's height off `scrollY`, while
+    // `innerHeight` stays; Safari changes `innerHeight` itself, and a desktop has no bar, so there it is nought.
+    const folded = () => {
+      const vv = window.visualViewport;
+      return vv ? Math.max(0, vv.height - window.innerHeight) : 0;
+    };
+    // The bar as it stood when the path was laid: only what moves after that counts.
+    let barAt = folded();
     const measure = () => {
       heroHeight = h.offsetHeight;
+      barAt = folded();
       // The name's place in the flow, not where it flies: read it with the fixed positioning off.
       const flew = h.hasAttribute('data-fly');
       if (flew) h.removeAttribute('data-fly');
@@ -153,6 +163,8 @@ export function Hero() {
     let carryFrom = 0;
     let carryAt = 0;
     let seized = false;
+    // Where along its way the name was when the bar began to fold; -1 while the bar is where it was.
+    let barFrom = -1;
     const seize = () => {
       seized = true;
       const running = g.getAnimations();
@@ -170,13 +182,12 @@ export function Hero() {
     const place = () => {
       cancelAnimationFrame(raf);
       raf = 0;
-      // How far the finger has carried the page, which is not `scrollY` alone. Chrome on Android hides its address
-      // bar by holding the page still on the screen and taking the bar's height off `scrollY` (`innerHeight` stays):
+      // How far the finger has carried the page, which is not `scrollY` alone while Chrome's bar folds (`folded`):
       // measured on the owner's Galaxy S22, `scrollY` fell 174 → 128 while the visual viewport grew 649 → 705, and
-      // the name slid back along its way just under the header. The visual viewport's growth past `innerHeight` puts
-      // it back; the sum rose 1–2 px a frame right through. Safari changes `innerHeight` itself, so there it adds nothing.
-      const vv = window.visualViewport;
-      const y = window.scrollY + (vv ? Math.max(0, vv.height - window.innerHeight) : 0);
+      // the name slid back along its way just under the header. With the bar's share put back the sum rose
+      // 1–2 px a frame right through.
+      const bar = folded() - barAt;
+      const y = window.scrollY + bar;
       // Docked and far below: nothing on it moves any more.
       if (docked && carry <= 0 && y > heroHeight * 1.2) return;
       if (y > 0 && !seized) seize();
@@ -195,6 +206,14 @@ export function Hero() {
         }
       }
       const p = carry + (1 - carry) * p0;
+      // While the bar folds, everything fixed to the screen (the header, and this name) rises by the bar's height
+      // and the page under it stands still: the name left a gap of the bar's height over the copy it had been
+      // overlapping (the owner: «a huge space between the text and the logo»). So the name stands still on the
+      // screen with the page while the bar moves (`lift`, down the screen by what the bar took), and the lift melts
+      // into the rest of its way: all of it where the bar began to fold, none of it on the header.
+      if (Math.abs(bar) < 0.5) barFrom = -1;
+      else if (barFrom < 0) barFrom = p;
+      const lift = barFrom >= 0 && barFrom < 0.999 ? bar * Math.min(1, Math.max(0, (1 - p) / (1 - barFrom))) : 0;
       // The name is fixed to the screen from the first frame, standing where it stands in the flow. Switching it
       // over at the first scroll let a phone, which scrolls the page itself before this script hears of it, move
       // the name up with the page for a frame or two and then snap it back to its place: the stutter.
@@ -206,7 +225,7 @@ export function Hero() {
       // Fixed to the screen, not cancelling the scroll by hand: a counter-translation by `scrollY` is a frame
       // behind the page whenever the glide (or a phone's own scrolling) moves it ahead of this script.
       const s = 1 + (to.w / o.w - 1) * p;
-      d.style.transform = `translate3d(${(o.x + (to.x - o.x) * p).toFixed(2)}px, ${(o.y + (to.y - o.y) * p).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
+      d.style.transform = `translate3d(${(o.x + (to.x - o.x) * p).toFixed(2)}px, ${(o.y + (to.y - o.y) * p + lift).toFixed(2)}px, 0) scale(${s.toFixed(5)})`;
       pic.style.transform = y > 0 ? `translate3d(0, ${(Math.min(y, vh * 1.2) * DEPTH).toFixed(1)}px, 0)` : '';
       // Landed: the header's own logo has faded in over it; this one steps aside.
       // Both in this one call, so one frame shows the one logo or the other, never both and never neither: an

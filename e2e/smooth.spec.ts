@@ -241,7 +241,7 @@ test('phone: the logo keeps the finger’s pace into the header instead of creep
   expect(left).toBeGreaterThan(0.07);
 });
 
-test('phone: Chrome hiding its address bar does not send the logo back along its way', async ({ page, isMobile }) => {
+test('phone: Chrome hiding its address bar neither sends the logo back nor lifts it off the page', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'the phone’s address bar');
   await open(page);
   await page.waitForTimeout(2500);
@@ -251,23 +251,33 @@ test('phone: Chrome hiding its address bar does not send the logo back along its
     [170, 649], [172, 649], [173.67, 649], [173.33, 651.3], [171, 654.4], [164.67, 662.6], [156, 673.2],
     [144.33, 686.6], [133.33, 698.8], [128.33, 705], [130, 705], [131.67, 705], [133.33, 705],
   ];
-  const widths = await page.evaluate(async (frames) => {
+  const rows = await page.evaluate(async (frames) => {
     const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     const vv = window.visualViewport!;
     const logo = document.getElementById('hovedtekst')!;
-    const out: number[] = [];
+    const copy = document.querySelector<HTMLElement>('[data-hero] p')!;
+    const out: { w: number; logo: number; copy: number }[] = [];
     for (const [y, h] of frames) {
       // The test phone's own height stands in for the S22's 649; the bar's share is added on top, as Chrome does.
       Object.defineProperty(vv, 'height', { configurable: true, get: () => innerHeight + (h - 649) });
       window.scrollTo(0, y);
       vv.dispatchEvent(new Event('resize'));
       await frame();
-      out.push(logo.getBoundingClientRect().width);
+      // Where it is on the glass: the part of the 56 px bar still showing pushes the whole page down.
+      const shown = 705 - h;
+      out.push({ w: logo.getBoundingClientRect().width, logo: logo.getBoundingClientRect().top + shown, copy: copy.getBoundingClientRect().top + shown });
     }
     return out;
   }, trace);
   // The logo shrinks as it goes to the header: any frame where it grows is a step back along its way.
-  for (let i = 1; i < widths.length; i++) expect(widths[i], `frame ${i}`).toBeLessThanOrEqual(widths[i - 1] + 0.05);
+  for (let i = 1; i < rows.length; i++) expect(rows[i].w, `frame ${i}`).toBeLessThanOrEqual(rows[i - 1].w + 0.05);
+  // While the bar folds (frames 2 to 9) the page stands nearly still on the glass; the logo must not leap away
+  // from it with the header (it rose the bar's whole height, a gap over the copy).
+  const copyMoved = Math.abs(rows[9].copy - rows[2].copy);
+  expect(Math.abs(rows[9].logo - rows[2].logo), `logo vs copy (${copyMoved.toFixed(1)} px)`).toBeLessThanOrEqual(copyMoved + 3);
+  // And with the bar gone it still lands on the header's logo.
+  await page.evaluate(() => window.scrollTo(0, Math.round(innerHeight * 0.5)));
+  await expect(page.locator('#topp')).toHaveAttribute('data-landed', '');
 });
 
 test('a phone keeps its own scroll: no glide', async ({ page, isMobile }) => {
