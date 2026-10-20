@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import { LOGO_ON_NAVY_CRIMSON, LOGO_RATIO } from '@/components/site/Logo';
-import { onScroll } from '@/lib/smooth';
+import { onScroll, WHERE } from '@/lib/smooth';
 import styles from './hero.module.css';
 
 /** The name goes back into the header over this share of the screen's height of scrolling. */
@@ -20,6 +20,18 @@ const PHONE_CROP = { width: 720, height: 1072 };
 const smooth = (t: number) => {
   const u = Math.min(1, Math.max(0, t));
   return u * u * (3 - 2 * u);
+};
+
+/**
+ * The phone's way into the header: it sets off gently like `smooth`, but arrives at the finger's
+ * own pace (slope 1 at the end) instead of slowing to a stop. `smooth` ends at speed nought, and with
+ * the page under a finger the name crept the last stretch and looked stuck just short of the header:
+ * the last 10 px of scroll moved it at 0.07× its mean pace. The glide (lib/smooth.ts) eases the page
+ * itself on a desktop, so there the old curve stays.
+ */
+const arrive = (t: number) => {
+  const u = Math.min(1, Math.max(0, t));
+  return u * u * (2 - u);
 };
 
 /** The greeting's delay and length (hero.module.css) with a little to spare. */
@@ -132,6 +144,7 @@ export function Hero() {
       header.setAttribute('data-handoff', '');
     });
 
+    const glides = window.matchMedia(WHERE);
     let docked = false;
     let flying = false;
     let raf = 0;
@@ -161,7 +174,7 @@ export function Hero() {
       // Docked and far below: nothing on it moves any more.
       if (docked && carry <= 0 && y > heroHeight * 1.2) return;
       if (y > 0 && !seized) seize();
-      const p0 = smooth(y / (vh * DOCK));
+      const p0 = (glides.matches ? smooth : arrive)(y / (vh * DOCK));
       if (carry > 0) {
         const now = performance.now();
         if (p0 > 0) {
