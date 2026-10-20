@@ -170,7 +170,13 @@ export function Hero() {
     const place = () => {
       cancelAnimationFrame(raf);
       raf = 0;
-      const y = window.scrollY;
+      // How far the finger has carried the page, which is not `scrollY` alone. Chrome on Android hides its address
+      // bar by holding the page still on the screen and taking the bar's height off `scrollY` (`innerHeight` stays):
+      // measured on the owner's Galaxy S22, `scrollY` fell 174 → 128 while the visual viewport grew 649 → 705, and
+      // the name slid back along its way just under the header. The visual viewport's growth past `innerHeight` puts
+      // it back; the sum rose 1–2 px a frame right through. Safari changes `innerHeight` itself, so there it adds nothing.
+      const vv = window.visualViewport;
+      const y = window.scrollY + (vv ? Math.max(0, vv.height - window.innerHeight) : 0);
       // Docked and far below: nothing on it moves any more.
       if (docked && carry <= 0 && y > heroHeight * 1.2) return;
       if (y > 0 && !seized) seize();
@@ -230,6 +236,8 @@ export function Hero() {
       remeasure();
     };
     window.addEventListener('resize', onResize);
+    // The bar can move without a scroll event of its own.
+    window.visualViewport?.addEventListener('resize', onMove);
     // The flow can still move after the first measure (a font arriving reflows the copy under the name): the
     // name is fixed now, so it has to be told.
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(remeasure);
@@ -244,6 +252,7 @@ export function Hero() {
       off();
       window.removeEventListener('scroll', onMove);
       window.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('resize', onMove);
     };
   }, []);
 
