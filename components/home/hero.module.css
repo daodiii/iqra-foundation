@@ -98,6 +98,7 @@
 
 /* Before the script measures, the name waits unseen (the header's logo is on screen); without it, it stands in the hero after a moment. */
 .greet {
+  position: relative;
   display: block;
   transform-origin: 0 0;
   transform: translate(var(--gx, 0), var(--gy, 0)) scale(var(--gs, 1));
@@ -130,6 +131,23 @@
   display: block;
   width: 100%;
   height: auto;
+  transition: opacity var(--dur-2) var(--ease);
+}
+
+/* The white ground's logo, over the first (Hero.tsx): the name wears the header's colours on its way in. */
+.greet .onLight {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  opacity: 0;
+}
+
+.hero[data-light] .greet img:first-child {
+  opacity: 0;
+}
+
+.hero[data-light] .greet .onLight {
+  opacity: 1;
 }
 
 /* The copy on the centre line: the paragraph, then the two buttons. */

@@ -53,7 +53,11 @@ export function HeaderMotion() {
       const d = y - lastY;
       if (Math.abs(d) < DEADBAND) return;
       lastY = y;
-      const hold = y < window.innerHeight * 0.6 || seaOn || document.body.hasAttribute('data-menu-open') || header.matches(':focus-within');
+      // The home page's name on its way into the header (Hero.tsx: `data-handoff`, not yet `data-landed`): the
+      // header waits for it. Gone, it left the name to land where the header had been and vanish (the owner,
+      // 2026-10-20, on a quick scroll to the hero's foot: «You can just like disappear … It slides up»).
+      const inbound = header.hasAttribute('data-handoff') && !header.hasAttribute('data-landed');
+      const hold = y < window.innerHeight * 0.6 || inbound || seaOn || document.body.hasAttribute('data-menu-open') || header.matches(':focus-within');
       set(!hold && d > 0);
     };
     const off = reduced ? () => {} : onScroll(onMove);

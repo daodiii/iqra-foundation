@@ -5,6 +5,9 @@ import { useEffect, useRef } from 'react';
 import { brief } from '@/content/brief.no';
 import { site } from '@/content/site.no';
 import { LOGO_ON_NAVY_CRIMSON, LOGO_RATIO } from '@/components/site/Logo';
+
+/** The header's logo on a white ground (Logo.tsx, `ground="white"`): the name lands as this when the header is white. */
+const LOGO_ON_WHITE = '/brand/iqra-logo.svg';
 import { onScroll, WHERE } from '@/lib/smooth';
 import styles from './hero.module.css';
 
@@ -23,16 +26,24 @@ const smooth = (t: number) => {
 };
 
 /**
- * The phone's way into the header: it sets off gently like `smooth`, but arrives at the finger's
- * own pace (slope 1 at the end) instead of slowing to a stop. `smooth` ends at speed nought, and with
- * the page under a finger the name crept the last stretch and looked stuck just short of the header:
- * the last 10 px of scroll moved it at 0.07× its mean pace. The glide (lib/smooth.ts) eases the page
- * itself on a desktop, so there the old curve stays.
+ * The way into the header where the page neither glides nor is touched (a coarse pointer takes the timed glide
+ * below): it sets off gently like `smooth`, but arrives at the scroll's own pace (slope 1 at the end) instead of
+ * slowing to a stop, where the last 10 px of scroll moved the name at 0.07× its mean pace. The glide
+ * (lib/smooth.ts) eases the page itself on a desktop, so there the old curve stays.
  */
 const arrive = (t: number) => {
   const u = Math.min(1, Math.max(0, t));
   return u * u * (2 - u);
 };
+
+/**
+ * On a phone the name goes into the header by itself over this long, once the page is scrolled this share of a
+ * screen (and back out above the second line). 700 ms, not #71's 420: the owner, 2026-10-20, choosing between
+ * #71 as it was, slower, or later: «#71, but slower».
+ */
+const GLIDE_MS = 700;
+const TOUCH_IN = 0.1;
+const TOUCH_OUT = 0.04;
 
 /** The greeting's delay and length (hero.module.css) with a little to spare. */
 const GREETING_MS = 200 + 1500 + 100;
@@ -144,6 +155,14 @@ export function Hero() {
       header.setAttribute('data-handoff', '');
     });
 
+    // The name in flight wears the header's colours: over a white header it is the white ground's logo. A quick
+    // scroll that ended with the hero's foot under the header turned the header white while the name was on its way,
+    // and the navy ground's logo, white letters, flew in as a ghost over the white page and then swapped on landing
+    // (the owner, 2026-10-20: «if the color is to change exactly when it goes in, it becomes like a bit weird»).
+    const wear = () => h.toggleAttribute('data-light', header.hasAttribute('data-watched') && !header.hasAttribute('data-dark'));
+    const colours = new MutationObserver(wear);
+    colours.observe(header, { attributes: true, attributeFilter: ['data-dark', 'data-watched'] });
+    wear();
     const glides = window.matchMedia(WHERE);
     let docked = false;
     let flying = false;
@@ -211,6 +230,90 @@ export function Hero() {
         header.toggleAttribute('data-landed', docked);
       }
     };
+    // A phone scrolls the page on its own thread and tells this script afterwards, so a path laid by the scroll is
+    // always a few frames behind it, most of all at the end, where the name is small and has to land exactly on
+    // the header's logo (the owner's Samsung S22, 2026-10-18: it lags just before the navbar). There the scroll only
+    // starts the move: a little way down the page the name goes into the header by itself on a timed transition,
+    // which the browser runs off the main thread, and it comes back out when the visitor is at the top again.
+    if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+      const at = (q: number) =>
+        `translate3d(${(o.x + (to.x - o.x) * q).toFixed(2)}px, ${(o.y + (to.y - o.y) * q).toFixed(2)}px, 0) scale(${(1 + (to.w / o.w - 1) * q).toFixed(5)})`;
+      let target = false;
+      let timer = 0;
+      const land = (v: boolean) => {
+        if (v === docked) return;
+        docked = v;
+        h.toggleAttribute('data-docked', v);
+        header.toggleAttribute('data-landed', v);
+      };
+      const set = (instant: boolean) => {
+        clearTimeout(timer);
+        const q = target ? 1 : 0;
+        if (instant) {
+          d.style.transition = 'none';
+          d.style.transform = at(q);
+          land(target);
+          return;
+        }
+        // On its way back out the header's logo gives way at once; the name is on top of it, and the same picture.
+        if (!target) land(false);
+        // Cut short mid-greeting: go on from where the greeting stands.
+        if (!seized) seize();
+        if (carry > 0) {
+          d.style.transition = 'none';
+          d.style.transform = at(carry);
+          void d.offsetWidth;
+          carry = 0;
+        }
+        d.style.transition = `transform ${GLIDE_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+        d.style.transform = at(q);
+        if (target) timer = window.setTimeout(() => target && land(true), GLIDE_MS + 40);
+      };
+      const onEnd = (e: TransitionEvent) => {
+        if (e.target === d && e.propertyName === 'transform' && target) {
+          clearTimeout(timer);
+          land(true);
+        }
+      };
+      d.addEventListener('transitionend', onEnd);
+      const touchPlace = (instant = false) => {
+        const y = window.scrollY;
+        pic.style.transform = y > 0 ? `translate3d(0, ${(Math.min(y, vh * 1.2) * DEPTH).toFixed(1)}px, 0)` : '';
+        // Two lines, so a finger resting between them does not make the name go in and out.
+        const want = target ? y > vh * TOUCH_OUT : y > vh * TOUCH_IN;
+        if (want === target && !instant) return;
+        target = want;
+        set(instant);
+      };
+      const onTouchScroll = () => touchPlace();
+      window.addEventListener('scroll', onTouchScroll, { passive: true });
+      const remeasure = () => {
+        measure();
+        d.style.transition = 'none';
+        d.style.transform = at(target ? 1 : 0);
+      };
+      const onTouchResize = () => {
+        if (window.innerWidth !== vw) remeasure();
+      };
+      window.addEventListener('resize', onTouchResize);
+      const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(remeasure);
+      ro?.observe(h);
+      h.setAttribute('data-fly', '');
+      d.style.transform = at(0);
+      touchPlace(true);
+      return () => {
+        clearTimeout(timer);
+        colours.disconnect();
+        h.removeAttribute('data-light');
+        cancelAnimationFrame(id);
+        window.removeEventListener('scroll', onTouchScroll);
+        window.removeEventListener('resize', onTouchResize);
+        d.removeEventListener('transitionend', onEnd);
+        ro?.disconnect();
+        header.removeAttribute('data-handoff');
+        header.removeAttribute('data-landed');
+      };
+    }
     // At once, not in a frame of its own: the glide tells us inside the frame it moved the page, before it is painted.
     const onMove = place;
     const off = onScroll(onMove);
@@ -236,6 +339,8 @@ export function Hero() {
     ro?.observe(h);
     place();
     return () => {
+      colours.disconnect();
+      h.removeAttribute('data-light');
       header.removeAttribute('data-handoff');
       header.removeAttribute('data-landed');
       ro?.disconnect();
@@ -272,6 +377,8 @@ export function Hero() {
         <span ref={dock} id="hovedtekst" className={styles.dock}>
           <span ref={greet} className={styles.greet}>
             <img src={LOGO_ON_NAVY_CRIMSON} alt={site.logoAlt} width={Math.round(HEIGHT * LOGO_RATIO)} height={HEIGHT} decoding="async" fetchPriority="high" />
+            {/* The header's own logo for a white ground, laid over the first: shown while the header is white (`data-light`). */}
+            <img className={styles.onLight} src={LOGO_ON_WHITE} alt="" aria-hidden="true" width={Math.round(HEIGHT * LOGO_RATIO)} height={HEIGHT} decoding="async" />
           </span>
         </span>
       </h1>
