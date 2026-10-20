@@ -213,6 +213,34 @@ test('phone: the logo keeps its place when the browser toolbar resizes the hero 
   await expect(page.locator('#topp')).not.toHaveAttribute('data-landed');
 });
 
+test('phone: the logo keeps the finger’s pace into the header instead of creeping the last stretch', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'the phone’s own scroll');
+  await open(page);
+  await page.waitForTimeout(2500);
+  // How much of its way the logo has left at 90% of the docking scroll (Hero.tsx, DOCK 0.45).
+  // At the finger's pace it is 10%; the old curve, slowing to a stop, left 2.8% and crept it.
+  const left = await page.evaluate(async () => {
+    const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const logo = document.getElementById('hovedtekst')!;
+    const box = () => {
+      const r = logo.getBoundingClientRect();
+      return [r.top, r.left, r.width];
+    };
+    const dist = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+    window.scrollTo(0, 0);
+    await frame();
+    const start = box();
+    window.scrollTo(0, Math.round(innerHeight * 0.45 * 0.9));
+    await frame();
+    const near = box();
+    const home = [...document.querySelectorAll<HTMLElement>('#topp img[data-logo]')].find((el) => el.getBoundingClientRect().width > 0)!;
+    const h = home.getBoundingClientRect();
+    const end = [h.top, h.left, h.width];
+    return dist(near, end) / dist(start, end);
+  });
+  expect(left).toBeGreaterThan(0.07);
+});
+
 test('a phone keeps its own scroll: no glide', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'the phone');
   await open(page);
