@@ -72,8 +72,12 @@ export const site = {
   legal,
   /** The two buttons under the home page's text (brief 2), and where they go; and Kontakt, the way on from the foot of the home page. */
   cta: {
-    work: { label: brief.home.buttons[0], href: '/vart-arbeid' },
-    support: { label: brief.home.buttons[1], href: '/stott-oss' },
+    /** The front page's two buttons (D1): on to Om Iqra Foundation, and to the coming events. */
+    about: { label: klient.home.buttons.about, href: '/om-oss' },
+    events: { label: klient.home.buttons.events, href: '/aktuelt/arrangementer' },
+    /** The two buttons under «Sammen kan vi gjøre en forskjell» (D1). Where «Bli samarbeidspartner» leads is the client's question Q9; Kontakt until they say. */
+    partner: { label: klient.home.together.buttons.partner, href: '/kontakt' },
+    support: { label: klient.home.together.buttons.support, href: '/stott-oss' },
     contact: { label: klient.menu.contact, href: '/kontakt' },
   },
   header: {
@@ -134,7 +138,9 @@ export const site = {
   months: ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'],
   pages: {
     home: {
-      description: brief.home.paragraph,
+      description: klient.home.paragraphs[0],
+      /** Under the three next events: the way on to all of them, beside the client's «Se alle nyheter». */
+      allEvents: 'Se alle arrangementer',
       visionLabel: 'Visjon',
       missionLabel: 'Misjon',
       areasLabel: 'Fire hovedområder',
@@ -249,9 +255,7 @@ export const site = {
     support: {
       label: klient.menu.support,
       title: 'Støtt oss',
-      description: brief.home.paragraph,
-      /** The page's heading, the owner's own words (2026-09-21); the title above stays the tab's and the menu's. */
-      question: 'Vil du støtte oss?',
+      description: klient.support.intro,
     },
     notFound: {
       title: 'Siden finnes ikke',

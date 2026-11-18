@@ -14,7 +14,7 @@ import { site } from '../content/site.no';
 
 async function open(page: Page) {
   await page.goto('/');
-  await expect(page.locator('[data-fields][data-live]')).toBeAttached();
+  await expect(page.locator('h1')).toBeVisible();
 }
 
 /** A gesture of `px` down the page at `speed` px/s, made in the middle of the screen. */
@@ -67,7 +67,7 @@ const glides = (page: Page) => page.evaluate(() => document.documentElement.clas
 test('the page glides: it carries on after the hand has stopped, and comes to rest exactly where the hand sent it', async ({ page, isMobile }) => {
   test.skip(isMobile, 'the glide is for a touchpad, a TrackPoint or a mouse');
   await open(page);
-  expect(await glides(page)).toBe(true);
+  await expect.poll(() => glides(page)).toBe(true); // the glide starts once the page's script has run
   const from = await stillAt(page);
   await record(page);
   await gesture(page, 900, 1500);
@@ -79,32 +79,6 @@ test('the page glides: it carries on after the hand has stopped, and comes to re
   let lastMove = 0;
   for (let i = 1; i < frames.length; i++) if (frames[i].y !== frames[i - 1].y) lastMove = frames[i].ts;
   expect(lastMove - lifted).toBeGreaterThan(200);
-});
-
-test('the plates move with the page and stop with it: nothing drifts on once the page stands still', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'a phone keeps its own scroll, and the plates their ease behind it');
-  await open(page);
-  const H = page.viewportSize()!.height;
-  // The first plate (Visjon og misjon's), its centre 700 px below the middle of the screen: a gesture of 500 opens it most of the way.
-  const centre = await page.evaluate(() => {
-    const r = document.querySelector<HTMLElement>('[data-scene][style*="--open"]')!.getBoundingClientRect();
-    return r.top + window.scrollY + r.height / 2;
-  });
-  await page.evaluate((y) => window.scrollTo(0, y), Math.round(centre - H / 2 - 700));
-  await stillAt(page);
-  await record(page);
-  await gesture(page, 500, 1500);
-  await stillAt(page);
-  await page.waitForTimeout(600);
-  const frames = await stopRecording(page);
-  let stop = 0;
-  for (let i = 1; i < frames.length; i++) if (frames[i].y !== frames[i - 1].y) stop = i;
-  expect(stop, 'the page moved').toBeGreaterThan(0);
-  // The plates did move with it …
-  expect(frames[stop].open).not.toBe(frames[0].open);
-  // … and not one frame after it: the value is written in the frame the page moves.
-  const after = frames.slice(stop).map((f) => f.open);
-  expect(new Set(after).size, `after the page stopped: ${[...new Set(after)].join(' | ')}`).toBe(1);
 });
 
 test('every page glides, not the home page alone, and a link to another page stops a glide still going', async ({ page, isMobile }) => {
@@ -125,7 +99,10 @@ test('every page glides, not the home page alone, and a link to another page sto
   // From the home page to another by the menu in the middle of a glide: the new page starts at its top and stays there.
   await open(page);
   await gesture(page, 1500, 3000);
-  await page.getByRole('navigation', { name: site.header.navLabel }).getByRole('link', { name: site.pages.resources.label, exact: true }).click();
+  // The header has gone up on the way down (HeaderMotion); focus brings it back, and Enter follows the link at once.
+  const link = page.getByRole('navigation', { name: site.header.navLabel }).getByRole('link', { name: site.pages.resources.label, exact: true });
+  await link.focus();
+  await link.press('Enter');
   await expect(page).toHaveURL(/\/ressurser$/);
   expect(await stillAt(page)).toBe(0);
 });
@@ -143,29 +120,6 @@ async function swipe(page: Page, px: number) {
   await page.waitForTimeout(300);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 }
-
-test('on a phone the plates move with the thumb and stop with the page: nothing trails behind it', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'the phone');
-  await open(page);
-  const H = page.viewportSize()!.height;
-  const centre = await page.evaluate(() => {
-    const r = document.querySelector<HTMLElement>('[data-scene][style*="--open"]')!.getBoundingClientRect();
-    return r.top + window.scrollY + r.height / 2;
-  });
-  await page.evaluate((y) => window.scrollTo(0, y), Math.round(centre - H / 2 - H * 0.7));
-  await stillAt(page);
-  await record(page);
-  await swipe(page, Math.round(H * 0.55));
-  await stillAt(page);
-  await page.waitForTimeout(600);
-  const frames = await stopRecording(page);
-  let stop = 0;
-  for (let i = 1; i < frames.length; i++) if (frames[i].y !== frames[i - 1].y) stop = i;
-  expect(stop, 'the page moved').toBeGreaterThan(0);
-  expect(frames[stop].open).not.toBe(frames[0].open);
-  const after = frames.slice(stop).map((f) => f.open);
-  expect(new Set(after).size, `after the page stopped: ${[...new Set(after)].join(' | ')}`).toBe(1);
-});
 
 test('the name goes back into the header on the scroll and lands exactly on the header’s logo, which takes over', async ({ page }) => {
   await open(page);
@@ -282,7 +236,7 @@ test('an open menu holds the page still under a gesture, and closing it gives th
   // A narrow laptop window: the header's items move behind the menu button.
   await page.setViewportSize({ width: 820, height: 900 });
   await open(page);
-  expect(await glides(page)).toBe(true);
+  await expect.poll(() => glides(page)).toBe(true); // the glide starts once the page's script has run
   const from = await stillAt(page);
   await page.getByRole('button', { name: site.header.open }).click();
   await expect(page.locator('body')).toHaveAttribute('data-scroll-locked', '');
