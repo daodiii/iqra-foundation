@@ -157,7 +157,7 @@ export default config({
           },
           { label: 'Bilde' },
         ),
-        bio: fields.text({ label: 'Kort presentasjon', multiline: true, validation: { isRequired: true } }),
+        bio: fields.text({ label: 'Kort biografi', multiline: true, description: 'Noen setninger om personen. Kan stå tomt til den er skrevet.' }),
         order: fields.integer({ label: 'Rekkefølge', description: 'Lavest først.', defaultValue: 10 }),
       },
     }),

@@ -177,8 +177,8 @@ export const site = {
     },
     people: {
       label: brief.menu[5],
-      title: brief.people.title,
-      description: brief.people.paragraph,
+      title: klient.people.title,
+      description: klient.people.intro,
       empty: 'Presentasjoner av menneskene bak Iqra kommer senere.',
       photoMissing: 'Bilde kommer',
     },

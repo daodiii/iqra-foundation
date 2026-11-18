@@ -197,14 +197,18 @@ test.describe('the collections are honest while empty', () => {
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', brief.resources);
     await expect(page.getByText(site.pages.resources.empty, { exact: true })).toBeVisible();
   });
-  test('menneskene bak: the board paragraph, then everyone in the collection, or the empty line', async ({ page }) => {
+  test('menneskene bak: the client’s text, the five board members by name and role, and how to reach the board', async ({ page }) => {
+    const t = klient.people;
     await page.goto('/menneskene-bak');
-    await expect(page).toHaveTitle(T(brief.people.title));
-    await expect(page.locator('h1')).toHaveText(brief.people.title);
-    await expect(page.getByText(brief.people.paragraph, { exact: true })).toBeVisible();
-    const people = getPeople();
-    expect(await page.getByRole('main').locator('h3').allTextContents()).toEqual(people.map((p) => p.name));
-    if (!people.length) await expect(page.getByText(site.pages.people.empty, { exact: true })).toBeVisible();
+    await expect(page).toHaveTitle(T(t.title));
+    await expect(page.locator('h1')).toHaveText(t.title);
+    for (const p of [t.intro, t.board.text]) await expect(page.getByText(p, { exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText([t.board.title, t.contact.title]);
+    expect(await page.getByRole('main').locator('h3').allTextContents()).toEqual(t.members.map((m) => m.name));
+    for (const m of t.members) await expect(page.getByRole('main').getByText(m.role, { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('main').locator(`a[href="mailto:${klient.contact.email}"]`)).toHaveCount(1);
+    await expect(page.getByRole('main')).toContainText(t.contact.text);
+    await expect(page.getByRole('main')).not.toContainText(/\[[^\]]+\]/);
   });
   test('styringsdokumenter', async ({ page }) => {
     await page.goto('/styringsdokumenter');

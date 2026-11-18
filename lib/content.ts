@@ -72,7 +72,8 @@ export type Person = {
   name: string;
   role: string;
   photo: Picture | null;
-  bio: string;
+  /** The short bio the client asks for (M4); null until it is supplied. */
+  bio: string | null;
   /** Where in the list; lower first. */
   order: number;
 };
@@ -245,7 +246,7 @@ export function getPeople(dir?: string): Person[] {
       name: str(file, raw, 'name'),
       role: str(file, raw, 'role'),
       photo: picture('menneskene', file, raw, 'photo'),
-      bio: str(file, raw, 'bio'),
+      bio: optStr(file, raw, 'bio'),
       order: int(file, raw, 'order'),
     }))
     .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, 'nb'));
