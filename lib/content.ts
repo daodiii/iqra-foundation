@@ -1,12 +1,13 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { brief } from '@/content/brief.no';
 import { COLLECTIONS, type CollectionName } from '@/content/collections';
+import { klient } from '@/content/klient.no';
 
 /**
  * The one door the pages read the collections through.
  *
- * Everything that changes over time — events, resources, governing documents, people — is
+ * Everything that changes over time — events, the library's resources, people — is
  * a typed collection: one JSON file per entry under `content/<collection>/`, in the shape
  * `content/collections.ts` declares and Keystatic (`keystatic.config.ts`) writes. Pages
  * never read files themselves; they call `getEvents()` and the rest, which read, check and
@@ -37,34 +38,44 @@ export type Event = {
   place: string;
   text: string;
   link: string | null;
+  /** The programme, when there is one (D5: «informasjon om tid, sted, program og påmelding»). */
+  program: string | null;
+  /** After the event: a write-up and a recording, shown in the archive «der det er tilgjengelig» (D5). */
+  report: string | null;
+  recording: string | null;
   image: Picture | null;
   /** One of the four areas, when the item belongs to one. */
   area: AreaKey | null;
 };
 
-export type ResourceKind = 'publikasjon' | 'artikkel' | 'rapport' | 'presentasjon' | 'video' | 'annet';
+/** A news item (M3): headline, ingress, picture, date and the article text. */
+export type NewsItem = {
+  slug: string;
+  title: string;
+  /** ISO date. */
+  date: string;
+  /** The ingress: the short text under the headline, and on the item's card. */
+  summary: string;
+  image: Picture | null;
+  /** The article text as Keystatic writes it (Markdoc); null when the ingress is all there is. */
+  body: string | null;
+};
+
+/** The library's four categories (M5), keyed as `klient.resources.categories`. */
+export type ResourceCategory = (typeof klient.resources.categories)[number]['key'];
 export type Resource = {
   slug: string;
   title: string;
-  kind: ResourceKind;
+  category: ResourceCategory;
   /** ISO date. */
   date: string;
   summary: string;
-  /** A file under `public/`, as its public path; or a URL elsewhere. One of the two. */
+  /** A file under `public/` (a PDF, a presentation), as its public path. */
   file: string | null;
+  /** A video file under `public/`, played on the page. */
+  video: string | null;
+  /** Where the resource lives, when it is not a file here. */
   url: string | null;
-  /** One of the four areas, when the item belongs to one. */
-  area: AreaKey | null;
-};
-
-export type DocumentKind = 'vedtekter' | 'arsrapport' | 'arsregnskap' | 'strategi' | 'annet';
-export type GoverningDocument = {
-  slug: string;
-  title: string;
-  kind: DocumentKind;
-  year: number;
-  /** A file under `public/`, as its public path. */
-  file: string;
 };
 
 export type Person = {
@@ -72,13 +83,13 @@ export type Person = {
   name: string;
   role: string;
   photo: Picture | null;
-  bio: string;
+  /** The short bio the client asks for (M4); null until it is supplied. */
+  bio: string | null;
   /** Where in the list; lower first. */
   order: number;
 };
 
-export const RESOURCE_KINDS: readonly ResourceKind[] = ['publikasjon', 'artikkel', 'rapport', 'presentasjon', 'video', 'annet'];
-export const DOCUMENT_KINDS: readonly DocumentKind[] = ['vedtekter', 'arsrapport', 'arsregnskap', 'strategi', 'annet'];
+export const RESOURCE_CATEGORIES: readonly ResourceCategory[] = klient.resources.categories.map((c) => c.key);
 
 /* ----- reading ----- */
 
@@ -169,7 +180,12 @@ const picture = (name: CollectionName, file: string, raw: Raw, key: string): Pic
   const v = raw[key];
   if (v === undefined || v === null) return null;
   if (typeof v !== 'object' || Array.isArray(v)) throw new RecordError(file, `«${key}» must be { src, alt }`);
-  const o = v as Raw;
+  let o = v as Raw;
+  // Keystatic's ticked box: `{ discriminant: true, value: { src, alt } }`, or `{ discriminant: false }` for none.
+  if ('discriminant' in o) {
+    if (o.discriminant !== true || !o.value || typeof o.value !== 'object' || Array.isArray(o.value)) return null;
+    o = o.value as Raw;
+  }
   const src = optStr(file, o, 'src');
   if (src === null) return null;
   const alt = optStr(file, o, 'alt');
@@ -190,6 +206,9 @@ export function getEvents(dir?: string): Event[] {
       place: str(file, raw, 'place'),
       text: str(file, raw, 'text'),
       link: optStr(file, raw, 'link'),
+      program: optStr(file, raw, 'program'),
+      report: optStr(file, raw, 'report'),
+      recording: optStr(file, raw, 'recording'),
       image: picture('arrangementer', file, raw, 'image'),
       area: optOneOf(file, raw, 'area', AREA_KEYS),
     }))
@@ -206,36 +225,65 @@ export function splitEvents(events: Event[], today: string): { upcoming: Event[]
   return { upcoming, past };
 }
 
+/**
+ * Nyheter, newest first. A news item is a folder, `<slug>/index.json` and its article text in
+ * `<slug>/body.mdoc`, and it is read only when ticked «Publiser»: unticked, it is a draft
+ * (the owner's wish for PR 62, 2026-10-10).
+ */
+export function getNews(dir = collectionDir('nyheter')): NewsItem[] {
+  let names: string[];
+  try {
+    names = readdirSync(dir);
+  } catch {
+    return [];
+  }
+  const items: NewsItem[] = [];
+  for (const slug of names.sort()) {
+    const at = path.join(dir, slug, 'index.json');
+    if (!existsSync(at)) continue;
+    const file = `${COLLECTIONS.nyheter.dir}/${slug}/index.json`;
+    let raw: unknown;
+    try {
+      raw = JSON.parse(readFileSync(at, 'utf8'));
+    } catch (e) {
+      throw new RecordError(file, `is not valid JSON (${(e as Error).message})`);
+    }
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new RecordError(file, 'is not an object');
+    const r = raw as Raw;
+    if (r.publish !== true) continue;
+    const bodyAt = path.join(dir, slug, 'body.mdoc');
+    const text = existsSync(bodyAt) ? readFileSync(bodyAt, 'utf8') : '';
+    items.push({
+      slug,
+      title: str(file, r, 'title'),
+      date: isoDate(file, r, 'date'),
+      summary: str(file, r, 'summary'),
+      image: picture('nyheter', file, r, 'image'),
+      body: text.trim() ? text : null,
+    });
+  }
+  return items.sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title, 'nb'));
+}
+
 export function getResources(dir?: string): Resource[] {
   return readCollection('ressurser', dir)
     .map(({ file, slug, raw }) => {
       const f = optStr(file, raw, 'file');
+      const video = optStr(file, raw, 'video');
       const url = optStr(file, raw, 'url');
-      if (!f && !url) throw new RecordError(file, 'needs either «file» or «url»');
+      if (!f && !video && !url) throw new RecordError(file, 'needs a «file», a «video» or a «url»');
       return {
         slug,
         title: str(file, raw, 'title'),
-        kind: oneOf(file, raw, 'kind', RESOURCE_KINDS),
+        category: oneOf(file, raw, 'category', RESOURCE_CATEGORIES),
         date: isoDate(file, raw, 'date'),
         summary: str(file, raw, 'summary'),
         file: f === null ? null : publicPath('ressurser', 'file', f),
+        video: video === null ? null : publicPath('ressurser', 'video', video),
         url,
-        area: optOneOf(file, raw, 'area', AREA_KEYS),
       };
     })
     .sort((a, b) => b.date.localeCompare(a.date));
-}
-
-export function getDocuments(dir?: string): GoverningDocument[] {
-  return readCollection('styringsdokumenter', dir)
-    .map(({ file, slug, raw }) => ({
-      slug,
-      title: str(file, raw, 'title'),
-      kind: oneOf(file, raw, 'kind', DOCUMENT_KINDS),
-      year: int(file, raw, 'year'),
-      file: publicPath('styringsdokumenter', 'file', str(file, raw, 'file')),
-    }))
-    .sort((a, b) => b.year - a.year || a.title.localeCompare(b.title, 'nb'));
 }
 
 export function getPeople(dir?: string): Person[] {
@@ -245,7 +293,7 @@ export function getPeople(dir?: string): Person[] {
       name: str(file, raw, 'name'),
       role: str(file, raw, 'role'),
       photo: picture('menneskene', file, raw, 'photo'),
-      bio: str(file, raw, 'bio'),
+      bio: optStr(file, raw, 'bio'),
       order: int(file, raw, 'order'),
     }))
     .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, 'nb'));
