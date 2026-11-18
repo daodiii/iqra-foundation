@@ -71,9 +71,29 @@
 
 .section h2 {
   font-size: var(--step-3);
+  /* «Kunnskapsformidling og publikasjoner»: a long compound breaks (hyphenated where the browser can) rather than widening a 320 phone. */
+  hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 .section p {
+  margin-top: 14px;
+}
+
+/* A list in running text: the client's points under a section, with ordinary bullets. */
+.points {
+  margin: 14px 0 0;
+  padding-left: 1.25em;
+  display: grid;
+  gap: 8px;
+  list-style: disc;
+}
+
+.points li::marker {
+  color: var(--color-crimson);
+}
+
+.section > p + p {
   margin-top: 14px;
 }
 

@@ -136,14 +136,14 @@ export const site = {
     },
     about: {
       label: brief.menu[1],
-      title: 'Om oss',
-      description: brief.about.paragraphs[0],
+      title: klient.about.title,
+      description: klient.about.intro,
       story: { label: 'Navnet', text: story },
     },
     work: {
       label: brief.menu[2],
-      title: 'Vårt arbeid',
-      description: brief.mission.headline,
+      title: klient.work.title,
+      description: klient.work.intro,
     },
     events: {
       label: brief.menu[3],

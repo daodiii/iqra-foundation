@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import { MarkedLine } from '@/components/site/AreaMark';
 import styles from '@/components/site/page.module.css';
 import { PageTitle } from '@/components/site/PageTitle';
-import { brief } from '@/content/brief.no';
+import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
 
 export const metadata: Metadata = {
@@ -10,22 +9,53 @@ export const metadata: Metadata = {
   description: site.pages.about.description,
 };
 
+const t = klient.about;
+
 /**
- * Om oss: the brief's text (5), with the four areas marked in their colours where the
- * second paragraph names them, and the story of the name in the user's own words.
+ * Om Iqra Foundation: the client's text (D2, 2026-11-18), every section in their order and
+ * in their words — the foundation and its supervision, the name, the purpose, the values,
+ * who it is for, and its independence.
  */
 export default function OmOss() {
   return (
     <article className={styles.page}>
-      <PageTitle href="/om-oss" className={styles.title}>{brief.about.title}</PageTitle>
-      <div className={styles.prose}>
-        {brief.about.paragraphs.map((p, i) => (
-          <p key={p.slice(0, 24)}>{i === 1 ? <MarkedLine text={p} /> : p}</p>
-        ))}
-      </div>
+      <PageTitle href="/om-oss" className={styles.title}>{t.title}</PageTitle>
+      <p className={styles.lede}>{t.intro}</p>
+
       <section className={styles.section} aria-labelledby="navnet">
-        <h2 id="navnet">{site.pages.about.story.label}</h2>
-        <p>{site.pages.about.story.text}</p>
+        <h2 id="navnet">{t.name.title}</h2>
+        <p>{t.name.text}</p>
+      </section>
+
+      <section className={styles.section} aria-labelledby="formal">
+        <h2 id="formal">{t.purpose.title}</h2>
+        <p>{t.purpose.lead}</p>
+        <ul className={styles.points}>
+          {t.purpose.points.map((p) => <li key={p}>{p}</li>)}
+        </ul>
+      </section>
+
+      <section className={styles.section} aria-labelledby="verdigrunnlag">
+        <h2 id="verdigrunnlag">{t.values.title}</h2>
+        <p>{t.values.lead}</p>
+        <ul className={styles.points}>
+          {t.values.points.map((v) => (
+            <li key={v.name}>
+              <strong>{v.name}</strong> – {v.text}
+            </li>
+          ))}
+        </ul>
+        <p>{t.values.close}</p>
+      </section>
+
+      <section className={styles.section} aria-labelledby="hvem">
+        <h2 id="hvem">{t.audience.title}</h2>
+        <p>{t.audience.text}</p>
+      </section>
+
+      <section className={styles.section} aria-labelledby="stiftelse">
+        <h2 id="stiftelse">{t.independent.title}</h2>
+        {t.independent.paragraphs.map((p) => <p key={p.slice(0, 24)}>{p}</p>)}
       </section>
     </article>
   );

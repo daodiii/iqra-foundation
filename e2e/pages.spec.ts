@@ -115,7 +115,8 @@ test('the home page is the name alone, and carries the brief’s main text, the 
   await expect(pages.nth(1)).toHaveAttribute('data-here', '');
   await main.getByRole('link', { name: brief.areas[3].name, exact: true }).click();
   await expect(page).toHaveURL(/\/vart-arbeid#samfunnsdeltakelse$/);
-  await expect(page.locator('#samfunnsdeltakelse')).toBeInViewport();
+  // Vårt arbeid carries the client's areas of work now (2026-11-18); the sea and its anchors go with the home page's update.
+  await expect(page.locator('h1')).toHaveText(klient.work.title);
 });
 
 /** Walk the page from the top to the foot in steps, letting each scroll-driven piece write its frame; `at` is read at every step. */
@@ -154,29 +155,28 @@ test('phone: a print on the board table is little more than half a screen tall',
   expect(h).toBeLessThan(0.6);
 });
 
-test('vårt arbeid: the four areas, each its own section of water, each reachable by its anchor', async ({ page }) => {
+test('vårt arbeid: the client’s intro and every area of work, each a section reachable by its anchor', async ({ page }) => {
   await page.goto('/vart-arbeid');
   await expect(page).toHaveTitle(T(site.pages.work.title));
-  await expect(page.locator('h1')).toHaveText(site.pages.work.title);
-  for (const a of brief.areas) {
-    const section = page.locator(`#${a.key}`);
-    await expect(section).toContainText(a.name);
-    await expect(section).toContainText(a.text);
-    await expect(section.locator('[data-material="water"]')).toHaveCount(1);
-  }
-  await page.goto('/vart-arbeid#samfunnsdeltakelse');
-  await expect(page.locator('#samfunnsdeltakelse')).toBeInViewport();
+  await expect(page.locator('h1')).toHaveText(klient.work.title);
+  await expect(page.getByText(klient.work.intro, { exact: true })).toBeVisible();
+  await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText(klient.work.areas.map((a) => a.title));
+  for (const a of klient.work.areas) await expect(page.getByText(a.text, { exact: true })).toBeVisible();
+  await page.goto('/vart-arbeid#samarbeid-og-partnerskap');
+  await expect(page.locator('#samarbeid-og-partnerskap')).toBeInViewport();
 });
 
-test('om oss: the brief’s text and the story of the name', async ({ page }) => {
+test('om iqra foundation: the client’s text, section by section', async ({ page }) => {
+  const t = klient.about;
   await page.goto('/om-oss');
   await expect(page).toHaveTitle(T(site.pages.about.title));
-  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', site.pages.about.description);
-  await expect(page.locator('h1')).toHaveText(brief.about.title);
-  for (const p of brief.about.paragraphs) await expect(page.getByText(p, { exact: true })).toBeVisible();
-  await expect(page.getByText(site.pages.about.story.text, { exact: true })).toBeVisible();
-  // the four names in the «skjæringspunktet» line each carry their area's mark (the footer's thread has its own four)
-  await expect(page.getByRole('main').locator('[data-area]')).toHaveCount(4);
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', t.intro);
+  await expect(page.locator('h1')).toHaveText(t.title);
+  await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText([t.name.title, t.purpose.title, t.values.title, t.audience.title, t.independent.title]);
+  for (const p of [t.intro, t.name.text, t.purpose.lead, ...t.purpose.points, t.values.lead, t.values.close, t.audience.text, ...t.independent.paragraphs]) {
+    await expect(page.getByText(p, { exact: true })).toBeVisible();
+  }
+  await expect(page.getByRole('main').locator('[data-area]')).toHaveCount(0);
 });
 
 test.describe('the collections are honest while empty', () => {
@@ -396,7 +396,7 @@ test('reduced motion: the pages render and nothing is hidden waiting for an anim
   expect(['0', '0px']).toContain(await page.locator('section#visjon circle').first().evaluate((el) => getComputedStyle(el).getPropertyValue('stroke-dashoffset')));
   expect(await sealOpen(page)).toBe('');
   await page.goto('/vart-arbeid');
-  for (const a of brief.areas) await expect(page.locator(`#${a.key}`)).toContainText(a.text);
+  for (const a of klient.work.areas) await expect(page.getByText(a.text, { exact: true })).toBeVisible();
   await context.close();
 });
 
