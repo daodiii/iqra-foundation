@@ -163,6 +163,8 @@ export const klient = {
     filter: { all: 'Alle', news: 'Nyheter', events: 'Arrangementer' },
     newsText: 'Oppdateringer om stiftelsens arbeid, nye prosjekter, samarbeid og kunngjøringer.',
     eventsText: 'Kommende seminarer, konferanser, foredrag og kurs, med informasjon om tid, sted, program og påmelding. Arkivet viser tidligere arrangementer med referater og opptak der det er tilgjengelig.',
+    /** The second sentence of `eventsText`, alone: the archive page's lede. */
+    archiveText: 'Arkivet viser tidligere arrangementer med referater og opptak der det er tilgjengelig.',
     newsletter: { link: 'Meld deg på nyhetsbrevet', text: 'for å få invitasjoner og oppdateringer direkte.' },
   },
 

@@ -1,0 +1,193 @@
+/*
+ * The front page under the hero: the client's sections one after another, each a full-width band
+ * (white, the light grey, and navy for the close) with its content on the page's margin and
+ * measure. Plain and airy, as the client asks for «Dette ønsker vi å skape»; the redesign comes after.
+ */
+.forside {
+  background: var(--color-white);
+  color: var(--color-ink);
+}
+
+.section {
+  padding: clamp(64px, 9vw, 120px) var(--margin);
+  scroll-margin-top: var(--header-h);
+}
+
+.section > * {
+  max-width: 1200px;
+  margin-inline: auto;
+}
+
+.light {
+  background: var(--color-light);
+}
+
+.navy {
+  background: var(--color-navy);
+  color: var(--color-light);
+}
+
+.title {
+  font-size: var(--step-4);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.navy .title {
+  color: var(--color-white);
+}
+
+.intro {
+  margin-top: 20px;
+  max-width: 62ch;
+  font-size: var(--step-1);
+  line-height: 1.5;
+}
+
+/* «Hvorfor vi finnes»: its two paragraphs side by side on a wide screen. */
+.columns {
+  margin-top: 28px;
+  display: grid;
+  gap: 20px 48px;
+  font-size: var(--step-0);
+  line-height: 1.6;
+}
+
+@media (min-width: 900px) {
+  .columns {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Three areas in a row on a wide screen, one under the other on a phone. */
+.three {
+  margin-top: 40px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 40px;
+}
+
+@media (min-width: 900px) {
+  .three {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+  }
+}
+
+.three h3 {
+  margin-top: 16px;
+  font-size: var(--step-2);
+  line-height: 1.2;
+}
+
+.three p {
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+.icon {
+  display: block;
+  width: 56px;
+  height: 56px;
+}
+
+/* Aktuelt: the news and the events side by side on a wide screen. */
+.lists {
+  margin-top: 40px;
+  display: grid;
+  gap: 48px;
+}
+
+@media (min-width: 900px) {
+  .lists {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.listTitle {
+  font-size: var(--step-2);
+}
+
+.list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 16px;
+}
+
+.list > li {
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--color-white);
+}
+
+.list h3 {
+  font-size: 20px;
+}
+
+.list img {
+  margin-top: 12px;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+.empty {
+  margin-top: 14px;
+  color: var(--color-ink-soft);
+}
+
+.more {
+  margin-top: 18px;
+  font: 500 var(--step-0) / 1.4 var(--font-sans);
+}
+
+.more a {
+  color: var(--color-navy);
+  text-underline-offset: 4px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.partner,
+.support {
+  display: inline-flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: var(--radius-pill);
+  font: 500 var(--step-0) / 1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.partner {
+  background: var(--color-light);
+  color: var(--color-navy);
+}
+
+.partner:hover {
+  background: var(--color-white);
+}
+
+.support {
+  background: var(--color-crimson);
+  color: var(--color-white);
+}
+
+.support:hover {
+  background: var(--color-crimson-deep);
+}
+
+.partner:focus-visible,
+.support:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 3px;
+}

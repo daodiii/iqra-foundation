@@ -1,11 +1,8 @@
-import { expect, test, type Page } from '@playwright/test';
-import { brief } from '../content/brief.no';
+import { expect, test } from '@playwright/test';
 import { site } from '../content/site.no';
 import { klient } from '../content/klient.no';
-import { getEvents, getPeople, splitEvents, todayISO } from '../lib/content';
+import { getEvents, getNews, getResources, splitEvents, todayISO } from '../lib/content';
 import { isPlaceholder } from '../lib/placeholder';
-import { sentences } from '../lib/text';
-import { groundAt, seaAreas } from '../components/home/tide';
 
 /**
  * Every page of the brief's menu exists, has its own title in the one pattern and a
@@ -15,144 +12,53 @@ import { groundAt, seaAreas } from '../components/home/tide';
 
 const T = (page: string) => `${page} – ${site.name}`;
 
-test('the home page is the name alone, and carries the brief’s main text, the four areas as one sea, Visjon and Misjon as a seal, and the rest of the site', async ({ page }) => {
+test('the home page: the name as the heading, then the client’s front page in their order, every word theirs', async ({ page }) => {
+  const h = klient.home;
   await page.goto('/');
   await expect(page).toHaveTitle(site.name);
-  expect(await page.locator('html').getAttribute('lang')).toBe('nb');
-  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', brief.home.paragraph);
-  // The lockup is the heading: the one h1 holds the art, named for the logo; the brief's headline is not on the page.
-  await expect(page.locator('h1')).toHaveAccessibleName(site.logoAlt);
-  await expect(page.locator('h1').getByRole('img', { name: site.logoAlt })).toBeVisible();
-  await expect(page.getByText(brief.home.headline)).toHaveCount(0);
-  await expect(page.getByText(brief.home.paragraph, { exact: true })).toBeVisible();
   const main = page.getByRole('main');
-  await expect(main.getByRole('link', { name: site.cta.work.label })).toHaveAttribute('href', site.cta.work.href);
-  // Støtt oss twice in the page's main: under the hero's text and on the ending's sheet beside Kontakt (the header has its own)
-  const support = main.getByRole('link', { name: site.cta.support.label });
-  await expect(support).toHaveCount(2);
-  for (const link of await support.all()) await expect(link).toHaveAttribute('href', site.cta.support.href);
-  await expect(main.locator('section#kontakt').getByRole('link', { name: site.cta.contact.label })).toHaveAttribute('href', site.cta.contact.href);
-  await expect(main.locator('section#kontakt').getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', site.cta.support.href);
-  // the four fields on one sea first, in the sea's order (white · navy · navy · white): one water, one list of the four names, four pages of text over it, the first lit
-  const sea = main.locator('[data-fields]');
-  await expect(sea).toHaveAttribute('data-live', '');
-  await expect(sea.locator('[data-material="water"]')).toHaveCount(1);
-  await expect(sea.locator('[data-index] button')).toHaveText(seaAreas.map((a) => a.name));
-  const pages = sea.locator('[data-page]');
-  await expect(pages).toHaveCount(4);
-  await expect(pages.nth(0)).toHaveAttribute('data-here', '');
-  await expect(pages.nth(1)).not.toHaveAttribute('data-here');
-  for (const a of brief.areas) {
-    await expect(main.getByRole('link', { name: a.name, exact: true })).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
-  }
-  // Visjon and Misjon as a seal on a flat navy plate: the ring, the four names twice round it, the words verbatim
-  await expect(main.getByText(brief.vision.headline, { exact: true })).toBeAttached();
-  await expect(main.getByText(brief.vision.paragraph, { exact: true })).toBeAttached();
-  await expect(main.getByText(brief.mission.headline, { exact: true })).toBeAttached();
-  await expect(main.getByText(brief.mission.paragraph, { exact: true })).toBeAttached();
-  const seal = main.locator('section#visjon svg');
-  await expect(seal.locator('circle')).toHaveCount(2);
-  for (const a of brief.areas) expect(await seal.locator('textPath').textContent()).toContain(a.name);
-  // every section after the sea a flat plate, on the navy ramp's steps and white: the seal, Om oss, Neste, the board, the ending
-  expect(await main.locator('[data-material="flat"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-ground')))).toEqual(['navy', 'white', 'navy-lift', 'white', 'navy-deep']);
-  await expect(main.locator('[data-material="ink"]')).toHaveCount(0);
-  // then the rest of the site: four sections in order, each section's title its one way on (no pill under it), the lists honest while empty
-  const ids = await main.locator('section[id]').evaluateAll((els) => els.map((e) => e.id));
-  expect(ids.slice(-4)).toEqual(['om-oss', 'arrangementer', 'menneskene-bak', 'kontakt']);
-  expect(ids).not.toContain('ressurser');
-  const hrefOf = (label: string) => site.links.find((n) => n.label === label)?.href ?? '';
-  for (const [id, label] of [['om-oss', site.pages.about.label], ['arrangementer', site.pages.events.label], ['menneskene-bak', site.pages.people.label], ['misjon', site.pages.work.label]] as const) {
-    await expect(main.locator(`section#${id} a`)).toHaveCount(1);
-    await expect(main.locator(`section#${id} h2 a`)).toHaveAttribute('href', hrefOf(label));
-  }
-  await expect(main.locator('section#visjon a')).toHaveCount(0);
-  // the next event as Neste's statement while one is coming, the honest line while not (the build reads the same collection)
+  await expect(main.locator('h1')).toHaveAccessibleName(site.logoAlt);
+  // the hero: the client's headline, two paragraphs and two buttons (D1)
+  await expect(main.getByText(h.headline, { exact: true })).toBeVisible();
+  for (const p of h.paragraphs) await expect(main.getByText(p, { exact: true })).toBeVisible();
+  await expect(main.getByRole('link', { name: site.cta.about.label })).toHaveAttribute('href', '/om-oss');
+  await expect(main.getByRole('link', { name: site.cta.events.label })).toHaveAttribute('href', '/aktuelt/arrangementer');
+  // the sections, in order
+  await expect(main.getByRole('heading', { level: 2 })).toHaveText([h.why.title, h.create.title, h.action.title, h.news.title, h.together.title]);
+  const all = [
+    ...h.why.paragraphs,
+    h.create.intro,
+    ...h.create.areas.flatMap((a) => [a.title, a.text]),
+    ...h.action.items.flatMap((a) => [a.title, a.text]),
+    h.news.intro,
+    h.together.text,
+  ];
+  for (const text of all) await expect(main.getByText(text, { exact: true })).toBeVisible();
+  // «Dette ønsker vi å skape» replaces the four boxes: an icon for each of its three, and none of the four anywhere
+  await expect(main.locator('section#skape svg[data-ikon]')).toHaveCount(3);
+  for (const old of ['Samfunnsdeltakelse', 'Møteplasser', 'Visjon', 'Misjon']) await expect(main.getByText(old, { exact: true })).toHaveCount(0);
+  // Aktuelt: at most three news and three events, and the way on to all of them
+  const news = getNews().slice(0, 3);
   const { upcoming } = splitEvents(getEvents(), todayISO());
-  if (upcoming.length) await expect(main.locator('section#arrangementer h3').first()).toHaveText(upcoming[0].title);
-  else await expect(main.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeAttached();
-  // the people as prints on the table while the collection has any (the first three, People.tsx's SEATS), the honest line while not
-  const seated = getPeople().slice(0, 3);
-  expect(await main.locator('section#menneskene-bak article h3').allTextContents()).toEqual(seated.map((p) => p.name));
-  if (!seated.length) await expect(main.getByText(site.pages.people.empty, { exact: true })).toBeAttached();
-  // nothing of the thread
-  await expect(main.locator('canvas[data-thread-canvas]')).toHaveCount(0);
-  // the act: the scroll is the browser's and the tide is ours. Put the second page on the middle of
-  // the screen and its name lights at once; its tide lands on its own clock, whole, and the box's own
-  // CSS ground is wholly the second area's (Samfunnsdeltakelse)
-  // the page's centre onto the reading line the sea measured (`data-line`; on a phone it is under the band)
-  const toPage = (k: number) =>
-    sea.evaluate((el, k) => {
-      const line = Number((el as HTMLElement).dataset.line);
-      const p = el.querySelectorAll('[data-page]')[k].getBoundingClientRect();
-      window.scrollTo(0, window.scrollY + p.top + p.height / 2 - line);
-    }, k);
-  const playhead = () => sea.evaluate((el) => (el as HTMLElement).dataset.u);
-  const ground = () => sea.locator('[data-material="water"]').evaluate((el) => (el as HTMLElement).style.getPropertyValue('--ground'));
-  await toPage(1);
-  await expect(pages.nth(1)).toHaveAttribute('data-here', '');
-  await expect(pages.nth(0)).not.toHaveAttribute('data-here');
-  // a software-renderer frame can starve headless Chromium, the same as sea.spec.ts's polls
-  await expect.poll(playhead, { timeout: 10_000 }).toBe('1.000');
-  // polled, not read once: a single read can race the exact landing right after the playhead poll
-  await expect.poll(ground, { timeout: 10_000 }).toBe(groundAt(1));
-  // and back on the first field as the page returns to it
-  await toPage(0);
-  await expect(pages.nth(0)).toHaveAttribute('data-here', '');
-  await expect.poll(playhead, { timeout: 10_000 }).toBe('0.000');
-  // the seal's plate opens as it passes the middle of the screen, and Om oss arrives as the tip line reaches it
-  const plate = main.locator('section#visjon').locator('xpath=ancestor::*[@data-material][1]');
-  await plate.evaluate((el) => {
-    const r = el.getBoundingClientRect();
-    window.scrollTo(0, window.scrollY + r.top + r.height / 2 - window.innerHeight / 2);
-  });
-  await expect.poll(async () => Number(await plate.evaluate((el) => (el.parentElement as HTMLElement).style.getPropertyValue('--open')))).toBeGreaterThan(0.97);
-  // polled: since the flow went on one clock (glide.ts) the clip trails `--open` by a frame or two, and read the same instant it is still a hundredth of a pixel in
-  await expect.poll(() => plate.evaluate((el) => getComputedStyle(el).clipPath)).toMatch(/inset\(0(px)? 0px round 0px\)|inset\(0px\)|none/);
-  await main.locator('section#om-oss').evaluate((el) => window.scrollTo(0, window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.5));
-  await expect(main.locator('section#om-oss')).toHaveAttribute('data-arrived', '');
-  // a field's page is the link to its band: the second field's (Samfunnsdeltakelse), lit on the middle of the screen
-  await toPage(1);
-  await expect(pages.nth(1)).toHaveAttribute('data-here', '');
-  await main.getByRole('link', { name: brief.areas[3].name, exact: true }).click();
-  await expect(page).toHaveURL(/\/vart-arbeid#samfunnsdeltakelse$/);
-  // Vårt arbeid carries the client's areas of work now (2026-11-18); the sea and its anchors go with the home page's update.
-  await expect(page.locator('h1')).toHaveText(klient.work.title);
+  const aktuelt = main.locator('section#aktuelt');
+  if (news.length) for (const n of news) await expect(aktuelt.getByRole('heading', { name: n.title })).toBeVisible();
+  else await expect(aktuelt.getByText(site.pages.news.emptyNews, { exact: true })).toBeVisible();
+  if (upcoming.length) for (const e of upcoming.slice(0, 3)) await expect(aktuelt.getByRole('heading', { name: e.title })).toBeVisible();
+  else await expect(aktuelt.getByText(site.pages.news.emptyUpcoming, { exact: true })).toBeVisible();
+  await expect(aktuelt.getByRole('link', { name: h.news.all })).toHaveAttribute('href', '/aktuelt/nyheter');
+  // the close: «Bli samarbeidspartner» and «Støtt arbeidet»
+  const sammen = main.locator('section#sammen');
+  await expect(sammen.getByRole('link', { name: site.cta.partner.label })).toHaveAttribute('href', site.cta.partner.href);
+  await expect(sammen.getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', '/stott-oss');
 });
 
-/** Walk the page from the top to the foot in steps, letting each scroll-driven piece write its frame; `at` is read at every step. */
-async function walkDown<T>(page: Page, at: () => Promise<T>): Promise<T[]> {
-  const H = await page.evaluate(() => document.documentElement.scrollHeight);
-  const seen: T[] = [];
-  for (let y = 0; y <= H; y += 240) {
-    await page.evaluate((y) => window.scrollTo(0, y), y);
-    await page.waitForTimeout(80);
-    seen.push(await at());
+test('phone: the home page is never wider than the screen', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'a phone only');
+  for (const width of [320, 360, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/');
+    expect(await page.evaluate(() => Math.max(document.documentElement.scrollWidth, window.innerWidth)), `/ at ${width}`).toBe(width);
   }
-  return seen;
-}
-
-test('phone: the page is never wider than the screen, from the hero to the foot', async ({ page, isMobile }) => {
-  // A phone widens its layout to take in whatever overflows (the Om oss doors, turned, reached past the
-  // edge and pushed «Meny» off the screen); a desktop clips it, so only the phone can show this.
-  test.skip(!isMobile, 'a phone only');
-  await page.goto('/');
-  const width = page.viewportSize()?.width;
-  const widths = await walkDown(page, () => page.evaluate(() => Math.max(document.documentElement.scrollWidth, window.innerWidth)));
-  // the doors did turn on the way (the state that widened the page), and the plate has risen by the foot
-  await expect(page.locator('section#om-oss [data-scene]')).toHaveAttribute('data-risen', '');
-  expect(Math.max(...widths)).toBe(width);
-  const menu = await page.getByRole('button', { name: site.header.open }).boundingBox();
-  expect((menu?.x ?? 0) + (menu?.width ?? 0)).toBeLessThanOrEqual(width ?? 0);
-});
-
-test('phone: a print on the board table is little more than half a screen tall', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'a phone only');
-  test.skip(getPeople().length === 0, 'no people published: the honest line stands instead of the table');
-  await page.goto('/');
-  const print = page.locator('section#menneskene-bak article').first();
-  await print.scrollIntoViewIfNeeded();
-  const h = await print.evaluate((el) => el.getBoundingClientRect().height / window.innerHeight);
-  expect(h).toBeLessThan(0.6);
 });
 
 test('vårt arbeid: the client’s intro and every area of work, each a section reachable by its anchor', async ({ page }) => {
@@ -180,22 +86,62 @@ test('om iqra foundation: the client’s text, section by section', async ({ pag
 });
 
 test.describe('the collections are honest while empty', () => {
-  test('arrangementer: kommende and tidligere, each with its own line while empty, each listing what is published', async ({ page }) => {
-    await page.goto('/arrangementer');
-    await expect(page).toHaveTitle(T(site.pages.events.title));
-    await expect(page.getByRole('heading', { name: site.pages.events.upcoming })).toBeVisible();
-    await expect(page.getByRole('heading', { name: site.pages.events.past })).toBeVisible();
-    const { upcoming, past } = splitEvents(getEvents(), todayISO());
-    if (upcoming.length) for (const e of upcoming) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
-    else await expect(page.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeVisible();
-    if (past.length) for (const e of past) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
-    else await expect(page.getByText(site.pages.events.emptyPast, { exact: true })).toBeVisible();
+  test('aktuelt: the client’s intro and the filter Alle · Nyheter · Arrangementer, each its own address, the current one marked', async ({ page }) => {
+    const t = site.pages.news;
+    for (const [href, label] of [['/aktuelt', 'Alle'], ['/aktuelt/nyheter', 'Nyheter'], ['/aktuelt/arrangementer', 'Arrangementer']] as const) {
+      await page.goto(href);
+      await expect(page.locator('h1')).toHaveText(klient.news.title);
+      await expect(page.getByText(klient.news.intro, { exact: true })).toBeVisible();
+      const filter = page.getByRole('navigation', { name: t.filterLabel });
+      await expect(filter.getByRole('link')).toHaveText([klient.news.filter.all, klient.news.filter.news, klient.news.filter.events]);
+      await expect(filter.locator('[aria-current="page"]')).toHaveText(label);
+    }
   });
-  test('ressurser', async ({ page }) => {
+  test('aktuelt: news under Nyheter with the client’s text, events under Arrangementer with theirs, upcoming and past split by today, each listing what is published or its empty line', async ({ page }) => {
+    const t = site.pages.news;
+    const news = getNews();
+    const { upcoming, past } = splitEvents(getEvents(), todayISO());
+    await page.goto('/aktuelt/nyheter');
+    await expect(page.getByText(klient.news.newsText, { exact: true })).toBeVisible();
+    await expect(page.getByText(klient.news.eventsText, { exact: true })).toHaveCount(0);
+    if (news.length) for (const n of news) await expect(page.getByRole('heading', { name: n.title })).toBeVisible();
+    else await expect(page.getByText(t.emptyNews, { exact: true })).toBeVisible();
+    await page.goto('/aktuelt/arrangementer');
+    await expect(page.getByText(klient.news.eventsText, { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: t.upcoming })).toBeVisible();
+    await expect(page.getByRole('heading', { name: t.past })).toBeVisible();
+    if (upcoming.length) for (const e of upcoming) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
+    else await expect(page.getByText(t.emptyUpcoming, { exact: true })).toBeVisible();
+    if (past.length) for (const e of past) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
+    else await expect(page.getByText(t.emptyPast, { exact: true }).first()).toBeVisible();
+    await page.getByRole('link', { name: t.archiveLink }).click();
+    await expect(page).toHaveURL(/\/aktuelt\/arkiv$/);
+    await expect(page.locator('h1')).toHaveText(t.archiveTitle);
+    await expect(page.getByText(klient.news.archiveText, { exact: true })).toBeVisible();
+  });
+  test('the old addresses land on Aktuelt', async ({ page }) => {
+    await page.goto('/arrangementer');
+    await expect(page).toHaveURL(/\/aktuelt\/arrangementer$/);
+    await page.goto('/nyheter');
+    await expect(page).toHaveURL(/\/aktuelt\/nyheter$/);
+  });
+  test('ressurser: the client’s intro, then the four categories in their order, each with its text and what is published in it, or the empty line', async ({ page }) => {
+    const r = klient.resources;
     await page.goto('/ressurser');
     await expect(page).toHaveTitle(T(site.pages.resources.title));
-    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', brief.resources);
-    await expect(page.getByText(site.pages.resources.empty, { exact: true })).toBeVisible();
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', r.intro);
+    await expect(page.locator('h1')).toHaveText(r.title);
+    const main = page.getByRole('main');
+    await expect(main.getByRole('heading', { level: 2 })).toHaveText(r.categories.map((c) => c.title));
+    await expect(main.getByRole('navigation', { name: site.pages.resources.categoriesLabel }).getByRole('link')).toHaveText(r.categories.map((c) => c.title));
+    const items = getResources();
+    for (const c of r.categories) {
+      const section = main.locator(`section#${c.key}`);
+      if (c.text) await expect(section).toContainText(c.text);
+      const inIt = items.filter((i) => i.category === c.key);
+      if (inIt.length) await expect(section.locator('h3')).toHaveText(inIt.map((i) => i.title));
+      else await expect(section.getByText(site.pages.resources.empty, { exact: true })).toBeVisible();
+    }
   });
   test('menneskene bak: the client’s text, the five board members by name and role, and how to reach the board', async ({ page }) => {
     const t = klient.people;
@@ -210,11 +156,10 @@ test.describe('the collections are honest while empty', () => {
     await expect(page.getByRole('main')).toContainText(t.contact.text);
     await expect(page.getByRole('main')).not.toContainText(/\[[^\]]+\]/);
   });
-  test('styringsdokumenter', async ({ page }) => {
+  test('the old Styringsdokumenter address lands on its category in the library', async ({ page }) => {
     await page.goto('/styringsdokumenter');
-    await expect(page).toHaveTitle(T(site.pages.documents.title));
-    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', brief.documents);
-    await expect(page.getByText(site.pages.documents.empty, { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/\/ressurser#styringsdokumenter$/);
+    await expect(page.locator('section#styringsdokumenter h2')).toHaveText('Styringsdokumenter');
   });
 });
 
@@ -230,17 +175,6 @@ test('phone: no page is wider than the screen at 320, 360 or 390, however long i
       const wide = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, window.innerWidth));
       expect(wide, `${item.href} at ${width}`).toBe(width);
     }
-  }
-});
-
-test('a long one-word title breaks at its joint only where the screen is too narrow: on a wide screen it is one line, and its name is the word whole', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'the wide screen');
-  for (const [href, title] of [['/styringsdokumenter', site.pages.documents.title], ['/arrangementer', site.pages.events.title]] as const) {
-    await page.goto(href);
-    const h1 = page.locator('h1');
-    await expect(h1).toHaveAccessibleName(title);
-    const lines = await h1.evaluate((el) => Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)));
-    expect(lines, href).toBe(1);
   }
 });
 
@@ -281,18 +215,26 @@ test('kontakt: five cards in reading order — the map with the address on it, t
   await expect(main.getByText(t.form.notice, { exact: true })).toBeVisible();
 });
 
-test('støtt oss: the question, then the three ways in the owner’s order — the account, Vipps, AvtaleGiro — the Vipps number real, the account bracketed, and one way out to the agreement', async ({ page }) => {
+test('støtt oss: the client’s text in their order, the ways to give under «Gave» — Vipps real, no bracketed account — and one way out to the agreement', async ({ page }) => {
+  const t = klient.support;
   await page.goto('/stott-oss');
   await expect(page).toHaveTitle(T(site.pages.support.title));
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { level: 1 })).toHaveText(site.pages.support.question);
-  await expect(main.getByRole('heading', { level: 2 })).toHaveText([site.support.ways.account, site.support.ways.vipps, site.support.ways.avtale]);
+  await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
+  await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.uses.title, t.ways.title]);
+  await expect(main.getByRole('heading', { level: 3 })).toHaveText(t.ways.items.map((w) => w.title));
   const text = await main.innerText();
-  expect(text.indexOf(site.support.account.value)).toBeGreaterThan(-1);
-  expect(text.indexOf(site.support.account.value)).toBeLessThan(text.indexOf(site.support.vipps.value));
-  expect(text.indexOf(site.support.vipps.value)).toBeLessThan(text.indexOf(site.support.avtale.button));
+  // the client's sentences, in their order
+  const order = [t.intro, t.uses.lead, ...t.uses.points, t.uses.close, ...t.ways.items.map((w) => w.text), t.close].map((s) => text.indexOf(s));
+  expect(order.every((i) => i > -1), `missing: ${order.join(',')}`).toBe(true);
+  expect([...order].sort((x, y) => x - y)).toEqual(order);
+  // Vipps and AvtaleGiro hang between «Gave» and «Samarbeid og partnerskap»
+  const vipps = text.indexOf(site.support.vipps.value);
+  expect(vipps).toBeGreaterThan(text.indexOf(t.ways.items[0].text));
+  expect(vipps).toBeLessThan(text.indexOf(site.support.avtale.button));
+  expect(text.indexOf(site.support.avtale.button)).toBeLessThan(text.indexOf(t.ways.items[1].text));
+  expect(text).not.toMatch(/\[[^\]]*\]/);
   await expect(main.locator('form, input, button')).toHaveCount(0);
-  // AvtaleGiro's one way out: the foundation's own agreement, at its provider
   const avtale = main.getByRole('link', { name: site.support.avtale.button });
   await expect(avtale).toHaveAttribute('href', site.support.avtale.href);
   await expect(main.getByRole('link')).toHaveCount(1);
@@ -304,7 +246,7 @@ test('støtt oss is exactly as wide as the screen, and so is the page after it o
   const fits = () => page.evaluate(() => document.documentElement.scrollWidth === window.innerWidth);
   await page.goto('/stott-oss');
   expect(await fits()).toBe(true);
-  await page.getByRole('contentinfo').getByRole('link', { name: brief.menu[1], exact: true }).click();
+  await page.getByRole('contentinfo').getByRole('link', { name: klient.menu.about, exact: true }).click();
   await expect(page).toHaveURL(/\/om-oss$/);
   await expect(page.locator('h1')).toBeVisible();
   expect(await fits()).toBe(true);
@@ -334,44 +276,17 @@ test('the share card is the logo, on every route', async ({ page }) => {
   for (const file of ['/favicon.ico', '/apple-icon.png']) expect((await page.request.get(file)).status()).toBe(200);
 });
 
-/**
- * What the home page hides until its arrival, read by computed style: Playwright's
- * `toBeVisible` counts an element at opacity 0 as visible, so a hidden state has to be
- * asserted by value. The statement's first word, Om oss's title, the foot's question.
- */
-async function nothingHidden(page: Page) {
-  const computed = (selector: string, property: string) =>
-    page.locator(selector).first().evaluate((el, p) => getComputedStyle(el).getPropertyValue(p), property);
-  expect(await computed('section#visjon [data-word]', 'opacity')).toBe('1');
-  expect(await computed('#om-oss [data-title]', 'clip-path')).toBe('none');
-  expect(await computed('section#kontakt h2', 'opacity')).toBe('1');
-  // the sheet lies on its plate, not pushed beyond its edge
-  expect(await page.locator('section#kontakt [data-sheet]').evaluate((el) => {
-    const r = el.getBoundingClientRect();
-    const p = (el.closest('[data-material]') as HTMLElement).getBoundingClientRect();
-    return r.left >= p.left - 1 && r.right <= p.right + 1;
-  })).toBe(true);
-}
-
-/** The seal's scene — the element `Scene` sets `--open` on, the plate's parent — and what it reads there. */
-const sealOpen = (page: Page) =>
-  page.locator('section#visjon').evaluate((el) => ((el.closest('[data-material]') as HTMLElement).parentElement as HTMLElement).style.getPropertyValue('--open'));
-
 test('with JavaScript off every page is complete: the text, the menu, the footer', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   for (const item of site.links) {
     await page.goto(item.href);
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.getByRole('contentinfo').getByRole('link', { name: brief.menu[8] })).toBeAttached();
+    await expect(page.getByRole('contentinfo').getByRole('link', { name: klient.menu.support })).toBeAttached();
   }
   await page.goto('/');
-  await expect(page.getByText(brief.home.paragraph, { exact: true })).toBeVisible();
-  // without script the pages still go by over the sticky screen (CSS alone): nothing live, nothing dimmed, every text its two sentences, the statement and the reading
-  await expect(page.locator('[data-fields]')).not.toHaveAttribute('data-live');
-  for (const a of brief.areas) for (const part of sentences(a.text)) await expect(page.getByText(part, { exact: true })).toBeVisible();
-  await nothingHidden(page);
-  expect(['', '0']).toContain(await sealOpen(page));
+  for (const p of klient.home.paragraphs) await expect(page.getByText(p, { exact: true })).toBeVisible();
+  await expect(page.getByText(klient.home.together.text, { exact: true })).toBeVisible();
   await context.close();
 });
 
@@ -380,25 +295,9 @@ test('reduced motion: the pages render and nothing is hidden waiting for an anim
   const page = await context.newPage();
   await page.goto('/');
   await expect(page.locator('h1')).toBeVisible();
-  await expect(page.getByText(brief.mission.paragraph, { exact: true })).toBeVisible();
-  // the sea under reduced motion: the four pages one under the other, every text there; a page put on
-  // the middle of the screen takes the sea at once, its name lit and the playhead on its field with no tide between
-  const sea = page.locator('[data-fields]');
-  for (const a of brief.areas) for (const part of sentences(a.text)) await expect(page.getByText(part, { exact: true })).toBeVisible();
-  const tops = await sea.locator('[data-page]').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
-  for (let i = 1; i < tops.length; i++) expect(tops[i]).toBeGreaterThan(tops[i - 1]);
-  await expect(sea).toHaveAttribute('data-live', '');
-  await sea.evaluate((el) => {
-    const p = el.querySelectorAll('[data-page]')[3].getBoundingClientRect();
-    window.scrollTo(0, window.scrollY + p.top + p.height / 2 - Number((el as HTMLElement).dataset.line));
-  });
-  await expect(sea.locator('[data-page]').nth(3)).toHaveAttribute('data-here', '');
-  expect(await sea.evaluate((el) => (el as HTMLElement).dataset.u)).toBe('3.000');
-  // once the script has run (the sections are live), everything stands: nothing hidden, the ring drawn, no listener on the scene
-  await expect(page.locator('section#om-oss')).toHaveAttribute('data-live', '');
-  await nothingHidden(page);
-  expect(['0', '0px']).toContain(await page.locator('section#visjon circle').first().evaluate((el) => getComputedStyle(el).getPropertyValue('stroke-dashoffset')));
-  expect(await sealOpen(page)).toBe('');
+  for (const p of klient.home.paragraphs) await expect(page.getByText(p, { exact: true })).toBeVisible();
+  for (const a of klient.home.create.areas) await expect(page.getByText(a.text, { exact: true })).toBeVisible();
+  expect(await page.getByText(klient.home.headline, { exact: true }).evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
   await page.goto('/vart-arbeid');
   for (const a of klient.work.areas) await expect(page.getByText(a.text, { exact: true })).toBeVisible();
   await context.close();
@@ -420,7 +319,8 @@ test('Personvern and Vilkår, robots.txt, the sitemap and the security headers',
   expect(robots).toMatch(/Sitemap: .*\/sitemap\.xml/);
   expect(robots).not.toMatch(/Disallow: \/\s*$/m);
   const sitemap = await (await page.request.get('/sitemap.xml')).text();
-  for (const item of [...site.links, ...site.legal]) expect(sitemap).toContain(item.href === '/' ? '<loc>' : `${item.href}</loc>`);
+  for (const item of [...site.links, ...site.legal].filter((i) => !i.href.includes('#'))) expect(sitemap).toContain(item.href === '/' ? '<loc>' : `${item.href}</loc>`);
+  expect(sitemap).not.toContain('/styringsdokumenter</loc>');
   const headers = (await page.request.get('/')).headers();
   expect(headers['strict-transport-security']).toMatch(/max-age=\d+/);
   expect(headers['x-content-type-options']).toBe('nosniff');

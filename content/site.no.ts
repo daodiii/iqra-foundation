@@ -22,23 +22,40 @@ import { klient } from './klient.no.ts';
 const story = 'Iqra er det første ordet i Koranen. Det kan bety å lese eller resitere. Vi vil at alle skal lese, forstå og lære hva islam faktisk er.';
 
 /**
- * The brief's nine menu items, and where each goes; the labels are the brief's. Eight stand in
- * the row, and Styringsdokumenter stands under Ressurser — the owner, 2026-10-09: «ressurser on
- * top and have styringsdokumenter under it».
+ * The menu, as the client asks for it (M1, 2026-11-18): Hjem; Om oss with Om Iqra Foundation,
+ * Vårt arbeid and Menneskene bak under it; Aktuelt with Nyheter and Arrangementer under it;
+ * Ressurser; Kontakt; and Støtt oss as its own button. Om oss and Aktuelt open a page too (the
+ * owner, 2026-11-18): Om oss is Om Iqra Foundation, Aktuelt is the page with all of it.
  */
+const m = klient.menu;
 const nav = [
-  { label: brief.menu[0], href: '/' },
-  { label: brief.menu[1], href: '/om-oss' },
-  { label: brief.menu[2], href: '/vart-arbeid' },
-  { label: brief.menu[3], href: '/arrangementer' },
-  { label: brief.menu[4], href: '/ressurser', children: [{ label: brief.menu[6], href: '/styringsdokumenter' }] },
-  { label: brief.menu[5], href: '/menneskene-bak' },
-  { label: brief.menu[7], href: '/kontakt' },
-  { label: brief.menu[8], href: '/stott-oss', button: true },
+  { label: m.home, href: '/' },
+  {
+    label: m.about,
+    href: '/om-oss',
+    children: [
+      { label: m.aboutFoundation, href: '/om-oss' },
+      { label: m.work, href: '/vart-arbeid' },
+      { label: m.people, href: '/menneskene-bak' },
+    ],
+  },
+  {
+    label: m.news,
+    href: '/aktuelt',
+    children: [
+      { label: m.newsItems, href: '/aktuelt/nyheter' },
+      { label: m.events, href: '/aktuelt/arrangementer' },
+    ],
+  },
+  { label: m.resources, href: '/ressurser' },
+  { label: m.contact, href: '/kontakt' },
+  { label: m.support, href: '/stott-oss', button: true },
 ] as const;
 
-/** All nine, in the menu's reading order (an item, then what stands under it): the footer's list, and every page a link can name. */
-const links: readonly { label: string; href: string }[] = nav.flatMap<{ label: string; href: string }>((item) => ('children' in item ? [item, ...item.children] : [item]));
+/** Every page the menu names, once each, in its reading order (an item, then what stands under it): the footer's list. */
+const links: readonly { label: string; href: string }[] = nav
+  .flatMap<{ label: string; href: string }>((item) => ('children' in item ? [item, ...item.children] : [item]))
+  .filter((l, i, all) => all.findIndex((o) => o.href === l.href) === i);
 
 /** The two legal pages: not in the menu (the brief's nine are the menu), reached from the foot of every page. */
 const legal = [
@@ -55,9 +72,13 @@ export const site = {
   legal,
   /** The two buttons under the home page's text (brief 2), and where they go; and Kontakt, the way on from the foot of the home page. */
   cta: {
-    work: { label: brief.home.buttons[0], href: '/vart-arbeid' },
-    support: { label: brief.home.buttons[1], href: '/stott-oss' },
-    contact: { label: brief.menu[7], href: '/kontakt' },
+    /** The front page's two buttons (D1): on to Om Iqra Foundation, and to the coming events. */
+    about: { label: klient.home.buttons.about, href: '/om-oss' },
+    events: { label: klient.home.buttons.events, href: '/aktuelt/arrangementer' },
+    /** The two buttons under «Sammen kan vi gjøre en forskjell» (D1). Where «Bli samarbeidspartner» leads is the client's question Q9; Kontakt until they say. */
+    partner: { label: klient.home.together.buttons.partner, href: '/kontakt' },
+    support: { label: klient.home.together.buttons.support, href: '/stott-oss' },
+    contact: { label: klient.menu.contact, href: '/kontakt' },
   },
   header: {
     homeLabel: 'Iqra Foundation, til forsiden',
@@ -117,7 +138,9 @@ export const site = {
   months: ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'],
   pages: {
     home: {
-      description: brief.home.paragraph,
+      description: klient.home.paragraphs[0],
+      /** Under the three next events: the way on to all of them, beside the client's «Se alle nyheter». */
+      allEvents: 'Se alle arrangementer',
       visionLabel: 'Visjon',
       missionLabel: 'Misjon',
       areasLabel: 'Fire hovedområder',
@@ -135,18 +158,40 @@ export const site = {
       },
     },
     about: {
-      label: brief.menu[1],
+      label: klient.menu.about,
       title: klient.about.title,
       description: klient.about.intro,
       story: { label: 'Navnet', text: story },
     },
     work: {
-      label: brief.menu[2],
+      label: klient.menu.work,
       title: klient.work.title,
       description: klient.work.intro,
     },
+    /** Aktuelt (M3 and D5): the words around the client's text — the filter, the headings, the empty lines. */
+    news: {
+      label: klient.menu.news,
+      title: klient.news.title,
+      description: klient.news.intro,
+      filterLabel: 'Vis',
+      newsTitle: klient.menu.newsItems,
+      eventsTitle: klient.menu.events,
+      upcoming: 'Kommende arrangementer',
+      past: 'Tidligere arrangementer',
+      archiveTitle: 'Arkiv',
+      archiveDescription: klient.news.archiveText,
+      archiveLink: 'Se hele arkivet',
+      emptyNews: 'Ingen nyheter er publisert ennå.',
+      emptyUpcoming: 'Ingen kommende arrangementer er publisert ennå.',
+      emptyPast: 'Ingen tidligere arrangementer ennå.',
+      readMore: 'Les hele saken',
+      signup: 'Påmelding',
+      program: 'Program',
+      report: 'Referat',
+      recording: 'Se opptaket',
+    },
     events: {
-      label: brief.menu[3],
+      label: klient.menu.events,
       title: 'Arrangementer',
       description: brief.about.paragraphs[3],
       upcoming: 'Kommende',
@@ -160,45 +205,28 @@ export const site = {
       count: { days: 'dager', hours: 'timer', minutes: 'min', seconds: 'sek' },
     },
     resources: {
-      label: brief.menu[4],
-      title: 'Ressurser',
-      description: brief.resources,
-      empty: 'Ingen ressurser er publisert ennå.',
-      kinds: {
-        publikasjon: 'Publikasjon',
-        artikkel: 'Artikkel',
-        rapport: 'Rapport',
-        presentasjon: 'Presentasjon',
-        video: 'Video',
-        annet: 'Annet',
-      },
+      label: klient.menu.resources,
+      title: klient.resources.title,
+      description: klient.resources.intro,
+      categoriesLabel: 'Kategorier',
+      empty: 'Ingenting er publisert her ennå.',
       open: 'Åpne',
       download: 'Last ned',
     },
     people: {
-      label: brief.menu[5],
+      label: klient.menu.people,
       title: klient.people.title,
       description: klient.people.intro,
       empty: 'Presentasjoner av menneskene bak Iqra kommer senere.',
       photoMissing: 'Bilde kommer',
     },
+    /** Styringsdokumenter is a category of the library now; the menu's item under Ressurser goes there. */
     documents: {
-      label: brief.menu[6],
+      label: 'Styringsdokumenter',
       title: 'Styringsdokumenter',
-      description: brief.documents,
-      empty: 'Ingen dokumenter er publisert ennå.',
-      kinds: {
-        vedtekter: 'Vedtekter',
-        arsrapport: 'Årsrapport',
-        arsregnskap: 'Årsregnskap',
-        strategi: 'Strategi',
-        annet: 'Annet',
-      },
-      download: 'Last ned',
-      year: 'År',
     },
     contact: {
-      label: brief.menu[7],
+      label: klient.menu.contact,
       title: 'Kontakt',
       description: brief.about.paragraphs[2],
       addressLabel: 'Adresse',
@@ -225,11 +253,9 @@ export const site = {
       },
     },
     support: {
-      label: brief.menu[8],
+      label: klient.menu.support,
       title: 'Støtt oss',
-      description: brief.home.paragraph,
-      /** The page's heading, the owner's own words (2026-09-21); the title above stays the tab's and the menu's. */
-      question: 'Vil du støtte oss?',
+      description: klient.support.intro,
     },
     notFound: {
       title: 'Siden finnes ikke',

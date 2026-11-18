@@ -9,7 +9,8 @@ import { siteUrl } from '@/lib/site-url';
  * these as excluded; that is the intent until the real values land.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [...site.links, ...site.legal].map(({ href }) => ({
+  // Styringsdokumenter is a section of Ressurser now (`/ressurser#styringsdokumenter`); a sitemap lists pages, not places on them.
+  return [...site.links, ...site.legal].filter(({ href }) => !href.includes('#')).map(({ href }) => ({
     url: href === '/' ? siteUrl : `${siteUrl}${href}`,
   }));
 }
