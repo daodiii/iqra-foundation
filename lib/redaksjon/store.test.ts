@@ -7,6 +7,7 @@ vi.mock('server-only', () => ({}));
 const { GitHubStore, GitHubError } = await import('./github');
 const { LocalStore } = await import('./local');
 const { getStore, assertPath } = await import('./store');
+type Store = import('./store').Store;
 
 describe('paths', () => {
   test('only ordinary paths under content/ and public/ pass', () => {
@@ -23,7 +24,7 @@ describe('LocalStore', () => {
   afterEach(() => rmSync(root, { recursive: true, force: true }));
 
   test('writes text and bytes, lists, reads with a version, removes', async () => {
-    const s = new LocalStore(root);
+    const s: Store = new LocalStore(root);
     await s.commit([
       { path: 'content/nyheter/a/index.json', text: '{}\n' },
       { path: 'public/opplastet/nyheter/a/b.webp', bytes: new Uint8Array([1, 2, 3]) },
@@ -39,7 +40,7 @@ describe('LocalStore', () => {
     expect(await s.list('content/finnes-ikke')).toEqual([]);
   });
   test('refuses a path outside content/ and public/ before writing anything', async () => {
-    const s = new LocalStore(root);
+    const s: Store = new LocalStore(root);
     await expect(s.commit([{ path: 'content/ok.json', text: 'x' }, { path: '../ut.json', text: 'x' }], 'm')).rejects.toThrow(/Ugyldig/);
     expect(existsSync(path.join(root, 'content/ok.json'))).toBe(false);
   });
