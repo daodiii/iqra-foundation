@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import { collection, config, fields } from '@keystatic/core';
 import { COLLECTIONS } from './content/collections';
 import { klient } from './content/klient.no';
@@ -43,6 +44,27 @@ const picture = (where: Upload) =>
     false: fields.empty(),
   });
 
+/**
+ * The web address Keystatic makes from the title. It asks for it under the title, so it gets a
+ * Norwegian name and a line saying it can be left alone.
+ */
+const address = (from: string) => ({
+  label: 'Nettadresse',
+  description: `Lages av ${from}. Trenger ikke endres.`,
+});
+
+/**
+ * The foundation's mark in the editor's corner, beside the name. Navy on the light theme; white
+ * on the dark one, where navy would vanish.
+ */
+const mark = ({ colorScheme }: { colorScheme: 'light' | 'dark' }) =>
+  createElement('img', {
+    src: '/brand/iqra-mark.svg',
+    alt: '',
+    height: 20,
+    style: { height: 20, width: 'auto', filter: colorScheme === 'dark' ? 'brightness(0) invert(1)' : undefined },
+  });
+
 /** A picture's file name inside an article: unique, so a replaced picture never reuses an old name. */
 const uniqueName = (name: string) => `${Date.now().toString(36)}-${name.toLowerCase().replace(/[^a-z0-9.]+/g, '-')}`;
 
@@ -50,8 +72,17 @@ export default config({
   storage: github
     ? { kind: 'github', repo: { owner: 'daodiii', name: 'iqra-foundation' } }
     : { kind: 'local' },
-  ui: { brand: { name: 'Iqra Foundation' } },
-  locale: 'en-US',
+  ui: {
+    brand: { name: 'Iqra Foundation', mark },
+    // The editor's menu follows the site's: Aktuelt, then Ressurser, then Om oss.
+    navigation: {
+      [klient.menu.news]: ['nyheter', 'arrangementer'],
+      [klient.menu.resources]: ['ressurser'],
+      [klient.menu.about]: ['menneskene'],
+    },
+  },
+  // Keystatic's own buttons and menus in Norwegian (its nb-NO translation).
+  locale: 'nb-NO',
   collections: {
     /** Nyheter (M3): headline, ingress, picture, date and article text; saved as a draft until «Publiser» is ticked. */
     nyheter: collection({
@@ -61,7 +92,7 @@ export default config({
       format: { data: 'json', contentField: 'body' },
       columns: ['date', 'publish'],
       schema: {
-        title: fields.slug({ name: { label: 'Overskrift', validation: { isRequired: true } } }),
+        title: fields.slug({ name: { label: 'Overskrift', validation: { isRequired: true } }, slug: address('overskriften') }),
         date: fields.date({ label: 'Dato', validation: { isRequired: true } }),
         summary: fields.text({ label: 'Ingress', description: 'Den korte teksten under overskriften, og på kortet.', multiline: true, validation: { isRequired: true } }),
         image: picture(c.nyheter.files.image),
@@ -99,7 +130,7 @@ export default config({
       format: { data: 'json' },
       columns: ['start', 'place'],
       schema: {
-        title: fields.slug({ name: { label: 'Tittel', validation: { isRequired: true } } }),
+        title: fields.slug({ name: { label: 'Tittel', validation: { isRequired: true } }, slug: address('tittelen') }),
         start: fields.date({ label: 'Dato', validation: { isRequired: true } }),
         time: fields.text({ label: 'Klokkeslett', description: 'Timer og minutter, for eksempel 18:00. Kan stå tomt.' }),
         end: fields.date({ label: 'Sluttdato', description: 'Bare for arrangementer over flere dager.' }),
@@ -129,7 +160,7 @@ export default config({
       format: { data: 'json' },
       columns: ['category', 'date'],
       schema: {
-        title: fields.slug({ name: { label: 'Tittel', validation: { isRequired: true } } }),
+        title: fields.slug({ name: { label: 'Tittel', validation: { isRequired: true } }, slug: address('tittelen') }),
         category: fields.select({
           label: 'Kategori',
           options: klient.resources.categories.map((k) => ({ label: k.title, value: k.key })),
@@ -159,7 +190,7 @@ export default config({
       format: { data: 'json' },
       columns: ['role', 'order'],
       schema: {
-        name: fields.slug({ name: { label: 'Navn', validation: { isRequired: true } } }),
+        name: fields.slug({ name: { label: 'Navn', validation: { isRequired: true } }, slug: address('navnet') }),
         role: fields.text({ label: 'Rolle', validation: { isRequired: true } }),
         photo: fields.object(
           {
