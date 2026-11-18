@@ -1,4 +1,5 @@
 import { brief } from './brief.no.ts';
+import { klient } from './klient.no.ts';
 
 /**
  * Everything the site says that is not the brief: navigation labels, buttons, form and
@@ -70,27 +71,29 @@ export const site = {
     legalLabel: 'Juridisk',
     orgnrLabel: 'Organisasjonsnummer',
     emailLabel: 'E-post',
+    phoneLabel: 'Telefon',
+    addressLabel: 'Adresse',
   },
-  /** What the foundation has not supplied yet. Bracketed on purpose: the build reports them. */
+  /**
+   * The foundation's contact details, as the client's document gives them (D8, 2026-11-18).
+   * The address is a post box, so it is a place to write to, not a place to stand: the
+   * Kontakt page's map gets no pin. The client gave no opening hours and no directions, and
+   * asked for the placeholders to go («Fjern testinnhold og plassholdertekster»), so those
+   * cards are gone. Facebook and Instagram are named in the document with their handles
+   * still to come («[brukernavn]»): they stay bracketed here, so the build reports them,
+   * and nothing shows them until they are real.
+   */
   contact: {
-    email: '[EPOST]',
-    orgnr: '[ORG.NR]',
-    /**
-     * The street and the postcode; the place is `site.place`. The Kontakt page's map
-     * (public/kart-1024.webp, kart-1536.webp) is stitched round a point, and the pin on it shows
-     * itself only once the street is real — today the point is Oslo sentrum (59.9138 N
-     * 10.7500 E), a stand-in for the place. When the address arrives: write it here, then
-     * `node scripts/dev/kart.mjs <lat> <lon>` so the map is round it.
-     */
-    address: { street: '[GATEADRESSE]', postcode: '[POSTNUMMER]' },
-    phone: '[TELEFON]',
-    hours: '[ÅPNINGSTIDER]',
-    transit: '[VEIEN DIT]',
-    /** Where to follow. A name stands as plain text while its address is bracketed, and becomes a link once it is real. */
+    name: klient.contact.name,
+    email: klient.contact.email,
+    orgnr: klient.contact.orgnr,
+    /** The two lines of the address: the post box, then the postcode and the place. */
+    address: [klient.contact.postbox, klient.contact.postcode],
+    phone: klient.contact.phone,
+    /** Where to follow. Shown only once a handle is real. */
     follow: [
       { name: 'Instagram', href: '[INSTAGRAM]' },
       { name: 'Facebook', href: '[FACEBOOK]' },
-      { name: 'LinkedIn', href: '[LINKEDIN]' },
     ],
   },
   support: {
@@ -202,8 +205,6 @@ export const site = {
       emailLabel: 'E-post',
       phoneLabel: 'Telefon',
       orgnrLabel: 'Organisasjonsnummer',
-      hoursLabel: 'Åpningstider',
-      transitLabel: 'Kollektivt',
       followLabel: 'Følg oss',
       /** The map is OpenStreetMap's; the credit is the licence's condition (ODbL), and links to it. The alt is rewritten with the map. */
       map: { alt: 'Kart over Oslo sentrum', credit: '© OpenStreetMap-bidragsytere', creditHref: 'https://www.openstreetmap.org/copyright' },

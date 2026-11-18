@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
-import { isPlaceholder } from '../lib/placeholder';
+import { klient } from '../content/klient.no';
 
 /**
  * The shell on every page: the header with the brief's nine items, the drawer on a phone,
@@ -165,18 +165,17 @@ test('the skip link is the first tab stop and lands on the content', async ({ pa
   expect(await page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName)).toMatch(/innhold|BODY|MAIN/);
 });
 
-test('the footer carries the logo reversed, the nine links, the red thread and the three facts', async ({ page }) => {
+test('the footer carries the logo reversed, the nine links and the client’s contact line, and no thread of the four areas', async ({ page }) => {
   await page.goto('/styringsdokumenter');
   const footer = page.getByRole('contentinfo');
   await expect(footer.locator('img').first()).toHaveAttribute('src', /\/brand\/iqra-logo-(on-navy|on-dark|white)\.svg/);
   await expect(footer.getByRole('navigation', { name: site.footer.navLabel }).getByRole('link')).toHaveText(NINE);
-  await expect(footer.locator('[data-thread]')).toContainText(brief.thread.name);
-  await expect(footer.locator('[data-thread]')).toContainText('Kunnskap');
-  await expect(footer.locator('[data-thread]')).toContainText('Samfunnsdeltakelse');
-  await expect(footer).toContainText(site.contact.orgnr);
-  await expect(footer).toContainText(site.contact.email);
-  await expect(footer.locator('a[href^="mailto:"]')).toHaveCount(isPlaceholder(site.contact.email) ? 0 : 1);
-  await expect(footer).toContainText(site.place);
+  await expect(footer.locator('[data-thread]')).toHaveCount(0);
+  await expect(footer).toContainText(klient.contact.name);
+  await expect(footer).toContainText(klient.contact.orgnr);
+  await expect(footer).toContainText(`${klient.contact.postbox}, ${klient.contact.postcode}`);
+  await expect(footer.locator('a[href="tel:+4794143585"]')).toHaveText(klient.contact.phone);
+  await expect(footer.locator(`a[href="mailto:${klient.contact.email}"]`)).toHaveText(klient.contact.email);
 });
 
 test('no page logs a console error', async ({ page }) => {
@@ -191,10 +190,3 @@ test('no page logs a console error', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('the thread’s four words each carry their area, in the home page’s order', async ({ page }) => {
-  await page.goto('/kontakt');
-  const words = page.getByRole('contentinfo').locator('[data-thread] [data-area]');
-  await expect(words).toHaveCount(4);
-  const order = ['kunnskap', 'samfunnsdeltakelse', 'dialog', 'moteplasser'];
-  await expect(words).toHaveText(order.map((k) => new RegExp(`^${brief.areas.find((a) => a.key === k)!.name}`)));
-});

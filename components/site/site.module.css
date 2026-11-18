@@ -4,7 +4,7 @@
  * direction's mark, the field made small — and Støtt oss a crimson pill. Under 900px the
  * menu is a drawer: a navy plate with the reversed logo at its top (the header itself
  * turns navy while it is open), light text, and Støtt oss as a crimson plate at its
- * foot. The footer is navy, and its red thread wears the four areas' colours.
+ * foot. The footer is navy.
  */
 
 .skip {
@@ -524,59 +524,13 @@
   text-underline-offset: 4px;
 }
 
-/*
- * The red thread: the name, then the four words, each in its area's colour — Kunnskap
- * light, Dialog turquoise, Møteplasser white, Samfunnsdeltakelse the lifted crimson —
- * and each full stop drawn as a dot in the same colour. The text underneath is the
- * brief's line, character for character.
- */
-.thread {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px 28px;
-  margin: 48px 0 0;
-  padding-top: 24px;
-  border-top: 1px solid color-mix(in srgb, var(--color-light) 18%, transparent);
-}
-
-.threadName {
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  font-size: var(--step--1);
-  color: var(--color-white);
-}
-
-.threadLine {
-  font-weight: 600;
-  font-size: var(--step--1);
-  letter-spacing: 0.02em;
-}
-
-.threadWord {
-  white-space: nowrap;
-}
-
-.stop {
-  font-size: 0;
-}
-
-.stop::before {
-  content: '';
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  margin-left: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  vertical-align: baseline;
-}
-
 .facts {
   display: flex;
   flex-wrap: wrap;
   gap: 16px 48px;
-  margin: 28px 0 0;
+  margin: 48px 0 0;
+  padding-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--color-light) 18%, transparent);
   font-size: var(--step--1);
   font-variant-numeric: tabular-nums;
 }

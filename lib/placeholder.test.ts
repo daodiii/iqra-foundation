@@ -11,10 +11,9 @@ describe('isPlaceholder', () => {
     expect(isPlaceholder('')).toBe(false);
   });
 
-  test('the site’s unsupplied contact values read as placeholders and its place does not', () => {
-    expect(isPlaceholder(site.contact.address.street)).toBe(true);
-    expect(isPlaceholder(site.contact.phone)).toBe(true);
+  test('the handles the client has not supplied read as placeholders, and the supplied facts do not', () => {
     for (const l of site.contact.follow) expect(isPlaceholder(l.href)).toBe(true);
+    for (const v of [site.contact.email, site.contact.phone, site.contact.orgnr, ...site.contact.address]) expect(isPlaceholder(v)).toBe(false);
     expect(isPlaceholder(site.place)).toBe(false);
   });
 });

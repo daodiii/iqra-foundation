@@ -63,7 +63,7 @@ describe('paymentPlaceholders', () => {
    */
   test('finds the payment details, and nothing that is merely unfinished', () => {
     const paths = paymentPlaceholders(site).map((p) => p.path);
-    expect(paths).toEqual(['contact.orgnr', 'support.account.value']);
+    expect(paths).toEqual(['support.account.value']);
     expect(paths).not.toContain('contact.email');
   });
 
@@ -86,26 +86,17 @@ describe('contentPlaceholders', () => {
   });
 
   /**
-   * What the site still lacks, exactly: the e-mail, the organisation number and the account
-   * number (the Vipps number arrived 2026-09-23), and what the Kontakt page asks for — the street and
-   * the postcode, the number, the hours, the way there, the three places to follow.
-   * Nothing else on the site is a stand-in — the collections ship empty and the prose is
-   * the brief's — so anything more here is a placeholder someone added and should
-   * account for.
+   * What the site still lacks, exactly: the account number (the Vipps number arrived
+   * 2026-09-23) and the Facebook and Instagram handles the client's document names but has
+   * not supplied (2026-11-18). The rest of the contact line came with the document.
+   * Nothing else on the site is a stand-in, so anything more here is a placeholder someone
+   * added and should account for.
    */
   test('the facts the foundation has not supplied are the only placeholders', () => {
     const paths = contentPlaceholders(site).map((p) => p.path).sort();
     expect(paths).toEqual([
-      'contact.address.postcode',
-      'contact.address.street',
-      'contact.email',
       'contact.follow[0].href',
       'contact.follow[1].href',
-      'contact.follow[2].href',
-      'contact.hours',
-      'contact.orgnr',
-      'contact.phone',
-      'contact.transit',
       'support.account.value',
     ]);
   });

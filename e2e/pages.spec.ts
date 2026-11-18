@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
+import { klient } from '../content/klient.no';
 import { getEvents, getPeople, splitEvents, todayISO } from '../lib/content';
 import { isPlaceholder } from '../lib/placeholder';
 import { sentences } from '../lib/text';
@@ -239,24 +240,23 @@ test('a long one-word title breaks at its joint only where the screen is too nar
   }
 });
 
-test('kontakt: seven cards in reading order — the map with the address on it, the address, the e-mail, the form under «Kontakt oss», the number, the hours, the way there — every value bracketed but the place, the form drawn, and no pin on a stand-in street', async ({ page }) => {
+test('kontakt: five cards in reading order — the map with the address on it, the address, the e-mail, the form under «Kontakt oss», the number — the client’s details, no placeholder, the form drawn, and no pin on a post box', async ({ page }) => {
   await page.goto('/kontakt');
   await expect(page).toHaveTitle(T(site.pages.contact.title));
   const t = site.pages.contact;
   const main = page.getByRole('main');
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
-  await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.addressLabel, t.emailLabel, t.form.title, t.phoneLabel, t.hoursLabel, t.transitLabel]);
+  await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.addressLabel, t.emailLabel, t.form.title, t.phoneLabel]);
   await expect(main.getByRole('heading', { level: 2, name: t.form.title })).toBeVisible();
-  expect(await main.locator('[data-card]').evaluateAll((els) => els.map((e) => e.getAttribute('data-card')))).toEqual(['kart', 'adresse', 'epost', 'skjema', 'telefon', 'tider', 'vei']);
-  // A link once the value is real; the text it is while it is bracketed — never a link that goes nowhere.
-  await expect(main).toContainText(site.contact.email);
-  await expect(main).toContainText(site.contact.phone);
-  await expect(main.locator('a[href^="mailto:"]')).toHaveCount(isPlaceholder(site.contact.email) ? 0 : 1);
-  await expect(main.locator('a[href^="tel:"]')).toHaveCount(isPlaceholder(site.contact.phone) ? 0 : 1);
-  await expect(main).toContainText(site.contact.address.street);
-  await expect(main).toContainText(`${site.contact.address.postcode} ${site.place}`);
-  await expect(main).toContainText(site.contact.orgnr);
-  // the map at both widths and served, its credit a link to the licence; the dot only once the street is real
+  expect(await main.locator('[data-card]').evaluateAll((els) => els.map((e) => e.getAttribute('data-card')))).toEqual(['kart', 'adresse', 'epost', 'skjema', 'telefon']);
+  // The client's details (D8, 2026-11-18): the e-mail and the number are links.
+  await expect(main.locator(`a[href="mailto:${klient.contact.email}"]`)).toHaveCount(1);
+  await expect(main.locator('a[href="tel:+4794143585"]')).toHaveCount(1);
+  await expect(main).toContainText(klient.contact.postbox);
+  await expect(main).toContainText(klient.contact.postcode);
+  await expect(main).toContainText(klient.contact.orgnr);
+  await expect(main).not.toContainText(/\[[^\]]+\]/);
+  // the map at both widths and served, its credit a link to the licence; no pin, since a post box is not a place
   await expect(main.getByRole('img', { name: t.map.alt })).toHaveAttribute('srcset', '/kart-1024.webp 1024w, /kart-1536.webp 1536w');
   for (const file of ['/kart-1024.webp', '/kart-1536.webp']) {
     const res = await page.request.get(file);
@@ -264,11 +264,11 @@ test('kontakt: seven cards in reading order — the map with the address on it, 
     expect(res.headers()['content-type']).toContain('image/webp');
   }
   await expect(main.getByRole('link', { name: t.map.credit })).toHaveAttribute('href', t.map.creditHref);
-  await expect(main.locator('[data-pin]')).toHaveCount(isPlaceholder(site.contact.address.street) ? 0 : 1);
-  // where to follow is named, and links nowhere while bracketed
+  await expect(main.locator('[data-pin]')).toHaveCount(0);
+  // where to follow appears only once a handle is real
   for (const l of site.contact.follow) {
-    await expect(main.getByText(l.name, { exact: true })).toBeVisible();
-    if (isPlaceholder(l.href)) await expect(main.getByRole('link', { name: l.name })).toHaveCount(0);
+    if (isPlaceholder(l.href)) await expect(main.getByText(l.name, { exact: true })).toHaveCount(0);
+    else await expect(main.getByRole('link', { name: l.name })).toHaveAttribute('href', l.href);
   }
   // the form is a drawing: its five fields as text, nothing to fill in, hidden from a reader, the honest line under it
   await expect(main.locator('form, input, textarea, button, select')).toHaveCount(0);

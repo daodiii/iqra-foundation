@@ -1,9 +1,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { areas } from '@/components/home/areas';
 import { brief } from '@/content/brief.no';
+import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
-import { isPlaceholder } from '@/lib/placeholder';
 import { Footer } from './Footer';
 import { Header } from './Header';
 
@@ -87,30 +86,23 @@ describe('the footer', () => {
     const nav = screen.getByRole('navigation', { name: site.footer.navLabel });
     expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(site.links.map((n) => n.label));
     expect(site.links.map((n) => n.label).sort()).toEqual([...brief.menu].sort());
-    expect(screen.getByText(site.contact.orgnr)).toBeInTheDocument();
-    const mail = screen.getByText(site.contact.email).closest('a');
-    if (isPlaceholder(site.contact.email)) expect(mail).toBeNull();
-    else expect(mail).toHaveAttribute('href', `mailto:${site.contact.email}`);
-    expect(screen.getByText(site.place)).toBeInTheDocument();
+    // The client's contact line (D8): the name with the org.nr, the post box, the number and the e-mail.
+    expect(screen.getByText(klient.contact.name)).toBeInTheDocument();
+    expect(screen.getByText(`${site.footer.orgnrLabel} ${klient.contact.orgnr}`)).toBeInTheDocument();
+    expect(screen.getByText(`${klient.contact.postbox}, ${klient.contact.postcode}`)).toBeInTheDocument();
+    expect(screen.getByText(klient.contact.phone).closest('a')).toHaveAttribute('href', 'tel:+4794143585');
+    expect(screen.getByText(klient.contact.email).closest('a')).toHaveAttribute('href', `mailto:${klient.contact.email}`);
+  });
+
+  test('the four areas’ red thread is gone: the client replaced the four areas', () => {
+    const { container } = render(<Footer />);
+    expect(container.querySelector('[data-thread]')).toBeNull();
+    expect(container.textContent).not.toContain('Samfunnsdeltakelse');
   });
 
   test('Personvern and Vilkår stand under the facts, in a nav of their own: the nine stay the nine', () => {
     render(<Footer />);
     const legal = screen.getByRole('navigation', { name: site.footer.legalLabel });
     expect(within(legal).getAllByRole('link').map((l) => [l.textContent, l.getAttribute('href')])).toEqual(site.legal.map((l) => [l.label, l.href]));
-  });
-
-  test('the red thread reads the brief’s name and its four words in the home page’s order, each word in its area’s colour', () => {
-    const { container } = render(<Footer />);
-    const thread = container.querySelector('[data-thread]')!;
-    expect(thread.textContent).toBe(brief.thread.name + areas.map((a) => `${a.name}.`).join(' '));
-    // the same four words as the brief's line, only reordered
-    expect(areas.map((a) => `${a.name}.`).sort()).toEqual(brief.thread.line.split(' ').sort());
-    const words = [...thread.querySelectorAll<HTMLElement>('[data-area]')];
-    expect(words.map((w) => w.dataset.area)).toEqual(areas.map((a) => a.key));
-    words.forEach((w, i) => {
-      expect(w.style.color).toBe(`var(${areas[i].onNavy})`);
-      expect(w.textContent).toBe(`${areas[i].name}.`);
-    });
   });
 });

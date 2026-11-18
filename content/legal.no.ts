@@ -17,7 +17,7 @@ type Section = { id: string; heading: string; paragraphs: readonly string[]; lis
 type Legal = { title: string; description: string; lede: string; sections: readonly Section[]; updated: string };
 
 const c = site.contact;
-const who = `Iqra Foundation, organisasjonsnummer ${c.orgnr}, ${c.address.street}, ${c.address.postcode} ${site.place}. E-post: ${c.email}.`;
+const who = `${c.name}, organisasjonsnummer ${c.orgnr}, ${c.address.join(', ')}. E-post: ${c.email}.`;
 
 export const privacy: Legal = {
   title: 'Personvern',

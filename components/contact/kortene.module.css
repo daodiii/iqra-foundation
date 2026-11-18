@@ -23,7 +23,7 @@
   grid-template-areas:
     'kart kart adresse skjema'
     'kart kart epost skjema'
-    'telefon tider vei skjema';
+    'telefon telefon telefon skjema';
   gap: 14px;
 }
 
@@ -61,8 +61,6 @@
 .card[data-card='epost'] { --i: 2; grid-area: epost; }
 .card[data-card='skjema'] { --i: 3; grid-area: skjema; }
 .card[data-card='telefon'] { --i: 4; grid-area: telefon; }
-.card[data-card='tider'] { --i: 5; grid-area: tider; }
-.card[data-card='vei'] { --i: 6; grid-area: vei; }
 
 .cardLabel {
   font: 500 13px/1 var(--font-sans);
@@ -74,6 +72,13 @@
   font: 600 clamp(20px, 1.7vw, 26px) / 1.25 var(--font-sans);
   letter-spacing: var(--tracking-tight);
   color: var(--color-navy);
+  /* The e-mail address is one long word: on a 320 phone it breaks rather than widening the page. */
+  overflow-wrap: anywhere;
+}
+
+/* The e-mail is the longest value, and one word: a step smaller, so its name fits the card whole. */
+.mail {
+  font-size: clamp(16px, 1.25vw, 20px);
 }
 
 .cardValue a {
@@ -327,8 +332,6 @@
       'adresse'
       'epost'
       'telefon'
-      'tider'
-      'vei'
       'skjema';
     gap: 12px;
   }
