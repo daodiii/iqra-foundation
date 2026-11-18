@@ -215,18 +215,26 @@ test('kontakt: five cards in reading order — the map with the address on it, t
   await expect(main.getByText(t.form.notice, { exact: true })).toBeVisible();
 });
 
-test('støtt oss: the question, then the three ways in the owner’s order — the account, Vipps, AvtaleGiro — the Vipps number real, the account bracketed, and one way out to the agreement', async ({ page }) => {
+test('støtt oss: the client’s text in their order, the ways to give under «Gave» — Vipps real, no bracketed account — and one way out to the agreement', async ({ page }) => {
+  const t = klient.support;
   await page.goto('/stott-oss');
   await expect(page).toHaveTitle(T(site.pages.support.title));
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { level: 1 })).toHaveText(site.pages.support.question);
-  await expect(main.getByRole('heading', { level: 2 })).toHaveText([site.support.ways.account, site.support.ways.vipps, site.support.ways.avtale]);
+  await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
+  await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.uses.title, t.ways.title]);
+  await expect(main.getByRole('heading', { level: 3 })).toHaveText(t.ways.items.map((w) => w.title));
   const text = await main.innerText();
-  expect(text.indexOf(site.support.account.value)).toBeGreaterThan(-1);
-  expect(text.indexOf(site.support.account.value)).toBeLessThan(text.indexOf(site.support.vipps.value));
-  expect(text.indexOf(site.support.vipps.value)).toBeLessThan(text.indexOf(site.support.avtale.button));
+  // the client's sentences, in their order
+  const order = [t.intro, t.uses.lead, ...t.uses.points, t.uses.close, ...t.ways.items.map((w) => w.text), t.close].map((s) => text.indexOf(s));
+  expect(order.every((i) => i > -1), `missing: ${order.join(',')}`).toBe(true);
+  expect([...order].sort((x, y) => x - y)).toEqual(order);
+  // Vipps and AvtaleGiro hang between «Gave» and «Samarbeid og partnerskap»
+  const vipps = text.indexOf(site.support.vipps.value);
+  expect(vipps).toBeGreaterThan(text.indexOf(t.ways.items[0].text));
+  expect(vipps).toBeLessThan(text.indexOf(site.support.avtale.button));
+  expect(text.indexOf(site.support.avtale.button)).toBeLessThan(text.indexOf(t.ways.items[1].text));
+  expect(text).not.toMatch(/\[[^\]]*\]/);
   await expect(main.locator('form, input, button')).toHaveCount(0);
-  // AvtaleGiro's one way out: the foundation's own agreement, at its provider
   const avtale = main.getByRole('link', { name: site.support.avtale.button });
   await expect(avtale).toHaveAttribute('href', site.support.avtale.href);
   await expect(main.getByRole('link')).toHaveCount(1);

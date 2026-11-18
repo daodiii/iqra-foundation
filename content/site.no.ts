@@ -255,9 +255,7 @@ export const site = {
     support: {
       label: klient.menu.support,
       title: 'Støtt oss',
-      description: brief.home.paragraph,
-      /** The page's heading, the owner's own words (2026-09-21); the title above stays the tab's and the menu's. */
-      question: 'Vil du støtte oss?',
+      description: klient.support.intro,
     },
     notFound: {
       title: 'Siden finnes ikke',
