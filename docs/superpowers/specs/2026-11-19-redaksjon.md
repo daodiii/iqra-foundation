@@ -1,6 +1,11 @@
 # Spec: Redaksjon, the foundation's own editor
 
-Status: draft, waiting for the owner's approval (2026-11-19).
+Status: **approved by the owner, 2026-11-19**, with the three recommended choices:
+- **Clerk** for login (Q1).
+- **Vercel Blob** for PDFs and videos (Q2).
+- **A fine-grained GitHub token** for saving (Q3).
+
+The plan is in `tasks/plan.md`.
 
 ## Objective
 
@@ -189,7 +194,7 @@ export function missing(n: Nyhet): string[] {
 8. The first screen of the writing page is usable within 2 s on the owner's laptop.
 9. Every unit and e2e test passes, and `tsc` and the linter are clean.
 
-## Open questions (the owner's setup choices)
+## Setup choices (answered 2026-11-19: Clerk, Vercel Blob, fine-grained token; Q4 at setup)
 
 - **Q1 · Login service.** The foundation has no own email domain (the site's address is
   `iqrafoundation25@gmail.com`). A mail service like Resend can then only send to the account
