@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { LOGO_ON_NAVY_CRIMSON } from '@/components/site/Logo';
-import { brief } from '@/content/brief.no';
+import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
 import { Hero } from './Hero';
 
@@ -33,15 +33,15 @@ const header = () => {
 };
 
 describe('Hero', () => {
-  test('the logo is the heading: the one h1 holds the reversed logo with the crimson accents, named for the logo, and the brief’s headline is not on the page; the paragraph is the brief’s; the two buttons go where the brief says', () => {
+  test('the logo is the heading: the one h1 holds the reversed logo with the crimson accents, named for the logo; under it the client’s headline, their two paragraphs and their two buttons', () => {
     render(<Hero />);
     const h1 = screen.getByRole('heading', { level: 1 });
     expect(h1).toHaveAccessibleName(site.logoAlt);
     expect(h1.querySelector('img')).toHaveAttribute('src', LOGO_ON_NAVY_CRIMSON);
-    expect(screen.queryByText(brief.home.headline)).toBeNull();
-    expect(screen.getByText(brief.home.paragraph)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: site.cta.work.label })).toHaveAttribute('href', '/vart-arbeid');
-    expect(screen.getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', '/stott-oss');
+    expect(screen.getByText(klient.home.headline)).toBeInTheDocument();
+    for (const p of klient.home.paragraphs) expect(screen.getByText(p)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: klient.home.buttons.about })).toHaveAttribute('href', '/om-oss');
+    expect(screen.getByRole('link', { name: klient.home.buttons.events })).toHaveAttribute('href', '/aktuelt/arrangementer');
   });
 
   test('a navy plate under the header, named by the part of the heading that moves: the header turns navy over it and watches #hovedtekst to know when the name has landed on its logo', () => {
@@ -121,6 +121,6 @@ describe('Hero', () => {
     });
     expect(container.querySelector('section')).not.toHaveAttribute('data-in');
     expect((document.getElementById('hovedtekst')!.firstElementChild as HTMLElement).style.getPropertyValue('--gx')).toBe('');
-    expect(screen.getByText(brief.home.paragraph)).toBeInTheDocument();
+    expect(screen.getByText(klient.home.paragraphs[0])).toBeInTheDocument();
   });
 });

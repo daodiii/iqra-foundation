@@ -7,7 +7,8 @@ import { site } from '@/content/site.no';
 import styles from './site.module.css';
 
 /**
- * The menu: the nine items of the brief, one click away on every page.
+ * The menu: the client's six items (M1, 2026-11-18), Om oss and Aktuelt with their pages under
+ * them, one click away on every page.
  *
  * On a wide screen they are a row; on a phone they are behind one button, in a drawer that
  * behaves like a dialog — focus stays inside it, Escape closes it, the page behind does not
@@ -18,11 +19,10 @@ import styles from './site.module.css';
  * Which item is the current page is read from the URL; Støtt oss is a button in both
  * layouts, as the brief asks («bør være en tydelig knapp»).
  *
- * Styringsdokumenter stands under Ressurser (the owner, 2026-10-09). In the row it is a small
- * plate that drops from Ressurser when Ressurser is pointed at or tabbed to; Escape puts it
- * away again until the pointer or the focus leaves. In the drawer it is a line set in under
- * Ressurser, always there. On a wide screen without a pointer that can hover it stands in the
- * row beside Ressurser, as before, so a touch never has to find it.
+ * What stands under Om oss and Aktuelt is, in the row, a small plate that drops when the item
+ * is pointed at or tabbed to; Escape puts it away again until the pointer or the focus leaves.
+ * In the drawer it is a line set in under its item, always there. On a wide screen without a
+ * pointer that can hover it stands in the row beside its item, so a touch never has to find it.
  */
 export function Nav() {
   const pathname = usePathname();
@@ -122,7 +122,8 @@ export function Nav() {
                     href={item.href}
                     prefetch={false}
                     className={styles.link}
-                    aria-current={current(item.href) ? 'page' : undefined}
+                    // Om oss and «Om Iqra Foundation» are one page: the item under it is the one marked.
+                    aria-current={current(item.href) && !under.some((c) => current(c.href)) ? 'page' : undefined}
                     data-branch={under.some((c) => current(c.href)) ? '' : undefined}
                     onClick={() => setOpen(false)}
                   >

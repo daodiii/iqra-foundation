@@ -71,7 +71,12 @@ const nextConfig: NextConfig = {
    * 2026-11-18), not a page of its own; the old address lands on it.
    */
   async redirects() {
-    return [{ source: '/styringsdokumenter', destination: '/ressurser#styringsdokumenter', permanent: true }];
+    return [
+      { source: '/styringsdokumenter', destination: '/ressurser#styringsdokumenter', permanent: true },
+      // News and events are one page now, Aktuelt (the client's message, point 3).
+      { source: '/arrangementer', destination: '/aktuelt/arrangementer', permanent: true },
+      { source: '/nyheter', destination: '/aktuelt/nyheter', permanent: true },
+    ];
   },
   async headers() {
     return [

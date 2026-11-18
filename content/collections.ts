@@ -15,6 +15,19 @@ export const COLLECTIONS = {
       image: { directory: 'public/media/arrangementer', publicPath: '/media/arrangementer/' },
     },
   },
+  /**
+   * Nyheter: one folder per item, `<slug>/index.json` for the fields and `<slug>/body.mdoc` for
+   * the article text, as Keystatic writes a collection with a rich-text field. An editor's
+   * pictures go under `/opplastet`, not `/media`, which `next.config.ts` serves as immutable.
+   */
+  nyheter: {
+    dir: 'content/nyheter',
+    folder: 'nyheter',
+    files: {
+      image: { directory: 'public/opplastet/nyheter', publicPath: '/opplastet/nyheter/' },
+      body: { directory: 'public/opplastet/nyheter', publicPath: '/opplastet/nyheter/' },
+    },
+  },
   ressurser: {
     dir: 'content/ressurser',
     folder: 'ressurser',
