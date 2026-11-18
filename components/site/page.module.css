@@ -247,3 +247,24 @@
 .buttonSecondary:hover {
   background: var(--color-light);
 }
+
+/* Støtt oss: one way to give under «Slik kan du bidra», its name and the client's line. */
+.way {
+  margin-top: 28px;
+}
+
+.way h3 {
+  font-size: var(--step-2);
+}
+
+.way > p {
+  margin-top: 8px;
+}
+
+/* A page's last line, the client's own, in a section of its own and as large as the lede. */
+.section .close {
+  margin-top: 0;
+  font-size: var(--step-1);
+  line-height: 1.5;
+  color: var(--color-navy);
+}
