@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
-import { brief } from '@/content/brief.no';
+import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
 import { LOGO_ON_NAVY_CRIMSON, LOGO_RATIO } from '@/components/site/Logo';
 
@@ -382,11 +382,15 @@ export function Hero() {
           </span>
         </span>
       </h1>
+      {/* The client's main text for the front page (D1, 2026-11-18): the headline, two paragraphs, two buttons. */}
       <div className={styles.copy}>
-        <p className={styles.lede}>{brief.home.paragraph}</p>
+        <p className={styles.headline}>{klient.home.headline}</p>
+        {klient.home.paragraphs.map((p) => (
+          <p key={p.slice(0, 24)} className={styles.lede}>{p}</p>
+        ))}
         <p className={styles.buttons}>
-          <Link href={site.cta.work.href} prefetch={false} className={styles.work}>{site.cta.work.label}</Link>
-          <Link href={site.cta.support.href} prefetch={false} className={styles.support}>{site.cta.support.label}</Link>
+          <Link href={site.cta.about.href} prefetch={false} className={styles.work}>{site.cta.about.label}</Link>
+          <Link href={site.cta.events.href} prefetch={false} className={styles.events}>{site.cta.events.label}</Link>
         </p>
       </div>
     </section>

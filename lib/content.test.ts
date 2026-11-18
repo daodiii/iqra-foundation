@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { getDocuments, getEvents, getPeople, getResources, splitEvents, todayISO } from './content';
+import { getEvents, getNews, getPeople, getResources, splitEvents, todayISO } from './content';
 
 /*
  * The readers against a fixture directory: what a well-formed record becomes, what a
@@ -36,7 +36,7 @@ describe('arrangementer', () => {
   test('a record becomes an event, the slug from the file name, optional fields null', () => {
     write('apen-kveld.json', { title: 'Åpen kveld', start: '2027-01-20', place: 'Oslo', text: 'Tekst.' });
     expect(getEvents(dir)).toEqual([
-      { slug: 'apen-kveld', title: 'Åpen kveld', start: '2027-01-20', time: null, end: null, place: 'Oslo', text: 'Tekst.', link: null, image: null, area: null },
+      { slug: 'apen-kveld', title: 'Åpen kveld', start: '2027-01-20', time: null, end: null, place: 'Oslo', text: 'Tekst.', link: null, program: null, report: null, recording: null, image: null, area: null },
     ]);
   });
   test('an area is carried when it is one of the four, null when absent or empty, refused otherwise', () => {
@@ -83,7 +83,7 @@ describe('arrangementer', () => {
 
 describe('splitEvents', () => {
   const ev = (title: string, start: string, end: string | null = null) =>
-    ({ slug: title, title, start, time: null, end, place: 'O', text: 'T', link: null, image: null, area: null });
+    ({ slug: title, title, start, time: null, end, place: 'O', text: 'T', link: null, program: null, report: null, recording: null, image: null, area: null });
   test('kommende from today on, tidligere before it, the past newest first', () => {
     // In date order, as getEvents hands them over.
     const { upcoming, past } = splitEvents([ev('older', '2026-08-01'), ev('gone', '2026-09-01'), ev('today', '2026-09-15'), ev('soon', '2026-10-01')], '2026-09-15');
@@ -96,46 +96,48 @@ describe('splitEvents', () => {
   });
 });
 
-describe('ressurser', () => {
-  test('a resource needs a file or a link, and the file gets its public path', () => {
-    write('r.json', { title: 'Rapport', kind: 'rapport', date: '2026-05-01', summary: 'S', file: 'rapport.pdf' });
-    expect(getResources(dir)[0]).toMatchObject({ kind: 'rapport', file: '/files/ressurser/rapport.pdf', url: null, area: null });
-    write('r.json', { title: 'Rapport', kind: 'rapport', date: '2026-05-01', summary: 'S' });
-    expect(() => getResources(dir)).toThrow(/needs either «file» or «url»/);
+describe('nyheter', () => {
+  const post = (slug: string, record: unknown, body?: string) => {
+    mkdirSync(path.join(dir, slug), { recursive: true });
+    writeFileSync(path.join(dir, slug, 'index.json'), JSON.stringify(record), 'utf8');
+    if (body !== undefined) writeFileSync(path.join(dir, slug, 'body.mdoc'), body, 'utf8');
+  };
+  test('a news item is a folder: headline, date, ingress, picture and article text; only ticked «Publiser» is read; newest first', () => {
+    post('a', { title: 'Første', date: '2026-10-01', summary: 'Ingress A', publish: true, image: { discriminant: true, value: { src: 'a.jpg', alt: 'Et bilde' } } }, 'Artikkelen.\n');
+    post('b', { title: 'Andre', date: '2026-11-01', summary: 'Ingress B', publish: true, image: { discriminant: false } });
+    post('c', { title: 'Utkast', date: '2026-11-10', summary: 'S', publish: false }, 'Ikke publisert.');
+    expect(getNews(dir)).toEqual([
+      { slug: 'b', title: 'Andre', date: '2026-11-01', summary: 'Ingress B', image: null, body: null },
+      { slug: 'a', title: 'Første', date: '2026-10-01', summary: 'Ingress A', image: { src: '/opplastet/nyheter/a.jpg', alt: 'Et bilde' }, body: 'Artikkelen.\n' },
+    ]);
   });
-  test('an area is carried when it is one of the four, null when absent or empty, refused otherwise', () => {
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: 'kunnskap' });
-    expect(getResources(dir)[0].area).toBe('kunnskap');
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: '' });
-    expect(getResources(dir)[0].area).toBeNull();
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y' });
-    expect(getResources(dir)[0].area).toBeNull();
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: 'sport' });
-    expect(() => getResources(dir)).toThrow(/«area» must be one of kunnskap, dialog, moteplasser, samfunnsdeltakelse/);
-  });
-  test('an unknown kind is refused', () => {
-    write('r.json', { title: 'X', kind: 'podkast', date: '2026-05-01', summary: 'S', url: 'https://example.no' });
-    expect(() => getResources(dir)).toThrow(/«kind» must be one of publikasjon, artikkel/);
-  });
-  test('newest first', () => {
-    write('a.json', { title: 'A', kind: 'artikkel', date: '2026-01-01', summary: 'S', url: 'https://a.no' });
-    write('b.json', { title: 'B', kind: 'artikkel', date: '2026-06-01', summary: 'S', url: 'https://b.no' });
-    expect(getResources(dir).map((r) => r.title)).toEqual(['B', 'A']);
+  test('a published item without a headline, a date or an ingress is refused, with its file', () => {
+    post('x', { title: 'X', date: '2026-10-01', publish: true });
+    expect(() => getNews(dir)).toThrow(/content\/nyheter\/x\/index.json: «summary»/);
   });
 });
 
-describe('styringsdokumenter', () => {
-  test('a document has a year and a file; newest year first, then by title', () => {
-    write('v.json', { title: 'Vedtekter', kind: 'vedtekter', year: 2025, file: 'vedtekter.pdf' });
-    write('r.json', { title: 'Årsrapport', kind: 'arsrapport', year: 2026, file: 'aarsrapport-2026.pdf' });
-    expect(getDocuments(dir).map((d) => [d.title, d.file])).toEqual([
-      ['Årsrapport', '/files/styringsdokumenter/aarsrapport-2026.pdf'],
-      ['Vedtekter', '/files/styringsdokumenter/vedtekter.pdf'],
-    ]);
+describe('ressurser', () => {
+  test('a resource needs a file, a video or a link, and an uploaded one gets its public path', () => {
+    write('r.json', { title: 'Rapport', category: 'publikasjoner', date: '2026-05-01', summary: 'S', file: 'rapport.pdf' });
+    expect(getResources(dir)[0]).toMatchObject({ category: 'publikasjoner', file: '/files/ressurser/rapport.pdf', video: null, url: null });
+    write('r.json', { title: 'Foredrag', category: 'videoer', date: '2026-05-01', summary: 'S', video: 'foredrag.mp4' });
+    expect(getResources(dir)[0]).toMatchObject({ category: 'videoer', file: null, video: '/files/ressurser/foredrag.mp4', url: null });
+    write('r.json', { title: 'Rapport', category: 'publikasjoner', date: '2026-05-01', summary: 'S' });
+    expect(() => getResources(dir)).toThrow(/needs a «file», a «video» or a «url»/);
   });
-  test('a year that is not a whole number is refused', () => {
-    write('v.json', { title: 'Vedtekter', kind: 'vedtekter', year: '2025', file: 'v.pdf' });
-    expect(() => getDocuments(dir)).toThrow(/«year» must be a whole number/);
+  test('the category is one of the client’s four, and nothing else', () => {
+    for (const category of ['publikasjoner', 'artikler', 'videoer', 'styringsdokumenter']) {
+      write('r.json', { title: 'X', category, date: '2026-05-01', summary: 'S', url: 'https://example.no' });
+      expect(getResources(dir)[0].category).toBe(category);
+    }
+    write('r.json', { title: 'X', category: 'podkast', date: '2026-05-01', summary: 'S', url: 'https://example.no' });
+    expect(() => getResources(dir)).toThrow(/«category» must be one of publikasjoner, artikler, videoer, styringsdokumenter/);
+  });
+  test('newest first', () => {
+    write('a.json', { title: 'A', category: 'artikler', date: '2026-01-01', summary: 'S', url: 'https://a.no' });
+    write('b.json', { title: 'B', category: 'artikler', date: '2026-06-01', summary: 'S', url: 'https://b.no' });
+    expect(getResources(dir).map((r) => r.title)).toEqual(['B', 'A']);
   });
 });
 

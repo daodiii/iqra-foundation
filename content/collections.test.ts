@@ -19,15 +19,24 @@ describe.each(Object.keys(COLLECTIONS) as CollectionName[])('%s', (name) => {
   const c = config.collections![name] as unknown as { path: string; format: unknown; schema: Record<string, AssetField> };
 
   test('is a collection of JSON files in the directory the site reads', () => {
-    expect(c.path).toBe(`${COLLECTIONS[name].dir}/*`);
-    expect(c.format).toEqual({ data: 'json' });
+    // Nyheter is a folder per item, its article text beside the fields; the rest are one file each.
+    if (name === 'nyheter') {
+      expect(c.path).toBe(`${COLLECTIONS[name].dir}/*/`);
+      expect(c.format).toEqual({ data: 'json', contentField: 'body' });
+    } else {
+      expect(c.path).toBe(`${COLLECTIONS[name].dir}/*`);
+      expect(c.format).toEqual({ data: 'json' });
+    }
   });
 
   test('every upload field stores under the site’s directory and records the site’s public path', () => {
-    for (const [key, where] of Object.entries(COLLECTIONS[name].files)) {
+    // `body` is the article text's pictures, which Keystatic's rich-text field places itself.
+    for (const [key, where] of Object.entries(COLLECTIONS[name].files).filter(([k]) => k !== 'body')) {
       // A picture is an object of `src` (the file) and `alt`; a plain file is the field itself.
-      const field = c.schema[key];
-      const asset = field.fields ? field.fields.src : field;
+      const field = c.schema[key] as AssetField & { values?: { true?: AssetField } };
+      // A ticked-box picture (Keystatic's conditional) keeps its object under `values.true`.
+      const object = field.values?.true ?? field;
+      const asset = object.fields ? object.fields.src : object;
       expect(asset, `${name}.${key}`).toBeDefined();
       expect(asset.directory, `${name}.${key}.directory`).toBe(where.directory);
       // The field does not expose publicPath; what it writes into the record does.
