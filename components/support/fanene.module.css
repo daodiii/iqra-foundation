@@ -1,6 +1,6 @@
 /*
- * Støtt oss: the question across the top, and three banners — navy, white, burgundy —
- * hung from a rail under it, unrolled one after another as the page comes. `--fane-unroll` is
+ * Støtt oss, under «Gave»: the banners — navy, white, burgundy — hung from a rail, unrolled
+ * one after another as the page comes. `--fane-unroll` is
  * how far a banner has unrolled and `--rolled` whether its roll is still there; both are
  * registered so the keyframes can interpolate them. Each cloth sets one colour (`--fane`)
  * and its inks and its roll's shading follow from it.
@@ -18,51 +18,20 @@
   initial-value: 0;
 }
 
-/* The question, then the hall the banners hang in, to the foot of the screen. */
-.fanene {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  min-height: calc(100dvh - var(--header-h));
-  padding: 0 var(--margin) var(--gutter);
-  background: var(--color-white);
-}
-
-/* The owner's question, centred, rising out of its own line first. */
-.question {
-  margin: clamp(26px, 4.5vh, 48px) 0 clamp(20px, 3vh, 30px);
-  text-align: center;
-  font-size: clamp(28px, 3.2vw, 46px);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: var(--color-navy);
-  clip-path: inset(0 0 100% 0);
-  animation: rise 820ms var(--ease-out-expo) 80ms both;
-}
-
-@keyframes rise {
-  from {
-    clip-path: inset(0 0 100% 0);
-    transform: translateY(14px);
-  }
-
-  to {
-    clip-path: inset(0 0 -12px 0);
-    transform: none;
-  }
-}
-
 /* The rail the banners hang from: the header's hairline, across the hall. */
 .hall {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: stretch;
   gap: clamp(16px, 2vw, 32px);
+  margin-top: 24px;
   border-top: 1px solid var(--color-hairline);
 }
 
 /* A banner; as the roll reaches its foot it swings once and settles. */
 .hang {
-  width: min(30vw, 400px);
+  flex: 0 1 320px;
+  min-width: 0;
   transform-origin: 50% 0;
   animation: settle 1500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   animation-delay: calc(1530ms + var(--k) * 240ms);
@@ -160,7 +129,8 @@
   grid-template-rows: auto 1fr auto;
   gap: 24px;
   height: 100%;
-  padding: 36px 36px 34px;
+  min-height: 340px;
+  padding: 32px 32px 30px;
   border-radius: 0 0 var(--box-radius) var(--box-radius);
   background: var(--fane);
   box-shadow: var(--fane-line, none);
@@ -218,6 +188,11 @@
   display: block;
 }
 
+/* The page's running-text margins (page.module.css) stop at the banner: its rows are spaced by the grid's gap. */
+.hall .mid > p {
+  margin: 0;
+}
+
 .label {
   font: 500 14px/1.4 var(--font-sans);
   letter-spacing: var(--tracking-label);
@@ -260,14 +235,9 @@
 /* ----- reduced motion: everything stands unrolled ----- */
 
 @media (prefers-reduced-motion: reduce) {
-  .question,
   .hang,
   .banner {
     animation: none;
-  }
-
-  .question {
-    clip-path: none;
   }
 
   .banner {
@@ -280,21 +250,14 @@
 /* ----- a phone: the banners under each other, each with a plate's corners, since they hang from nothing there ----- */
 
 @media (max-width: 899px) {
-  .fanene {
-    min-height: 0;
-  }
-
-  .question {
-    margin: 22px 0 18px;
-    font-size: clamp(26px, 7.4vw, 32px);
-  }
-
   .hall {
     flex-direction: column;
     gap: 12px;
   }
 
+  /* Stacked, a banner is as tall as its face: the row's flex-basis would be a height here. */
   .hang {
+    flex: none;
     width: 100%;
   }
 

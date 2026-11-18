@@ -1,105 +1,64 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
-import { SEATS } from '@/components/home/People';
-import { brief } from '@/content/brief.no';
+import { describe, expect, test, vi } from 'vitest';
+import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
-import { getEvents, getPeople, splitEvents, todayISO } from '@/lib/content';
-import { sentences } from '@/lib/text';
+import type { Event, NewsItem } from '@/lib/content';
 import Home from './page';
 
+/* The real collections ship empty; here there are four news items and four coming events, so the front page has to pick three of each. */
+const news: NewsItem[] = [1, 2, 3, 4].map((n) => ({ slug: `n${n}`, title: `Nyhet ${n}`, date: `2026-11-0${n}`, summary: 'Ingress.', image: null, body: null }));
+const events: Event[] = [1, 2, 3, 4].map((n) => ({
+  slug: `e${n}`, title: `Arrangement ${n}`, start: `2099-01-0${n}`, time: null, end: null, place: 'Oslo', text: 'Om det.', link: null, program: null, report: null, recording: null, image: null, area: null,
+}));
+vi.mock('@/lib/content', async (orig) => ({ ...(await orig<typeof import('@/lib/content')>()), getNews: () => news, getEvents: () => events }));
+
+const h = klient.home;
+
 describe('Hjem', () => {
-  test('one h1, the brief’s; the four fields on one sea first, each a link to its section of Vårt arbeid; then Visjon and Misjon as a seal on navy', () => {
-    const { container } = render(<Home />);
+  test('one h1, the name; the client’s headline, two paragraphs and two buttons; then their sections in their order', () => {
+    render(<Home />);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-
-    const areas = screen.getByRole('region', { name: site.pages.home.areasLabel });
-    expect(areas.querySelectorAll('[data-material="water"]')).toHaveLength(1);
-    expect(areas.querySelectorAll('[data-page]')).toHaveLength(4);
-    for (const a of brief.areas) {
-      const link = screen.getByRole('link', { name: a.name });
-      expect(link).toHaveAttribute('href', `/vart-arbeid#${a.key}`);
-      expect(areas).toContainElement(link);
-      // the text as its two sentences: the statement and the reading (Sea.tsx)
-      for (const part of sentences(a.text)) expect(screen.getByText(part)).toBeInTheDocument();
-    }
-
-    for (const [id, label, text] of [['visjon', site.pages.home.visionLabel, brief.vision], ['misjon', site.pages.home.missionLabel, brief.mission]] as const) {
-      const section = container.querySelector(`section#${id}`) as HTMLElement;
-      const name = within(section).getByRole('heading', { level: 2, name: label });
-      expect(section).toHaveAttribute('aria-labelledby', name.id);
-      // The vision's headline is word by word (Words): match the section's text, not a text node.
-      expect(section).toHaveTextContent(text.headline);
-      expect(within(section).getByText(text.paragraph)).toBeInTheDocument();
-      expect(section.closest('[data-material]')).toHaveAttribute('data-material', 'flat');
-    }
-    // The sea comes before the seal.
-    const order = [...container.querySelectorAll('[data-fields], section#visjon')];
-    expect(order[0]).toHaveAttribute('data-fields');
-
-    // One water, and five flat plates in the page's order (elite study: every section a plate, the navy ramp's steps). No ink anywhere.
-    expect(container.querySelectorAll('[data-material="water"]')).toHaveLength(1);
-    const flats = container.querySelectorAll('[data-material="flat"]');
-    expect([...flats].map((f) => f.getAttribute('data-ground'))).toEqual(['navy', 'white', 'navy-lift', 'white', 'navy-deep']);
-    expect(container.querySelector('[data-material="ink"]')).toBeNull();
+    expect(screen.getByText(h.headline)).toBeInTheDocument();
+    for (const p of h.paragraphs) expect(screen.getByText(p)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: h.buttons.about })).toHaveAttribute('href', '/om-oss');
+    expect(screen.getByRole('link', { name: h.buttons.events })).toHaveAttribute('href', '/aktuelt/arrangementer');
+    expect(screen.getAllByRole('heading', { level: 2 }).map((e) => e.textContent)).toEqual([h.why.title, h.create.title, h.action.title, h.news.title, h.together.title]);
   });
 
-  test('then the rest of the site, in order: Om oss, Arrangementer, Menneskene bak, Kontakt — no labels, each title its one way on (no pill under it), the lists honest while empty and the next event when there is one', () => {
+  test('«Dette ønsker vi å skape» replaces the four boxes: the client’s intro and three areas, each with an icon; none of the four areas is left', () => {
     const { container } = render(<Home />);
-    const t = site.pages;
-    const ids = [...container.querySelectorAll('section[id]')].map((s) => s.id);
-    expect(ids.slice(-4)).toEqual(['om-oss', 'arrangementer', 'menneskene-bak', 'kontakt']);
-    expect(ids).not.toContain('ressurser');
+    const skape = container.querySelector('section#skape') as HTMLElement;
+    expect(skape).toHaveTextContent(h.create.intro);
+    const items = within(skape).getAllByRole('listitem');
+    expect(items).toHaveLength(3);
+    h.create.areas.forEach((a, i) => {
+      expect(items[i]).toHaveTextContent(a.title);
+      expect(items[i]).toHaveTextContent(a.text);
+      expect(items[i].querySelector('svg[data-ikon]')).not.toBeNull();
+    });
+    for (const old of ['Samfunnsdeltakelse', 'Visjon', 'Misjon']) expect(container.textContent).not.toContain(old);
+    expect(container.querySelector('[data-material="water"]')).toBeNull();
+  });
 
-    const about = container.querySelector('section#om-oss') as HTMLElement;
-    const aboutTitle = within(about).getByRole('heading', { level: 2, name: brief.about.title });
-    expect(about).toHaveAttribute('aria-labelledby', aboutTitle.id);
-    expect(aboutTitle).toHaveAttribute('data-title');
-    expect(about).toHaveTextContent(brief.about.paragraphs[0]);
-    expect(about).toHaveTextContent(brief.about.paragraphs[1]);
-    expect(about.querySelectorAll('[data-area]')).toHaveLength(4);
-    const hrefOf = (label: string) => site.links.find((n) => n.label === label)?.href;
-    expect(within(about).getAllByRole('link')).toHaveLength(1);
-    expect(within(aboutTitle).getByRole('link')).toHaveAttribute('href', hrefOf(t.about.label));
+  test('every other text of the client’s front page is there, word for word', () => {
+    const { container } = render(<Home />);
+    const text = container.textContent ?? '';
+    for (const s of [...h.why.paragraphs, ...h.action.items.flatMap((a) => [a.title, a.text]), h.news.intro, h.together.text]) expect(text).toContain(s);
+  });
 
-    const events = container.querySelector('section#arrangementer') as HTMLElement;
-    const eventsTitle = within(events).getByRole('heading', { level: 2, name: t.events.title });
-    expect(within(eventsTitle).getByRole('link')).toHaveAttribute('href', hrefOf(t.events.label));
-    expect(within(events).getAllByRole('link')).toHaveLength(1);
-    // The page renders the real collection: the next event as the statement while one is coming, the honest line while not.
-    const { upcoming } = splitEvents(getEvents(), todayISO());
-    if (upcoming.length) expect(events).toHaveTextContent(upcoming[0].title);
-    else expect(events).toHaveTextContent(t.events.emptyUpcoming);
-    expect(events.closest('[data-material]')).toHaveAttribute('data-material', 'flat');
+  test('Aktuelt: the three latest news and the three next events, and the way on to all of them', () => {
+    const { container } = render(<Home />);
+    const aktuelt = container.querySelector('section#aktuelt') as HTMLElement;
+    const titles = within(aktuelt).getAllByRole('heading', { level: 3 }).map((e) => e.textContent);
+    expect(titles).toEqual([site.pages.news.newsTitle, 'Nyhet 1', 'Nyhet 2', 'Nyhet 3', site.pages.news.upcoming, 'Arrangement 1', 'Arrangement 2', 'Arrangement 3']);
+    expect(within(aktuelt).getByRole('link', { name: h.news.all })).toHaveAttribute('href', '/aktuelt/nyheter');
+    expect(within(aktuelt).getByRole('link', { name: site.pages.home.allEvents })).toHaveAttribute('href', '/aktuelt/arrangementer');
+  });
 
-    const people = container.querySelector('section#menneskene-bak') as HTMLElement;
-    const peopleTitle = within(people).getByRole('heading', { level: 2, name: brief.people.title });
-    expect(people).toHaveAttribute('aria-labelledby', peopleTitle.id);
-    expect(people).toHaveTextContent(brief.people.paragraph);
-    // The page renders the real collection: the people as prints on the table while there are any, the honest line while not.
-    const seated = getPeople().slice(0, SEATS);
-    expect([...people.querySelectorAll('article h3')].map((h) => h.textContent)).toEqual(seated.map((p) => p.name));
-    if (!seated.length) expect(people).toHaveTextContent(t.people.empty);
-    expect(within(people).getAllByRole('link')).toHaveLength(1);
-    expect(within(peopleTitle).getByRole('link')).toHaveAttribute('href', hrefOf(t.people.label));
-
-    // The foot: the question as the heading, word by word, on our plate; the line and Kontakt, the only way on, on the sheet on yours; no numbers.
-    const contact = container.querySelector('section#kontakt') as HTMLElement;
-    const contactTitle = within(contact).getByRole('heading', { level: 2 });
-    expect(contact).toHaveAttribute('aria-labelledby', contactTitle.id);
-    expect(contactTitle).toHaveTextContent(t.home.contact.question);
-    expect(contact).toHaveTextContent(t.home.contact.line);
-    // the ending's two actions (elite study): Kontakt and Støtt oss
-    expect(within(contact).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/kontakt', '/stott-oss']);
-    expect(within(contact).getByRole('link', { name: site.cta.contact.label })).toHaveAttribute('href', '/kontakt');
-    expect(contact).not.toHaveTextContent(site.support.vipps.value);
-    // one deep navy plate holds the ending (elite study); the section is inside it
-    expect(contact.closest('[data-material="flat"]')).toHaveAttribute('data-ground', 'navy-deep');
-    expect(container.querySelector('section#stott-oss')).toBeNull();
-
-    // Nothing of the thread or its knots, no eyebrow labels.
-    expect(container.querySelector('canvas[data-thread-canvas]')).toBeNull();
-    expect(container.querySelectorAll('[data-knot], [data-knot-at]')).toHaveLength(0);
-    // Every section after the sea arrives: the white ones are arrivals themselves, the plates hold one.
-    expect(container.querySelectorAll('[data-arrive]').length).toBeGreaterThanOrEqual(5);
+  test('«Sammen kan vi gjøre en forskjell» and its two buttons', () => {
+    const { container } = render(<Home />);
+    const sammen = container.querySelector('section#sammen') as HTMLElement;
+    expect(within(sammen).getByRole('link', { name: h.together.buttons.partner })).toHaveAttribute('href', site.cta.partner.href);
+    expect(within(sammen).getByRole('link', { name: h.together.buttons.support })).toHaveAttribute('href', '/stott-oss');
   });
 });

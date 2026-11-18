@@ -71,10 +71,98 @@
 
 .section h2 {
   font-size: var(--step-3);
+  /* «Kunnskapsformidling og publikasjoner»: a long compound breaks (hyphenated where the browser can) rather than widening a 320 phone. */
+  hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 .section p {
   margin-top: 14px;
+}
+
+/* A list in running text: the client's points under a section, with ordinary bullets. */
+.points {
+  margin: 14px 0 0;
+  padding-left: 1.25em;
+  display: grid;
+  gap: 8px;
+  list-style: disc;
+}
+
+.points li::marker {
+  color: var(--color-crimson);
+}
+
+.section > p + p {
+  margin-top: 14px;
+}
+
+/* The library's categories as a row of links to their sections. */
+.jump ul {
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  font: 500 15px/1.4 var(--font-sans);
+}
+
+.jump a {
+  color: var(--color-navy);
+  text-underline-offset: 4px;
+}
+
+/* A video in the library plays in its card, as wide as the card. */
+.video {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  border-radius: var(--radius);
+  background: var(--color-navy);
+}
+
+/* Aktuelt's filter: Alle, Nyheter, Arrangementer as three links, the current one filled. */
+.filter ul {
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--color-navy);
+  border-radius: var(--radius-pill);
+  font: 500 15px/1 var(--font-sans);
+  color: var(--color-navy);
+  text-decoration: none;
+}
+
+.filter a[aria-current='page'] {
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+/* A labelled block inside an event: its programme or its write-up, kept as the editor wrote it. */
+.block {
+  margin-top: 12px;
+  white-space: pre-line;
+}
+
+.block strong {
+  display: block;
+  font: 600 14px/1.4 var(--font-sans);
+}
+
+.subhead {
+  margin-top: 28px;
+  font-size: 20px;
 }
 
 .empty {
@@ -158,4 +246,25 @@
 
 .buttonSecondary:hover {
   background: var(--color-light);
+}
+
+/* Støtt oss: one way to give under «Slik kan du bidra», its name and the client's line. */
+.way {
+  margin-top: 28px;
+}
+
+.way h3 {
+  font-size: var(--step-2);
+}
+
+.way > p {
+  margin-top: 8px;
+}
+
+/* A page's last line, the client's own, in a section of its own and as large as the lede. */
+.section .close {
+  margin-top: 0;
+  font-size: var(--step-1);
+  line-height: 1.5;
+  color: var(--color-navy);
 }
