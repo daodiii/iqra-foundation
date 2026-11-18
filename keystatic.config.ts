@@ -20,6 +20,31 @@ import { klient } from './content/klient.no';
 const github = process.env.KEYSTATIC_GITHUB_CLIENT_ID !== undefined;
 
 const c = COLLECTIONS;
+type Upload = { directory: string; publicPath: string };
+
+/**
+ * A picture's words, required (from PR 62). The post's own picture will not save without them.
+ * A picture in the article text asks for them in its «Image details» dialog (the pencil on the
+ * picture).
+ */
+const altText = () =>
+  fields.text({ label: 'Bildebeskrivelse', description: 'Hva bildet viser, for dem som ikke ser det.', validation: { isRequired: true } });
+
+/** A picture and its words, one field: ticked, the form will not save without both. */
+const picture = (where: Upload) =>
+  fields.conditional(fields.checkbox({ label: 'Bilde', description: 'Kryss av for å legge ved et bilde.' }), {
+    true: fields.object(
+      {
+        src: fields.image({ label: 'Bildefil', directory: where.directory, publicPath: where.publicPath, validation: { isRequired: true } }),
+        alt: altText(),
+      },
+      { label: 'Bildet' },
+    ),
+    false: fields.empty(),
+  });
+
+/** A picture's file name inside an article: unique, so a replaced picture never reuses an old name. */
+const uniqueName = (name: string) => `${Date.now().toString(36)}-${name.toLowerCase().replace(/[^a-z0-9.]+/g, '-')}`;
 
 export default config({
   storage: github
@@ -28,6 +53,45 @@ export default config({
   ui: { brand: { name: 'Iqra Foundation' } },
   locale: 'en-US',
   collections: {
+    /** Nyheter (M3): headline, ingress, picture, date and article text; saved as a draft until «Publiser» is ticked. */
+    nyheter: collection({
+      label: 'Nyheter',
+      slugField: 'title',
+      path: `${c.nyheter.dir}/*/`,
+      format: { data: 'json', contentField: 'body' },
+      columns: ['date', 'publish'],
+      schema: {
+        title: fields.slug({ name: { label: 'Overskrift', validation: { isRequired: true } } }),
+        date: fields.date({ label: 'Dato', validation: { isRequired: true } }),
+        summary: fields.text({ label: 'Ingress', description: 'Den korte teksten under overskriften, og på kortet.', multiline: true, validation: { isRequired: true } }),
+        image: picture(c.nyheter.files.image),
+        body: fields.markdoc({
+          label: 'Artikkeltekst',
+          description: 'Hele artikkelen. Mellomoverskrifter, fet og kursiv, lenker, lister, sitater og bilder.',
+          options: {
+            heading: [2, 3],
+            bold: true,
+            italic: true,
+            strikethrough: false,
+            code: false,
+            link: true,
+            blockquote: true,
+            orderedList: true,
+            unorderedList: true,
+            divider: true,
+            table: false,
+            codeBlock: false,
+            image: {
+              directory: c.nyheter.files.body.directory,
+              publicPath: c.nyheter.files.body.publicPath,
+              transformFilename: uniqueName,
+              schema: { alt: altText() },
+            },
+          },
+        }),
+        publish: fields.checkbox({ label: 'Publiser på nettsiden', description: 'Uten kryss er nyheten lagret, men vises ikke på nettsiden.', defaultValue: false }),
+      },
+    }),
     arrangementer: collection({
       label: 'Arrangementer',
       slugField: 'title',
@@ -40,20 +104,11 @@ export default config({
         time: fields.text({ label: 'Klokkeslett', description: 'Timer og minutter, for eksempel 18:00. Kan stå tomt.' }),
         end: fields.date({ label: 'Sluttdato', description: 'Bare for arrangementer over flere dager.' }),
         place: fields.text({ label: 'Sted', validation: { isRequired: true } }),
-        text: fields.text({ label: 'Tekst', multiline: true, validation: { isRequired: true } }),
-        area: fields.select({
-          label: 'Område',
-          description: 'Hvilket av de fire områdene dette hører til, om det hører til ett.',
-          options: [
-            { label: 'Ingen', value: '' },
-            { label: 'Kunnskap', value: 'kunnskap' },
-            { label: 'Dialog', value: 'dialog' },
-            { label: 'Møteplasser', value: 'moteplasser' },
-            { label: 'Samfunnsdeltakelse', value: 'samfunnsdeltakelse' },
-          ],
-          defaultValue: '',
-        }),
-        link: fields.url({ label: 'Lenke', description: 'Påmelding eller mer informasjon. Kan stå tomt.' }),
+        text: fields.text({ label: 'Beskrivelse', multiline: true, validation: { isRequired: true } }),
+        link: fields.url({ label: 'Påmelding', description: 'Lenke til påmelding eller mer informasjon. Kan stå tomt.' }),
+        program: fields.text({ label: 'Program', description: 'Programmet for arrangementet. Kan stå tomt.', multiline: true }),
+        report: fields.text({ label: 'Referat', description: 'Etter arrangementet: et referat som vises i arkivet. Kan stå tomt.', multiline: true }),
+        recording: fields.url({ label: 'Opptak', description: 'Etter arrangementet: lenke til opptak, vist i arkivet. Kan stå tomt.' }),
         image: fields.object(
           {
             src: fields.image({

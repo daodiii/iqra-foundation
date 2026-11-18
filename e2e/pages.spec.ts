@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
 import { klient } from '../content/klient.no';
-import { getEvents, getPeople, getResources, splitEvents, todayISO } from '../lib/content';
+import { getEvents, getNews, getPeople, getResources, splitEvents, todayISO } from '../lib/content';
 import { isPlaceholder } from '../lib/placeholder';
 import { sentences } from '../lib/text';
 import { groundAt, seaAreas } from '../components/home/tide';
@@ -180,16 +180,44 @@ test('om iqra foundation: the client’s text, section by section', async ({ pag
 });
 
 test.describe('the collections are honest while empty', () => {
-  test('arrangementer: kommende and tidligere, each with its own line while empty, each listing what is published', async ({ page }) => {
-    await page.goto('/arrangementer');
-    await expect(page).toHaveTitle(T(site.pages.events.title));
-    await expect(page.getByRole('heading', { name: site.pages.events.upcoming })).toBeVisible();
-    await expect(page.getByRole('heading', { name: site.pages.events.past })).toBeVisible();
+  test('aktuelt: the client’s intro and the filter Alle · Nyheter · Arrangementer, each its own address, the current one marked', async ({ page }) => {
+    const t = site.pages.news;
+    for (const [href, label] of [['/aktuelt', 'Alle'], ['/aktuelt/nyheter', 'Nyheter'], ['/aktuelt/arrangementer', 'Arrangementer']] as const) {
+      await page.goto(href);
+      await expect(page.locator('h1')).toHaveText(klient.news.title);
+      await expect(page.getByText(klient.news.intro, { exact: true })).toBeVisible();
+      const filter = page.getByRole('navigation', { name: t.filterLabel });
+      await expect(filter.getByRole('link')).toHaveText([klient.news.filter.all, klient.news.filter.news, klient.news.filter.events]);
+      await expect(filter.locator('[aria-current="page"]')).toHaveText(label);
+    }
+  });
+  test('aktuelt: news under Nyheter with the client’s text, events under Arrangementer with theirs, upcoming and past split by today, each listing what is published or its empty line', async ({ page }) => {
+    const t = site.pages.news;
+    const news = getNews();
     const { upcoming, past } = splitEvents(getEvents(), todayISO());
+    await page.goto('/aktuelt/nyheter');
+    await expect(page.getByText(klient.news.newsText, { exact: true })).toBeVisible();
+    await expect(page.getByText(klient.news.eventsText, { exact: true })).toHaveCount(0);
+    if (news.length) for (const n of news) await expect(page.getByRole('heading', { name: n.title })).toBeVisible();
+    else await expect(page.getByText(t.emptyNews, { exact: true })).toBeVisible();
+    await page.goto('/aktuelt/arrangementer');
+    await expect(page.getByText(klient.news.eventsText, { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: t.upcoming })).toBeVisible();
+    await expect(page.getByRole('heading', { name: t.past })).toBeVisible();
     if (upcoming.length) for (const e of upcoming) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
-    else await expect(page.getByText(site.pages.events.emptyUpcoming, { exact: true })).toBeVisible();
+    else await expect(page.getByText(t.emptyUpcoming, { exact: true })).toBeVisible();
     if (past.length) for (const e of past) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
-    else await expect(page.getByText(site.pages.events.emptyPast, { exact: true })).toBeVisible();
+    else await expect(page.getByText(t.emptyPast, { exact: true }).first()).toBeVisible();
+    await page.getByRole('link', { name: t.archiveLink }).click();
+    await expect(page).toHaveURL(/\/aktuelt\/arkiv$/);
+    await expect(page.locator('h1')).toHaveText(t.archiveTitle);
+    await expect(page.getByText(klient.news.archiveText, { exact: true })).toBeVisible();
+  });
+  test('the old addresses land on Aktuelt', async ({ page }) => {
+    await page.goto('/arrangementer');
+    await expect(page).toHaveURL(/\/aktuelt\/arrangementer$/);
+    await page.goto('/nyheter');
+    await expect(page).toHaveURL(/\/aktuelt\/nyheter$/);
   });
   test('ressurser: the client’s intro, then the four categories in their order, each with its text and what is published in it, or the empty line', async ({ page }) => {
     const r = klient.resources;
@@ -241,17 +269,6 @@ test('phone: no page is wider than the screen at 320, 360 or 390, however long i
       const wide = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, window.innerWidth));
       expect(wide, `${item.href} at ${width}`).toBe(width);
     }
-  }
-});
-
-test('a long one-word title breaks at its joint only where the screen is too narrow: on a wide screen it is one line, and its name is the word whole', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'the wide screen');
-  for (const [href, title] of [['/arrangementer', site.pages.events.title]] as const) {
-    await page.goto(href);
-    const h1 = page.locator('h1');
-    await expect(h1).toHaveAccessibleName(title);
-    const lines = await h1.evaluate((el) => Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)));
-    expect(lines, href).toBe(1);
   }
 });
 

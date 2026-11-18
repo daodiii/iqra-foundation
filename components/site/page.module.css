@@ -122,6 +122,49 @@
   background: var(--color-navy);
 }
 
+/* Aktuelt's filter: Alle, Nyheter, Arrangementer as three links, the current one filled. */
+.filter ul {
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--color-navy);
+  border-radius: var(--radius-pill);
+  font: 500 15px/1 var(--font-sans);
+  color: var(--color-navy);
+  text-decoration: none;
+}
+
+.filter a[aria-current='page'] {
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+/* A labelled block inside an event: its programme or its write-up, kept as the editor wrote it. */
+.block {
+  margin-top: 12px;
+  white-space: pre-line;
+}
+
+.block strong {
+  display: block;
+  font: 600 14px/1.4 var(--font-sans);
+}
+
+.subhead {
+  margin-top: 28px;
+  font-size: 20px;
+}
+
 .empty {
   margin-top: 14px;
   color: var(--color-ink-soft);

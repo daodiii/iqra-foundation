@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
 
 /**
@@ -126,8 +125,8 @@ test('every page glides, not the home page alone, and a link to another page sto
   // From the home page to another by the menu in the middle of a glide: the new page starts at its top and stays there.
   await open(page);
   await gesture(page, 1500, 3000);
-  await page.getByRole('navigation', { name: site.header.navLabel }).getByRole('link', { name: brief.menu[2], exact: true }).click();
-  await expect(page).toHaveURL(/\/vart-arbeid$/);
+  await page.getByRole('navigation', { name: site.header.navLabel }).getByRole('link', { name: site.pages.resources.label, exact: true }).click();
+  await expect(page).toHaveURL(/\/ressurser$/);
   expect(await stillAt(page)).toBe(0);
 });
 

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { brief } from '@/content/brief.no';
 import { COLLECTIONS, type CollectionName } from '@/content/collections';
@@ -38,9 +38,27 @@ export type Event = {
   place: string;
   text: string;
   link: string | null;
+  /** The programme, when there is one (D5: «informasjon om tid, sted, program og påmelding»). */
+  program: string | null;
+  /** After the event: a write-up and a recording, shown in the archive «der det er tilgjengelig» (D5). */
+  report: string | null;
+  recording: string | null;
   image: Picture | null;
   /** One of the four areas, when the item belongs to one. */
   area: AreaKey | null;
+};
+
+/** A news item (M3): headline, ingress, picture, date and the article text. */
+export type NewsItem = {
+  slug: string;
+  title: string;
+  /** ISO date. */
+  date: string;
+  /** The ingress: the short text under the headline, and on the item's card. */
+  summary: string;
+  image: Picture | null;
+  /** The article text as Keystatic writes it (Markdoc); null when the ingress is all there is. */
+  body: string | null;
 };
 
 /** The library's four categories (M5), keyed as `klient.resources.categories`. */
@@ -162,7 +180,12 @@ const picture = (name: CollectionName, file: string, raw: Raw, key: string): Pic
   const v = raw[key];
   if (v === undefined || v === null) return null;
   if (typeof v !== 'object' || Array.isArray(v)) throw new RecordError(file, `«${key}» must be { src, alt }`);
-  const o = v as Raw;
+  let o = v as Raw;
+  // Keystatic's ticked box: `{ discriminant: true, value: { src, alt } }`, or `{ discriminant: false }` for none.
+  if ('discriminant' in o) {
+    if (o.discriminant !== true || !o.value || typeof o.value !== 'object' || Array.isArray(o.value)) return null;
+    o = o.value as Raw;
+  }
   const src = optStr(file, o, 'src');
   if (src === null) return null;
   const alt = optStr(file, o, 'alt');
@@ -183,6 +206,9 @@ export function getEvents(dir?: string): Event[] {
       place: str(file, raw, 'place'),
       text: str(file, raw, 'text'),
       link: optStr(file, raw, 'link'),
+      program: optStr(file, raw, 'program'),
+      report: optStr(file, raw, 'report'),
+      recording: optStr(file, raw, 'recording'),
       image: picture('arrangementer', file, raw, 'image'),
       area: optOneOf(file, raw, 'area', AREA_KEYS),
     }))
@@ -197,6 +223,46 @@ export function splitEvents(events: Event[], today: string): { upcoming: Event[]
   const upcoming = events.filter((e) => (e.end ?? e.start) >= today);
   const past = events.filter((e) => (e.end ?? e.start) < today).reverse();
   return { upcoming, past };
+}
+
+/**
+ * Nyheter, newest first. A news item is a folder, `<slug>/index.json` and its article text in
+ * `<slug>/body.mdoc`, and it is read only when ticked «Publiser»: unticked, it is a draft
+ * (the owner's wish for PR 62, 2026-10-10).
+ */
+export function getNews(dir = collectionDir('nyheter')): NewsItem[] {
+  let names: string[];
+  try {
+    names = readdirSync(dir);
+  } catch {
+    return [];
+  }
+  const items: NewsItem[] = [];
+  for (const slug of names.sort()) {
+    const at = path.join(dir, slug, 'index.json');
+    if (!existsSync(at)) continue;
+    const file = `${COLLECTIONS.nyheter.dir}/${slug}/index.json`;
+    let raw: unknown;
+    try {
+      raw = JSON.parse(readFileSync(at, 'utf8'));
+    } catch (e) {
+      throw new RecordError(file, `is not valid JSON (${(e as Error).message})`);
+    }
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new RecordError(file, 'is not an object');
+    const r = raw as Raw;
+    if (r.publish !== true) continue;
+    const bodyAt = path.join(dir, slug, 'body.mdoc');
+    const text = existsSync(bodyAt) ? readFileSync(bodyAt, 'utf8') : '';
+    items.push({
+      slug,
+      title: str(file, r, 'title'),
+      date: isoDate(file, r, 'date'),
+      summary: str(file, r, 'summary'),
+      image: picture('nyheter', file, r, 'image'),
+      body: text.trim() ? text : null,
+    });
+  }
+  return items.sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title, 'nb'));
 }
 
 export function getResources(dir?: string): Resource[] {
