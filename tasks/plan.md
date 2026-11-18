@@ -46,13 +46,15 @@ go to Vercel Blob.
 ## Task list
 
 ### Phase 1: Foundation
-- [ ] T1 Section schemas and file mapping
-- [ ] T2 The store: local and GitHub
-- [ ] T3 Login: Clerk, proxy, the email list, the test seam, the login screen
+- [x] T1 Section schemas and file mapping
+- [x] T2 The store: local and GitHub
+- [x] T3 Login: Clerk, proxy, the email list, the test seam, the login screen
 
 ### Checkpoint 1: foundation
-- [ ] vitest, tsc and lint clean; `npm run build` passes with and without the editor's env vars
-- [ ] /redaksjon is a 404 in a production build without keys; a login screen under dev
+- [x] vitest (481), tsc and lint clean; `npm run build` passes without the editor's env vars
+- [x] /redaksjon, /redaksjon/logg-inn and /api/redaksjon/* are 404 in a production build without keys; / and /aktuelt 200
+- [x] Under `next dev` with the test editor, /redaksjon serves and /redaksjon/logg-inn forwards to it
+- [ ] Not yet verified: the Clerk path itself (needs the owner's keys, at setup)
 
 ### Phase 2: News, end to end
 - [ ] T4 API routes for sections (list, read, save, delete), checked and validated
