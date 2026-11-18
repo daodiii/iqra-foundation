@@ -6,6 +6,7 @@
     "node": ">=22.18"
   },
   "scripts": {
+    "postinstall": "node scripts/keystatic-norsk.mjs",
     "dev": "next dev",
     "prebuild": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-content.mjs",
     "build": "next build",
