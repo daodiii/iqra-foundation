@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { getDocuments, getEvents, getPeople, getResources, splitEvents, todayISO } from './content';
+import { getEvents, getPeople, getResources, splitEvents, todayISO } from './content';
 
 /*
  * The readers against a fixture directory: what a well-formed record becomes, what a
@@ -97,45 +97,26 @@ describe('splitEvents', () => {
 });
 
 describe('ressurser', () => {
-  test('a resource needs a file or a link, and the file gets its public path', () => {
-    write('r.json', { title: 'Rapport', kind: 'rapport', date: '2026-05-01', summary: 'S', file: 'rapport.pdf' });
-    expect(getResources(dir)[0]).toMatchObject({ kind: 'rapport', file: '/files/ressurser/rapport.pdf', url: null, area: null });
-    write('r.json', { title: 'Rapport', kind: 'rapport', date: '2026-05-01', summary: 'S' });
-    expect(() => getResources(dir)).toThrow(/needs either «file» or «url»/);
+  test('a resource needs a file, a video or a link, and an uploaded one gets its public path', () => {
+    write('r.json', { title: 'Rapport', category: 'publikasjoner', date: '2026-05-01', summary: 'S', file: 'rapport.pdf' });
+    expect(getResources(dir)[0]).toMatchObject({ category: 'publikasjoner', file: '/files/ressurser/rapport.pdf', video: null, url: null });
+    write('r.json', { title: 'Foredrag', category: 'videoer', date: '2026-05-01', summary: 'S', video: 'foredrag.mp4' });
+    expect(getResources(dir)[0]).toMatchObject({ category: 'videoer', file: null, video: '/files/ressurser/foredrag.mp4', url: null });
+    write('r.json', { title: 'Rapport', category: 'publikasjoner', date: '2026-05-01', summary: 'S' });
+    expect(() => getResources(dir)).toThrow(/needs a «file», a «video» or a «url»/);
   });
-  test('an area is carried when it is one of the four, null when absent or empty, refused otherwise', () => {
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: 'kunnskap' });
-    expect(getResources(dir)[0].area).toBe('kunnskap');
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: '' });
-    expect(getResources(dir)[0].area).toBeNull();
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y' });
-    expect(getResources(dir)[0].area).toBeNull();
-    write('r.json', { title: 'R', kind: 'rapport', date: '2026-01-01', summary: 'S', url: 'https://x.y', area: 'sport' });
-    expect(() => getResources(dir)).toThrow(/«area» must be one of kunnskap, dialog, moteplasser, samfunnsdeltakelse/);
-  });
-  test('an unknown kind is refused', () => {
-    write('r.json', { title: 'X', kind: 'podkast', date: '2026-05-01', summary: 'S', url: 'https://example.no' });
-    expect(() => getResources(dir)).toThrow(/«kind» must be one of publikasjon, artikkel/);
+  test('the category is one of the client’s four, and nothing else', () => {
+    for (const category of ['publikasjoner', 'artikler', 'videoer', 'styringsdokumenter']) {
+      write('r.json', { title: 'X', category, date: '2026-05-01', summary: 'S', url: 'https://example.no' });
+      expect(getResources(dir)[0].category).toBe(category);
+    }
+    write('r.json', { title: 'X', category: 'podkast', date: '2026-05-01', summary: 'S', url: 'https://example.no' });
+    expect(() => getResources(dir)).toThrow(/«category» must be one of publikasjoner, artikler, videoer, styringsdokumenter/);
   });
   test('newest first', () => {
-    write('a.json', { title: 'A', kind: 'artikkel', date: '2026-01-01', summary: 'S', url: 'https://a.no' });
-    write('b.json', { title: 'B', kind: 'artikkel', date: '2026-06-01', summary: 'S', url: 'https://b.no' });
+    write('a.json', { title: 'A', category: 'artikler', date: '2026-01-01', summary: 'S', url: 'https://a.no' });
+    write('b.json', { title: 'B', category: 'artikler', date: '2026-06-01', summary: 'S', url: 'https://b.no' });
     expect(getResources(dir).map((r) => r.title)).toEqual(['B', 'A']);
-  });
-});
-
-describe('styringsdokumenter', () => {
-  test('a document has a year and a file; newest year first, then by title', () => {
-    write('v.json', { title: 'Vedtekter', kind: 'vedtekter', year: 2025, file: 'vedtekter.pdf' });
-    write('r.json', { title: 'Årsrapport', kind: 'arsrapport', year: 2026, file: 'aarsrapport-2026.pdf' });
-    expect(getDocuments(dir).map((d) => [d.title, d.file])).toEqual([
-      ['Årsrapport', '/files/styringsdokumenter/aarsrapport-2026.pdf'],
-      ['Vedtekter', '/files/styringsdokumenter/vedtekter.pdf'],
-    ]);
-  });
-  test('a year that is not a whole number is refused', () => {
-    write('v.json', { title: 'Vedtekter', kind: 'vedtekter', year: '2025', file: 'v.pdf' });
-    expect(() => getDocuments(dir)).toThrow(/«year» must be a whole number/);
   });
 });
 

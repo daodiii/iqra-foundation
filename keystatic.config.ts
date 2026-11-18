@@ -1,5 +1,6 @@
 import { collection, config, fields } from '@keystatic/core';
 import { COLLECTIONS } from './content/collections';
+import { klient } from './content/klient.no';
 
 /**
  * Keystatic: the second door to the collections.
@@ -71,70 +72,29 @@ export default config({
       slugField: 'title',
       path: `${c.ressurser.dir}/*`,
       format: { data: 'json' },
-      columns: ['kind', 'date'],
+      columns: ['category', 'date'],
       schema: {
         title: fields.slug({ name: { label: 'Tittel', validation: { isRequired: true } } }),
-        kind: fields.select({
-          label: 'Type',
-          options: [
-            { label: 'Publikasjon', value: 'publikasjon' },
-            { label: 'Artikkel', value: 'artikkel' },
-            { label: 'Rapport', value: 'rapport' },
-            { label: 'Presentasjon', value: 'presentasjon' },
-            { label: 'Video', value: 'video' },
-            { label: 'Annet', value: 'annet' },
-          ],
-          defaultValue: 'publikasjon',
+        category: fields.select({
+          label: 'Kategori',
+          options: klient.resources.categories.map((k) => ({ label: k.title, value: k.key })),
+          defaultValue: 'publikasjoner',
         }),
         date: fields.date({ label: 'Dato', validation: { isRequired: true } }),
         summary: fields.text({ label: 'Sammendrag', multiline: true, validation: { isRequired: true } }),
-        area: fields.select({
-          label: 'Område',
-          description: 'Hvilket av de fire områdene dette hører til, om det hører til ett.',
-          options: [
-            { label: 'Ingen', value: '' },
-            { label: 'Kunnskap', value: 'kunnskap' },
-            { label: 'Dialog', value: 'dialog' },
-            { label: 'Møteplasser', value: 'moteplasser' },
-            { label: 'Samfunnsdeltakelse', value: 'samfunnsdeltakelse' },
-          ],
-          defaultValue: '',
-        }),
         file: fields.file({
           label: 'Fil',
-          description: 'En PDF eller annen fil. Enten fil eller lenke.',
+          description: 'En PDF, en presentasjon eller et annet dokument.',
           directory: c.ressurser.files.file.directory,
           publicPath: c.ressurser.files.file.publicPath,
         }),
-        url: fields.url({ label: 'Lenke', description: 'Der ressursen ligger, om den ikke er en fil her.' }),
-      },
-    }),
-    styringsdokumenter: collection({
-      label: 'Styringsdokumenter',
-      slugField: 'title',
-      path: `${c.styringsdokumenter.dir}/*`,
-      format: { data: 'json' },
-      columns: ['kind', 'year'],
-      schema: {
-        title: fields.slug({ name: { label: 'Tittel', validation: { isRequired: true } } }),
-        kind: fields.select({
-          label: 'Type',
-          options: [
-            { label: 'Vedtekter', value: 'vedtekter' },
-            { label: 'Årsrapport', value: 'arsrapport' },
-            { label: 'Årsregnskap', value: 'arsregnskap' },
-            { label: 'Strategi', value: 'strategi' },
-            { label: 'Annet', value: 'annet' },
-          ],
-          defaultValue: 'arsrapport',
+        video: fields.file({
+          label: 'Video',
+          description: 'En videofil (MP4) som spilles av på nettsiden.',
+          directory: c.ressurser.files.video.directory,
+          publicPath: c.ressurser.files.video.publicPath,
         }),
-        year: fields.integer({ label: 'År', validation: { isRequired: true, min: 2020, max: 2100 } }),
-        file: fields.file({
-          label: 'Fil',
-          directory: c.styringsdokumenter.files.file.directory,
-          publicPath: c.styringsdokumenter.files.file.publicPath,
-          validation: { isRequired: true },
-        }),
+        url: fields.url({ label: 'Lenke', description: 'Der ressursen ligger, om den ikke er lastet opp her. Én av fil, video eller lenke må fylles ut.' }),
       },
     }),
     menneskene: collection({

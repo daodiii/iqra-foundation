@@ -97,6 +97,31 @@
   margin-top: 14px;
 }
 
+/* The library's categories as a row of links to their sections. */
+.jump ul {
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  font: 500 15px/1.4 var(--font-sans);
+}
+
+.jump a {
+  color: var(--color-navy);
+  text-underline-offset: 4px;
+}
+
+/* A video in the library plays in its card, as wide as the card. */
+.video {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  border-radius: var(--radius);
+  background: var(--color-navy);
+}
+
 .empty {
   margin-top: 14px;
   color: var(--color-ink-soft);

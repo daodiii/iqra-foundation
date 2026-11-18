@@ -28,7 +28,8 @@ describe('the header', () => {
     expect(row).toEqual([brief.menu[0], brief.menu[1], brief.menu[2], brief.menu[3], brief.menu[4], brief.menu[5], brief.menu[7], brief.menu[8]]);
     const ressurser = [...nav.querySelector('ul')!.children].find((li) => li.querySelector('a')!.textContent === brief.menu[4])!;
     const under = within(ressurser.querySelector('ul')!).getAllByRole('link');
-    expect(under.map((l) => [l.textContent, l.getAttribute('href')])).toEqual([[brief.menu[6], '/styringsdokumenter']]);
+    // Styringsdokumenter is a section of Ressurser since the client's update (2026-11-18).
+    expect(under.map((l) => [l.textContent, l.getAttribute('href')])).toEqual([[brief.menu[6], '/ressurser#styringsdokumenter']]);
     const links = within(nav).getAllByRole('link');
     expect(links.map((l) => l.getAttribute('href'))).toEqual(site.links.map((n) => n.href));
   });
@@ -41,13 +42,12 @@ describe('the header', () => {
     expect(current[0]).toHaveTextContent('Om oss');
   });
 
-  test('on Styringsdokumenter its own link is the current page, and Ressurser above it is marked as the branch', () => {
-    pathname = '/styringsdokumenter';
+  test('on Ressurser, Ressurser is the current page: Styringsdokumenter is a section of it, not a page', () => {
+    pathname = '/ressurser';
     render(<Header />);
     const current = screen.getAllByRole('link', { current: 'page' });
     expect(current).toHaveLength(1);
-    expect(current[0]).toHaveTextContent(brief.menu[6]);
-    expect(screen.getByRole('link', { name: brief.menu[4] })).toHaveAttribute('data-branch', '');
+    expect(current[0]).toHaveTextContent(brief.menu[4]);
   });
 
   test('Escape puts away the list under Ressurser and hands focus back to Ressurser; leaving the item lets it open again', () => {

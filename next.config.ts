@@ -66,6 +66,13 @@ const nextConfig: NextConfig = {
    * `max-age` either, and when the second film went out under the first one's names
    * (2026-09-20) a returning visitor kept seeing the first for a month.
    */
+  /**
+   * Styringsdokumenter is a category of the library now (the client's message, point 5,
+   * 2026-11-18), not a page of its own; the old address lands on it.
+   */
+  async redirects() {
+    return [{ source: '/styringsdokumenter', destination: '/ressurser#styringsdokumenter', permanent: true }];
+  },
   async headers() {
     return [
       { source: '/((?!keystatic|api/keystatic).*)', headers: securityHeaders },

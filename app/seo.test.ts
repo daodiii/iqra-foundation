@@ -19,9 +19,10 @@ describe('robots.txt and the sitemap', () => {
     for (const rule of rules) expect([rule.disallow].flat()).not.toContain('/');
   });
 
-  test('every page of the menu and both legal pages, absolute, once each', () => {
+  test('every page of the menu and both legal pages, absolute, once each; not Styringsdokumenter, a section of Ressurser now', () => {
     const urls = sitemap().map((e) => e.url);
-    expect(urls).toEqual([...site.links, ...site.legal].map((l) => (l.href === '/' ? siteUrl : `${siteUrl}${l.href}`)));
+    const pages = [...site.links, ...site.legal].filter((l) => !l.href.includes('#'));
+    expect(urls).toEqual(pages.map((l) => (l.href === '/' ? siteUrl : `${siteUrl}${l.href}`)));
     expect(new Set(urls).size).toBe(urls.length);
     for (const u of urls) expect(u).toMatch(/^https?:\/\//);
   });

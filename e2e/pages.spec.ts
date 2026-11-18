@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { brief } from '../content/brief.no';
 import { site } from '../content/site.no';
 import { klient } from '../content/klient.no';
-import { getEvents, getPeople, splitEvents, todayISO } from '../lib/content';
+import { getEvents, getPeople, getResources, splitEvents, todayISO } from '../lib/content';
 import { isPlaceholder } from '../lib/placeholder';
 import { sentences } from '../lib/text';
 import { groundAt, seaAreas } from '../components/home/tide';
@@ -191,11 +191,23 @@ test.describe('the collections are honest while empty', () => {
     if (past.length) for (const e of past) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
     else await expect(page.getByText(site.pages.events.emptyPast, { exact: true })).toBeVisible();
   });
-  test('ressurser', async ({ page }) => {
+  test('ressurser: the client’s intro, then the four categories in their order, each with its text and what is published in it, or the empty line', async ({ page }) => {
+    const r = klient.resources;
     await page.goto('/ressurser');
     await expect(page).toHaveTitle(T(site.pages.resources.title));
-    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', brief.resources);
-    await expect(page.getByText(site.pages.resources.empty, { exact: true })).toBeVisible();
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', r.intro);
+    await expect(page.locator('h1')).toHaveText(r.title);
+    const main = page.getByRole('main');
+    await expect(main.getByRole('heading', { level: 2 })).toHaveText(r.categories.map((c) => c.title));
+    await expect(main.getByRole('navigation', { name: site.pages.resources.categoriesLabel }).getByRole('link')).toHaveText(r.categories.map((c) => c.title));
+    const items = getResources();
+    for (const c of r.categories) {
+      const section = main.locator(`section#${c.key}`);
+      if (c.text) await expect(section).toContainText(c.text);
+      const inIt = items.filter((i) => i.category === c.key);
+      if (inIt.length) await expect(section.locator('h3')).toHaveText(inIt.map((i) => i.title));
+      else await expect(section.getByText(site.pages.resources.empty, { exact: true })).toBeVisible();
+    }
   });
   test('menneskene bak: the client’s text, the five board members by name and role, and how to reach the board', async ({ page }) => {
     const t = klient.people;
@@ -210,11 +222,10 @@ test.describe('the collections are honest while empty', () => {
     await expect(page.getByRole('main')).toContainText(t.contact.text);
     await expect(page.getByRole('main')).not.toContainText(/\[[^\]]+\]/);
   });
-  test('styringsdokumenter', async ({ page }) => {
+  test('the old Styringsdokumenter address lands on its category in the library', async ({ page }) => {
     await page.goto('/styringsdokumenter');
-    await expect(page).toHaveTitle(T(site.pages.documents.title));
-    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', brief.documents);
-    await expect(page.getByText(site.pages.documents.empty, { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/\/ressurser#styringsdokumenter$/);
+    await expect(page.locator('section#styringsdokumenter h2')).toHaveText('Styringsdokumenter');
   });
 });
 
@@ -235,7 +246,7 @@ test('phone: no page is wider than the screen at 320, 360 or 390, however long i
 
 test('a long one-word title breaks at its joint only where the screen is too narrow: on a wide screen it is one line, and its name is the word whole', async ({ page, isMobile }) => {
   test.skip(isMobile, 'the wide screen');
-  for (const [href, title] of [['/styringsdokumenter', site.pages.documents.title], ['/arrangementer', site.pages.events.title]] as const) {
+  for (const [href, title] of [['/arrangementer', site.pages.events.title]] as const) {
     await page.goto(href);
     const h1 = page.locator('h1');
     await expect(h1).toHaveAccessibleName(title);
@@ -420,7 +431,8 @@ test('Personvern and Vilkår, robots.txt, the sitemap and the security headers',
   expect(robots).toMatch(/Sitemap: .*\/sitemap\.xml/);
   expect(robots).not.toMatch(/Disallow: \/\s*$/m);
   const sitemap = await (await page.request.get('/sitemap.xml')).text();
-  for (const item of [...site.links, ...site.legal]) expect(sitemap).toContain(item.href === '/' ? '<loc>' : `${item.href}</loc>`);
+  for (const item of [...site.links, ...site.legal].filter((i) => !i.href.includes('#'))) expect(sitemap).toContain(item.href === '/' ? '<loc>' : `${item.href}</loc>`);
+  expect(sitemap).not.toContain('/styringsdokumenter</loc>');
   const headers = (await page.request.get('/')).headers();
   expect(headers['strict-transport-security']).toMatch(/max-age=\d+/);
   expect(headers['x-content-type-options']).toBe('nosniff');

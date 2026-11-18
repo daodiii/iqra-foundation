@@ -2,11 +2,12 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { brief } from '@/content/brief.no';
 import { COLLECTIONS, type CollectionName } from '@/content/collections';
+import { klient } from '@/content/klient.no';
 
 /**
  * The one door the pages read the collections through.
  *
- * Everything that changes over time — events, resources, governing documents, people — is
+ * Everything that changes over time — events, the library's resources, people — is
  * a typed collection: one JSON file per entry under `content/<collection>/`, in the shape
  * `content/collections.ts` declares and Keystatic (`keystatic.config.ts`) writes. Pages
  * never read files themselves; they call `getEvents()` and the rest, which read, check and
@@ -42,29 +43,21 @@ export type Event = {
   area: AreaKey | null;
 };
 
-export type ResourceKind = 'publikasjon' | 'artikkel' | 'rapport' | 'presentasjon' | 'video' | 'annet';
+/** The library's four categories (M5), keyed as `klient.resources.categories`. */
+export type ResourceCategory = (typeof klient.resources.categories)[number]['key'];
 export type Resource = {
   slug: string;
   title: string;
-  kind: ResourceKind;
+  category: ResourceCategory;
   /** ISO date. */
   date: string;
   summary: string;
-  /** A file under `public/`, as its public path; or a URL elsewhere. One of the two. */
+  /** A file under `public/` (a PDF, a presentation), as its public path. */
   file: string | null;
+  /** A video file under `public/`, played on the page. */
+  video: string | null;
+  /** Where the resource lives, when it is not a file here. */
   url: string | null;
-  /** One of the four areas, when the item belongs to one. */
-  area: AreaKey | null;
-};
-
-export type DocumentKind = 'vedtekter' | 'arsrapport' | 'arsregnskap' | 'strategi' | 'annet';
-export type GoverningDocument = {
-  slug: string;
-  title: string;
-  kind: DocumentKind;
-  year: number;
-  /** A file under `public/`, as its public path. */
-  file: string;
 };
 
 export type Person = {
@@ -78,8 +71,7 @@ export type Person = {
   order: number;
 };
 
-export const RESOURCE_KINDS: readonly ResourceKind[] = ['publikasjon', 'artikkel', 'rapport', 'presentasjon', 'video', 'annet'];
-export const DOCUMENT_KINDS: readonly DocumentKind[] = ['vedtekter', 'arsrapport', 'arsregnskap', 'strategi', 'annet'];
+export const RESOURCE_CATEGORIES: readonly ResourceCategory[] = klient.resources.categories.map((c) => c.key);
 
 /* ----- reading ----- */
 
@@ -211,32 +203,21 @@ export function getResources(dir?: string): Resource[] {
   return readCollection('ressurser', dir)
     .map(({ file, slug, raw }) => {
       const f = optStr(file, raw, 'file');
+      const video = optStr(file, raw, 'video');
       const url = optStr(file, raw, 'url');
-      if (!f && !url) throw new RecordError(file, 'needs either «file» or «url»');
+      if (!f && !video && !url) throw new RecordError(file, 'needs a «file», a «video» or a «url»');
       return {
         slug,
         title: str(file, raw, 'title'),
-        kind: oneOf(file, raw, 'kind', RESOURCE_KINDS),
+        category: oneOf(file, raw, 'category', RESOURCE_CATEGORIES),
         date: isoDate(file, raw, 'date'),
         summary: str(file, raw, 'summary'),
         file: f === null ? null : publicPath('ressurser', 'file', f),
+        video: video === null ? null : publicPath('ressurser', 'video', video),
         url,
-        area: optOneOf(file, raw, 'area', AREA_KEYS),
       };
     })
     .sort((a, b) => b.date.localeCompare(a.date));
-}
-
-export function getDocuments(dir?: string): GoverningDocument[] {
-  return readCollection('styringsdokumenter', dir)
-    .map(({ file, slug, raw }) => ({
-      slug,
-      title: str(file, raw, 'title'),
-      kind: oneOf(file, raw, 'kind', DOCUMENT_KINDS),
-      year: int(file, raw, 'year'),
-      file: publicPath('styringsdokumenter', 'file', str(file, raw, 'file')),
-    }))
-    .sort((a, b) => b.year - a.year || a.title.localeCompare(b.title, 'nb'));
 }
 
 export function getPeople(dir?: string): Person[] {

@@ -71,7 +71,7 @@ test('desktop: Styringsdokumenter stands under Ressurser, shown when Ressurser i
   await page.goto('/om-oss');
   const nav = page.getByRole('navigation', { name: site.header.navLabel });
   const ressurser = nav.getByRole('link', { name: brief.menu[4], exact: true });
-  const under = nav.locator('a[href="/styringsdokumenter"]');
+  const under = nav.locator('a[href="/ressurser#styringsdokumenter"]');
   await expect(under).toBeHidden();
   await ressurser.hover();
   await expect(under).toBeVisible();
@@ -91,9 +91,11 @@ test('desktop: Styringsdokumenter stands under Ressurser, shown when Ressurser i
   await page.keyboard.press('Tab');
   await ressurser.hover();
   await under.click();
-  await expect(page).toHaveURL(/\/styringsdokumenter$/);
+  // Styringsdokumenter is a section of Ressurser now: the link lands on it, and Ressurser is the current page.
+  await expect(page).toHaveURL(/\/ressurser#styringsdokumenter$/);
+  await expect(page.locator('section#styringsdokumenter')).toBeInViewport();
   await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
-  await expect(ressurser).toHaveAttribute('data-branch', '');
+  await expect(ressurser).toHaveAttribute('aria-current', 'page');
 });
 
 test('the current page is marked, once', async ({ page }) => {

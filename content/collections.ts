@@ -20,13 +20,7 @@ export const COLLECTIONS = {
     folder: 'ressurser',
     files: {
       file: { directory: 'public/files/ressurser', publicPath: '/files/ressurser/' },
-    },
-  },
-  styringsdokumenter: {
-    dir: 'content/styringsdokumenter',
-    folder: 'styringsdokumenter',
-    files: {
-      file: { directory: 'public/files/styringsdokumenter', publicPath: '/files/styringsdokumenter/' },
+      video: { directory: 'public/files/ressurser', publicPath: '/files/ressurser/' },
     },
   },
   menneskene: {
