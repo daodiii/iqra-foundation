@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { connection } from 'next/server';
 import styles from '@/components/redaksjon/redaksjon.module.css';
 import { editorEnabled, testEditor } from '@/lib/redaksjon/access';
 
@@ -11,6 +12,8 @@ export const metadata: Metadata = { title: 'Redaksjon', robots: { index: false, 
  * editor of `next dev` and e2e runs without it.
  */
 export default async function RedaksjonLayout({ children }: { children: React.ReactNode }) {
+  // Decided per request, never at build: the build has none of the editor's settings.
+  await connection();
   if (!editorEnabled()) notFound();
   const body = <div className={styles.root}>{children}</div>;
   if (testEditor()) return body;

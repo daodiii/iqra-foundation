@@ -2,12 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { Icon, type IconName } from './Icon';
 import { LoggUt } from './LoggUt';
 import s from './shell.module.css';
 
 type Counts = { nyheter: number; arrangementer: number; ressurser: number; menneskene: number };
+
+/** Lets a page change the rail's counts after a save without reloading the page (and its pictures). */
+const CountsContext = createContext<(section: keyof Counts, by: number) => void>(() => {});
+export const useAdjustCount = () => useContext(CountsContext);
 
 const GROUPS: { head: string; items: { href: string; icon: IconName; label: string; key: keyof Counts }[] }[] = [
   { head: 'Aktuelt', items: [
@@ -22,8 +26,14 @@ const GROUPS: { head: string; items: { href: string; icon: IconName; label: stri
  * The editor's frame (mockup A): the rail on the left with the way to write something new and
  * the sections; on a phone, a top bar whose menu opens the same rail over the page.
  */
-export function Shell({ email, counts, clerk, children }: { email: string; counts: Counts; clerk: boolean; children: React.ReactNode }) {
+export function Shell({ email, counts: fromServer, clerk, children }: { email: string; counts: Counts; clerk: boolean; children: React.ReactNode }) {
   const path = usePathname();
+  // The server's counts, plus what was saved or deleted on this page since.
+  const [delta, setDelta] = useState<{ base: Counts; add: Partial<Counts> }>({ base: fromServer, add: {} });
+  const add = delta.base === fromServer ? delta.add : {};
+  const counts = Object.fromEntries(Object.entries(fromServer).map(([k, v]) => [k, v + (add[k as keyof Counts] ?? 0)])) as Counts;
+  const adjust = (section: keyof Counts, by: number) =>
+    setDelta((d) => { const cur = d.base === fromServer ? d.add : {}; return { base: fromServer, add: { ...cur, [section]: (cur[section] ?? 0) + by } }; });
   // Open on the page it was opened on: following a link closes it without an effect.
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === path;
@@ -78,7 +88,7 @@ export function Shell({ email, counts, clerk, children }: { email: string; count
         </div>
       </aside>
 
-      <div className={s.main}>{children}</div>
+      <div className={s.main}><CountsContext.Provider value={adjust}>{children}</CountsContext.Provider></div>
     </div>
   );
 }

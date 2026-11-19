@@ -107,6 +107,12 @@ function uploadChanges(section: Section, slug: string, uploads: Upload[]): Chang
   });
 }
 
+/** «ny» is the address of the editor's empty sheet, so no post may have it. */
+function usable(slug: string) {
+  if (!isSlug(slug)) throw new EditorError(422, 'Nettadressen kan bare ha små bokstaver, tall og bindestrek.', [{ key: 'slug', text: 'Nettadresse' }]);
+  if (slug === 'ny') throw new EditorError(409, 'Nettadressen «ny» er opptatt. Velg en annen.', [{ key: 'slug', text: 'Nettadresse' }]);
+}
+
 function check<S extends Section>(section: S, fields: EntryOf[S]) {
   const p = problems(section, fields);
   if (p.length) throw new EditorError(422, `Mangler: ${p.map((x) => x.text).join(', ')}.`, p);
@@ -130,7 +136,7 @@ export async function createEntry<S extends Section>(
 ): Promise<Saved> {
   check(section, input.fields);
   const slug = input.slug ?? slugify(titleOf(section, input.fields));
-  if (!isSlug(slug)) throw new EditorError(422, 'Nettadressen kan bare ha små bokstaver, tall og bindestrek.', [{ key: 'slug', text: 'Nettadresse' }]);
+  usable(slug);
   if ((await readAll(store, section, slug)).exists) {
     throw new EditorError(409, 'Det finnes allerede en side med denne nettadressen. Velg en annen.', [{ key: 'slug', text: 'Nettadresse' }]);
   }
@@ -158,7 +164,7 @@ export async function saveEntry<S extends Section>(
   if (!now.exists) throw new EditorError(404, 'Finner ikke denne siden. Den kan være slettet.');
   if (now.version !== input.version) throw new StaleError(entryPaths(section, slug)[0]);
   const to = input.slug ?? slug;
-  if (!isSlug(to)) throw new EditorError(422, 'Nettadressen kan bare ha små bokstaver, tall og bindestrek.', [{ key: 'slug', text: 'Nettadresse' }]);
+  if (to !== slug) usable(to);
   if (to !== slug && (await readAll(store, section, to)).exists) {
     throw new EditorError(409, 'Det finnes allerede en side med denne nettadressen. Velg en annen.', [{ key: 'slug', text: 'Nettadresse' }]);
   }
