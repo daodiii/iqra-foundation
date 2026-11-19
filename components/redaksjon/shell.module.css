@@ -1,5 +1,5 @@
 /* The frame: rail + main (mockup A «Arket»). Tokens come from redaksjon.module.css .root. */
-.app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
+.app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; background: linear-gradient(to right, var(--paper) 235px, var(--line-soft) 235px 236px, transparent 236px); }
 .app :global(.i) { width: 18px; height: 18px; flex: none; }
 .main { min-width: 0; }
 
@@ -29,7 +29,7 @@
 .mtop, .scrim { display: none; }
 
 @media (max-width: 760px) {
-  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; background: none; }
   .mtop { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 8px; background: var(--paper); border-bottom: 1px solid var(--line-soft); position: sticky; top: 0; z-index: 20; }
   .mtop button, .mnew { width: 44px; height: 44px; border-radius: 10px; border: 0; background: none; display: grid; place-items: center; color: var(--ink); }
   .mlogo img { height: 20px; width: auto; }

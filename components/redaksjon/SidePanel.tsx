@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { isSlug, slugify, type Pic } from '@/lib/redaksjon/schema';
+import card from '@/components/site/page.module.css';
+import { site } from '@/content/site.no';
 import { Icon } from './Icon';
 import { Picture } from './Picture';
 import s from './editor.module.css';
@@ -16,6 +18,8 @@ type Props = {
   slug: string; onSlug: (v: string) => void;
   title: string; summary: string; image: Pic;
   problems: { key: string; text: string }[];
+  /** Whether the post has a text, so the card links to a page of its own. */
+  hasText: boolean;
   /** The address on the site when the post is there as it is now; otherwise null. */
   liveHref: string | null;
 };
@@ -84,14 +88,16 @@ export function SidePanel(p: Props) {
           <h3>Slik ser kortet ut</h3>
           {p.liveHref && <a href={p.liveHref} target="_blank" rel="noreferrer">Hele siden</a>}
         </div>
-        <div className={s.prev}>
-          {p.image ? <Picture src={p.image.src} className={s.prevBlank} /> : <div className={s.prevBlank} />}
-          <div>
-            <time>{longDate(p.date)}</time>
-            <strong>{p.title || 'Overskrift'}</strong>
+        {/* The site's own card, with the site's own styles, so this is what Aktuelt shows. */}
+        <ul className={`${card.list} ${s.card}`}>
+          <li className={card.item}>
+            <p className={card.meta}><time>{longDate(p.date)}</time></p>
+            <h3>{p.hasText ? <a href={p.liveHref ?? undefined}>{p.title || 'Overskrift'}</a> : p.title || 'Overskrift'}</h3>
+            {p.image && <Picture src={p.image.src} />}
             <p>{p.summary || 'Ingressen vises her.'}</p>
-          </div>
-        </div>
+            {p.hasText && <p className={card.meta}><a href={p.liveHref ?? undefined}>{site.pages.news.readMore}</a></p>}
+          </li>
+        </ul>
       </section>
     </aside>
   );

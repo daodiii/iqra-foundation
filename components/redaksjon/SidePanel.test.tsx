@@ -5,14 +5,14 @@ import { longDate, SidePanel } from './SidePanel';
 
 const base = {
   onPublish: vi.fn(), onDate: vi.fn(), onSlug: vi.fn(),
-  date: '2026-11-19', slug: 'apen-dag', liveHref: null,
+  date: '2026-11-19', slug: 'apen-dag', liveHref: null, hasText: true,
 };
 
 describe('the side panel', () => {
   test('the checklist names what is missing, and the switch says what Av means', () => {
     const f = { title: 'Åpen dag', date: '2026-11-19', summary: '', image: { src: '/x.webp', alt: '' }, publish: false, body: '' };
     render(<SidePanel {...base} publish={false} title={f.title} summary={f.summary} image={f.image} problems={problems('nyheter', f)} />);
-    const items = screen.getAllByRole('listitem').map((li) => [li.textContent, li.className.includes('no')]);
+    const items = screen.getAllByRole('listitem').filter((li) => !li.querySelector('h3')).map((li) => [li.textContent, li.className.includes('no')]);
     expect(items).toEqual([
       ['Overskrift', false], ['Ingress', true], ['Dato', false], ['Bilde med beskrivelse', true], ['Slå på «Vis på nettsiden»', true],
     ]);

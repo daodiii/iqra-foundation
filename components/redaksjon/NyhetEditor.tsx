@@ -158,7 +158,7 @@ export function NyhetEditor({ initial, slug: savedSlug, version: savedVersion }:
         date={f.date} onDate={(v) => set('date', v)}
         slug={slug} onSlug={(v) => { setSlug(v); setSlugTouched(true); }}
         title={f.title} summary={f.summary} image={f.image}
-        problems={issues} liveHref={liveHref}
+        problems={issues} liveHref={liveHref} hasText={f.body.trim() !== ''}
       />
 
       <div className={s.bar}>{statusEl}{saveBtn}</div>
