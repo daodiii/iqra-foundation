@@ -1,6 +1,6 @@
 import 'server-only';
 import {
-  entryPaths, fromFiles, isSlug, LABELS, problems, slugify, slugOf, titleOf, toFiles,
+  CATEGORIES, entryPaths, fromFiles, isSlug, LABELS, problems, slugify, slugOf, titleOf, toFiles,
   type EntryOf, type Section,
 } from './schema';
 import { COLLECTIONS } from '@/content/collections';
@@ -12,7 +12,7 @@ import { StaleError, type Change, type Store } from './files';
  */
 
 /** One row in a list: enough for «Sist endret» and the section lists. */
-export type Row = { section: Section; slug: string; title: string; date: string; draft: boolean };
+export type Row = { section: Section; slug: string; title: string; sub: string; date: string; draft: boolean };
 
 /** An entry as the editor opens it, with the version a later save must send back. */
 export type Opened<S extends Section> = { section: S; slug: string; fields: EntryOf[S]; version: string };
@@ -30,6 +30,17 @@ export class EditorError extends Error {
 const dateOf = (section: Section, f: Record<string, unknown>): string =>
   String((section === 'arrangementer' ? f.start : f.date) ?? '');
 
+/** The line under a row's title: the ingress, the description, the category and kind, the role. */
+function subOf(section: Section, f: Record<string, unknown>): string {
+  const str = (v: unknown) => (typeof v === 'string' ? v : '');
+  if (section === 'nyheter') return str(f.summary);
+  if (section === 'arrangementer') return str(f.text);
+  if (section === 'menneskene') return str(f.role);
+  const cat = CATEGORIES.find((c) => c.key === f.category)?.label ?? '';
+  const kind = f.file ? (/\.pdf$/i.test(str(f.file)) ? 'PDF' : 'Fil') : f.video ? 'Video' : f.url ? 'Lenke' : '';
+  return [cat, kind].filter(Boolean).join(' · ');
+}
+
 /** Every entry in a section, newest first (people in their running order). */
 export async function listEntries(store: Store, section: Section): Promise<Row[]> {
   const slugs = (await store.list(COLLECTIONS[section].dir)).map((p) => slugOf(section, p)).filter((s): s is string => s !== null);
@@ -39,7 +50,7 @@ export async function listEntries(store: Store, section: Section): Promise<Row[]
       if (!opened) return null;
       const f = opened.fields as Record<string, unknown>;
       return {
-        section, slug, title: titleOf(section, opened.fields) || slug, date: dateOf(section, f),
+        section, slug, title: titleOf(section, opened.fields) || slug, sub: subOf(section, f), date: dateOf(section, f),
         draft: section === 'nyheter' && f.publish !== true, order: typeof f.order === 'number' ? f.order : 0,
       };
     }),
@@ -47,7 +58,7 @@ export async function listEntries(store: Store, section: Section): Promise<Row[]
   const ok = rows.filter((r): r is Row & { order: number } => r !== null);
   if (section === 'menneskene') ok.sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, 'nb'));
   else ok.sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title, 'nb'));
-  return ok.map((r) => ({ section: r.section, slug: r.slug, title: r.title, date: r.date, draft: r.draft }));
+  return ok.map((r) => ({ section: r.section, slug: r.slug, title: r.title, sub: r.sub, date: r.date, draft: r.draft }));
 }
 
 /** The version of an entry: its files' versions together, so a change to either one counts. */

@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import styles from '@/components/redaksjon/redaksjon.module.css';
 import { LoggUt } from '@/components/redaksjon/LoggUt';
+import { Shell } from '@/components/redaksjon/Shell';
+import { counts } from '@/lib/redaksjon/load';
 import { testEditor } from '@/lib/redaksjon/access';
 import { currentEditor } from '@/lib/redaksjon/session';
 
@@ -29,5 +31,5 @@ export default async function Innlogget({ children }: { children: React.ReactNod
       </main>
     );
   }
-  return children;
+  return <Shell email={who.email} counts={await counts()} clerk={!testEditor()}>{children}</Shell>;
 }
