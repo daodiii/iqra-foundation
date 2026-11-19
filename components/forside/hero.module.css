@@ -1,0 +1,288 @@
+/*
+ * Hero «Midt», exactly one screen: the full lockup on one axis, the headline under it, the rest
+ * centred. Everything scales with the screen's height as well as its width, so it fits at every size.
+ */
+.hero {
+  position: relative;
+  z-index: 0;
+  height: 100vh;
+  height: 100svh;
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  background: var(--navy);
+  color: #fff;
+}
+
+/* held back and darkened while the white sheet slides over it (Pour.tsx sets --fxd) */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #040812;
+  opacity: var(--fxd, 0);
+  pointer-events: none;
+  z-index: 9;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 24px;
+  align-content: center;
+  padding-block: calc(84px + env(safe-area-inset-top, 0px)) 4.5vh;
+}
+
+.slot {
+  position: relative;
+  grid-column: 3 / span 8;
+  justify-self: center;
+  width: 100%;
+  aspect-ratio: 742.433 / 407.094;
+  max-height: 34vh;
+  margin-bottom: 3.6vh;
+}
+
+.h1 {
+  grid-column: 1 / -1;
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+  font-size: calc(min(5.4vw, 7.6vh) * 1.03);
+  letter-spacing: -0.032em;
+  line-height: 0.9312;
+}
+
+.ln {
+  display: block;
+}
+
+.wm {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+.w {
+  display: inline-block;
+  transition: transform 1.05s var(--ease-out) calc(var(--i) * 70ms);
+}
+
+.side {
+  grid-column: 3 / span 8;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: min(24px, 2.6vh);
+  margin-top: 3vh;
+  padding-bottom: 6px;
+  transition:
+    opacity 0.9s var(--ease-out) 0.2s,
+    transform 1.1s var(--ease-out) 0.2s;
+}
+
+.lede {
+  margin: 0;
+  max-width: 34em;
+  font-size: clamp(15px, min(1.25vw, 2.2vh), 20px);
+  line-height: 1.612;
+}
+
+.acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 28px;
+  transition:
+    opacity 0.8s var(--ease-out) 0.3s,
+    transform 1s var(--ease-out) 0.3s;
+}
+
+/*
+ * The words wait under their masks and rise once the pour begins (Hero.tsx sets data-go). The
+ * layout's first script marks the page as running JavaScript before it paints; without it they stand.
+ */
+:global(html[data-js]) .hero:not([data-go]) .w {
+  transform: translateY(105%);
+}
+
+:global(html[data-js]) .hero:not([data-go]) .side {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+:global(html[data-js]) .hero:not([data-go]) .acts {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.about {
+  --k-bg: var(--rod);
+  --k-fg: #fff;
+  --k-hbg: #fff;
+  --k-hfg: var(--rod);
+}
+
+.events {
+  --k-fg: #fff;
+  --k-ink: var(--navy);
+  color: #fff;
+  padding-bottom: 8px;
+}
+
+/*
+ * The logo. It lies over the page (fixed, outside the hero, so the hero's hold-back cannot carry it)
+ * and flies from the slot into the header's slot as the page scrolls (Hero.tsx sizes and places it).
+ * Without JavaScript it cannot fly: the slot shows the white lockup instead.
+ */
+.mk {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 32;
+  pointer-events: none;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+:global(html:not([data-js])) .mk {
+  display: none;
+}
+
+.still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+:global(html[data-js]) .still {
+  visibility: hidden;
+}
+
+.arr {
+  position: absolute;
+  inset: 0;
+  animation: arr 1.3s var(--ease-out) 0.1s both;
+}
+
+@keyframes arr {
+  from {
+    clip-path: inset(100% -60% -60% -60%);
+    transform: translateY(40px);
+  }
+  to {
+    clip-path: inset(-60% -60% -60% -60%);
+    transform: none;
+  }
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+
+/* carved into the plate: a soft shadow, a shade, a highlight and the face, moved by the light */
+.soft {
+  --lf: var(--carve-soft);
+  --cf: var(--carve-soft-c);
+  opacity: calc(0.6 * var(--sh, 1));
+}
+
+.shade {
+  --lf: var(--carve-shade);
+  --cf: var(--carve-shade-c);
+  opacity: calc(0.75 * var(--sh, 1));
+}
+
+.hi {
+  --lf: var(--carve-hi);
+  --cf: var(--carve-hi-c);
+  opacity: var(--sh, 1);
+}
+
+.face {
+  --lf: var(--carve-face);
+  --cf: var(--rod);
+}
+
+/* «Smeltet»: white poured up inside the letters, with a lit surface riding on top */
+.lit {
+  --lf: #f0f0f1;
+  --cf: var(--rod);
+}
+
+.surf {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 4;
+  opacity: var(--sv, 0);
+}
+
+.glow {
+  stroke: #bfe6e8;
+  stroke-width: 28;
+}
+
+/* Kameleon: navy on a light ground; on crimson the accents turn white */
+:global([data-forside][data-solid][data-tone='light']) .lit {
+  --lf: var(--navy);
+}
+
+:global([data-forside][data-solid][data-tone='light']) :is(.carved, .surf) {
+  visibility: hidden;
+}
+
+:global([data-forside][data-solid][data-tone='rod']) .lit {
+  --cf: #fff;
+}
+
+@media (max-width: 900px) {
+  .main {
+    padding-block: calc(76px + env(safe-area-inset-top, 0px)) 4vh;
+  }
+
+  .slot {
+    grid-column: 1 / -1;
+    max-height: 24vh;
+    margin: 0 0 3vh;
+  }
+
+  .h1 {
+    font-size: calc(min(10.6vw, 5.6vh) * 1.03);
+  }
+
+  .side {
+    grid-column: 1 / -1;
+    margin-top: 2.4vh;
+  }
+
+  .lede {
+    font-size: min(16px, 2.1vh);
+  }
+
+  .acts {
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arr {
+    animation: none;
+  }
+
+  .w,
+  .side,
+  .acts {
+    transition: none;
+  }
+}

@@ -1,0 +1,212 @@
+/*
+ * The scene after the hero (520vh, the screen holds): a flat white sheet slides up over the hero,
+ * which holds back and darkens; the opening paragraph glides in line by line, rests, and drifts
+ * away; the crimson dot rises out of the white and opens into the «Hvorfor vi finnes» poster.
+ * It starts behind the hero (a screen up), so the white rises from the foot of the hero.
+ */
+/*
+ * The scene lies over the hero, so it lets the pointer through to the hero's buttons; the sheet and the
+ * poster take it back where they are drawn (the header reads the ground under it by hit-testing).
+ */
+.sc {
+  position: relative;
+  z-index: 1;
+  height: 520vh;
+  margin-top: -100vh;
+  margin-top: -100svh;
+  pointer-events: none;
+}
+
+.sheet,
+.red {
+  pointer-events: auto;
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.sheet {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  box-shadow: 0 -24px 60px -24px rgba(4, 8, 18, 0.45);
+  transform: translate3d(0, 110vh, 0);
+  will-change: transform;
+}
+
+.tx {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 var(--gutter);
+  color: var(--navy);
+  will-change: transform, opacity;
+}
+
+.tx p {
+  margin: 0;
+  max-width: 21em;
+  text-align: center;
+  font-weight: 400;
+  font-size: clamp(28px, 3.3vw, 60px);
+  line-height: 1.248;
+  letter-spacing: -0.008em;
+}
+
+.red {
+  position: absolute;
+  inset: 0;
+  background: var(--rod);
+  color: #fff;
+  clip-path: circle(var(--R, 0px) at 50% var(--cy, 120%));
+  will-change: clip-path;
+}
+
+.tone {
+  position: absolute;
+  right: -14vw;
+  bottom: -30vh;
+  width: 78vw;
+  height: auto;
+  overflow: visible;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.tone path {
+  fill: var(--rod-dyp);
+}
+
+.ct {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: auto 1fr auto;
+  gap: 0 24px;
+  padding: clamp(120px, 17vh, 190px) var(--gutter) clamp(56px, 9vh, 100px);
+}
+
+.ct :global([data-lines]) [class] {
+  transition-duration: 1.2s;
+}
+
+.h2 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-weight: 600;
+  font-size: calc(clamp(56px, 9.2vw, 180px) * 1.03);
+  letter-spacing: -0.04em;
+  line-height: 0.873;
+}
+
+.lead {
+  grid-column: 1 / span 7;
+  grid-row: 3;
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(26px, 2.4vw, 44px);
+  line-height: 1.3312;
+  letter-spacing: -0.006em;
+}
+
+.more {
+  grid-column: 9 / span 4;
+  grid-row: 3;
+  align-self: end;
+  margin: 0;
+  font-size: clamp(17px, 1.35vw, 23px);
+  line-height: 1.664;
+  color: var(--rod-pale);
+  transition:
+    opacity 1s var(--ease-out),
+    transform 1.2s var(--ease-out);
+}
+
+:global(html[data-js]) .more:not([data-on]) {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+/* Without JavaScript the scene cannot play: it is laid out as plain flow, the paragraph on white, then the poster. */
+:global(html:not([data-js])) .sc {
+  height: auto;
+  margin-top: 0;
+  background: #fff;
+}
+
+:global(html:not([data-js])) .stage {
+  position: relative;
+  height: auto;
+}
+
+:global(html:not([data-js])) .sheet {
+  display: none;
+}
+
+:global(html:not([data-js])) .tx {
+  position: relative;
+  padding-block: 18vh;
+}
+
+:global(html:not([data-js])) .red {
+  position: relative;
+  clip-path: none;
+  min-height: 100vh;
+}
+
+:global(html:not([data-js])) .ct {
+  position: relative;
+  min-height: 100vh;
+}
+
+@media (max-width: 900px) {
+  .ct {
+    padding-top: 96px;
+    grid-template-rows: auto auto auto 1fr;
+  }
+
+  .h2 {
+    font-size: calc(clamp(44px, 12.4vw, 66px) * 1.03);
+  }
+
+  .lead {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 26px;
+    font-size: 20px;
+    line-height: 1.4144;
+  }
+
+  .more {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 20px;
+    font-size: 16px;
+    line-height: 1.612;
+  }
+
+  .tone {
+    width: 150vw;
+    right: -60vw;
+    bottom: -14vh;
+  }
+
+  .tx p {
+    font-size: clamp(25px, 7vw, 34px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .more {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}

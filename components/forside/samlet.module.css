@@ -1,0 +1,147 @@
+/*
+ * The finale «Sammen kan vi gjøre en forskjell» = Samlet (280vh, the screen holds): on crimson, the
+ * words of the title fly in from scattered places until the sentence stands whole; then the text and
+ * the two buttons rise.
+ */
+.sa {
+  position: relative;
+  height: 280vh;
+  background: var(--rod);
+  color: #fff;
+}
+
+.stg {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 24px;
+  align-content: center;
+  padding: clamp(100px, 14vh, 150px) var(--gutter) clamp(48px, 8vh, 90px);
+}
+
+.h2 {
+  grid-column: 1 / span 11;
+  margin: 0;
+  font-weight: 600;
+  font-size: calc(clamp(52px, min(8.4vw, 14vh), 170px) * 1.03);
+  letter-spacing: -0.04em;
+  line-height: 0.8924;
+}
+
+.w {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+.bot {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 24px;
+  margin-top: clamp(36px, 6vh, 72px);
+  align-items: end;
+}
+
+.say {
+  grid-column: 1 / span 6;
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(17px, min(1.4vw, 2.5vh), 24px);
+  letter-spacing: -0.0048em;
+  line-height: 1.456;
+  color: var(--rod-pale);
+}
+
+.cta {
+  grid-column: 8 / span 5;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 14px 16px;
+}
+
+.up {
+  transition:
+    opacity 1s var(--ease-out),
+    transform 1.2s var(--ease-out);
+}
+
+.bot[data-on] .d1 {
+  transition-delay: 0.12s;
+}
+
+:global(html[data-js]) .bot:not([data-on]) .up {
+  opacity: 0;
+  transform: translateY(34px);
+}
+
+.b1,
+.b2 {
+  gap: 10px;
+}
+
+.b1 {
+  --k-bg: #fff;
+  --k-fg: var(--rod);
+  --k-hbg: var(--navy-deep);
+  --k-hfg: #fff;
+}
+
+.b2 {
+  --k-fg: #fff;
+  --k-hbg: #fff;
+  --k-hfg: var(--rod);
+}
+
+@media (max-width: 900px) {
+  .h2 {
+    grid-column: 1 / -1;
+    font-size: calc(clamp(44px, 12.4vw, 64px) * 1.03);
+  }
+
+  .bot {
+    display: block;
+  }
+
+  .say {
+    font-size: 16px;
+  }
+
+  .cta {
+    margin-top: 24px;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .b1,
+  .b2 {
+    justify-content: center;
+  }
+}
+
+/* Without JavaScript the sentence stands whole and the screen does not hold. */
+:global(html:not([data-js])) .sa {
+  height: auto;
+}
+
+:global(html:not([data-js])) .stg {
+  position: relative;
+  height: auto;
+  min-height: 100vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .up {
+    transition: none;
+  }
+
+  :global(html[data-js]) .bot:not([data-on]) .up {
+    opacity: 1;
+    transform: none;
+  }
+}

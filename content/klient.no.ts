@@ -152,7 +152,7 @@ export const klient = {
     ],
     contact: {
       title: 'Kontakt styret',
-      text: 'Henvendelser til styret kan sendes til iqrafoundation25@gmail.com.',
+      text: 'Henvendelser til styret kan sendes til post@iqrasti.no.',
     },
   },
 
@@ -214,7 +214,7 @@ export const klient = {
     postbox: 'Postboks 9044',
     postcode: '0133 Oslo',
     phone: '+47 941 43 585',
-    email: 'iqrafoundation25@gmail.com',
+    email: 'post@iqrasti.no',
   },
 } as const;
 

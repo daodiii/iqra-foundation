@@ -85,6 +85,8 @@ export const site = {
     navLabel: 'Hovedmeny',
     open: 'Meny',
     close: 'Lukk menyen',
+    /** The visible word on the menu's close button; `close` names it. */
+    closeShort: 'Lukk',
     skip: 'Hopp til innholdet',
   },
   footer: {
@@ -94,6 +96,8 @@ export const site = {
     emailLabel: 'E-post',
     phoneLabel: 'Telefon',
     addressLabel: 'Adresse',
+    /** The front page's foot: back to the top. */
+    toTop: 'Til toppen',
   },
   /**
    * The foundation's contact details, as the client's document gives them (D8, 2026-11-18).
