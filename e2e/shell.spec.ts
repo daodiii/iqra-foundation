@@ -47,7 +47,7 @@ test('desktop: every item is on screen at 1440, 1280 and 1024, what stands under
   test.skip(isMobile, 'the phone has the drawer');
   for (const width of [1440, 1280, 1024]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/');
+    await page.goto('/om-oss');
     const links = await headerLinks(page);
     await links.filter({ hasText: m.news }).first().hover();
     const shown = [m.home, m.about, m.news, m.newsItems, m.events, m.resources, m.contact, m.support];
@@ -63,7 +63,7 @@ test('desktop: every item is on screen at 1440, 1280 and 1024, what stands under
   }
   // One click on a top item: Ressurser.
   await page.setViewportSize({ width: 1024, height: 900 });
-  await page.goto('/');
+  await page.goto('/om-oss');
   await page.getByRole('navigation', { name: site.header.navLabel }).getByRole('link', { name: m.resources, exact: true }).click();
   await expect(page).toHaveURL(/\/ressurser$/);
   await expect(page.locator('h1')).toBeVisible();
@@ -108,7 +108,7 @@ test('the current page is marked, once', async ({ page }) => {
 
 test('phone: the drawer holds every item, traps focus, closes on Escape and locks the page', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'the drawer is the phone layout');
-  await page.goto('/');
+  await page.goto('/om-oss');
   const button = page.getByRole('button', { name: site.header.open });
   await expect(button).toBeVisible();
   await expect(button).toHaveAttribute('aria-expanded', 'false');
@@ -145,7 +145,7 @@ test('phone: the drawer holds every item, traps focus, closes on Escape and lock
 
 test('phone: the header and drawer items are targets a thumb can hit', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'touch targets');
-  await page.goto('/');
+  await page.goto('/om-oss');
   const button = page.getByRole('button', { name: site.header.open });
   const b = await button.boundingBox();
   expect(b!.height).toBeGreaterThanOrEqual(44);

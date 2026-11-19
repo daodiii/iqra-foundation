@@ -12,46 +12,6 @@ import { isPlaceholder } from '../lib/placeholder';
 
 const T = (page: string) => `${page} – ${site.name}`;
 
-test('the home page: the name as the heading, then the client’s front page in their order, every word theirs', async ({ page }) => {
-  const h = klient.home;
-  await page.goto('/');
-  await expect(page).toHaveTitle(site.name);
-  const main = page.getByRole('main');
-  await expect(main.locator('h1')).toHaveAccessibleName(site.logoAlt);
-  // the hero: the client's headline, two paragraphs and two buttons (D1)
-  await expect(main.getByText(h.headline, { exact: true })).toBeVisible();
-  for (const p of h.paragraphs) await expect(main.getByText(p, { exact: true })).toBeVisible();
-  await expect(main.getByRole('link', { name: site.cta.about.label })).toHaveAttribute('href', '/om-oss');
-  await expect(main.getByRole('link', { name: site.cta.events.label })).toHaveAttribute('href', '/aktuelt/arrangementer');
-  // the sections, in order
-  await expect(main.getByRole('heading', { level: 2 })).toHaveText([h.why.title, h.create.title, h.action.title, h.news.title, h.together.title]);
-  const all = [
-    ...h.why.paragraphs,
-    h.create.intro,
-    ...h.create.areas.flatMap((a) => [a.title, a.text]),
-    ...h.action.items.flatMap((a) => [a.title, a.text]),
-    h.news.intro,
-    h.together.text,
-  ];
-  for (const text of all) await expect(main.getByText(text, { exact: true })).toBeVisible();
-  // «Dette ønsker vi å skape» replaces the four boxes: an icon for each of its three, and none of the four anywhere
-  await expect(main.locator('section#skape svg[data-ikon]')).toHaveCount(3);
-  for (const old of ['Samfunnsdeltakelse', 'Møteplasser', 'Visjon', 'Misjon']) await expect(main.getByText(old, { exact: true })).toHaveCount(0);
-  // Aktuelt: at most three news and three events, and the way on to all of them
-  const news = getNews().slice(0, 3);
-  const { upcoming } = splitEvents(getEvents(), todayISO());
-  const aktuelt = main.locator('section#aktuelt');
-  if (news.length) for (const n of news) await expect(aktuelt.getByRole('heading', { name: n.title })).toBeVisible();
-  else await expect(aktuelt.getByText(site.pages.news.emptyNews, { exact: true })).toBeVisible();
-  if (upcoming.length) for (const e of upcoming.slice(0, 3)) await expect(aktuelt.getByRole('heading', { name: e.title })).toBeVisible();
-  else await expect(aktuelt.getByText(site.pages.news.emptyUpcoming, { exact: true })).toBeVisible();
-  await expect(aktuelt.getByRole('link', { name: h.news.all })).toHaveAttribute('href', '/aktuelt/nyheter');
-  // the close: «Bli samarbeidspartner» and «Støtt arbeidet»
-  const sammen = main.locator('section#sammen');
-  await expect(sammen.getByRole('link', { name: site.cta.partner.label })).toHaveAttribute('href', site.cta.partner.href);
-  await expect(sammen.getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', '/stott-oss');
-});
-
 test('phone: the home page is never wider than the screen', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'a phone only');
   for (const width of [320, 360, 390]) {

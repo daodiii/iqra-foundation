@@ -1,5 +1,4 @@
-import { Forside } from '@/components/home/Forside';
-import { Hero } from '@/components/home/Hero';
+import { Forside } from '@/components/forside/Forside';
 
 /**
  * The next events are chosen by today's date, and the page is prerendered — regenerated at
@@ -9,15 +8,7 @@ import { Hero } from '@/components/home/Hero';
  */
 export const revalidate = 3600;
 
-/**
- * Hjem: the client's front page (D1 and M2, 2026-11-18). The logo on navy with the client's
- * headline, text and two buttons (Hero); then their sections in their order (Forside).
- */
+/** Hjem: the owner's redesigned front page (2026-11-18/19), section by section (components/forside/). */
 export default function Home() {
-  return (
-    <>
-      <Hero />
-      <Forside />
-    </>
-  );
+  return <Forside />;
 }

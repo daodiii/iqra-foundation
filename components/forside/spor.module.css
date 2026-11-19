@@ -1,0 +1,201 @@
+/*
+ * «Dette ønsker vi å skape» = Sporet (380vh, the screen holds): the title, then three colour panels
+ * (navy, teal, burgundy) pass sideways as the page scrolls. All text is white on the panels; each
+ * panel's line icon draws itself, closed by the logo's dot.
+ */
+.spor {
+  position: relative;
+  height: 380vh;
+  background: #fff;
+}
+
+.stg {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.trk {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 2.6vw;
+  padding: clamp(80px, 10vh, 110px) var(--gutter) 0;
+  will-change: transform;
+}
+
+.trk :is(h2, h3) {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.036em;
+  line-height: 0.9118;
+}
+
+.trk :global([data-lines]) [class] {
+  transition-duration: 1.25s;
+  transition-delay: calc(var(--k) * 85ms);
+}
+
+.p0 {
+  flex: none;
+  width: min(60vw, 900px);
+  color: var(--navy);
+  padding-right: 5vw;
+}
+
+.p0 h2 {
+  font-size: calc(clamp(54px, min(7.6vw, 13vh), 150px) * 1.03);
+}
+
+.ingress {
+  margin: clamp(28px, 5vh, 60px) 0 0;
+  font-weight: 400;
+  letter-spacing: -0.006em;
+  line-height: 1.352;
+  font-size: clamp(22px, min(2.1vw, 3.8vh), 38px);
+  max-width: 21em;
+}
+
+.cd {
+  flex: none;
+  position: relative;
+  overflow: hidden;
+  width: min(60vw, 860px);
+  height: min(74vh, 740px);
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  padding: clamp(32px, 4vw, 68px);
+  color: #fff;
+}
+
+.c1 {
+  background: var(--navy);
+  --dc: var(--turkis);
+}
+
+.c2 {
+  background: var(--teal);
+  --dc: var(--navy);
+}
+
+.c3 {
+  background: var(--rod);
+  --dc: var(--navy);
+}
+
+.cd h3 {
+  grid-row: 3;
+  max-width: min(100%, 7.6em);
+  font-size: calc(clamp(44px, min(5.2vw, 9.5vh), 104px) * 1.03);
+}
+
+.txt {
+  grid-row: 4;
+  margin: clamp(20px, 3.2vh, 36px) 0 0;
+  font-weight: 400;
+  letter-spacing: -0.004em;
+  font-size: clamp(19px, min(1.6vw, 2.9vh), 27px);
+  line-height: 1.4352;
+  max-width: 22em;
+  color: rgba(255, 255, 255, 0.9);
+  transition:
+    opacity 1s var(--ease-out) 0.35s,
+    transform 1.2s var(--ease-out) 0.35s;
+}
+
+:global(html[data-js]) .cd:not([data-on]) .txt {
+  opacity: 0;
+  transform: translateY(26px);
+}
+
+/*
+ * The icons: one family, fine lines on a 120 grid, each closed by the logo's dot. They stand drawn:
+ * the mock's draw-on never played (a page-wide class kept every icon finished), and the finished
+ * icons are what the owner approved.
+ */
+.ik {
+  display: block;
+  overflow: visible;
+  color: #fff;
+  width: min(30vh, 19vw);
+  height: auto;
+  will-change: transform;
+}
+
+.s {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.d {
+  fill: var(--dc);
+}
+
+@media (min-width: 1700px) {
+  .cd h3 {
+    font-size: calc(min(clamp(44px, min(5.2vw, 9.5vh), 104px), 4.7vw, 92px) * 1.03);
+  }
+}
+
+@media (max-width: 900px) {
+  .p0 {
+    width: 84vw;
+  }
+
+  .p0 h2 {
+    font-size: calc(clamp(44px, 12vw, 62px) * 1.03);
+  }
+
+  .ingress {
+    font-size: 20px;
+  }
+
+  .cd {
+    width: 84vw;
+    height: 70vh;
+    padding: 28px;
+  }
+
+  .ik {
+    width: 36vw;
+  }
+
+  .cd h3 {
+    font-size: calc(clamp(36px, 10vw, 50px) * 1.03);
+  }
+
+  .txt {
+    font-size: 18px;
+  }
+}
+
+/* Without JavaScript the panels stand in a row that scrolls sideways by hand. */
+:global(html:not([data-js])) .spor {
+  height: auto;
+}
+
+:global(html:not([data-js])) .stg {
+  position: relative;
+  overflow-x: auto;
+}
+
+:global(html:not([data-js])) .trk {
+  position: relative;
+  padding-bottom: 10vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .txt {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

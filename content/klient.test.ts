@@ -13,7 +13,13 @@ import { klient } from './klient.no';
  * the strings is listed in LEFTOVERS, each with its reason.
  */
 const FILE = path.resolve(process.cwd(), 'docs/prompts/2026-11-18-klient-oppdatering.md');
-const file = readFileSync(FILE, 'utf8');
+/**
+ * The one change to the client's words since: the foundation's e-mail is post@iqrasti.no (the
+ * owner, 2026-11-19), in the contact line and in «Kontakt styret». The sources keep the old
+ * address as the client wrote it; the test reads them with the new one in its place.
+ */
+const EMAIL = { old: 'iqrafoundation25@gmail.com', now: 'post@iqrasti.no' };
+const file = readFileSync(FILE, 'utf8').replaceAll(EMAIL.old, EMAIL.now);
 
 /** Markdown emphasis off, whitespace collapsed: what a reader of the sources sees. */
 const plain = (s: string) => s.replace(/\*/g, '').replace(/\s+/g, ' ').trim();

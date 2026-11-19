@@ -1,0 +1,114 @@
+/*
+ * The front page's ground rules (the owner's redesign, 2026-11-18/19).
+ *
+ * Colour «Klassisk»: navy #1b2a4a, burgundy #8c2340, teal #21716f. Every darker and lighter shade
+ * below is derived from its family's base in OKLCH (keeping the base's hue and chroma ratio, moving
+ * lightness), as the colour round's buildcolor.mjs did; the turquoise #67c1bf is the brand's own.
+ * Type: Instrument Sans everywhere, 600 for titles, 400 for text, 500 for labels and controls.
+ */
+.page {
+  --navy: #1b2a4a;
+  --navy-dark: #13213a;
+  --navy-deep: #101c32;
+  --rod: #8c2340;
+  --rod-dyp: #7c0f32;
+  --teal: #21716f;
+  --turkis: #67c1bf;
+  /* the pale teal and pale burgundy, for grounds and text on crimson */
+  --teal-pale: #cee9e8;
+  --rod-pale: #fcedf0;
+  /* greys of the navy family, for text on white and on navy */
+  --ink-2: #2a3856;
+  --ink-3: #4f5c79;
+  --ink-4: #7f8ba6;
+  --on-navy: #c3cde1;
+  --on-navy-2: #cbd3e1;
+  /* the carved logo's layers (Hero.tsx) */
+  --carve-soft: #060c1a;
+  --carve-soft-c: #21030b;
+  --carve-shade: #0b1427;
+  --carve-shade-c: #3c0416;
+  --carve-hi: #496396;
+  --carve-hi-c: #bc5b71;
+  --carve-face: #253b65;
+
+  --gutter: clamp(20px, 3.4vw, 64px);
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --font: var(--font-instrument), system-ui, sans-serif;
+
+  font-family: var(--font);
+  font-weight: 400;
+  color: var(--navy);
+  background: #fff;
+}
+
+.page :is(h1, h2, h3, h4) {
+  font-family: var(--font);
+  text-wrap: wrap;
+}
+
+/* The page under the header: the hero is the first screen, so main has no room kept for the header. */
+.main {
+  padding-top: 0;
+}
+
+/* The logo's lines, drawn once and used everywhere on the page (Merke.tsx) */
+.defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* A line of a text that glides in (Lines.tsx): its mask, and the line in it */
+.ln {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+.li {
+  display: block;
+  transform-origin: 0 100%;
+  transition: transform 1.3s var(--ease-out) calc(var(--k) * 90ms);
+}
+
+[data-lines='off'] .li {
+  transform: translateY(112%) rotate(2.5deg);
+}
+
+/* The page's side margins */
+.pad {
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+}
+
+/*
+ * Lagene: each section slides over the one before, which holds back at half speed and darkens by
+ * up to 30% (Lagene.tsx sets the hold and `--fxd`). The later section always lies higher.
+ */
+.layer {
+  position: relative;
+}
+
+.layerIn {
+  box-shadow: 0 -24px 60px -24px rgba(4, 8, 18, 0.45);
+}
+
+/* the shade over a section as the next comes over it: its own element, so a frame changes one opacity and restyles nothing else */
+.shade {
+  position: absolute;
+  inset: 0;
+  background: #040812;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .li {
+    transition: none !important;
+    transform: none !important;
+  }
+}

@@ -23,6 +23,18 @@ export const generalSans = localFont({
   ],
 });
 
+/**
+ * The front page's typeface since the redesign (the owner's pick, 2026-11-19, after a survey of the
+ * fonts leading institutes and think tanks use): Instrument Sans, under the SIL Open Font License,
+ * self-hosted from `brand/fonts/instrument-sans/` beside its licence. One variable file covers the
+ * three weights the page sets (400 text, 500 labels, 600 titles); the latin subset holds æ, ø and å.
+ */
+export const instrumentSans = localFont({
+  variable: '--font-instrument',
+  display: 'swap',
+  src: [{ path: '../brand/fonts/instrument-sans/InstrumentSans-Variable-latin.woff2', weight: '400 600', style: 'normal' }],
+});
+
 export const supreme = localFont({
   variable: '--font-supreme',
   display: 'swap',
