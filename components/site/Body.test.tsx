@@ -64,3 +64,9 @@ test('a picture whose file is not there is still shown, plain, with its words', 
   render(<Body source={'![Borte](/opplastet/nyheter/a/borte.png)'} root={root} />);
   expect(screen.getByRole('img', { name: 'Borte' })).toHaveAttribute('src', '/opplastet/nyheter/a/borte.png');
 });
+
+test('headings carry the anchors the article contents link to', () => {
+  const { container } = render(<Body source={'## Læring som utvikler\n\nTekst.\n\n### Under\n'} root={root} />);
+  expect(container.querySelector('h2')).toHaveAttribute('id', 'del-laering-som-utvikler');
+  expect(container.querySelector('h3')).toHaveAttribute('id', 'del-under');
+});
