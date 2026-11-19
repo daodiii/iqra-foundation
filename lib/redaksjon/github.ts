@@ -38,10 +38,16 @@ export class GitHubStore implements Store {
     return { commit: ref.object.sha, tree: c.tree.sha };
   }
 
-  private async tree(): Promise<TreeEntry[]> {
-    const { tree } = await this.head();
-    const t = await this.api<{ tree: TreeEntry[]; truncated: boolean }>('GET', `/git/trees/${tree}?recursive=1`);
-    return t.tree;
+  /** The branch's whole tree, fetched once per store (a store lives for one request) until a commit. */
+  private cached: Promise<TreeEntry[]> | null = null;
+  private tree(): Promise<TreeEntry[]> {
+    this.cached ??= (async () => {
+      const { tree } = await this.head();
+      const t = await this.api<{ tree: TreeEntry[]; truncated: boolean }>('GET', `/git/trees/${tree}?recursive=1`);
+      return t.tree;
+    })();
+    this.cached.catch(() => { this.cached = null; });
+    return this.cached;
   }
 
   async list(prefix: string): Promise<string[]> {
@@ -60,6 +66,7 @@ export class GitHubStore implements Store {
 
   async commit(changes: Change[], message: string): Promise<void> {
     for (const c of changes) assertPath(c.path);
+    this.cached = null;
     // Bytes go up as blobs first; text rides in the tree.
     const entries = await Promise.all(
       changes.map(async (c) => {

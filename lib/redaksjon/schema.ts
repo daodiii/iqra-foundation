@@ -102,18 +102,15 @@ const KNOWN: Record<Section, string[]> = {
   menneskene: ['name', 'role', 'photo', 'bio', 'order'],
 };
 
-/** An entry from its files' contents (`files` keyed by repo path; a missing body is empty). */
-export function fromFiles<S extends Section>(section: S, slug: string, files: Record<string, string | null>): Stored<S> {
-  const [jsonPath, bodyPath] = entryPaths(section, slug);
-  const text = files[jsonPath];
-  if (text == null) throw new Error(`${jsonPath} finnes ikke`);
-  const raw = JSON.parse(text) as Raw;
-  const extra: Raw = {};
-  for (const [k, v] of Object.entries(raw)) if (!KNOWN[section].includes(k)) extra[k] = v;
+/**
+ * The editor's fields from any object: the JSON a file holds, or what the browser sent. Every
+ * value is checked for its type, so nothing that is not a string reaches a string field.
+ */
+export function coerce<S extends Section>(section: S, raw: Raw, body = ''): EntryOf[S] {
   let fields: EntryOf[Section];
   switch (section) {
     case 'nyheter':
-      fields = { title: s(raw.title), date: s(raw.date), summary: s(raw.summary), image: readPic(section, 'image', raw.image), publish: raw.publish === true, body: files[bodyPath] ?? '' };
+      fields = { title: s(raw.title), date: s(raw.date), summary: s(raw.summary), image: readPic(section, 'image', raw.image), publish: raw.publish === true, body };
       break;
     case 'arrangementer':
       fields = {
@@ -127,7 +124,18 @@ export function fromFiles<S extends Section>(section: S, slug: string, files: Re
     default:
       fields = { name: s(raw.name), role: s(raw.role), photo: readPic(section, 'photo', raw.photo), bio: s(raw.bio), order: typeof raw.order === 'number' ? raw.order : 10 };
   }
-  return { fields: fields as EntryOf[S], extra };
+  return fields as EntryOf[S];
+}
+
+/** An entry from its files' contents (`files` keyed by repo path; a missing body is empty). */
+export function fromFiles<S extends Section>(section: S, slug: string, files: Record<string, string | null>): Stored<S> {
+  const [jsonPath, bodyPath] = entryPaths(section, slug);
+  const text = files[jsonPath];
+  if (text == null) throw new Error(`${jsonPath} finnes ikke`);
+  const raw = JSON.parse(text) as Raw;
+  const extra: Raw = {};
+  for (const [k, v] of Object.entries(raw)) if (!KNOWN[section].includes(k)) extra[k] = v;
+  return { fields: coerce(section, raw, bodyPath ? (files[bodyPath] ?? '') : ''), extra };
 }
 
 /* ----- writing the editor's entry to files ----- */
