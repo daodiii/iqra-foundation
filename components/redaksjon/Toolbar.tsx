@@ -60,10 +60,10 @@ export function Toolbar({ editor, onPicture }: { editor: Editor; onPicture: () =
       </div>
       {linking !== null && (
         <form className={s.inline} onSubmit={(e) => { e.preventDefault(); applyLink(); }}>
-          <label htmlFor="redaksjon-lenke">Lenke til</label>
+          <label htmlFor="redaksjon-lenke">Adresse</label>
           <input id="redaksjon-lenke" type="url" inputMode="url" value={linking} autoFocus onChange={(e) => setLinking(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Escape') { setLinking(null); editor.commands.focus(); } }} />
-          <button type="submit" className={`${s.btn} ${s.go}`}>Legg til</button>
+          <button type="submit" className={`${s.btn} ${s.go}`}>Sett inn lenke</button>
           {st.link && <button type="button" className={s.btn} onClick={() => { c().extendMarkRange('link').unsetLink().run(); setLinking(null); }}>Fjern lenken</button>}
           <button type="button" className={`${s.btn} ${s.quiet}`} onClick={() => { setLinking(null); editor.commands.focus(); }}>Avbryt</button>
         </form>

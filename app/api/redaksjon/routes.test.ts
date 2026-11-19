@@ -70,7 +70,7 @@ describe('a news post through the API', () => {
     expect(made.status).toBe(201);
     const a = (await made.json()) as { slug: string; version: string; note: string };
     expect(a.slug).toBe('apen-dag-pa-furuset');
-    expect(a.note).toMatch(/på nettsiden om ca\. 2–3 minutter/i);
+    expect(a.note).toMatch(/synlig på nettsiden om 2–3 minutter/i);
 
     const news = getNews(path.join(root, 'content/nyheter'));
     expect(news.map((n) => n.title)).toEqual(['Åpen dag på Furuset']);

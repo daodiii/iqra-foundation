@@ -55,7 +55,7 @@ export function Shell({ email, counts: fromServer, clerk, children }: { email: s
           <Icon name="menu" />
         </button>
         <Link href="/redaksjon" className={s.mlogo}><img src="/brand/iqra-logo.svg" alt="Iqra Foundation, redaksjon" /></Link>
-        <Link href="/redaksjon/nyheter/ny" className={s.mnew} aria-label="Skriv nytt"><Icon name="plus" /></Link>
+        <Link href="/redaksjon/nyheter/ny" className={s.mnew} aria-label="Nytt innlegg"><Icon name="plus" /></Link>
       </header>
 
       {open && <div className={s.scrim} onClick={() => setOpen(false)} aria-hidden="true" />}
@@ -65,7 +65,7 @@ export function Shell({ email, counts: fromServer, clerk, children }: { email: s
           <span>Redaksjon</span>
           <button type="button" className={s.close} aria-label="Lukk menyen" onClick={() => setOpen(false)}><Icon name="close" /></button>
         </div>
-        <Link href="/redaksjon/nyheter/ny" className={s.new}><Icon name="plus" />Skriv nytt</Link>
+        <Link href="/redaksjon/nyheter/ny" className={s.new}><Icon name="plus" />Nytt innlegg</Link>
         <nav className={s.nav} aria-label="Redaksjonen">
           <Link href="/redaksjon" aria-current={here('/redaksjon') ? 'page' : undefined}><Icon name="home" />Oversikt</Link>
           {GROUPS.map((g) => (

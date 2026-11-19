@@ -21,7 +21,7 @@ export const counts = cache(async (): Promise<Record<Section, number>> => {
   return Object.fromEntries(SECTIONS.map((s, i) => [s, lists[i].length])) as Record<Section, number>;
 });
 
-/** The newest posts across news, events and resources, for «Sist endret». */
+/** The newest posts across news, events and resources, for «Siste innlegg». */
 export const latest = cache(async (n = 6): Promise<Row[]> => {
   const lists = await Promise.all((['nyheter', 'arrangementer', 'ressurser'] as const).map((s) => rowsOf(s)));
   return lists.flat().sort((a, b) => b.date.localeCompare(a.date)).slice(0, n);

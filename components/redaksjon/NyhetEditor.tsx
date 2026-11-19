@@ -20,7 +20,8 @@ type Status = { tone: 'idle' | 'busy' | 'ok' | 'error'; text: string };
  */
 type Local = { name: string; blob: Blob; path?: string };
 
-const hhmm = () => new Date().toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+/** The time as Norwegian writes it: «11.34». */
+const hhmm = () => new Date().toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
 
 /**
  * Writing a news post (mockup A): the sheet, the panel beside it, and «Lagre». A new post has no
@@ -35,7 +36,7 @@ export function NyhetEditor({ initial, slug: savedSlug, version: savedVersion }:
   const [slugTouched, setSlugTouched] = useState(Boolean(savedSlug));
   const [version, setVersion] = useState(savedVersion);
   const [saved, setSaved] = useState<{ fields: Nyhet; slug: string } | null>(savedSlug ? { fields: initial, slug: savedSlug } : null);
-  const [status, setStatus] = useState<Status>({ tone: 'idle', text: savedSlug ? 'Ingen endringer' : 'Ikke lagret ennå' });
+  const [status, setStatus] = useState<Status>({ tone: 'idle', text: savedSlug ? 'Alt er lagret' : 'Ikke lagret ennå' });
   const [error, setError] = useState<{ text: string; stale: boolean } | null>(null);
   const local = useRef(new Map<string, Local>());
 
@@ -100,7 +101,7 @@ export function NyhetEditor({ initial, slug: savedSlug, version: savedVersion }:
     setSlugTouched(true);
     setVersion(r.value.version);
     setSaved({ fields: f, slug: r.value.slug });
-    setStatus({ tone: 'ok', text: `${r.value.note.replace(/\.$/, '')} · ${hhmm()}` });
+    setStatus({ tone: 'ok', text: r.value.note.replace(/^Lagret/, `Lagret kl. ${hhmm()}`) });
     // A new or moved post gets its address in the bar without leaving the page (a new page would
     // show the pictures from the site, which has them only after its rebuild).
     if (moved) window.history.replaceState(null, '', `/redaksjon/nyheter/${r.value.slug}`);
@@ -112,7 +113,7 @@ export function NyhetEditor({ initial, slug: savedSlug, version: savedVersion }:
     <span className={s.status} data-tone={status.tone} role="status" aria-live="polite">
       {status.tone === 'ok' && <Icon name="check" />}
       {status.tone === 'error' && <Icon name="alert" />}
-      {dirty && status.tone !== 'busy' && status.tone !== 'error' && saved ? 'Endringer som ikke er lagret' : status.text}
+      {dirty && status.tone !== 'busy' && status.tone !== 'error' && saved ? 'Du har endringer som ikke er lagret' : status.text}
     </span>
   );
   const saveBtn = (

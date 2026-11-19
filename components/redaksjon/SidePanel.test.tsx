@@ -17,7 +17,7 @@ describe('the side panel', () => {
       ['Overskrift', false], ['Ingress', true], ['Dato', false], ['Bilde med beskrivelse', true], ['Slå på «Vis på nettsiden»', true],
     ]);
     expect(screen.getByRole('switch')).not.toBeChecked();
-    expect(screen.getByText(/Av: nyheten er lagret/)).toBeInTheDocument();
+    expect(screen.getByText(/Av: Nyheten lagres som utkast/)).toBeInTheDocument();
     expect(screen.getByText('/aktuelt/nyheter/apen-dag')).toBeInTheDocument();
   });
 

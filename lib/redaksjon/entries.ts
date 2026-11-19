@@ -11,7 +11,7 @@ import { StaleError, type Change, type Store } from './files';
  * route handlers and the editor's server pages both call these, so the checks live in one place.
  */
 
-/** One row in a list: enough for «Sist endret» and the section lists. */
+/** One row in a list: enough for «Siste innlegg» and the section lists. */
 export type Row = { section: Section; slug: string; title: string; sub: string; date: string; draft: boolean };
 
 /** An entry as the editor opens it, with the version a later save must send back. */
@@ -125,7 +125,7 @@ const message = (section: Section, title: string, email: string, deleted = false
 /** What the editor says after a save. */
 function note(section: Section, fields: Record<string, unknown>): string {
   if (section === 'nyheter' && fields.publish !== true) return 'Lagret som utkast. Den vises ikke på nettsiden.';
-  return 'Lagret. På nettsiden om ca. 2–3 minutter.';
+  return 'Lagret. Synlig på nettsiden om 2–3 minutter.';
 }
 
 export type Saved = { slug: string; version: string; note: string };
@@ -138,7 +138,7 @@ export async function createEntry<S extends Section>(
   const slug = input.slug ?? slugify(titleOf(section, input.fields));
   usable(slug);
   if ((await readAll(store, section, slug)).exists) {
-    throw new EditorError(409, 'Det finnes allerede en side med denne nettadressen. Velg en annen.', [{ key: 'slug', text: 'Nettadresse' }]);
+    throw new EditorError(409, 'En annen nyhet har allerede denne nettadressen. Endre overskriften eller adressen.', [{ key: 'slug', text: 'Nettadresse' }]);
   }
   const files = toFiles(section, slug, { fields: input.fields, extra: {} });
   const changes: Change[] = [
@@ -166,7 +166,7 @@ export async function saveEntry<S extends Section>(
   const to = input.slug ?? slug;
   if (to !== slug) usable(to);
   if (to !== slug && (await readAll(store, section, to)).exists) {
-    throw new EditorError(409, 'Det finnes allerede en side med denne nettadressen. Velg en annen.', [{ key: 'slug', text: 'Nettadresse' }]);
+    throw new EditorError(409, 'En annen nyhet har allerede denne nettadressen. Endre overskriften eller adressen.', [{ key: 'slug', text: 'Nettadresse' }]);
   }
   const { extra } = fromFiles(section, slug, now.files);
   const files = toFiles(section, to, { fields: input.fields, extra });

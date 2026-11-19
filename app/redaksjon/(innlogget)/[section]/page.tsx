@@ -22,7 +22,7 @@ export default async function Seksjon({ params }: PageProps<'/redaksjon/[section
       </div>
       {rows.length
         ? <Rows rows={rows} today={todayISO()} kind={false} />
-        : <p className={s.empty}>Ingenting her ennå. <Link href={`/redaksjon/${section}/ny`}>{NEW[section]}</Link></p>}
+        : <p className={s.empty}>Ingen innlegg ennå. <Link href={`/redaksjon/${section}/ny`}>{NEW[section]}</Link></p>}
     </main>
   );
 }

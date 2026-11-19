@@ -8,7 +8,7 @@ import { blank, isSection, type Nyhet } from '@/lib/redaksjon/schema';
 export default async function Skriv({ params }: PageProps<'/redaksjon/[section]/[slug]'>) {
   const { section, slug } = await params;
   if (!isSection(section) || section !== 'nyheter') notFound(); // the other sections come in phase 3
-  // A fresh key each time: «Skriv nytt» from a post saved in this visit must start empty.
+  // A fresh key each time: «Nytt innlegg» from a post saved in this visit must start empty.
   if (slug === 'ny') return <NyhetEditor key={crypto.randomUUID()} initial={blank('nyheter', todayISO())} slug={null} version={null} />;
   const entry = await opened('nyheter', slug);
   if (!entry) notFound();

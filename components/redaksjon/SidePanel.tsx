@@ -34,7 +34,7 @@ export function SidePanel(p: Props) {
     ['Ingress', ok('summary')],
     ['Dato', ok('date')],
     ...(p.image ? ([['Bilde med beskrivelse', ok('image')]] as [string, boolean][]) : []),
-    ...(!ok('body') ? ([['Beskrivelse på bilde i teksten', false]] as [string, boolean][]) : []),
+    ...(!ok('body') ? ([['Bildebeskrivelse på bilde i teksten', false]] as [string, boolean][]) : []),
   ];
 
   return (
@@ -46,7 +46,7 @@ export function SidePanel(p: Props) {
           <span className={s.sw} aria-hidden="true" />
           <div>
             <strong>Vis på nettsiden</strong>
-            <span>{p.publish ? 'På: nyheten vises på nettsiden når du lagrer.' : 'Av: nyheten er lagret, men bare dere i redaksjonen ser den.'}</span>
+            <span>{p.publish ? 'På: Nyheten kommer på nettsiden når du lagrer.' : 'Av: Nyheten lagres som utkast og vises ikke på nettsiden.'}</span>
           </div>
         </label>
       </section>
@@ -61,7 +61,7 @@ export function SidePanel(p: Props) {
           {editingSlug ? (
             <form className={s.url} onSubmit={(e) => { e.preventDefault(); const v = slugify(draftSlug); if (isSlug(v)) { p.onSlug(v); setEditingSlug(false); } }}>
               <input aria-labelledby="redaksjon-adresse" value={draftSlug} autoFocus onChange={(e) => setDraftSlug(e.target.value)} style={{ flex: 1, height: 34 }} />
-              <button type="submit">Bruk</button>
+              <button type="submit">OK</button>
             </form>
           ) : (
             <div className={s.url}>
@@ -69,12 +69,12 @@ export function SidePanel(p: Props) {
               <button type="button" onClick={() => { setDraftSlug(p.slug); setEditingSlug(true); }}>Endre</button>
             </div>
           )}
-          <span className={s.hint}>Lages av overskriften. Trenger ikke endres.</span>
+          <span className={s.hint}>Lages automatisk fra overskriften. Du trenger ikke endre den.</span>
         </div>
       </section>
 
       <section className={s.ready}>
-        <h3>Klar for nettsiden</h3>
+        <h3>Sjekkliste</h3>
         <ul>
           {items.map(([text, done]) => (
             <li key={text} className={done ? undefined : s.no}><Icon name={done ? 'check' : 'clock'} />{text}</li>
@@ -85,8 +85,8 @@ export function SidePanel(p: Props) {
 
       <section>
         <div className={s.prevHead}>
-          <h3>Slik ser kortet ut</h3>
-          {p.liveHref && <a href={p.liveHref} target="_blank" rel="noreferrer">Hele siden</a>}
+          <h3>Slik vises den på Aktuelt</h3>
+          {p.liveHref && <a href={p.liveHref} target="_blank" rel="noreferrer">Se hele saken</a>}
         </div>
         {/* The site's own card, with the site's own styles, so this is what Aktuelt shows. */}
         <ul className={`${card.list} ${s.card}`}>

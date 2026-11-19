@@ -24,8 +24,8 @@ export default async function Oversikt() {
         </Link>
       </div>
       <section className={s.sec} aria-labelledby="sist">
-        <div className={s.secHead}><h2 id="sist">Sist endret</h2><Link href="/redaksjon/nyheter">Se alle nyheter</Link></div>
-        {rows.length ? <Rows rows={rows} today={todayISO()} /> : <p className={s.empty}>Ingenting her ennå.</p>}
+        <div className={s.secHead}><h2 id="sist">Siste innlegg</h2><Link href="/redaksjon/nyheter">Se alle nyheter</Link></div>
+        {rows.length ? <Rows rows={rows} today={todayISO()} /> : <p className={s.empty}>Ingen innlegg ennå.</p>}
       </section>
     </main>
   );

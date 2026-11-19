@@ -30,14 +30,14 @@ export async function route(section: string, run: (c: Ctx) => Promise<Response>)
 export function refusal(e: unknown): Response {
   if (e instanceof EditorError) return Response.json({ error: e.message, fields: e.fields ?? [] }, { status: e.status });
   if (e instanceof StaleError) {
-    return Response.json({ error: 'Noen andre har endret denne siden etter at du åpnet den. Last den inn på nytt før du lagrer.' }, { status: 409 });
+    return Response.json({ error: 'Noen andre har endret denne nyheten mens du hadde den åpen. Kopier teksten din, og last inn siden på nytt.' }, { status: 409 });
   }
   if (e instanceof GitHubError) {
     console.error('[redaksjon]', e.message);
-    return Response.json({ error: 'Kunne ikke lagre akkurat nå. Teksten din er ikke borte; prøv igjen om litt.' }, { status: 502 });
+    return Response.json({ error: 'Kunne ikke lagre akkurat nå. Teksten din er ikke borte. Prøv igjen om litt.' }, { status: 502 });
   }
   console.error('[redaksjon]', e);
-  return Response.json({ error: 'Noe gikk galt. Teksten din er ikke borte; prøv igjen.' }, { status: 500 });
+  return Response.json({ error: 'Noe gikk galt. Teksten din er ikke borte. Prøv igjen.' }, { status: 500 });
 }
 
 /** The body of a save: the fields, the version opened, an address, and pictures (base64). */

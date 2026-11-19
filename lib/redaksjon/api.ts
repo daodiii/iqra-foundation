@@ -21,7 +21,7 @@ async function call<T>(method: string, url: string, body?: unknown): Promise<Res
       cache: 'no-store',
     });
   } catch {
-    return { ok: false, status: 0, error: 'Fikk ikke kontakt. Sjekk nettet og prøv igjen; teksten din er ikke borte.', fields: [] };
+    return { ok: false, status: 0, error: 'Fikk ikke kontakt med nettsiden. Sjekk internett og prøv igjen. Teksten din er ikke borte.', fields: [] };
   }
   if (res.ok) return { ok: true, value: (res.status === 204 ? undefined : await res.json()) as T };
   const b = (await res.json().catch(() => ({}))) as { error?: string; fields?: Problem[] };

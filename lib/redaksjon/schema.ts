@@ -197,7 +197,7 @@ export function problems<S extends Section>(section: S, fields: EntryOf[S]): { k
       need('date', isDate(n.date), 'Dato');
       need('summary', n.summary.trim() !== '', 'Ingress');
       pic('image', n.image);
-      need('body', !/!\[\s*\]\(/.test(n.body), 'Beskrivelse på bilde i teksten');
+      need('body', !/!\[\s*\]\(/.test(n.body), 'Bildebeskrivelse på bilde i teksten');
       break;
     }
     case 'arrangementer': {

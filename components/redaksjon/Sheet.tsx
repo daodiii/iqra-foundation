@@ -86,14 +86,14 @@ export function Sheet(p: Props) {
               <button type="button" className={s.btn} onClick={() => coverInput.current?.click()}><Icon name="img" />Bytt bilde</button>
               <button type="button" className={s.btn} aria-label="Fjern bildet" title="Fjern bildet" onClick={() => p.onImage(null)}><Icon name="trash" /></button>
             </div>
-            {busy === 'cover' && <div className={s.busy}>Gjør bildet klart …</div>}
+            {busy === 'cover' && <div className={s.busy}>Klargjør bildet …</div>}
           </div>
           <div className={s.alt} data-missing={altMissing || undefined}>
             <label htmlFor="redaksjon-alt">Bildebeskrivelse</label>
             <input
               id="redaksjon-alt"
               value={p.image.alt}
-              placeholder="Hva viser bildet? Leses opp for dem som ikke ser det."
+              placeholder="Beskriv kort hva bildet viser. Teksten leses opp for blinde og svaksynte."
               onChange={(e) => p.onImage({ src: p.image!.src, alt: e.target.value })}
               aria-invalid={altMissing || undefined}
             />
@@ -102,8 +102,8 @@ export function Sheet(p: Props) {
       ) : (
         <button type="button" className={s.addCover} onClick={() => coverInput.current?.click()} disabled={busy === 'cover'}>
           <Icon name="img" />
-          {busy === 'cover' ? 'Gjør bildet klart …' : 'Legg til bilde'}
-          <small>Vises øverst i saken og på kortet</small>
+          {busy === 'cover' ? 'Klargjør bildet …' : 'Legg til bilde'}
+          <small>Vises øverst i saken og på Aktuelt</small>
         </button>
       )}
       {problem && <p className={`${s.hint} ${s.danger}`} style={{ margin: '10px 56px 0' }} role="alert">{problem}</p>}
@@ -117,13 +117,13 @@ export function Sheet(p: Props) {
       <label className={s.srOnly} htmlFor="redaksjon-ingress">Ingress</label>
       <textarea
         id="redaksjon-ingress" ref={summaryRef} className={s.ingress} rows={2} value={p.summary}
-        placeholder="Ingress: en eller to setninger som sier hva saken handler om"
+        placeholder="Ingress: en eller to setninger om hva saken handler om"
         onChange={(e) => p.onSummary(e.target.value.replace(/\n/g, ' '))}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); editor?.commands.focus('start'); } }}
       />
 
       {editor && <Toolbar editor={editor} onPicture={() => textInput.current?.click()} />}
-      {busy === 'text' && <p className={s.inline}>Gjør bildet klart …</p>}
+      {busy === 'text' && <p className={s.inline}>Klargjør bildet …</p>}
       {pending && (
         <form className={s.inline} onSubmit={(e) => { e.preventDefault(); insert(); }}>
           <img src={pending.src} alt="" />
