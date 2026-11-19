@@ -52,3 +52,6 @@ scripts/.frames/
 
 # helper scripts output
 .scratch/
+
+# taste-skill working folder
+.taste-skill/
