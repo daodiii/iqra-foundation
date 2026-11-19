@@ -31,6 +31,35 @@ const csp = [
   'upgrade-insecure-requests',
 ].join('; ');
 
+/**
+ * The editor under /redaksjon logs in through Clerk, whose scripts and API live at the
+ * instance's own address. That address is written into the publishable key (base64 after
+ * `pk_test_` / `pk_live_`, ending in `$`), so the policy names exactly that host and no wildcard.
+ * Cloudflare's check is Clerk's bot protection on sign-in.
+ */
+function clerkHost(key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ''): string | null {
+  const m = /^pk_(?:test|live)_([A-Za-z0-9+/=]+)$/.exec(key);
+  if (!m) return null;
+  const host = Buffer.from(m[1], 'base64').toString('utf8').replace(/\$$/, '');
+  return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(host) ? host : null;
+}
+const clerk = clerkHost();
+const editorCsp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}${clerk ? ` https://${clerk} https://challenges.cloudflare.com` : ''}`,
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob:${clerk ? ' https://img.clerk.com' : ''}`,
+  "font-src 'self' data:",
+  `connect-src 'self'${clerk ? ` https://${clerk}` : ''}`,
+  `frame-src${clerk ? ' https://challenges.cloudflare.com' : " 'none'"}`,
+  "worker-src 'self' blob:",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+  'upgrade-insecure-requests',
+].join('; ');
+
 const securityHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -80,7 +109,15 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: '/((?!keystatic|api/keystatic).*)', headers: securityHeaders },
+      { source: '/((?!keystatic|api/keystatic|redaksjon|api/redaksjon).*)', headers: securityHeaders },
+      {
+        source: '/:dir(redaksjon|api/redaksjon)/:rest*',
+        headers: [
+          ...securityHeaders.filter((h) => h.key !== 'Content-Security-Policy'),
+          { key: 'Content-Security-Policy', value: editorCsp },
+          { key: 'Cache-Control', value: 'private, no-store' },
+        ],
+      },
       {
         source: '/media/:file*',
         headers: [
