@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
-import { onFrame, progress } from './frame';
+import { onScrollFrame, progress } from './frame';
 import { Lines } from './Lines';
 import f from './forside.module.css';
 import styles from './spor.module.css';
@@ -54,13 +54,14 @@ export function Spor() {
     const track = trk.current;
     if (!el || !track) return;
     const panels = Array.from(track.children) as HTMLElement[];
+    const stage = track.parentElement as HTMLElement;
     let shown = '';
-    return onFrame(() => {
-      const H = window.innerHeight;
+    return onScrollFrame(el, () => {
+      const H = stage.clientHeight;
       const W = window.innerWidth;
       const r = el.getBoundingClientRect();
-      if (r.height <= H) return;
-      const k = progress(el);
+      if (!H || r.height <= H) return;
+      const k = progress(el, H);
       const max = track.scrollWidth - W;
       track.style.transform = `translateX(${(-k * max).toFixed(1)}px)`;
       const vis = r.top < H * 0.5 && r.bottom > H * 0.5;
@@ -79,7 +80,7 @@ export function Spor() {
   }, []);
 
   return (
-    <section id="skape" className={`${f.layer} ${f.layerIn} ${f.layerOut}`} style={{ zIndex: 2 }} aria-labelledby="skape-tittel" data-lag="spor">
+    <section id="skape" className={`${f.layer} ${f.layerIn}`} style={{ zIndex: 2 }} aria-labelledby="skape-tittel" data-lag="spor">
       <div ref={spor} className={styles.spor}>
         <div className={styles.stg}>
           <div ref={trk} className={styles.trk}>
@@ -97,6 +98,7 @@ export function Spor() {
           </div>
         </div>
       </div>
+      <i className={f.shade} aria-hidden="true" data-shade />
     </section>
   );
 }

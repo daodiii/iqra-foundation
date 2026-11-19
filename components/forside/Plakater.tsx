@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
-import { clamp, eio, onFrame, reducedMotion } from './frame';
+import { clamp, eio, onScrollFrame, reducedMotion } from './frame';
 import { Knapp } from './Knapp';
 import { EVENTS_HREF, NEWS_HREF } from './lenker';
 import f from './forside.module.css';
@@ -82,7 +82,7 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
       };
     });
     const stop = posters.length
-      ? onFrame(() => {
+      ? onScrollFrame(el, () => {
           const H = window.innerHeight;
           posters.forEach((po, i) => {
             if (po.matches(':hover')) return;
@@ -103,7 +103,7 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
   }, []);
 
   return (
-    <section ref={root} id="aktuelt" className={`${styles.pk} ${f.layer} ${f.layerIn} ${f.layerOut}`} style={{ zIndex: 4 }} aria-labelledby="aktuelt-tittel" data-lag="aktuelt">
+    <section ref={root} id="aktuelt" className={`${styles.pk} ${f.layer} ${f.layerIn}`} style={{ zIndex: 4 }} aria-labelledby="aktuelt-tittel" data-lag="aktuelt">
       <div className={styles.hd}>
         <h2 id="aktuelt-tittel" className={styles.rv} data-rv>
           {h.title}
@@ -172,6 +172,7 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
       ) : (
         <p className={styles.empty}>{t.emptyNews}</p>
       )}
+      <i className={f.shade} aria-hidden="true" data-shade />
     </section>
   );
 }

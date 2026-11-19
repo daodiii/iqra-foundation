@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
-import { onFrame } from './frame';
+import { onFrame, pageKey } from './frame';
 import { Knapp } from './Knapp';
 import { MARK } from './Merke';
 import f from './forside.module.css';
@@ -68,7 +68,17 @@ export function Topp() {
     const page = el?.closest<HTMLElement>('[data-forside]');
     if (!el || !page) return;
     let last = '';
+    let seen = '';
+    let again = false;
     return onFrame(() => {
+      // only when the page has moved or the logo has docked or left, and once more the frame after:
+      // the scenes move in the same frame, some after this reads. A still page needs no new reading.
+      const k = pageKey() + ('solid' in page.dataset ? 's' : '');
+      if (k === seen) {
+        if (!again) return;
+        again = false;
+      } else again = true;
+      seen = k;
       if (!('solid' in page.dataset)) {
         if (last) {
           delete page.dataset.tone;
@@ -104,14 +114,7 @@ export function Topp() {
           <Knapp href={SUPPORT.href} kind="fill" className={styles.give}>
             {SUPPORT.label}
           </Knapp>
-          <button
-            ref={button}
-            type="button"
-            className={styles.menu}
-            aria-expanded={open}
-            aria-controls="meny"
-            onClick={() => setOpen(true)}
-          >
+          <button ref={button} type="button" className={styles.menu} aria-expanded={open} aria-controls="meny" onClick={() => setOpen(true)}>
             <span>{site.header.open}</span>
             <i className={styles.burger} aria-hidden="true" />
           </button>

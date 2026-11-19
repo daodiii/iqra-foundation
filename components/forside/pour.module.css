@@ -17,8 +17,7 @@
   pointer-events: none;
 }
 
-.sheet,
-.red {
+.sheet {
   pointer-events: auto;
 }
 
@@ -59,13 +58,30 @@
   letter-spacing: -0.008em;
 }
 
+/*
+ * The crimson dot: a circle as wide as the screen's diagonal, centred on the stage and scaled down to
+ * a dot. The poster inside is scaled up by the same amount and moved back, so it stands still while
+ * the circle grows over it. Both are transforms, which a phone composes without repainting; the
+ * clip-path circle this replaces repainted the whole screen every frame.
+ */
 .red {
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  overflow: hidden;
   background: var(--rod);
   color: #fff;
-  clip-path: circle(var(--R, 0px) at 50% var(--cy, 120%));
-  will-change: clip-path;
+  /* closed: unseen and not in the pointer's way, but still read out (Pour.tsx sets the opacity) */
+  opacity: 0;
+  will-change: transform;
+}
+
+.redIn {
+  position: absolute;
+  will-change: transform;
 }
 
 .tone {
@@ -157,7 +173,17 @@
 
 :global(html:not([data-js])) .red {
   position: relative;
-  clip-path: none;
+  left: auto;
+  top: auto;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  opacity: 1;
+  min-height: 100vh;
+}
+
+:global(html:not([data-js])) .redIn {
+  position: relative;
   min-height: 100vh;
 }
 

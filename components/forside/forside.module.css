@@ -96,12 +96,12 @@
   box-shadow: 0 -24px 60px -24px rgba(4, 8, 18, 0.45);
 }
 
-.layerOut::after {
-  content: '';
+/* the shade over a section as the next comes over it: its own element, so a frame changes one opacity and restyles nothing else */
+.shade {
   position: absolute;
   inset: 0;
   background: #040812;
-  opacity: var(--fxd, 0);
+  opacity: 0;
   pointer-events: none;
   z-index: 9;
 }

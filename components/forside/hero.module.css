@@ -14,17 +14,6 @@
   color: #fff;
 }
 
-/* held back and darkened while the white sheet slides over it (Pour.tsx sets --fxd) */
-.hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: #040812;
-  opacity: var(--fxd, 0);
-  pointer-events: none;
-  z-index: 9;
-}
-
 .main {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));

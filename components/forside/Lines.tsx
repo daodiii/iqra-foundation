@@ -12,19 +12,7 @@ import styles from './forside.module.css';
  * Before it is measured (and with JavaScript off) the text is plain, whole and visible. Each line
  * but the last ends in a space, so the text reads (and is named) as the one sentence it is.
  */
-export function Lines({
-  text,
-  as: Tag = 'p',
-  on,
-  className,
-  id,
-}: {
-  text: string;
-  as?: ElementType;
-  on: boolean;
-  className?: string;
-  id?: string;
-}) {
+export function Lines({ text, as: Tag = 'p', on, className, id }: { text: string; as?: ElementType; on: boolean; className?: string; id?: string }) {
   const ref = useRef<HTMLElement>(null);
   const [lines, setLines] = useState<string[] | null>(null);
   const [pass, setPass] = useState(0);
@@ -48,25 +36,31 @@ export function Lines({
     setLines(out.map((l) => l.join(' ')));
   }, [lines, pass]);
 
-  // Measure again when the font lands or the width changes by more than a scrollbar.
+  // Measure again when the font lands or the text's own box changes width (a resize, or a scene that
+  // sizes its container after mounting, as the crimson dot does). A phone's address bar changes only the height.
   useLayoutEffect(() => {
-    let w0 = window.innerWidth;
+    const el = ref.current;
+    let w0 = el?.getBoundingClientRect().width ?? 0;
     const again = () => {
       setLines(null);
       setPass((p) => p + 1);
     };
-    const resize = () => {
-      if (Math.abs(window.innerWidth - w0) > 40) {
-        w0 = window.innerWidth;
-        again();
-      }
-    };
+    const ro =
+      el && typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(([e]) => {
+            const w = e.contentRect.width;
+            if (Math.abs(w - w0) > 1) {
+              w0 = w;
+              again();
+            }
+          })
+        : null;
+    if (el) ro?.observe(el);
     document.fonts?.ready.then(again);
     document.fonts?.addEventListener?.('loadingdone', again);
-    window.addEventListener('resize', resize);
     return () => {
       document.fonts?.removeEventListener?.('loadingdone', again);
-      window.removeEventListener('resize', resize);
+      ro?.disconnect();
     };
   }, []);
 

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
 import { scrollToY } from '@/lib/smooth';
-import { onFrame } from './frame';
+import { onScrollFrame } from './frame';
 import f from './forside.module.css';
 import styles from './trinn.module.css';
 
@@ -33,7 +33,7 @@ export function Trinn() {
     if (!el) return;
     const its = Array.from(el.children) as HTMLElement[];
     let shown = -2;
-    return onFrame(() => {
+    return onScrollFrame(el, () => {
       const best = nearest(
         its.map((it) => it.getBoundingClientRect()),
         window.innerHeight,
@@ -53,7 +53,7 @@ export function Trinn() {
   };
 
   return (
-    <section id="handling" className={`${styles.tr} ${f.layer} ${f.layerIn} ${f.layerOut}`} style={{ zIndex: 3 }} aria-labelledby="handling-tittel" data-lag="trinn">
+    <section id="handling" className={`${styles.tr} ${f.layer} ${f.layerIn}`} style={{ zIndex: 3 }} aria-labelledby="handling-tittel" data-lag="trinn">
       <div className={styles.g}>
         <div className={styles.lh}>
           <h2 id="handling-tittel">{a.title}</h2>
@@ -76,6 +76,7 @@ export function Trinn() {
           ))}
         </div>
       </div>
+      <i className={f.shade} aria-hidden="true" data-shade />
     </section>
   );
 }

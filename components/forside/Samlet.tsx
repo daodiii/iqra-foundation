@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
-import { eio, onFrame, progress, reducedMotion } from './frame';
+import { eio, onScrollFrame, progress, reducedMotion } from './frame';
 import { Knapp } from './Knapp';
 import f from './forside.module.css';
 import styles from './samlet.module.css';
@@ -29,9 +29,10 @@ export function Samlet() {
     if (!el) return;
     const words = Array.from(el.querySelectorAll<HTMLElement>('[data-w]'));
     const reduce = reducedMotion();
+    const stage = el.firstElementChild as HTMLElement;
     let shown = false;
-    return onFrame(() => {
-      const k = reduce ? 1 : progress(el);
+    return onScrollFrame(el, () => {
+      const k = reduce ? 1 : progress(el, stage.clientHeight);
       words.forEach((w, i) => {
         const g = eio(k / 0.55 - i * 0.06);
         const p = SCATTER[i % SCATTER.length];
@@ -47,7 +48,7 @@ export function Samlet() {
   }, []);
 
   return (
-    <section id="sammen" className={`${f.layer} ${f.layerIn} ${f.layerOut}`} style={{ zIndex: 5 }} aria-labelledby="sammen-tittel" data-lag="samlet">
+    <section id="sammen" className={`${f.layer} ${f.layerIn}`} style={{ zIndex: 5 }} aria-labelledby="sammen-tittel" data-lag="samlet">
       <div ref={sa} className={styles.sa}>
         <div className={styles.stg}>
           <h2 id="sammen-tittel" className={styles.h2}>
@@ -73,6 +74,7 @@ export function Samlet() {
           </div>
         </div>
       </div>
+      <i className={f.shade} aria-hidden="true" data-shade />
     </section>
   );
 }
