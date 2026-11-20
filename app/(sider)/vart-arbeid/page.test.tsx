@@ -8,7 +8,7 @@ describe('Vårt arbeid', () => {
     const { container } = render(<VartArbeid />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(klient.work.title);
     expect(screen.getByText(klient.work.intro)).toBeInTheDocument();
-    const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent!.replace(/\s+/g, ' ').trim());
     expect(headings).toEqual(klient.work.areas.map((a) => a.title));
     for (const a of klient.work.areas) {
       const section = screen.getByRole('heading', { level: 2, name: a.title }).closest('section')!;
@@ -19,9 +19,12 @@ describe('Vårt arbeid', () => {
     expect(container.querySelector('section#kurs-opplaering-og-kompetanseutvikling')).not.toBeNull();
   });
 
-  test('every area is a field reachable by the anchor the old page gave it, the first (4×2) carrying the note', () => {
+  test('every area is a plate named by its title and reachable by the anchor the old page gave it, the first carrying the note', () => {
     const { container } = render(<VartArbeid />);
-    const ids = Array.from(container.querySelectorAll('[data-field]')).map((f) => f.id);
+    const plates = Array.from(container.querySelectorAll('[data-plate]'));
+    expect(plates).toHaveLength(klient.work.areas.length + 1);
+    expect(screen.getByRole('region', { name: klient.work.title })).toBe(plates[0]);
+    const ids = Array.from(container.querySelectorAll('[data-plate][data-area]')).map((f) => f.id);
     expect(ids).toEqual([
       'kurs-opplaering-og-kompetanseutvikling',
       'seminarer-konferanser-og-panelsamtaler',
@@ -31,9 +34,19 @@ describe('Vårt arbeid', () => {
       'moteplasser-og-laeringsarenaer',
       'samarbeid-og-partnerskap',
     ]);
-    const first = container.querySelector('[data-field]')!;
-    expect(first).toHaveTextContent(klient.work.areas[0].note!);
-    expect(container.querySelectorAll('[data-field] p').length).toBe(klient.work.areas.length + 1);
+    klient.work.areas.forEach((a, i) => {
+      const region = screen.getByRole('region', { name: a.title });
+      expect(region).toBe(plates[i + 1]);
+      expect(region).toHaveAttribute('id', ids[i]);
+    });
+    expect(screen.getByRole('region', { name: klient.work.areas[0].title })).toHaveTextContent(klient.work.areas[0].note!);
+  });
+
+  test('the first plate is white, and no two plates side by side share a ground', () => {
+    const { container } = render(<VartArbeid />);
+    const tones = Array.from(container.querySelectorAll('[data-plate]')).map((p) => p.getAttribute('data-plate'));
+    expect(tones[0]).toBe('white');
+    tones.slice(1).forEach((t, i) => expect(t).not.toBe(tones[i]));
   });
 
   test('no copy of our own: no eyebrows, numbers or links beyond the client’s text', () => {

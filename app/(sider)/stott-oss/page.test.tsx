@@ -16,7 +16,21 @@ describe('Støtt oss', () => {
     expect(screen.getByText(t.intro)).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([t.uses.title, t.ways.title]);
     expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(t.ways.items.map((w) => w.title));
-    expect(container.querySelector('article')!.lastElementChild).toHaveTextContent(t.close);
+    const plates = container.querySelectorAll('[data-plate]');
+    expect(plates[plates.length - 1]).toHaveTextContent(t.close);
+  });
+
+  test('each part is a plate named by its title, white first, no two neighbours in one ground, the last line on crimson', () => {
+    const { container } = render(<StottOss />);
+    const plates = Array.from(container.querySelectorAll<HTMLElement>('[data-plate]'));
+    expect(plates.map((p) => p.dataset.plate)).toEqual(['white', 'navy', 'white', 'rod']);
+    expect(screen.getByRole('region', { name: t.title })).toBe(plates[0]);
+    expect(screen.getByRole('region', { name: t.uses.title })).toBe(plates[1]);
+    expect(screen.getByRole('region', { name: t.ways.title })).toBe(plates[2]);
+    expect(screen.getByRole('region', { name: t.close })).toBe(plates[3]);
+    // the old anchors still lead to their parts
+    expect(container.querySelector('#bidraget')).toHaveTextContent(t.uses.title);
+    expect(container.querySelector('#bidra')).toHaveTextContent(t.ways.title);
   });
 
   test('every sentence and every point of the client’s text is on the page, in their order, the points as a list', () => {
@@ -25,25 +39,16 @@ describe('Støtt oss', () => {
     const order = [t.intro, t.uses.lead, ...t.uses.points, t.uses.close, ...t.ways.items.map((w) => w.text), t.close].map((s) => text.indexOf(s));
     expect(order.every((i) => i > -1)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    const uses = screen.getByRole('heading', { level: 2, name: t.uses.title }).closest('section')!;
+    const uses = screen.getByRole('region', { name: t.uses.title });
     expect(within(uses).getAllByRole('listitem').map((li) => li.textContent)).toEqual([...t.uses.points]);
   });
 
-  test('five stones, one per use, drawn for the eye only', () => {
-    const { container } = render(<StottOss />);
-    const svg = container.querySelector('[data-scene]')!;
-    expect(svg.closest('[aria-hidden="true"]')).not.toBeNull();
-    expect(svg.querySelectorAll('[data-stone]')).toHaveLength(t.uses.points.length);
-    expect(svg.querySelectorAll('[data-shadow]')).toHaveLength(t.uses.points.length);
-    // as served, nothing is offset or hidden: the script (with motion allowed) does that
-    for (const s of svg.querySelectorAll<SVGElement>('[data-stone]')) expect(s.getAttribute('style')).toBeNull();
-  });
-
-  test('the ways to give stand under «Gave», not under the other two, and AvtaleGiro is the one link', () => {
+  test('the ways to give stand under «Gave», not under the other two, the Vipps number set big, and AvtaleGiro is the one link', () => {
     const { container } = render(<StottOss />);
     const gave = screen.getByRole('heading', { level: 3, name: t.ways.items[0].title }).parentElement!;
     expect(within(gave).getByText(site.support.vipps.value)).toBeInTheDocument();
     expect(within(gave).getByText(site.support.vipps.label)).toBeInTheDocument();
+    expect(gave.querySelector('[data-num="vipps"]')).toHaveTextContent(site.support.vipps.value);
     expect(within(gave).getByRole('link', { name: site.support.avtale.button })).toHaveAttribute('href', site.support.avtale.href);
     for (const w of t.ways.items.slice(1)) {
       const way = screen.getByRole('heading', { level: 3, name: w.title }).parentElement!;
@@ -61,18 +66,9 @@ describe('Støtt oss', () => {
     else expect(container.textContent).toContain(account);
   });
 
-  test('without JavaScript or with reduced motion nothing waits: every hiding rule is under html[data-js] with motion allowed', () => {
-    const css = readFileSync(path.resolve(process.cwd(), 'components/support/grunnmuren.module.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-    const at = css.indexOf('@media (prefers-reduced-motion: no-preference)');
-    expect(at).toBeGreaterThan(-1);
-    const before = css.slice(0, at);
-    expect(before).not.toMatch(/opacity:\s*0[;\s]/);
-    expect(before).not.toMatch(/--o:\s*0/);
-    expect(before).not.toMatch(/position:\s*sticky/);
-    expect(before).not.toMatch(/rgba\(255,\s*255,\s*255,\s*0\.28\)/);
-    const block = css.slice(at);
-    for (const rule of block.match(/[^{}]+\{[^{}]*(opacity:\s*0[;\s]|--o:\s*0|sticky|0\.28\))[^{}]*\}/g) ?? []) {
-      expect(rule).toContain('html[data-js]');
-    }
+  test('nothing on the page is hidden on a phone: the intro shows at every width', () => {
+    const css = readFileSync(path.resolve(process.cwd(), 'components/support/stott-plater.module.css'), 'utf8');
+    expect(css).not.toMatch(/display:\s*none/);
+    expect(css).not.toMatch(/visibility:\s*hidden/);
   });
 });

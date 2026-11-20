@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Ikonene } from '@/components/contact/Ikonene';
+import { KontaktPlater } from '@/components/contact/KontaktPlater';
 import { site } from '@/content/site.no';
 
 export const metadata: Metadata = {
@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: site.pages.contact.description,
 };
 
-/** Kontakt: the e-mail, the number and the post box as three colour bands with drawn icons, and the form, not yet wired, under «Kontakt oss». */
+/** Kontakt on «Platene»: the title and the page's text, the e-mail, the number and the post box as large lines on navy, and the form, not yet wired, under «Kontakt oss». */
 export default function Kontakt() {
-  return <Ikonene />;
+  return <KontaktPlater />;
 }

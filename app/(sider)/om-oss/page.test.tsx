@@ -39,13 +39,11 @@ describe('Om Iqra Foundation', () => {
     expect(within(purpose).getAllByRole('listitem').map((li) => li.textContent)).toEqual(t.purpose.points);
   });
 
-  test('each part is a card named by its title, and the progress line carries no text', () => {
+  test('each part is a plate named by its title', () => {
     const { container } = render(<OmOss />);
     for (const title of [t.purpose.title, t.values.title, t.audience.title, t.independent.title]) {
-      expect(screen.getByRole('region', { name: title })).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: title })).toHaveAttribute('data-plate');
     }
-    const line = container.querySelector('[data-line]')!;
-    expect(line).toHaveAttribute('aria-hidden', 'true');
-    expect(line.textContent).toBe('');
+    expect(container.querySelectorAll('[data-plate]')).toHaveLength(5);
   });
 });

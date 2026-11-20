@@ -1,5 +1,5 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
 import type { Resource } from '@/lib/content';
@@ -17,26 +17,21 @@ vi.mock('@/lib/content', async (orig) => ({ ...(await orig<typeof import('@/lib/
 
 const t = site.pages.resources;
 const section = (c: HTMLElement, key: string) => c.querySelector(`section#${key}`) as HTMLElement;
-const spine = (key: string) => within(document.querySelector(`section#${key}`) as HTMLElement).getByRole('button');
-
-afterEach(() => {
-  window.history.replaceState(null, '', '/');
-});
 
 describe('Ressurser', () => {
-  test('the title and the client’s intro, then the four categories in the client’s order, each its own book with the client’s text where they gave one', () => {
+  test('the title and the client’s intro, then the four categories in the client’s order, each its own plate with the client’s text where they gave one', () => {
     render(<Ressurser />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(klient.resources.title);
     expect(screen.getByText(klient.resources.intro)).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(klient.resources.categories.map((c) => c.title));
     for (const c of klient.resources.categories) {
-      const book = screen.getByRole('heading', { level: 2, name: c.title }).closest('section')!;
-      expect(book).toHaveAttribute('id', c.key);
-      if (c.text) expect(book).toHaveTextContent(c.text);
+      const plate = screen.getByRole('heading', { level: 2, name: c.title }).closest('section')!;
+      expect(plate).toHaveAttribute('id', c.key);
+      if (c.text) expect(plate).toHaveTextContent(c.text);
     }
   });
 
-  test('each item stands in its category: a video plays on the page, a file can be downloaded, a link opens; an empty book says so', () => {
+  test('each item stands in its category: a video plays on the page, a file can be downloaded, a link opens; an empty category says so', () => {
     const { container } = render(<Ressurser />);
     const video = section(container, 'videoer').querySelector('video')!;
     expect(video).toHaveAttribute('src', '/files/ressurser/foredrag.mp4');
@@ -52,7 +47,7 @@ describe('Ressurser', () => {
     expect(within(section(container, 'videoer')).queryByText(t.empty)).toBeNull();
   });
 
-  test('a book with several items lists them all, newest first, each with its title, date, summary and the way to it', () => {
+  test('a category with several items lists them all, newest first, each with its title, date, summary and the way to it', () => {
     const { container } = render(<Ressurser />);
     const book = section(container, 'publikasjoner');
     const lis = book.querySelectorAll('li');
@@ -65,31 +60,22 @@ describe('Ressurser', () => {
     expect(within(book).queryByText(t.empty)).toBeNull();
   });
 
-  test('the first book stands open; choosing a spine pulls that book out and puts the others back', () => {
+  test('each part is a plate named by its title: the title plate, then one per category, its anchor the category’s key', () => {
     const { container } = render(<Ressurser />);
-    expect(spine('publikasjoner')).toHaveAttribute('aria-expanded', 'true');
-    expect(section(container, 'publikasjoner')).toHaveAttribute('data-open');
-    expect(section(container, 'artikler').querySelector('[data-cover]')).toHaveAttribute('inert');
-    fireEvent.click(spine('artikler'));
-    expect(spine('artikler')).toHaveAttribute('aria-expanded', 'true');
-    expect(spine('publikasjoner')).toHaveAttribute('aria-expanded', 'false');
-    expect(section(container, 'artikler').querySelector('[data-cover]')).not.toHaveAttribute('inert');
-    expect(container.querySelectorAll('section[data-open]')).toHaveLength(1);
-  });
-
-  test('arriving at a category’s anchor opens its book (the old Styringsdokumenter address lands there), and so does a later anchor', () => {
-    window.history.replaceState(null, '', '/ressurser#styringsdokumenter');
-    const { container } = render(<Ressurser />);
-    expect(spine('styringsdokumenter')).toHaveAttribute('aria-expanded', 'true');
-    expect(container.querySelectorAll('section[data-open]')).toHaveLength(1);
-    act(() => {
-      window.history.replaceState(null, '', '/ressurser#videoer');
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    const plates = container.querySelectorAll('[data-plate]');
+    expect(plates).toHaveLength(1 + klient.resources.categories.length);
+    expect(screen.getByRole('region', { name: klient.resources.title })).toBe(plates[0]);
+    klient.resources.categories.forEach((c, i) => {
+      const plate = screen.getByRole('region', { name: c.title });
+      expect(plate).toBe(plates[i + 1]);
+      expect(plate).toHaveAttribute('id', c.key);
     });
-    expect(spine('videoer')).toHaveAttribute('aria-expanded', 'true');
+    const tones = Array.from(plates).map((p) => p.getAttribute('data-plate'));
+    expect(tones[0]).toBe('white');
+    tones.slice(1).forEach((tone, i) => expect(tone).not.toBe(tones[i]));
   });
 
-  test('no list of category links over the shelf: the spines are the way to a category, as in the mock', () => {
+  test('no list of category links over the plates: each category is its own plate with its own anchor', () => {
     render(<Ressurser />);
     expect(screen.queryByRole('navigation')).toBeNull();
   });
