@@ -13,7 +13,7 @@ import styles from './plakater.module.css';
 /** A coming event as a poster: the day large, the month and year, the title, the time and the place. */
 export type Poster = { slug: string; day: string; month: string; title: string; meta: string; dateTime: string; example?: boolean };
 /** A news item in the strip: its date written out, its title, its ingress, and where it leads. */
-export type Strip = { slug: string; date: string; dateTime: string; title: string; summary: string; href: string };
+export type Strip = { slug: string; date: string; dateTime: string; title: string; summary: string; href: string; example?: boolean };
 
 const POSTER = [styles.p1, styles.p2, styles.p3];
 const t = site.pages.news;
@@ -159,9 +159,12 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
           {news.map((n) => (
             <li key={n.slug}>
               <Link href={n.href} prefetch={false} className={styles.sv} data-sv>
-                <time className={`${styles.meta} ${styles.label}`} dateTime={n.dateTime}>
-                  {n.date}
-                </time>
+                <span className={styles.svTop}>
+                  <time className={`${styles.meta} ${styles.label}`} dateTime={n.dateTime}>
+                    {n.date}
+                  </time>
+                  {n.example && <span className={`${styles.exNews} ${styles.label}`}>Eksempel</span>}
+                </span>
                 <h4>
                   <span className={styles.tl}>{n.title}</span>
                 </h4>

@@ -230,6 +230,21 @@
   transform-origin: 0 50%;
 }
 
+/* the date, and a sample post's mark beside it (Forside.tsx NEWS_EXAMPLES) */
+.svTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.exNews {
+  padding: 4px 8px;
+  border: 1px dashed var(--ink-4);
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
 .sv h4 {
   margin-top: 10px;
   font-size: clamp(22px, min(1.8vw, 3.2vh), 32px);
