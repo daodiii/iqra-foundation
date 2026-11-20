@@ -141,14 +141,6 @@
   font-size: clamp(17px, 1.35vw, 23px);
   line-height: 1.664;
   color: var(--rod-pale);
-  transition:
-    opacity 1s var(--ease-out),
-    transform 1.2s var(--ease-out);
-}
-
-:global(html[data-js]) .more:not([data-on]) {
-  opacity: 0;
-  transform: translateY(30px);
 }
 
 /* Without JavaScript the scene cannot play: it is laid out as plain flow, the paragraph on white, then the poster. */
@@ -283,23 +275,5 @@
     opacity: 0.9;
   }
 
-  /* the texts stand: no masks to rise from */
-  .sc :global([data-lines]) [class] {
-    transform: none !important;
-    transition: none !important;
-  }
-
-  .more {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .more {
-    transition: none !important;
-    transform: none !important;
-    opacity: 1 !important;
-  }
-}

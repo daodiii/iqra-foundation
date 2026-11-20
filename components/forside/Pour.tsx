@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
-import { clamp, eio, eo, onFrame, pageKey, plainPour, reducedMotion, repainted } from './frame';
+import { clamp, eio, eo, onFrame, pageKey, PLAIN_POUR, plainPour, reducedMotion, repainted } from './frame';
 import { Lines } from './Lines';
 import { SWOOSH } from './logo-paths';
 import f from './forside.module.css';
@@ -179,7 +179,7 @@ export function Pour() {
       <div className={styles.stage}>
         <div ref={sheet} className={styles.sheet} />
         <div ref={tx} className={styles.tx} data-pour-tx>
-          <Lines text={h.paragraphs[0]} on={on.tx} />
+          <Lines text={h.paragraphs[0]} on={on.tx} auto={PLAIN_POUR} />
         </div>
         <div ref={red} className={styles.red}>
           <div ref={redIn} className={styles.redIn}>
@@ -189,11 +189,9 @@ export function Pour() {
               </g>
             </svg>
             <section id="hvorfor" className={styles.ct} aria-labelledby="hvorfor-tittel">
-              <Lines as="h2" id="hvorfor-tittel" className={styles.h2} text={h.why.title} on={on.h} />
-              <Lines className={styles.lead} text={h.why.paragraphs[0]} on={on.lead} />
-              <p className={styles.more} data-on={on.more ? '' : undefined}>
-                {h.why.paragraphs[1]}
-              </p>
+              <Lines as="h2" id="hvorfor-tittel" className={styles.h2} text={h.why.title} on={on.h} auto={PLAIN_POUR} />
+              <Lines className={styles.lead} text={h.why.paragraphs[0]} on={on.lead} auto={PLAIN_POUR} delay={150} />
+              <Lines className={styles.more} text={h.why.paragraphs[1]} on={on.more} auto={PLAIN_POUR} delay={150} />
             </section>
           </div>
         </div>

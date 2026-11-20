@@ -6,6 +6,7 @@ import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
 import { reducedMotion } from './frame';
 import { Knapp } from './Knapp';
+import { Lines } from './Lines';
 import { EVENTS_HREF, NEWS_HREF } from './lenker';
 import f from './forside.module.css';
 import styles from './plakater.module.css';
@@ -109,9 +110,7 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
     // «Aktuelt» and its intro are gone (the owner, 2026-11-20): the section starts at the coming events
     <section ref={root} id="aktuelt" className={`${styles.pk} ${f.layer} ${f.layerIn}`} style={{ zIndex: 4 }} aria-labelledby="aktuelt-tittel" data-lag="aktuelt">
       <div className={`${styles.sub} ${styles.first}`}>
-        <h2 id="aktuelt-tittel" className={styles.rv} data-rv>
-          {t.upcoming}
-        </h2>
+        <Lines as="h2" id="aktuelt-tittel" text={t.upcoming} />
         <span className={styles.rv} data-rv>
           <Knapp href={EVENTS_HREF} kind="ring" className={styles.all}>
             {site.pages.home.allEvents}
@@ -140,9 +139,7 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
       )}
 
       <div className={styles.sub}>
-        <h2 className={styles.rv} data-rv>
-          {t.newsTitle}
-        </h2>
+        <Lines as="h2" text={t.newsTitle} />
         <span className={styles.rv} data-rv>
           <Knapp href={NEWS_HREF} kind="ring" className={styles.all}>
             {h.all}

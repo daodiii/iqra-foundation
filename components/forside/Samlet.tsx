@@ -5,6 +5,7 @@ import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
 import { reducedMotion } from './frame';
 import { Knapp } from './Knapp';
+import { Lines } from './Lines';
 import f from './forside.module.css';
 import styles from './samlet.module.css';
 
@@ -64,7 +65,7 @@ export function Samlet() {
             })}
           </h2>
           <div className={styles.bot}>
-            <p className={`${styles.say} ${styles.up}`}>{s.text}</p>
+            <Lines className={styles.say} text={s.text} on={on} delay={950} />
             <div className={`${styles.cta} ${styles.up} ${styles.d1}`}>
               <Knapp href={site.cta.partner.href} kind="fill" className={styles.b1}>
                 {site.cta.partner.label}

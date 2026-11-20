@@ -108,20 +108,6 @@
   max-width: 24em;
 }
 
-/* the arrival: each part rises out of the dark in turn (Trinn.tsx sets data-in and the delay --d) */
-.rv {
-  transition:
-    opacity 0.8s var(--ease-out) var(--d, 0ms),
-    transform 1s var(--ease-out) var(--d, 0ms),
-    clip-path 1s var(--ease-out) var(--d, 0ms);
-}
-
-:global(html[data-js]) .rv:not([data-in]) {
-  opacity: 0;
-  transform: translateY(56px);
-  clip-path: inset(0 0 100% 0);
-}
-
 @media (max-width: 900px) {
   .lh {
     position: static;
@@ -158,14 +144,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rv,
-  :global(html[data-js]) .rv:not([data-in]) {
-    transition: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    clip-path: none !important;
-  }
-
   .it {
     transition: none !important;
     opacity: 1 !important;
