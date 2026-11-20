@@ -1,28 +1,26 @@
 /*
  * The front page's ground rules (the owner's redesign, 2026-11-18/19).
  *
- * Colour «Klassisk»: navy #1b2a4a, burgundy #8c2340, teal #21716f. Every darker and lighter shade
- * below is derived from its family's base in OKLCH (keeping the base's hue and chroma ratio, moving
- * lightness), as the colour round's buildcolor.mjs did; the turquoise #67c1bf is the brand's own.
+ * Colour: three, since 2026-11-20 (the owner): navy #1b2a4a and white carry the page, a deep
+ * burgundy #67112f is kept for what must be seen. Text is black on light grounds, white on navy.
+ * Teal and turquoise are gone from the site (they stay in the brand's own print and logo work).
  * Type: Instrument Sans everywhere, 600 for titles, 400 for text, 500 for labels and controls.
  */
 .page {
   --navy: #1b2a4a;
   --navy-dark: #13213a;
   --navy-deep: #101c32;
-  --rod: #8c2340;
-  --rod-dyp: #7c0f32;
-  --teal: #21716f;
-  --turkis: #67c1bf;
-  /* the pale teal and pale burgundy, for grounds and text on crimson */
-  --teal-pale: #cee9e8;
+  /* three colours: navy, white and a deep burgundy for what must be seen (the owner, 2026-11-20) */
+  --rod: #67112f;
+  --rod-dyp: #4e0b22;
   --rod-pale: #fcedf0;
-  /* greys of the navy family, for text on white and on navy */
-  --ink-2: #2a3856;
-  --ink-3: #4f5c79;
+  /* text: black on light grounds, white on navy (the owner, 2026-11-20: a think tank is read) */
+  --ink: #000;
+  /* the keyboard ring: burgundy on light grounds, white where the ground is navy or burgundy */
+  --focus: var(--rod);
+  --on-navy: #fff;
+  /* a grey of the navy family, for a dashed line */
   --ink-4: #7f8ba6;
-  --on-navy: #c3cde1;
-  --on-navy-2: #cbd3e1;
   /* the carved logo's layers (Hero.tsx) */
   --carve-soft: #060c1a;
   --carve-soft-c: #21030b;
@@ -39,7 +37,7 @@
 
   font-family: var(--font);
   font-weight: 400;
-  color: var(--navy);
+  color: var(--ink);
   background: #fff;
 }
 

@@ -24,7 +24,7 @@
 }
 
 .k:focus-visible {
-  outline: 2px solid var(--turkis);
+  outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
 

@@ -42,7 +42,7 @@
 }
 
 .body a {
-  color: var(--color-navy);
+  color: var(--color-ink);
   text-decoration: underline;
   text-underline-offset: 0.15em;
 }
