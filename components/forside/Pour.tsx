@@ -46,6 +46,9 @@ export function Pour() {
     let shown = '';
     let size = '';
     let held = false;
+    // once the paragraph has glided in it stays in its lines; scrolling back above it fades it out
+    // with the white, instead of sliding it back down its masks while it is still being read
+    let seen = false;
     return onScrollFrame(el, () => {
       if (!fit && tone.current) {
         const g = tone.current.querySelector('g');
@@ -79,7 +82,8 @@ export function Pour() {
       // 2: once the screen is white the paragraph glides in; it rests, then drifts up and away as the dot comes
       const away = eio((k - 0.4) / 0.1);
       tx.current!.style.transform = `translateY(${(-H * 0.12 * away).toFixed(1)}px)`;
-      tx.current!.style.opacity = (1 - away).toFixed(3);
+      const fade = seen ? clamp((gone / H - 0.7) / 0.25) : 1;
+      tx.current!.style.opacity = ((1 - away) * fade).toFixed(3);
       // 3: the crimson dot rises out of the white to the middle, then opens to the whole screen
       const rise = eo((k - 0.45) / 0.11);
       const open = eio((k - 0.56) / 0.16);
@@ -115,6 +119,9 @@ export function Pour() {
       tone.current!.style.transform = `translate(${((1 - q) * 14).toFixed(2)}vw,${((1 - q) * 34).toFixed(2)}vh) rotate(${((1 - q) * -14).toFixed(2)}deg)`;
       tone.current!.style.opacity = (q * 0.9).toFixed(3);
       const s = stateAt(k);
+      // the paragraph waits until the white has covered the screen: on a phone's shorter scene that is later than k 0.25
+      if (s.tx && gone >= H * 0.96) seen = true;
+      s.tx = seen;
       const key = `${+s.tx}${+s.h}${+s.lead}${+s.more}`;
       if (key !== shown) {
         shown = key;

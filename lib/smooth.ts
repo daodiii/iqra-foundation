@@ -28,9 +28,11 @@ import Lenis from 'lenis';
  * here, so a flick has gone 95 % of the way about 1.2 s after the last of it arrives. Larger is
  * lighter and shorter, smaller heavier and longer. The owner, trying the first build (2026-09-25):
  * «make it twice as heavy» — twice the time constant of the 0.085 the scroll-flow skill's site
- * settled on, measured on this same laptop.
+ * settled on, measured on this same laptop. On 2026-11-20, with the redesigned front page's long
+ * pinned scenes, the owner: «the scrolling also needs to be better»; the glide is lighter again,
+ * 0.07 (a time constant of 0.24 s), so a scene answers the hand sooner and stops sooner.
  */
-export const LERP = 0.0425;
+export const LERP = 0.07;
 
 /** Where the page glides: a precise pointer (a touchpad, a TrackPoint, a mouse) and motion wanted. */
 export const WHERE = '(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)';

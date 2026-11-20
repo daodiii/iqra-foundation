@@ -33,7 +33,24 @@ export function Trinn() {
     if (!el) return;
     const its = Array.from(el.children) as HTMLElement[];
     let shown = -2;
-    return onScrollFrame(el, () => {
+    // the parts arrive one after another: each rises in as it comes onto the screen, and parts that
+    // arrive together (a tall screen, a fast scroll) follow each other 220 ms apart
+    const root = el.closest('section');
+    const io = new IntersectionObserver(
+      (es) => {
+        let n = 0;
+        es.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const t = e.target as HTMLElement;
+          t.style.setProperty('--d', `${n++ * 220}ms`);
+          t.dataset.in = '';
+          io.unobserve(t);
+        });
+      },
+      { rootMargin: '0px 0px -18% 0px' },
+    );
+    root?.querySelectorAll('[data-rv]').forEach((n) => io.observe(n));
+    const stop = onScrollFrame(el, () => {
       const best = nearest(
         its.map((it) => it.getBoundingClientRect()),
         window.innerHeight,
@@ -43,6 +60,10 @@ export function Trinn() {
         setCur(best);
       }
     });
+    return () => {
+      io.disconnect();
+      stop();
+    };
   }, []);
 
   const go = (i: number) => {
@@ -56,7 +77,9 @@ export function Trinn() {
     <section id="handling" className={`${styles.tr} ${f.layer} ${f.layerIn}`} style={{ zIndex: 3 }} aria-labelledby="handling-tittel" data-lag="trinn">
       <div className={styles.g}>
         <div className={styles.lh}>
-          <h2 id="handling-tittel">{a.title}</h2>
+          <h2 id="handling-tittel" className={styles.rv} data-rv>
+            {a.title}
+          </h2>
           <ul className={styles.idx}>
             {a.items.map((it, i) => (
               <li key={it.title}>
@@ -70,8 +93,10 @@ export function Trinn() {
         <div ref={items} className={styles.items}>
           {a.items.map((it, i) => (
             <article key={it.title} className={styles.it} data-on={cur === i ? '' : undefined}>
-              <h3>{it.title}</h3>
-              <p className={styles.txt}>{it.text}</p>
+              <div className={styles.rv} data-rv>
+                <h3>{it.title}</h3>
+                <p className={styles.txt}>{it.text}</p>
+              </div>
             </article>
           ))}
         </div>

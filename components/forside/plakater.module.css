@@ -119,6 +119,11 @@
   box-shadow: 0 40px 70px -40px rgba(15, 19, 24, 0.55);
 }
 
+/* a poster is a link: `.pk a` (inherit) would otherwise make its text navy on its own navy */
+.pk a.po {
+  color: #fff;
+}
+
 .po:focus-visible {
   outline: 2px solid var(--turkis);
   outline-offset: 4px;
@@ -182,6 +187,16 @@
 
 .meta {
   color: var(--ink-3);
+}
+
+/* a sample poster's mark (Forside.tsx EXAMPLES): never on the live site */
+.ex {
+  position: absolute;
+  right: clamp(20px, 2vw, 32px);
+  top: clamp(20px, 2vw, 32px);
+  padding: 5px 9px;
+  border: 1px dashed rgba(255, 255, 255, 0.7);
+  font-size: 11px;
 }
 
 .strip {

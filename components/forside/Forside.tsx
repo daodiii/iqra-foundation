@@ -29,6 +29,23 @@ export function toPoster(e: Event): Poster {
   };
 }
 
+/**
+ * Three sample events (the owner, 2026-11-20: «make 3 arrangements, just mark so that we can see how
+ * it will look»). Each poster says «Eksempel». They stand in only while no real event is coming, and
+ * never on the live site: Vercel sets VERCEL_ENV to 'production' there, so they show locally and on
+ * preview links only.
+ */
+export const EXAMPLES: Poster[] = [
+  { slug: 'eksempel-1', day: '04', month: 'Desember 2026', title: 'Åpent foredrag: kunnskap og samfunn', meta: 'kl. 18:00 · Oslo', dateTime: '2026-12-04T18:00', example: true },
+  { slug: 'eksempel-2', day: '15', month: 'Januar 2027', title: 'Samtalekveld for unge voksne', meta: 'kl. 19:00 · Oslo', dateTime: '2027-01-15T19:00', example: true },
+  { slug: 'eksempel-3', day: '06', month: 'Februar 2027', title: 'Seminar om dialog og fellesskap', meta: 'kl. 11:00 · Oslo', dateTime: '2027-02-06T11:00', example: true },
+];
+
+/** The coming events to show: the real ones, or the samples where they may stand in. */
+export function shownEvents(real: Poster[], env = process.env.VERCEL_ENV): Poster[] {
+  return real.length || env === 'production' ? real : EXAMPLES;
+}
+
 /** A news item in the strip; it leads to its article when it has one, else to the news. */
 export function toStrip(n: NewsItem): Strip {
   return { slug: n.slug, date: writeDate(n.date), dateTime: n.date, title: n.title, summary: n.summary, href: n.body ? newsHref(n.slug) : NEWS_HREF };
@@ -43,7 +60,7 @@ export function toStrip(n: NewsItem): Strip {
 export function Forside() {
   const news = getNews().slice(0, SHOWN).map(toStrip);
   const { upcoming } = splitEvents(getEvents(), todayISO());
-  const events = upcoming.slice(0, SHOWN).map(toPoster);
+  const events = shownEvents(upcoming.slice(0, SHOWN).map(toPoster));
   return (
     <>
       <Hero />
