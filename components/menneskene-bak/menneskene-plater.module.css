@@ -139,3 +139,8 @@
     transition: none;
   }
 }
+
+/* the role starts with a capital letter, «Styreleder» (the owner, 2026-11-20) */
+.role::first-letter {
+  text-transform: uppercase;
+}

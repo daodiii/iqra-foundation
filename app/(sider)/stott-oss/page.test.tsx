@@ -35,6 +35,7 @@ describe('Støtt oss', () => {
 
   test('every sentence and every point of the client’s text is on the page, in their order, the points as a list', () => {
     const { container } = render(<StottOss />);
+    container.querySelector('nav[aria-label="På denne siden"]')?.remove(); // the page's parts (mock 54) repeat its own headings
     const text = container.textContent ?? '';
     const order = [t.intro, t.uses.lead, ...t.uses.points, t.uses.close, ...t.ways.items.map((w) => w.text), t.close].map((s) => text.indexOf(s));
     expect(order.every((i) => i > -1)).toBe(true);
@@ -45,6 +46,7 @@ describe('Støtt oss', () => {
 
   test('the ways to give stand under «Gave», not under the other two, the Vipps number set big, and AvtaleGiro is the one link', () => {
     const { container } = render(<StottOss />);
+    container.querySelector('nav[aria-label="På denne siden"]')?.remove(); // the page's parts (mock 54) repeat its own headings
     const gave = screen.getByRole('heading', { level: 3, name: t.ways.items[0].title }).parentElement!;
     expect(within(gave).getByText(site.support.vipps.value)).toBeInTheDocument();
     expect(within(gave).getByText(site.support.vipps.label)).toBeInTheDocument();

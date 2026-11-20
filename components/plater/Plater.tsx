@@ -32,35 +32,23 @@ export function inset(k: number, w: number, h: number) {
  * is there.
  */
 /**
- * The page's opening, three ways (mocks 52–54, 2026-11-20; the owner: no whole screen for the page's
- * name, «a small part, and then we go to the actual content»): 52 a short masthead, 53 the same with a
- * row of the page's parts that stays under the header, 54 the title and the parts in a column at the
- * left while the content starts at the right. PREVIEW: `?apning=52|53|54` picks one and shows a switcher.
+ * The page's opening (mock 54 «Rett på», the owner's pick of 2026-11-20: no whole screen for the page's
+ * name, «a small part, and then we go to the actual content»): the title, the intro and the page's parts
+ * stand in a column at the left that stays while the content runs from the top at the right. On a phone
+ * the column stands over the content and the content runs the full width.
  */
-const OPENINGS = ['52', '53', '54'] as const;
-type Opening = (typeof OPENINGS)[number];
 type Part = { id: string; label: string };
 
 export function Plater({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [opening, setOpening] = useState<Opening>('52');
-  const [preview, setPreview] = useState(false);
   const [parts, setParts] = useState<Part[]>([]);
   const [here, setHere] = useState<string>();
-
-  useEffect(() => {
-    // PREVIEW BRANCH ONLY: the switcher shows without a query, since Vercel's preview login drops it
-    // (memory: vercel-preview-login-drops-query). Remove with the switcher before this is merged.
-    setPreview(true);
-    const q = new URLSearchParams(window.location.search).get('apning');
-    if (q && (OPENINGS as readonly string[]).includes(q)) setOpening(q as Opening);
-  }, []);
 
   // the page's parts, named by their own headings, and which of them is being read
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    // the header's height, so the row of parts (53) and the column (54) stand right under it
+    // the header's height, so the column and the content stand right under it
     const bar = document.querySelector<HTMLElement>('[data-topp]');
     const measure = () => el.style.setProperty('--top-h', `${Math.round(bar?.getBoundingClientRect().bottom ?? 91)}px`);
     measure();
@@ -84,7 +72,7 @@ export function Plater({ children, className }: { children: ReactNode; className
       io.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [opening]);
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
@@ -125,46 +113,25 @@ export function Plater({ children, className }: { children: ReactNode; className
       stop();
       io?.disconnect();
     };
-  }, [opening]);
+  }, []);
 
   const list = Children.toArray(children);
-  const toc =
-    parts.length > 1 ? (
-      <nav className={styles.toc} aria-label="På denne siden">
-        {parts.map((p) => (
-          <a key={p.id} href={`#${p.id}`} aria-current={here === p.id ? 'true' : undefined}>
-            {p.label}
-          </a>
-        ))}
-      </nav>
-    ) : null;
 
   return (
-    <div ref={ref} className={`${styles.plater} ${className ?? ''}`} data-plater="" data-open={opening}>
-      {opening === '54' ? (
-        <>
-          <aside className={styles.side54}>
-            {list[0]}
-            {toc}
-          </aside>
-          <div className={styles.rest54}>{list.slice(1)}</div>
-        </>
-      ) : (
-        <>
-          {list[0]}
-          {opening === '53' && toc}
-          {list.slice(1)}
-        </>
-      )}
-      {preview && (
-        <div className={styles.switch} role="group" aria-label="Åpning (forhåndsvisning)">
-          {OPENINGS.map((o) => (
-            <button key={o} type="button" aria-pressed={opening === o} onClick={() => setOpening(o)}>
-              {o}
-            </button>
-          ))}
-        </div>
-      )}
+    <div ref={ref} className={`${styles.plater} ${className ?? ''}`} data-plater="">
+      <aside className={styles.side}>
+        {list[0]}
+        {parts.length > 1 && (
+          <nav className={styles.toc} aria-label="På denne siden">
+            {parts.map((p) => (
+              <a key={p.id} href={`#${p.id}`} aria-current={here === p.id ? 'true' : undefined}>
+                {p.label}
+              </a>
+            ))}
+          </nav>
+        )}
+      </aside>
+      <div className={styles.rest}>{list.slice(1)}</div>
     </div>
   );
 }
