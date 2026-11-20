@@ -113,6 +113,7 @@
   --k-hbg: #fff;
   --k-hfg: var(--rod);
   font-size: 16px;
+  white-space: nowrap;
 }
 
 :global([data-forside][data-solid][data-tone='rod']) .give {
@@ -172,16 +173,33 @@
 
 @media (max-width: 900px) {
   .bar {
-    padding-block: 14px;
+    padding-block: 10px;
   }
 
   .home {
-    width: 80px;
-    height: 44px;
+    width: 64px;
+    height: 35px;
   }
 
   .nav {
-    gap: 16px;
+    gap: 18px;
+  }
+
+  .give {
+    --k-py: 8px;
+    --k-px: 14px;
+    font-size: 14px;
+  }
+
+  .menu {
+    font-size: 14px;
+    gap: 8px;
+    padding: 8px 0;
+  }
+
+  .burger {
+    width: 18px;
+    height: 8px;
   }
 
   .link {
@@ -409,12 +427,12 @@
   }
 
   .mnuLogo {
-    width: 80px;
-    height: 44px;
+    width: 64px;
+    height: 35px;
   }
 
   .mnuTop {
-    padding-block: 14px;
+    padding-block: 10px;
   }
 }
 

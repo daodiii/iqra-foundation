@@ -47,7 +47,9 @@ test('the client’s front page in their order, every word theirs', async ({ pag
   if (news.length) for (const n of news) await expect(aktuelt.getByRole('heading', { name: n.title })).toBeAttached();
   else await expect(aktuelt.getByText(site.pages.news.emptyNews, { exact: true })).toBeAttached();
   if (upcoming.length) for (const e of upcoming.slice(0, 3)) await expect(aktuelt.getByRole('heading', { name: e.title })).toBeAttached();
-  else await expect(aktuelt.getByText(site.pages.news.emptyUpcoming, { exact: true })).toBeAttached();
+  // with none coming, the three sample posters stand in everywhere but the live site (Forside.tsx shownEvents)
+  else if (process.env.VERCEL_ENV === 'production') await expect(aktuelt.getByText(site.pages.news.emptyUpcoming, { exact: true })).toBeAttached();
+  else await expect(aktuelt.getByText('Eksempel', { exact: true })).toHaveCount(3);
   await expect(aktuelt.getByRole('link', { name: h.news.all })).toHaveAttribute('href', '/aktuelt/nyheter');
   const sammen = main.locator('section#sammen');
   await expect(sammen.getByRole('link', { name: site.cta.partner.label })).toHaveAttribute('href', site.cta.partner.href);

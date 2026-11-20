@@ -99,8 +99,13 @@ export function Hero() {
 
     const place = () => {
       const e = eio(pShown);
+      const sy = window.scrollY;
+      // the slot sits in the hero, which the pour scene holds back at half speed (Pour.tsx): the
+      // logo starts from where the slot really is, so it never runs ahead of the headline under it
+      const held = reduce || sy >= 2 * sec.clientHeight ? 0 : sy * 0.5;
+      const from = rest.y - sy + held;
       const x = rest.x + (target.x - rest.x) * e;
-      const y = rest.y - window.scrollY + (target.y - (rest.y - window.scrollY)) * e;
+      const y = from + (target.y - from) * e;
       const s = (rest.w + (target.w - rest.w) * e) / rest.w;
       el.style.transform = `translate(${x.toFixed(2)}px,${y.toFixed(2)}px) scale(${s.toFixed(5)})`;
       if (pShown >= 0.98) page.dataset.solid = '';
