@@ -1,6 +1,7 @@
 import { klient } from '@/content/klient.no';
 import { Lines } from '@/components/forside/Lines';
-import { Plate, Plater, after } from '@/components/plater/Plater';
+import { Plate, Plater } from '@/components/plater/Plater';
+import { after } from '@/components/plater/after';
 import p from '@/components/plater/plater.module.css';
 
 const t = klient.about;

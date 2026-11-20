@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { clamp, eo, onScrollFrame } from '@/components/forside/frame';
 import f from '@/components/forside/forside.module.css';
 import styles from './plater.module.css';
@@ -114,6 +114,3 @@ export function Plate({
     </section>
   );
 }
-
-/** A delay for a `data-rise` text, in seconds, so a row of them arrives one after the next. */
-export const after = (s: number) => ({ '--d': `${s}s` }) as CSSProperties;

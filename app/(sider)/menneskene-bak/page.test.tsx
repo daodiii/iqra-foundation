@@ -36,7 +36,17 @@ describe('Menneskene bak', () => {
     expect(screen.queryByText(site.pages.people.empty)).toBeNull();
   });
 
-  test('a photo fills its person’s frame with its alt, and a bio is shown', () => {
+  test('each part is a plate, a region named by its title: the title, Styret, Kontakt styret', () => {
+    render(<MenneskeneBak />);
+    const plates = Array.from(document.querySelectorAll('[data-plate]'));
+    expect(plates.map((el) => el.tagName)).toEqual(['SECTION', 'SECTION', 'SECTION']);
+    expect(screen.getAllByRole('region').map((r) => r.getAttribute('data-plate'))).toEqual(plates.map((el) => el.getAttribute('data-plate')));
+    expect(screen.getByRole('region', { name: t.title })).toBe(plates[0]);
+    expect(screen.getByRole('region', { name: t.board.title })).toBe(plates[1]);
+    expect(screen.getByRole('region', { name: t.contact.title })).toBe(plates[2]);
+  });
+
+  test('a photo stands with its person, with its alt, and a bio is shown; no photo, no image', () => {
     override = [
       { slug: 'a', name: 'Navn En', role: 'styreleder', photo: { src: '/bilder/en.jpg', alt: 'Portrett av Navn En' }, bio: 'En kort bio.', order: 1 },
       { slug: 'b', name: 'Navn To', role: 'styremedlem', photo: null, bio: null, order: 2 },
@@ -48,7 +58,7 @@ describe('Menneskene bak', () => {
     expect(screen.getAllByRole('img')).toHaveLength(1);
   });
 
-  test('with nobody in the collection, the site’s sentence stands in the frames’ place', () => {
+  test('with nobody in the collection, the site’s sentence stands in the list’s place', () => {
     override = [];
     render(<MenneskeneBak />);
     expect(screen.getByText(site.pages.people.empty)).toBeInTheDocument();

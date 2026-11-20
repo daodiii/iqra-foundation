@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Feltene } from '@/components/vart-arbeid/Feltene';
+import { ArbeidPlater } from '@/components/vart-arbeid/ArbeidPlater';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
 
@@ -22,10 +22,10 @@ function anchor(title: string) {
 }
 
 /**
- * Vårt arbeid as 11 «Feltene» (the owner's pick, 2026-11-20): the client's text (D3, 2026-11-18),
- * the intro and the areas of work in their order, each a colour field with its own anchor. The
- * client's intro says six areas and lists seven; all seven stand here as written until the client
- * says otherwise (their question Q2).
+ * Vårt arbeid as «Platene» (mock 42, the owner's pick for all subpages, 2026-11-20): the client's text
+ * (D3, 2026-11-18), the intro and the areas of work in their order, each a full-screen plate with its
+ * own anchor. The client's intro says six areas and lists seven; all seven stand here as written until
+ * the client says otherwise (their question Q2).
  */
 export default function VartArbeid() {
   const areas = t.areas.map((a) => ({
@@ -34,5 +34,5 @@ export default function VartArbeid() {
     text: a.text,
     note: 'note' in a ? a.note : undefined,
   }));
-  return <Feltene title={t.title} intro={t.intro} areas={areas} />;
+  return <ArbeidPlater title={t.title} intro={t.intro} areas={areas} />;
 }

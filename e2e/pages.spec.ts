@@ -96,8 +96,6 @@ test.describe('the collections are honest while empty', () => {
     await expect(page.locator('h1')).toHaveText(r.title);
     const main = page.getByRole('main');
     await expect(main.getByRole('heading', { level: 2 })).toHaveText(r.categories.map((c) => c.title));
-    // «Bokryggene»: each category is a book whose spine is a button that opens it
-    await expect(main.getByRole('heading', { level: 2 }).getByRole('button')).toHaveText(r.categories.map((c) => c.title));
     const items = getResources();
     for (const c of r.categories) {
       const section = main.locator(`section#${c.key}`);
@@ -142,12 +140,13 @@ test('phone: no page is wider than the screen at 320, 360 or 390, however long i
   }
 });
 
-test('kontakt: «Ikonene» — three bands with drawn icons, e-mail, phone and the address, the form under «Kontakt oss» — the client’s details, no placeholder, the form drawn', async ({ page }) => {
+test('kontakt: «Platene» — the title, then e-mail, phone and the address, the form under «Kontakt oss» — the client’s details, no placeholder, the form drawn', async ({ page }) => {
   await page.goto('/kontakt');
   await expect(page).toHaveTitle(T(site.pages.contact.title));
   const t = site.pages.contact;
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.form.title);
+  await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
+  await expect(main.getByRole('heading', { level: 2, name: t.form.title })).toBeVisible();
   expect(await main.locator('[data-way]').evaluateAll((els) => els.map((e) => e.getAttribute('data-way')))).toEqual(['epost', 'telefon', 'adresse']);
   // The client's details (D8, 2026-11-18): the e-mail and the number are links.
   await expect(main.locator(`a[href="mailto:${klient.contact.email}"]`)).toHaveCount(1);
