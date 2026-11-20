@@ -114,9 +114,9 @@
 }
 
 /*
- * The icons: one family, fine lines on a 120 grid, each closed by the logo's dot. They stand drawn:
- * the mock's draw-on never played (a page-wide class kept every icon finished), and the finished
- * icons are what the owner approved.
+ * The icons: one family, fine lines on a 120 grid, each closed by the logo's dot. Each draws itself
+ * line by line as its panel comes in, and the dot pops in last (the owner, 2026-11-20: «yes» to the
+ * draw-on the mock meant but never played).
  */
 .ik {
   display: block;
@@ -133,10 +133,24 @@
   stroke-width: 1.15;
   stroke-linecap: round;
   stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1.6s cubic-bezier(0.65, 0, 0.35, 1) calc(var(--j, 0) * 140ms);
 }
 
 .d {
   fill: var(--dc);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 1.35s;
+}
+
+:global(html[data-js]) .cd:not([data-on]) .s {
+  stroke-dashoffset: 1;
+}
+
+:global(html[data-js]) .cd:not([data-on]) .d {
+  transform: scale(0);
 }
 
 @media (min-width: 1700px) {
@@ -172,6 +186,19 @@
     font-size: calc(clamp(36px, 10vw, 50px) * 1.03);
   }
 
+  /*
+   * «Engasjement og deltakelse» keeps «og» on its first line, like the other two titles (the owner,
+   * 2026-11-20). «Engasjement og» is 7.16 em wide; the panel holds 84vw less its 2 × 28px padding.
+   */
+  .c2 h3 {
+    font-size: min(calc(clamp(36px, 10vw, 50px) * 1.03), calc((84vw - 56px) / 7.3));
+  }
+
+  /* Shorter on phones (the owner, 2026-11-20): the same sideways walk in fewer screens of swiping. */
+  .spor {
+    height: 300vh;
+  }
+
   .txt {
     font-size: 18px;
   }
@@ -193,9 +220,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .txt {
+  .txt,
+  .s,
+  .d {
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
+    stroke-dashoffset: 0 !important;
   }
 }

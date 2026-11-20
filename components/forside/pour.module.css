@@ -193,6 +193,11 @@
 }
 
 @media (max-width: 900px) {
+  /* Shorter on phones (the owner, 2026-11-20): every step of the scene, in fewer screens of swiping. */
+  .sc {
+    height: 360vh;
+  }
+
   .ct {
     padding-top: 96px;
     grid-template-rows: auto auto auto 1fr;
