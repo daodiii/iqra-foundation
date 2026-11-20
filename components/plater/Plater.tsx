@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
 import { clamp, eo, onScrollFrame } from '@/components/forside/frame';
 import f from '@/components/forside/forside.module.css';
 import styles from './plater.module.css';
@@ -31,8 +31,60 @@ export function inset(k: number, w: number, h: number) {
  * by line (`Lines`). Without JavaScript, or with reduced motion, every plate stands open and every text
  * is there.
  */
+/**
+ * The page's opening, three ways (mocks 52–54, 2026-11-20; the owner: no whole screen for the page's
+ * name, «a small part, and then we go to the actual content»): 52 a short masthead, 53 the same with a
+ * row of the page's parts that stays under the header, 54 the title and the parts in a column at the
+ * left while the content starts at the right. PREVIEW: `?apning=52|53|54` picks one and shows a switcher.
+ */
+const OPENINGS = ['52', '53', '54'] as const;
+type Opening = (typeof OPENINGS)[number];
+type Part = { id: string; label: string };
+
 export function Plater({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [opening, setOpening] = useState<Opening>('52');
+  const [preview, setPreview] = useState(false);
+  const [parts, setParts] = useState<Part[]>([]);
+  const [here, setHere] = useState<string>();
+
+  useEffect(() => {
+    // PREVIEW BRANCH ONLY: the switcher shows without a query, since Vercel's preview login drops it
+    // (memory: vercel-preview-login-drops-query). Remove with the switcher before this is merged.
+    setPreview(true);
+    const q = new URLSearchParams(window.location.search).get('apning');
+    if (q && (OPENINGS as readonly string[]).includes(q)) setOpening(q as Opening);
+  }, []);
+
+  // the page's parts, named by their own headings, and which of them is being read
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // the header's height, so the row of parts (53) and the column (54) stand right under it
+    const bar = document.querySelector<HTMLElement>('[data-topp]');
+    const measure = () => el.style.setProperty('--top-h', `${Math.round(bar?.getBoundingClientRect().bottom ?? 91)}px`);
+    measure();
+    window.addEventListener('resize', measure);
+    const plates = Array.from(el.querySelectorAll<HTMLElement>('[data-plate]')).slice(1);
+    const found = plates
+      .map((p) => {
+        const id = p.getAttribute('aria-labelledby')?.split(' ')[0];
+        const h = id ? document.getElementById(id) : null;
+        return id && h ? { id, label: (h.textContent ?? '').replace(/\s+/g, ' ').trim() } : null;
+      })
+      .filter((x): x is Part => !!x && !!x.label);
+    setParts(found);
+    if (typeof IntersectionObserver === 'undefined') return () => window.removeEventListener('resize', measure);
+    const io = new IntersectionObserver(
+      (es) => es.forEach((e) => e.isIntersecting && setHere(e.target.getAttribute('aria-labelledby')?.split(' ')[0])),
+      { rootMargin: '-40% 0px -55% 0px' },
+    );
+    plates.forEach((p) => io.observe(p));
+    return () => {
+      io.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [opening]);
 
   useEffect(() => {
     const el = ref.current;
@@ -73,11 +125,46 @@ export function Plater({ children, className }: { children: ReactNode; className
       stop();
       io?.disconnect();
     };
-  }, []);
+  }, [opening]);
+
+  const list = Children.toArray(children);
+  const toc =
+    parts.length > 1 ? (
+      <nav className={styles.toc} aria-label="På denne siden">
+        {parts.map((p) => (
+          <a key={p.id} href={`#${p.id}`} aria-current={here === p.id ? 'true' : undefined}>
+            {p.label}
+          </a>
+        ))}
+      </nav>
+    ) : null;
 
   return (
-    <div ref={ref} className={`${styles.plater} ${className ?? ''}`} data-plater="">
-      {children}
+    <div ref={ref} className={`${styles.plater} ${className ?? ''}`} data-plater="" data-open={opening}>
+      {opening === '54' ? (
+        <>
+          <aside className={styles.side54}>
+            {list[0]}
+            {toc}
+          </aside>
+          <div className={styles.rest54}>{list.slice(1)}</div>
+        </>
+      ) : (
+        <>
+          {list[0]}
+          {opening === '53' && toc}
+          {list.slice(1)}
+        </>
+      )}
+      {preview && (
+        <div className={styles.switch} role="group" aria-label="Åpning (forhåndsvisning)">
+          {OPENINGS.map((o) => (
+            <button key={o} type="button" aria-pressed={opening === o} onClick={() => setOpening(o)}>
+              {o}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

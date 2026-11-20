@@ -40,7 +40,7 @@ h2.wide {
 
 /* a statement: a little smaller than the shared one, so a two-sentence text keeps to a short screen */
 p.say {
-  font-size: clamp(28px, min(3.8vw, 7vh), 62px);
+  font-size: clamp(22px, 2.2vw, 32px);
   overflow-wrap: break-word;
 }
 
@@ -54,9 +54,9 @@ p.say {
   }
   /* «kompetanseutvikling» and «Kunnskapsformidling» each stand on one line at 390 px */
   h2.h {
-    font-size: 9.6vw;
+    font-size: 28px;
   }
   p.say {
-    font-size: 7.4vw;
+    font-size: 22px;
   }
 }

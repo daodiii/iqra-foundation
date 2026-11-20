@@ -73,9 +73,9 @@
 .h1 {
   grid-column: 1 / span 10;
   font-weight: 600;
-  font-size: min(10vw, 19vh);
-  line-height: 0.88;
-  letter-spacing: -0.055em;
+  font-size: clamp(36px, 4.4vw, 64px);
+  line-height: 1;
+  letter-spacing: -0.025em;
 }
 /* the text beside or under the title */
 .intro {
@@ -89,9 +89,9 @@
   grid-column: 1 / span 7;
   align-self: start;
   font-weight: 600;
-  font-size: min(6.6vw, 12vh);
-  line-height: 0.94;
-  letter-spacing: -0.05em;
+  font-size: clamp(28px, 2.8vw, 40px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
   overflow-wrap: break-word;
 }
 /* the text to the right of a part's heading */
@@ -114,9 +114,9 @@
 .say {
   grid-column: 1 / span 11;
   font-weight: 500;
-  font-size: clamp(30px, 4.3vw, 74px);
-  line-height: 1.08;
-  letter-spacing: -0.032em;
+  font-size: clamp(22px, 2.2vw, 32px);
+  line-height: 1.3;
+  letter-spacing: -0.012em;
 }
 /* a closing sentence under a part */
 .note {
@@ -142,8 +142,8 @@
   border-top: 1px solid var(--rule);
   padding: clamp(16px, 2.6vh, 24px) 0;
   font-weight: 500;
-  font-size: clamp(22px, 2.5vw, 42px);
-  line-height: 1.15;
+  font-size: clamp(19px, 1.8vw, 26px);
+  line-height: 1.25;
   letter-spacing: -0.022em;
 }
 .lines > li:last-child {
@@ -168,7 +168,7 @@
 .cols b {
   display: block;
   font-weight: 600;
-  font-size: clamp(24px, 2.5vw, 42px);
+  font-size: clamp(20px, 1.7vw, 26px);
   letter-spacing: -0.03em;
   line-height: 1.05;
   margin-bottom: 12px;
@@ -263,7 +263,7 @@
   }
   .h1 {
     grid-column: 1 / -1;
-    font-size: 16vw;
+    font-size: 36px;
   }
   .intro,
   .h,
@@ -274,16 +274,16 @@
     grid-column: 1 / -1;
   }
   .h {
-    font-size: 11vw;
+    font-size: 28px;
   }
   .say {
-    font-size: 8.6vw;
+    font-size: 22px;
   }
   .cols {
     grid-template-columns: repeat(min(var(--n, 4), 2), minmax(0, 1fr));
   }
   .cols b {
-    font-size: 7vw;
+    font-size: 21px;
   }
   .two {
     grid-template-columns: minmax(0, 1fr);
@@ -303,4 +303,166 @@
   .plater [data-rise] {
     transition: none;
   }
+}
+
+/* ---------- the page's opening (mocks 52–54, 2026-11-20): a short part, then the content ---------- */
+:is(.plater[data-open] > .plate:first-child, .side54 > .plate) {
+  min-height: 0;
+  padding-top: calc(var(--top-h, 91px) + clamp(40px, 7vh, 76px));
+  padding-bottom: clamp(36px, 6vh, 56px);
+}
+:is(.plater[data-open] > .plate:first-child, .side54 > .plate) .h1 {
+  grid-column: 1 / span 6;
+}
+:is(.plater[data-open] > .plate:first-child, .side54 > .plate) .intro {
+  grid-column: 8 / span 5;
+}
+.plater[data-open='52'] > .plate:first-child {
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+}
+/* the content right after the opening starts at once, at the top of its plate, not at its foot */
+:is(.plater[data-open] > .plate:first-child + .plate, .plater[data-open] > .toc + .plate, .rest54 > .plate:first-child) {
+  align-items: flex-start;
+  min-height: 0;
+  padding-top: clamp(48px, 8vh, 80px);
+}
+
+/* 53: the page's parts in a row that stays under the header */
+.toc {
+  position: sticky;
+  top: var(--top-h, 91px);
+  z-index: 5;
+  display: flex;
+  gap: clamp(20px, 2.6vw, 36px);
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+.toc a {
+  flex: none;
+  padding: 16px 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ink);
+  text-decoration: none;
+}
+.toc a[aria-current] {
+  box-shadow: inset 0 -2px 0 var(--rod);
+}
+.toc a:focus-visible {
+  outline: 2px solid var(--rod);
+  outline-offset: -2px;
+}
+
+/* 54: the title and the parts in a column at the left, the content from the top at the right */
+.plater[data-open='54'] {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  background: #fff;
+}
+.side54 {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100svh;
+  background: #fff;
+}
+.plater[data-open='54'] .side54 > .plate {
+  min-height: 0;
+  padding-right: clamp(20px, 2.4vw, 40px);
+  padding-bottom: 28px;
+}
+.plater[data-open='54'] .side54 > .plate .in {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+.plater[data-open='54'] .side54 > .plate :is(.h1, .intro) {
+  grid-column: 1 / -1;
+}
+.plater[data-open='54'] .side54 .h1 {
+  font-size: clamp(34px, 3.6vw, 56px);
+}
+.plater[data-open='54'] .side54 .intro {
+  font-size: clamp(16px, 1.15vw, 18px);
+}
+.plater[data-open='54'] .side54 .toc {
+  position: static;
+  display: block;
+  border: 0;
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: 20px;
+  white-space: normal;
+}
+.plater[data-open='54'] .side54 .toc a {
+  display: block;
+  padding: 10px 0 10px 16px;
+  border-left: 2px solid rgba(0, 0, 0, 0.12);
+}
+.plater[data-open='54'] .side54 .toc a[aria-current] {
+  box-shadow: none;
+  border-left-color: var(--rod);
+  color: var(--rod);
+}
+.rest54 {
+  min-width: 0;
+  margin-top: calc(var(--top-h, 91px) + 24px);
+  border-radius: 22px 0 0 0;
+  overflow: hidden;
+  background: var(--navy-deep);
+}
+
+@media (max-width: 900px) {
+  :is(.plater[data-open] > .plate:first-child, .side54 > .plate) {
+    padding-top: calc(var(--top-h, 76px) + 32px);
+    padding-bottom: 28px;
+  }
+  :is(.plater[data-open] > .plate:first-child, .side54 > .plate) :is(.h1, .intro) {
+    grid-column: 1 / -1;
+  }
+  .plater[data-open='54'] {
+    display: block;
+  }
+  .side54 {
+    position: static;
+    height: auto;
+  }
+  .plater[data-open='54'] .side54 .toc {
+    padding-bottom: 24px;
+  }
+  .rest54 {
+    margin: 0 0 0 12px;
+    border-radius: 20px 0 0 0;
+  }
+}
+
+/* PREVIEW ONLY: the switcher between the three openings (`?apning=`); taken out once one is picked */
+.switch {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 60;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: #000;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+.switch button {
+  all: unset;
+  cursor: pointer;
+  padding: 10px 14px;
+  border-radius: 7px;
+  font: 600 15px/1 var(--font);
+  color: #fff;
+}
+.switch button[aria-pressed='true'] {
+  background: #fff;
+  color: #000;
 }
