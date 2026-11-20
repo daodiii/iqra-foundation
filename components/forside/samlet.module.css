@@ -1,20 +1,18 @@
 /*
- * The finale «Sammen kan vi gjøre en forskjell» = Samlet (280vh, the screen holds): on crimson, the
- * words of the title fly in from scattered places until the sentence stands whole; then the text and
- * the two buttons rise.
+ * The finale «Sammen kan vi gjøre en forskjell» = Samlet, one screen of crimson: when it is well on
+ * screen the words of the title fly in from scattered places until the sentence stands whole, then
+ * the text and the two buttons rise (Samlet.tsx sets data-on once). It plays on a clock, not the scroll.
  */
 .sa {
   position: relative;
-  height: 280vh;
   background: var(--rod);
   color: #fff;
 }
 
 .stg {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100svh;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
   overflow: hidden;
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -34,7 +32,14 @@
 
 .w {
   display: inline-block;
-  will-change: transform, opacity;
+  transition:
+    transform 1.25s var(--ease-out) calc(var(--i) * 90ms),
+    opacity 0.9s var(--ease-out) calc(var(--i) * 90ms);
+}
+
+:global(html[data-js]) .sa:not([data-on]) .w {
+  transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1.25);
+  opacity: 0;
 }
 
 .bot {
@@ -66,15 +71,15 @@
 
 .up {
   transition:
-    opacity 1s var(--ease-out),
-    transform 1.2s var(--ease-out);
+    opacity 1s var(--ease-out) 0.95s,
+    transform 1.2s var(--ease-out) 0.95s;
 }
 
-.bot[data-on] .d1 {
-  transition-delay: 0.12s;
+.d1 {
+  transition-delay: 1.07s;
 }
 
-:global(html[data-js]) .bot:not([data-on]) .up {
+:global(html[data-js]) .sa:not([data-on]) .up {
   opacity: 0;
   transform: translateY(34px);
 }
@@ -98,11 +103,6 @@
 }
 
 @media (max-width: 900px) {
-  /* Shorter on phones (the owner, 2026-11-20). */
-  .sa {
-    height: 200vh;
-  }
-
   .h2 {
     grid-column: 1 / -1;
     font-size: calc(clamp(44px, 12.4vw, 64px) * 1.03);
@@ -129,23 +129,13 @@
   }
 }
 
-/* Without JavaScript the sentence stands whole and the screen does not hold. */
-:global(html:not([data-js])) .sa {
-  height: auto;
-}
-
-:global(html:not([data-js])) .stg {
-  position: relative;
-  height: auto;
-  min-height: 100vh;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .up {
+  .up,
+  .w {
     transition: none;
   }
 
-  :global(html[data-js]) .bot:not([data-on]) .up {
+  :global(html[data-js]) .sa:not([data-on]) :is(.up, .w) {
     opacity: 1;
     transform: none;
   }

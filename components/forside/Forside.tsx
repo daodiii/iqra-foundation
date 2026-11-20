@@ -3,7 +3,6 @@ import { getEvents, getNews, splitEvents, todayISO, type Event, type NewsItem } 
 import { writeDate } from '@/lib/dates';
 import { newsHref } from '@/components/aktuelt/Aktuelt';
 import { Hero } from './Hero';
-import { Lagene } from './Lagene';
 import { NEWS_HREF } from './lenker';
 import { Plakater, type Poster, type Strip } from './Plakater';
 import { Pour } from './Pour';
@@ -82,7 +81,6 @@ export function Forside() {
       <Trinn />
       <Plakater events={events} news={news} />
       <Samlet />
-      <Lagene />
       <Takt />
     </>
   );

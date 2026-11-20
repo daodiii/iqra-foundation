@@ -115,13 +115,27 @@
   transform-style: preserve-3d;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--ty, 0px));
   opacity: var(--op, 1);
-  transition: transform 0.25s ease-out;
+  transition:
+    transform 1.1s var(--ease-out) var(--d, 0ms),
+    opacity 0.9s var(--ease-out) var(--d, 0ms);
   box-shadow: 0 40px 70px -40px rgba(15, 19, 24, 0.55);
 }
 
 /* a poster is a link: `.pk a` (inherit) would otherwise make its text navy on its own navy */
 .pk a.po {
   color: #fff;
+}
+
+/* waiting below, tilted back, until it arrives (Plakater.tsx sets data-in once) */
+:global(html[data-js]) .po:not([data-in]) {
+  --rx: 24deg;
+  --ty: 90px;
+  --op: 0;
+}
+
+/* under the mouse the lean follows quickly */
+.po:hover {
+  transition: transform 0.25s ease-out;
 }
 
 .po:focus-visible {

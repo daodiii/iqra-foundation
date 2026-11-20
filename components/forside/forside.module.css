@@ -92,8 +92,9 @@
   position: relative;
 }
 
+/* sections lie side by side now (the owner's trial of a calmer scroll, 2026-11-20): no edge shadow */
 .layerIn {
-  box-shadow: 0 -24px 60px -24px rgba(4, 8, 18, 0.45);
+  box-shadow: none;
 }
 
 /* the shade over a section as the next comes over it: its own element, so a frame changes one opacity and restyles nothing else */

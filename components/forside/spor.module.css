@@ -1,11 +1,12 @@
 /*
- * «Dette ønsker vi å skape» = Sporet (380vh, the screen holds): the title, then three colour panels
+ * «Dette ønsker vi å skape» = Sporet (320vh, the screen holds): the title, then three colour panels
  * (navy, teal, burgundy) pass sideways as the page scrolls. All text is white on the panels; each
  * panel's line icon draws itself, closed by the logo's dot.
  */
 .spor {
   position: relative;
-  height: 380vh;
+  /* carried panel to panel (Takt.tsx), so it needs less scroll than when it was scrubbed by hand */
+  height: 320vh;
   background: #fff;
 }
 
@@ -41,15 +42,19 @@
   transition-delay: calc(var(--k) * 85ms);
 }
 
+/*
+ * On a wide screen every part is as wide as half the room between the margins, so two stand whole
+ * side by side at every rest (Spor.tsx sporStops); each swipe moves the track on by one part.
+ */
 .p0 {
   flex: none;
-  width: min(60vw, 900px);
+  width: calc((100vw - 2 * var(--gutter) - 2.6vw) / 2);
   color: var(--navy);
-  padding-right: 5vw;
+  padding-right: 4vw;
 }
 
 .p0 h2 {
-  font-size: calc(clamp(54px, min(7.6vw, 13vh), 150px) * 1.03);
+  font-size: calc(clamp(52px, min(5.8vw, 11vh), 132px) * 1.03);
 }
 
 .ingress {
@@ -57,15 +62,15 @@
   font-weight: 400;
   letter-spacing: -0.006em;
   line-height: 1.352;
-  font-size: clamp(22px, min(2.1vw, 3.8vh), 38px);
-  max-width: 21em;
+  font-size: clamp(19px, min(1.6vw, 2.9vh), 30px);
+  max-width: 24em;
 }
 
 .cd {
   flex: none;
   position: relative;
   overflow: hidden;
-  width: min(60vw, 860px);
+  width: calc((100vw - 2 * var(--gutter) - 2.6vw) / 2);
   height: min(74vh, 740px);
   display: grid;
   grid-template-rows: auto 1fr auto auto;
@@ -91,7 +96,7 @@
 .cd h3 {
   grid-row: 3;
   max-width: min(100%, 7.6em);
-  font-size: calc(clamp(44px, min(5.2vw, 9.5vh), 104px) * 1.03);
+  font-size: calc(clamp(38px, min(3.9vw, 8vh), 84px) * 1.03);
 }
 
 .txt {
@@ -153,11 +158,7 @@
   transform: scale(0);
 }
 
-@media (min-width: 1700px) {
-  .cd h3 {
-    font-size: calc(min(clamp(44px, min(5.2vw, 9.5vh), 104px), 4.7vw, 92px) * 1.03);
-  }
-}
+
 
 @media (max-width: 900px) {
   .p0 {
@@ -196,7 +197,7 @@
 
   /* Shorter on phones (the owner, 2026-11-20): the same sideways walk in fewer screens of swiping. */
   .spor {
-    height: 300vh;
+    height: 280vh;
   }
 
   .txt {

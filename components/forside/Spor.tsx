@@ -104,8 +104,10 @@ export function Spor() {
 }
 
 /**
- * The page offsets at which each panel stands whole in the middle of the screen (the first at the
- * section's top, the last at its foot): the beats of Sporet (Takt.tsx).
+ * The beats of Sporet (Takt.tsx), as page offsets. On a wide screen two parts stand whole side by
+ * side at every rest (the intro and the first panel, then the first and second, then the last two):
+ * a part's beat is where its left edge meets the page's margin. On a phone one panel stands whole in
+ * the middle. The first beat is the section's top, the last its foot; beats that coincide merge.
  */
 export function sporStops(el: HTMLElement): number[] {
   const track = el.querySelector<HTMLElement>('[data-trk]');
@@ -117,5 +119,8 @@ export function sporStops(el: HTMLElement): number[] {
   const travel = el.offsetHeight - H;
   const max = track.scrollWidth - W;
   if (travel <= 0 || max <= 0) return [];
-  return (Array.from(track.children) as HTMLElement[]).map((p) => top + clamp((p.offsetLeft + p.offsetWidth / 2 - W / 2) / max) * travel);
+  const parts = Array.from(track.children) as HTMLElement[];
+  const pairs = !window.matchMedia('(max-width: 900px)').matches;
+  const margin = parts[0]?.offsetLeft ?? 0;
+  return parts.map((p) => top + clamp((pairs ? p.offsetLeft - margin : p.offsetLeft + p.offsetWidth / 2 - W / 2) / max) * travel);
 }
