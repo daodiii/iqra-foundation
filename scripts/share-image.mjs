@@ -1,7 +1,8 @@
 /**
  * The share card: `app/opengraph-image.png`, 1200×630.
  *
- * The logo on its turquoise plate — the guide's main logo — with the red thread under it,
+ * The logo on white with the thread under it in black, its dots in the site's burgundy (three
+ * colours since 2026-11-20, the owner; the turquoise plate is gone),
  * set in General Sans from the repo's own font files, rendered by headless Chromium so it
  * is pixel-exact with the site. Run `node scripts/share-image.mjs` after changing the logo,
  * the thread or the fonts; the PNG is committed because the build does not run browsers.
@@ -28,10 +29,10 @@ const html = `<!doctype html>
 <style>
   @font-face { font-family: 'General Sans'; font-weight: 500; src: url('${dataUrl('brand/fonts/general-sans/GeneralSans-Medium.woff2', 'font/woff2')}') format('woff2'); }
   html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
-  body { background: #67c1bf; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 44px; font-family: 'General Sans', sans-serif; }
+  body { background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 44px; font-family: 'General Sans', sans-serif; }
   img { width: 540px; height: auto; display: block; }
-  p { margin: 0; color: #2c394b; font-size: 30px; font-weight: 500; letter-spacing: 0.02em; }
-  p b { color: #ab5261; font-weight: 500; }
+  p { margin: 0; color: #000000; font-size: 30px; font-weight: 500; letter-spacing: 0.02em; }
+  p b { color: #67112f; font-weight: 500; }
 </style></head>
 <body>
   <img src="${dataUrl('public/brand/iqra-logo.svg', 'image/svg+xml')}" alt="">

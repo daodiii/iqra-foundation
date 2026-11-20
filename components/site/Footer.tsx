@@ -14,7 +14,7 @@ export function Footer() {
     <footer className={styles.footer} data-header="dark">
       <div className={styles.footerTop}>
         <Link href="/" prefetch={false} className={styles.footerHome} aria-label={site.header.homeLabel}>
-          <Logo ground="navy" height={44} decorative />
+          <Logo ground="navy" crimson height={44} decorative />
         </Link>
         <nav aria-label={site.footer.navLabel}>
           <ul className={styles.footerList}>
