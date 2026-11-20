@@ -36,7 +36,7 @@ describe('Hjem, the owner’s redesign', () => {
   test('the sections in the client’s order, every one named by its title', () => {
     page();
     const main = screen.getByRole('main');
-    expect(within(main).getAllByRole('heading', { level: 2 }).map((e) => e.textContent)).toEqual([h.why.title, h.create.title, h.action.title, h.news.title, h.together.title]);
+    expect(within(main).getAllByRole('heading', { level: 2 }).map((e) => e.textContent)).toEqual([h.why.title, h.create.title, h.action.title, site.pages.news.upcoming, site.pages.news.newsTitle, h.together.title]);
     for (const id of ['hvorfor', 'skape', 'handling', 'aktuelt', 'sammen']) expect(main.querySelector(`section#${id}`)).not.toBeNull();
   });
 
@@ -50,7 +50,7 @@ describe('Hjem, the owner’s redesign', () => {
       h.create.intro,
       ...h.create.areas.flatMap((a) => [a.title, a.text]),
       ...h.action.items.flatMap((a) => [a.title, a.text]),
-      h.news.intro,
+      // «Aktuelt» and its intro left the front page (the owner, 2026-11-20)
       h.together.title,
       h.together.text,
     ])
@@ -81,7 +81,9 @@ describe('Hjem, the owner’s redesign', () => {
     data.events = four.events;
     const { container } = page();
     const aktuelt = container.querySelector('section#aktuelt') as HTMLElement;
-    expect(within(aktuelt).getAllByRole('heading', { level: 3 }).map((e) => e.textContent)).toEqual([site.pages.news.upcoming, site.pages.news.newsTitle]);
+    // the section opens at the coming events: no «Aktuelt» title or intro above them
+    expect(within(aktuelt).getAllByRole('heading', { level: 2 }).map((e) => e.textContent)).toEqual([site.pages.news.upcoming, site.pages.news.newsTitle]);
+    expect(within(aktuelt).queryByText(h.news.intro)).toBeNull();
     expect(within(aktuelt).getAllByRole('heading', { level: 4 }).map((e) => e.textContent)).toEqual(['Arrangement 1', 'Arrangement 2', 'Arrangement 3', 'Nyhet 1', 'Nyhet 2', 'Nyhet 3']);
     expect(aktuelt).toHaveTextContent('kl. 18:00 · Oslo');
     expect(aktuelt).toHaveTextContent('Januar 2099');

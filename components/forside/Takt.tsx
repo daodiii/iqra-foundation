@@ -2,8 +2,9 @@
 
 import { useEffect } from 'react';
 import { WHERE } from '@/lib/smooth';
-import { steps, touchSettle, type Beats } from '@/lib/steps';
-import { pageTop } from './frame';
+import { clean, steps, touchSettle, type Beats } from '@/lib/steps';
+import { pageTop, plainPour } from './frame';
+import f from './forside.module.css';
 import { PARA, WHY } from './Pour';
 import { sporStops } from './Spor';
 
@@ -20,9 +21,16 @@ import { sporStops } from './Spor';
  */
 export function readBeats(): Beats {
   const zone: number[] = [0];
+  const plainMarks: number[] = [];
   const sc = document.querySelector<HTMLElement>('[data-lag="sc"]');
   const stage = sc?.firstElementChild as HTMLElement | null;
-  if (sc && stage?.clientHeight) {
+  if (plainPour()) {
+    // plain and open on a phone: the paragraph and the poster are places to stop, nothing is carried
+    for (const s of ['[data-pour-tx]', '#hvorfor']) {
+      const el = document.querySelector<HTMLElement>(s);
+      if (el) plainMarks.push(pageTop(el));
+    }
+  } else if (sc && stage?.clientHeight) {
     const top = pageTop(sc);
     zone.push(top + PARA * stage.clientHeight, top + WHY * stage.clientHeight);
   }
@@ -34,10 +42,67 @@ export function readBeats(): Beats {
     const el = document.querySelector<HTMLElement>(s);
     return el ? [pageTop(el)] : [];
   });
-  return { zones: [zone, track], marks };
+  return { zones: [plainMarks.length ? [] : zone, track], marks: [...plainMarks, ...marks] };
 }
 
-/** Starts the beats: carried by the glide on a laptop (lib/steps.ts), settled after a swipe on a phone. Renders nothing. */
+/** Where a phone uses the browser's own snapping (its momentum is the browser's, so only the browser can stop it). */
+export const PHONE_SNAP = '(pointer: coarse) and (prefers-reduced-motion: no-preference)';
+
+/** Every place a phone's fling may not pass: the beats of both carried parts and the tops of the sections, merged and sorted. */
+export function snapPoints(b: Beats, max: number): number[] {
+  return clean([...b.zones.flat(), ...b.marks], max);
+}
+
+/**
+ * On a phone, the fling after a swipe is the browser's own momentum: a long one used to carry from
+ * the hero down to «Aktuelt», past half the page (the owner, 2026-11-20: «if you take a long scroll,
+ * you go down to news and you miss the entire page almost»). The browser's scroll snapping is the one
+ * thing that acts on that momentum: each point below is a snap point a fling cannot pass
+ * (scroll-snap-stop: always). Mandatory snapping, because proximity lets a fling through (measured in
+ * Chrome, 2026-11-20: a 5000 px throw passed every point with proximity, stopped at the first with
+ * mandatory). So that the reader can still rest anywhere inside a section, each section is a snap
+ * area too (forside.module.css): an area taller than the screen counts as snapped wherever it covers
+ * the screen. One empty marker per point, laid out again whenever the page's size changes.
+ */
+function phoneSnaps(): () => void {
+  const mq = window.matchMedia(PHONE_SNAP);
+  if (!mq.matches) return () => {};
+  const root = document.documentElement;
+  const layer = document.createElement('div');
+  layer.className = f.snaps;
+  layer.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(layer);
+  root.style.scrollSnapType = 'y mandatory';
+  // the site keeps room for its header when a link jumps to a heading (scroll-padding); a snap point
+  // here is a scroll position itself, so it must not be pushed down by that room
+  const pad = root.style.scrollPaddingTop;
+  root.style.scrollPaddingTop = '0px';
+  root.dataset.snapPhone = '';
+  let raf = 0;
+  const lay = () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const ys = snapPoints(readBeats(), root.scrollHeight - window.innerHeight);
+      while (layer.children.length > ys.length) layer.lastChild?.remove();
+      while (layer.children.length < ys.length) layer.appendChild(document.createElement('i'));
+      ys.forEach((y, i) => ((layer.children[i] as HTMLElement).style.top = `${y}px`));
+    });
+  };
+  lay();
+  const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(lay) : null;
+  ro?.observe(document.body);
+  document.fonts?.ready.then(lay);
+  return () => {
+    cancelAnimationFrame(raf);
+    ro?.disconnect();
+    root.style.scrollSnapType = '';
+    root.style.scrollPaddingTop = pad;
+    delete root.dataset.snapPhone;
+    layer.remove();
+  };
+}
+
+/** Starts the beats: carried by the glide on a laptop (lib/steps.ts); on a phone, snap points a fling cannot pass and a settle after a swipe. Renders nothing. */
 export function Takt() {
   useEffect(() => {
     let stop = steps(readBeats);
@@ -51,11 +116,13 @@ export function Takt() {
     };
     where.addEventListener('change', follow);
     const stopTouch = touchSettle(() => readBeats().zones);
+    const stopSnaps = phoneSnaps();
     return () => {
       where.removeEventListener('change', follow);
       cancelAnimationFrame(raf);
       stop();
       stopTouch();
+      stopSnaps();
     };
   }, []);
   return null;

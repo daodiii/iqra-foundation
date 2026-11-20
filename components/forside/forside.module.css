@@ -78,6 +78,41 @@
   transform: translateY(112%) rotate(2.5deg);
 }
 
+/*
+ * A phone's snap points (Takt.tsx phoneSnaps): empty markers laid at page offsets, each a place a
+ * fling may not pass. They sit on the document's own box (no positioned ancestor), so `top` is the
+ * offset from the top of the page.
+ */
+.snaps {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 0;
+  pointer-events: none;
+}
+
+.snaps > i {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/*
+ * With a phone's snapping on (Takt.tsx phoneSnaps), every block of the page is a snap area, start to
+ * start, so the reader rests anywhere inside one; only the markers above stop a fling.
+ */
+:global(html[data-snap-phone]) :is(:global([data-hero]), :global([data-pour-tx]), :global(#hvorfor), :global(#skape), :global(#handling), :global(#aktuelt), :global(#sammen)) {
+  scroll-snap-align: start;
+}
+
+:global(html[data-snap-phone]) :global([data-lag='fot']) {
+  scroll-snap-align: end;
+}
+
 /* The page's side margins */
 .pad {
   padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
-import { clamp, eio, onFrame, pageKey, reducedMotion } from './frame';
+import { eio, onFrame, pageKey, plainPour, reducedMotion } from './frame';
 import { Knapp } from './Knapp';
 import { LETTERS, MARK } from './Merke';
 import { VIEWBOX } from './logo-paths';
@@ -16,6 +16,21 @@ const VIEW = VB.join(' ');
 /** The pour's length once it starts, and when it starts by itself. */
 const POUR_MS = 900;
 const AUTO_MS = 1000;
+/** The logo's glide between the hero and the header, either way. */
+export const FLY_MS = 700;
+/** It leaves for the header once the page is this far down (share of a screen), and comes back below DOWN. */
+export const UP = 0.06;
+export const DOWN = 0.02;
+
+/**
+ * Where the flight is going after the page stands at `sy` on a screen `H` tall, from `want` (0 the
+ * hero's slot, 1 the header): it goes up past UP and back below DOWN, and between them keeps its way.
+ */
+export function flightGoal(sy: number, H: number, want: number): number {
+  if (sy > H * UP) return 1;
+  if (sy < H * DOWN) return 0;
+  return want;
+}
 
 /** The lit surface of the pour across the lockup: a wave at `level`, closed below for the clip, open for the stroke. */
 export function wavePath(level: number, amp: number, ph: number, closed: boolean) {
@@ -102,7 +117,7 @@ export function Hero() {
       const sy = window.scrollY;
       // the slot sits in the hero, which the pour scene holds back at half speed (Pour.tsx): the
       // logo starts from where the slot really is, so it never runs ahead of the headline under it
-      const held = reduce || sy >= 2 * sec.clientHeight ? 0 : sy * 0.5;
+      const held = reduce || plainPour() || sy >= 2 * sec.clientHeight ? 0 : sy * 0.5;
       const from = rest.y - sy + held;
       const x = rest.x + (target.x - rest.x) * e;
       const y = from + (target.y - from) * e;
@@ -135,12 +150,8 @@ export function Hero() {
       if (t > 0 && !('go' in sec.dataset)) sec.dataset.go = '';
     };
 
-    /** How far the flight has gone, by the scroll: it starts after 4% of a screen and lands at 54%. */
-    // measured against the hero (one screen, 100svh), which holds still while a phone's address bar slides
-    const scrollP = () => {
-      const H = sec.clientHeight || window.innerHeight;
-      return clamp((window.scrollY - H * 0.04) / (H * 0.5));
-    };
+    // where the flight is going: the header once the page has left the top, the slot when it is back
+    let fly = 0;
 
     const auto = window.setTimeout(() => (tGoal = 1), reduce ? 0 : AUTO_MS);
     const onScroll = () => {
@@ -184,9 +195,13 @@ export function Hero() {
         pour(now);
         tDrawn = t;
       }
-      // the flight waits until the logo is white; then it catches up with the scroll
-      const pT = t >= 0.88 ? scrollP() : 0;
-      pShown += (pT - pShown) * (Math.abs(pT - pShown) < 0.002 ? 1 : 0.16);
+      // the flight waits until the logo is white; then it glides on its own clock, all the way, so it
+      // never rests half way over the text however the page stops (the owner, 2026-11-20: «it just
+      // stops in the middle of the page»). Measured against the hero (100svh), which holds still
+      // while a phone's address bar slides.
+      fly = t >= 0.88 ? flightGoal(window.scrollY, sec.clientHeight || window.innerHeight, fly) : 0;
+      const step = reduce ? 1 : dt / FLY_MS;
+      pShown = fly > pShown ? Math.min(fly, pShown + step) : Math.max(fly, pShown - step);
       // the logo moves only when the page or the flight has; a still page costs nothing
       const k = `${pageKey()}|${pShown}|${measured}`;
       if (k !== placed) {

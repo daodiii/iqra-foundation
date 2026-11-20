@@ -28,14 +28,13 @@ test('the client’s front page in their order, every word theirs', async ({ pag
   for (const p of h.paragraphs) await expect(main.getByText(p, { exact: true })).toBeAttached();
   await expect(main.getByRole('link', { name: site.cta.about.label })).toHaveAttribute('href', '/om-oss');
   await expect(main.getByRole('link', { name: site.cta.events.label })).toHaveAttribute('href', '/aktuelt/arrangementer');
-  await expect(main.getByRole('heading', { level: 2 })).toHaveText([h.why.title, h.create.title, h.action.title, h.news.title, h.together.title]);
+  await expect(main.getByRole('heading', { level: 2 })).toHaveText([h.why.title, h.create.title, h.action.title, site.pages.news.upcoming, site.pages.news.newsTitle, h.together.title]);
   const text = (await main.textContent()) ?? '';
   for (const s of [
     ...h.why.paragraphs,
     h.create.intro,
     ...h.create.areas.flatMap((a) => [a.title, a.text]),
     ...h.action.items.flatMap((a) => [a.title, a.text]),
-    h.news.intro,
     h.together.text,
   ])
     expect(text).toContain(s);

@@ -104,4 +104,12 @@ export function pageTop(el: HTMLElement): number {
   return y;
 }
 
+/**
+ * Where the part after the hero is plain (the owner, 2026-11-20: on a phone it «should just be open»,
+ * and scrolling back up «the dot should be gone … so you come directly to the next text»): the opening
+ * paragraph and the «Hvorfor vi finnes» poster stand in the page's flow, open, with no sheet and no dot.
+ */
+export const PLAIN_POUR = '(max-width: 900px)';
+export const plainPour = () => window.matchMedia(PLAIN_POUR).matches;
+
 export const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;

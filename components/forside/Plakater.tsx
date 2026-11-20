@@ -106,20 +106,12 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
   }, []);
 
   return (
+    // «Aktuelt» and its intro are gone (the owner, 2026-11-20): the section starts at the coming events
     <section ref={root} id="aktuelt" className={`${styles.pk} ${f.layer} ${f.layerIn}`} style={{ zIndex: 4 }} aria-labelledby="aktuelt-tittel" data-lag="aktuelt">
-      <div className={styles.hd}>
+      <div className={`${styles.sub} ${styles.first}`}>
         <h2 id="aktuelt-tittel" className={styles.rv} data-rv>
-          {h.title}
-        </h2>
-        <p className={`${styles.leadIn} ${styles.rv}`} data-rv>
-          {h.intro}
-        </p>
-      </div>
-
-      <div className={styles.sub}>
-        <h3 className={styles.rv} data-rv>
           {t.upcoming}
-        </h3>
+        </h2>
         <span className={styles.rv} data-rv>
           <Knapp href={EVENTS_HREF} kind="ring" className={styles.all}>
             {site.pages.home.allEvents}
@@ -148,9 +140,9 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
       )}
 
       <div className={styles.sub}>
-        <h3 className={styles.rv} data-rv>
+        <h2 className={styles.rv} data-rv>
           {t.newsTitle}
-        </h3>
+        </h2>
         <span className={styles.rv} data-rv>
           <Knapp href={NEWS_HREF} kind="ring" className={styles.all}>
             {h.all}

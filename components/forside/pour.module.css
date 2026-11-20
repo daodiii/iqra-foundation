@@ -230,6 +230,72 @@
   }
 }
 
+/*
+ * On a phone the part after the hero is plain and open (the owner, 2026-11-20): the paragraph on white,
+ * then the «Hvorfor vi finnes» poster, in the page's flow, both whole. No sheet, no dot, no glide-in;
+ * scrolling back up comes straight to the text. Pour.tsx runs no scene here (frame.ts PLAIN_POUR).
+ */
+@media (max-width: 900px) {
+  .sc {
+    height: auto;
+    margin-top: 0;
+    pointer-events: auto;
+  }
+
+  .stage {
+    position: relative;
+    height: auto;
+    overflow: visible;
+  }
+
+  .sheet {
+    display: none;
+  }
+
+  .tx {
+    position: relative;
+    inset: auto;
+    padding: clamp(80px, 13vh, 120px) var(--gutter);
+    background: #fff;
+  }
+
+  .red {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    opacity: 1;
+  }
+
+  .redIn {
+    position: relative;
+  }
+
+  .ct {
+    position: relative;
+    inset: auto;
+    min-height: 100svh;
+  }
+
+  .tone {
+    opacity: 0.9;
+  }
+
+  /* the texts stand: no masks to rise from */
+  .sc :global([data-lines]) [class] {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .more {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .more {
     transition: none !important;
