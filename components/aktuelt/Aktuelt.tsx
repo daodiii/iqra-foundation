@@ -5,7 +5,7 @@ import { getEvents, getNews, splitEvents, todayISO, type Event, type NewsItem } 
 import { writeDate, writeDateTime } from '@/lib/dates';
 import { newsHref, type View } from './links';
 import { EVENT_SAMPLES, NEWS_SAMPLES } from './samples';
-import { Tavla } from './Tavla';
+import { AktueltPlater } from './AktueltPlater';
 
 const t = site.pages.news;
 
@@ -73,10 +73,10 @@ export function EventCard({ e, archive = false }: { e: Event; archive?: boolean 
 
 /**
  * Aktuelt: one page for news and events with the filter the client asks for — Alle, Nyheter,
- * Arrangementer (M3) — and their text (D5), set as the owner's board «Tavla, hvit» (Tavla.tsx).
+ * Arrangementer (M3) — and their text (D5), set as «Platene» (AktueltPlater.tsx, mock 42, 2026-11-20).
  * Under Arrangementer the past events stand as the archive, which also has a page of its own.
  * Events move from upcoming to the archive by date on their own (`revalidate` on the routes).
- * While nothing is published the board shows the front page's samples, marked «Eksempel».
+ * While nothing is published the page shows the front page's samples, marked «Eksempel».
  */
 export function Aktuelt({ view }: { view: View }) {
   const realNews = getNews();
@@ -84,7 +84,7 @@ export function Aktuelt({ view }: { view: View }) {
   const sampleNews = !realNews.length;
   const sampleEvents = !realUpcoming.length;
   return (
-    <Tavla
+    <AktueltPlater
       view={view}
       news={sampleNews ? NEWS_SAMPLES : realNews}
       upcoming={sampleEvents ? EVENT_SAMPLES : realUpcoming}
