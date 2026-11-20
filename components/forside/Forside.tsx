@@ -46,6 +46,18 @@ export function shownEvents(real: Poster[]): Poster[] {
   return real.length ? real : EXAMPLES;
 }
 
+/** Three sample news posts (the owner, 2026-11-20: «make sample news posts too»), marked «Eksempel» like the events. */
+export const NEWS_EXAMPLES: Strip[] = [
+  { slug: 'eksempel-nyhet-1', date: writeDate('2026-11-18'), dateTime: '2026-11-18', title: 'Iqra Foundation åpner for samarbeidspartnere', summary: 'Vi inviterer organisasjoner og fagmiljøer til å bygge møteplasser sammen med oss.', href: NEWS_HREF, example: true },
+  { slug: 'eksempel-nyhet-2', date: writeDate('2026-11-06'), dateTime: '2026-11-06', title: 'Første samtalekveld samlet unge voksne i Oslo', summary: 'Kvelden handlet om tillit, fellesskap og hvordan vi kan delta mer i samfunnet.', href: NEWS_HREF, example: true },
+  { slug: 'eksempel-nyhet-3', date: writeDate('2026-10-24'), dateTime: '2026-10-24', title: 'Ny serie med åpne foredrag i vinter', summary: 'Gjennom vinteren holder vi foredrag om kunnskap, dialog og samfunnsdeltakelse.', href: NEWS_HREF, example: true },
+];
+
+/** The news to show: the real posts, or the samples while none is published. */
+export function shownNews(real: Strip[]): Strip[] {
+  return real.length ? real : NEWS_EXAMPLES;
+}
+
 /** A news item in the strip; it leads to its article when it has one, else to the news. */
 export function toStrip(n: NewsItem): Strip {
   return { slug: n.slug, date: writeDate(n.date), dateTime: n.date, title: n.title, summary: n.summary, href: n.body ? newsHref(n.slug) : NEWS_HREF };
@@ -58,7 +70,7 @@ export function toStrip(n: NewsItem): Strip {
  * is the layout's. Every word is the client's (content/klient.no.ts) or the site's own labels.
  */
 export function Forside() {
-  const news = getNews().slice(0, SHOWN).map(toStrip);
+  const news = shownNews(getNews().slice(0, SHOWN).map(toStrip));
   const { upcoming } = splitEvents(getEvents(), todayISO());
   const events = shownEvents(upcoming.slice(0, SHOWN).map(toPoster));
   return (
