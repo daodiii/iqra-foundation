@@ -95,7 +95,7 @@ test('the logo pours white, then docks into the header’s slot; the header foll
   const tone = () => page.locator('[data-forside]').getAttribute('data-tone');
   await to(page, 1.3 * H);
   await expect.poll(tone).toBe('light');
-  // the poster is open from 72% of the way through its scene; the scene is shorter on a phone
+  // past the paragraph the dot opens by itself on a clock (Pour.tsx); the poster rests at 1.8 screens in
   const poster = await page.evaluate(() => {
     const sc = document.querySelector('[data-lag="sc"]') as HTMLElement;
     return sc.offsetTop + 0.85 * (sc.offsetHeight - window.innerHeight);

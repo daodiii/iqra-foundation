@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
-import { clamp, eio, eo, onScrollFrame, reducedMotion } from './frame';
+import { clamp, eio, eo, onFrame, pageKey, reducedMotion, repainted } from './frame';
 import { Lines } from './Lines';
 import { SWOOSH } from './logo-paths';
 import f from './forside.module.css';
@@ -10,14 +10,35 @@ import styles from './pour.module.css';
 
 type On = { tx: boolean; h: boolean; lead: boolean; more: boolean };
 
-/** What is shown at scene progress `k` (0–1 over the scene's 520vh). */
-export function stateAt(k: number): On {
-  return { tx: k > 0.25, h: k > 0.62, lead: k > 0.7, more: k > 0.77 };
+/*
+ * Where things happen, in screens scrolled into the scene (the stage's height). The white covers the
+ * hero by 1; the paragraph rests at PARA (a beat, Takt.tsx); past OPEN the crimson dot rises and
+ * opens by itself, on a clock (the owner, 2026-11-20: «perhaps the dot should just open automatically
+ * and open the entire thing»); back above CLOSE it closes again; the poster rests at WHY (a beat).
+ */
+export const PARA = 1.15;
+export const OPEN = 1.25;
+export const CLOSE = 1.18;
+export const WHY = 1.8;
+/** How long the dot takes to rise and open (closing goes faster). */
+export const OPEN_MS = 1100;
+
+/** What the poster shows at open progress `o` (0–1, on the clock). */
+export function stateAt(o: number): Omit<On, 'tx'> {
+  return { h: o > 0.6, lead: o > 0.78, more: o > 0.92 };
+}
+
+/** The dot's way toward `want` (0 or 1) after `dt` ms: opening takes OPEN_MS, closing 60% of that. */
+export function stepOpen(o: number, want: number, dt: number): number {
+  if (o < want) return Math.min(want, o + dt / OPEN_MS);
+  if (o > want) return Math.max(want, o - dt / (OPEN_MS * 0.6));
+  return o;
 }
 
 /**
  * The pour scene: the white sheet over the hero, the opening paragraph, and the crimson dot that
- * opens into «Hvorfor vi finnes». Every step follows the scroll exactly (no smoothing).
+ * opens into «Hvorfor vi finnes». The sheet and the paragraph follow the scroll exactly; the dot,
+ * once called, plays on its own clock.
  */
 export function Pour() {
   const sc = useRef<HTMLDivElement>(null);
@@ -49,7 +70,16 @@ export function Pour() {
     // once the paragraph has glided in it stays in its lines; scrolling back above it fades it out
     // with the white, instead of sliding it back down its masks while it is still being read
     let seen = false;
-    return onScrollFrame(el, () => {
+    let o = 0;
+    let want = 0;
+    let last: number | null = null;
+    let page = '';
+    return onFrame((now) => {
+      const dt = last === null ? 16 : Math.min(50, now - last);
+      last = now;
+      // a still page with the dot at rest costs nothing
+      if (pageKey() === page && o === want) return;
+      page = pageKey();
       if (!fit && tone.current) {
         const g = tone.current.querySelector('g');
         const bb = g && typeof g.getBBox === 'function' ? g.getBBox() : null;
@@ -62,10 +92,12 @@ export function Pour() {
       const W = stage.clientWidth;
       const H = stage.clientHeight;
       // no layout yet: a 0/0 here would poison everything after it
-      if (!H || r.height <= H) return;
-      const k = clamp(-r.top / (r.height - H));
+      if (!H || r.height <= H) {
+        page = '';
+        return;
+      }
       // 1: the white sheet rises over the hero, which holds back at half speed and darkens
-      const gone = k * (r.height - H);
+      const gone = clamp(-r.top / (r.height - H)) * (r.height - H);
       const level = Math.max(0, H - gone);
       sheet.current!.style.transform = `translate3d(0,${level.toFixed(1)}px,0)`;
       if (hero) {
@@ -79,14 +111,21 @@ export function Pour() {
           held = false;
         }
       }
-      // 2: once the screen is white the paragraph glides in; it rests, then drifts up and away as the dot comes
-      const away = eio((k - 0.4) / 0.1);
+      // 2: once the screen is white the paragraph glides in; it rests, then drifts up and away
+      const s = gone / H;
+      if (s >= 0.96) seen = true;
+      const away = eio((s - CLOSE) / 0.2);
+      const fade = seen ? clamp((s - 0.7) / 0.25) : 1;
       tx.current!.style.transform = `translateY(${(-H * 0.12 * away).toFixed(1)}px)`;
-      const fade = seen ? clamp((gone / H - 0.7) / 0.25) : 1;
       tx.current!.style.opacity = ((1 - away) * fade).toFixed(3);
-      // 3: the crimson dot rises out of the white to the middle, then opens to the whole screen
-      const rise = eo((k - 0.45) / 0.11);
-      const open = eio((k - 0.56) / 0.16);
+      // 3: the crimson dot, called past OPEN, rises to the middle and opens to the whole screen by itself
+      if (s >= OPEN) want = 1;
+      else if (s < CLOSE) want = 0;
+      const was = o;
+      o = reduce ? want : stepOpen(o, want, dt);
+      if (o !== was) repainted();
+      const rise = eo(o / 0.28);
+      const open = eio((o - 0.18) / 0.82);
       const full = Math.hypot(W, H) / 2 + 4;
       if (size !== `${W}x${H}`) {
         size = `${W}x${H}`;
@@ -103,29 +142,26 @@ export function Pour() {
           top: `${(full - H / 2).toFixed(1)}px`,
         });
       }
-      const R = k < 0.44 ? 0 : 14 + (full - 14) * open;
+      const R = o <= 0 ? 0 : 14 + (full - 14) * open;
       const dy = ((118 - 68 * rise) / 100) * H - H / 2;
       if (R <= 0) {
         dot.style.opacity = '';
         dot.style.pointerEvents = '';
       } else {
-        const s = Math.min(1, R / full);
+        const k = Math.min(1, R / full);
         dot.style.opacity = '1';
         dot.style.pointerEvents = 'auto';
-        dot.style.transform = `translate3d(0,${dy.toFixed(1)}px,0) scale(${s.toFixed(5)})`;
-        inner.style.transform = `scale(${(1 / s).toFixed(5)}) translate3d(0,${(-dy).toFixed(1)}px,0)`;
+        dot.style.transform = `translate3d(0,${dy.toFixed(1)}px,0) scale(${k.toFixed(5)})`;
+        inner.style.transform = `scale(${(1 / k).toFixed(5)}) translate3d(0,${(-dy).toFixed(1)}px,0)`;
       }
-      const q = eio((k - 0.58) / 0.3);
+      const q = eio((o - 0.3) / 0.7);
       tone.current!.style.transform = `translate(${((1 - q) * 14).toFixed(2)}vw,${((1 - q) * 34).toFixed(2)}vh) rotate(${((1 - q) * -14).toFixed(2)}deg)`;
       tone.current!.style.opacity = (q * 0.9).toFixed(3);
-      const s = stateAt(k);
-      // the paragraph waits until the white has covered the screen: on a phone's shorter scene that is later than k 0.25
-      if (s.tx && gone >= H * 0.96) seen = true;
-      s.tx = seen;
-      const key = `${+s.tx}${+s.h}${+s.lead}${+s.more}`;
+      const st = { tx: seen, ...stateAt(o) };
+      const key = `${+st.tx}${+st.h}${+st.lead}${+st.more}`;
       if (key !== shown) {
         shown = key;
-        setOn(s);
+        setOn(st);
       }
     });
   }, []);

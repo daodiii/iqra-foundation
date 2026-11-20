@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
-import { onFrame, pageKey } from './frame';
+import { onFrame, pageKey, paintKey } from './frame';
 import { Knapp } from './Knapp';
 import { MARK } from './Merke';
 import f from './forside.module.css';
@@ -73,7 +73,8 @@ export function Topp() {
     return onFrame(() => {
       // only when the page has moved or the logo has docked or left, and once more the frame after:
       // the scenes move in the same frame, some after this reads. A still page needs no new reading.
-      const k = pageKey() + ('solid' in page.dataset ? 's' : '');
+      // the crimson dot opens by itself on a still page (Pour.tsx): paintKey counts that too
+      const k = `${pageKey()}|${paintKey()}${'solid' in page.dataset ? 's' : ''}`;
       if (k === seen) {
         if (!again) return;
         again = false;

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
-import { clamp, onScrollFrame, progress, reducedMotion } from './frame';
+import { clamp, onScrollFrame, pageTop, progress } from './frame';
 import { Lines } from './Lines';
 import f from './forside.module.css';
 import styles from './spor.module.css';
@@ -43,20 +43,6 @@ function Icon({ n }: { n: number }) {
   );
 }
 
-/**
- * Where a swipe through the panels settles, on a touch screen (the owner, 2026-11-20): the next panel
- * stop in the direction the page was moving, so no panel rests half on screen. At the section's two
- * ends, or with no stop ahead, it stays where it is, so the reader can always swipe on out.
- * `stops` are page offsets, ascending; returns the offset to go to, or null to stay.
- */
-export function snapTarget(y: number, from: number, stops: number[], top: number, travel: number): number | null {
-  if (y <= top + 2 || y >= top + travel - 2) return null;
-  const dir = Math.sign(y - from);
-  if (!dir) return null;
-  const ahead = dir > 0 ? stops.find((s) => s > y + 1) : [...stops].reverse().find((s) => s < y - 1);
-  return ahead === undefined ? null : ahead;
-}
-
 /** «Dette ønsker vi å skape», Sporet: the track moves sideways with the scroll, exactly; a panel opens as it comes in. */
 export function Spor() {
   const spor = useRef<HTMLDivElement>(null);
@@ -70,8 +56,7 @@ export function Spor() {
     const panels = Array.from(track.children) as HTMLElement[];
     const stage = track.parentElement as HTMLElement;
     let shown = '';
-    const stopSettling = settle(el, track, panels, stage);
-    const stopFrames = onScrollFrame(el, () => {
+    return onScrollFrame(el, () => {
       const H = stage.clientHeight;
       const W = window.innerWidth;
       const r = el.getBoundingClientRect();
@@ -92,17 +77,13 @@ export function Spor() {
         setOn(now);
       }
     });
-    return () => {
-      stopFrames();
-      stopSettling();
-    };
   }, []);
 
   return (
     <section id="skape" className={`${f.layer} ${f.layerIn}`} style={{ zIndex: 2 }} aria-labelledby="skape-tittel" data-lag="spor">
-      <div ref={spor} className={styles.spor}>
+      <div ref={spor} className={styles.spor} data-spor>
         <div className={styles.stg}>
-          <div ref={trk} className={styles.trk}>
+          <div ref={trk} className={styles.trk} data-trk>
             <div className={styles.p0}>
               <Lines as="h2" id="skape-tittel" text={c.title} on={on[0]} />
               <Lines className={styles.ingress} text={c.intro} on={on[0]} />
@@ -123,52 +104,18 @@ export function Spor() {
 }
 
 /**
- * On a touch screen, once a swipe (and its fling) has come to rest inside the panels, glide on to the
- * next panel in that direction (`snapTarget`). A panel's stop is where its middle meets the screen's.
+ * The page offsets at which each panel stands whole in the middle of the screen (the first at the
+ * section's top, the last at its foot): the beats of Sporet (Takt.tsx).
  */
-function settle(el: HTMLElement, track: HTMLElement, panels: HTMLElement[], stage: HTMLElement): () => void {
-  if (!window.matchMedia('(pointer: coarse)').matches || reducedMotion()) return () => {};
-  let from = window.scrollY;
-  let finger = false;
-  let timer = 0;
-  const stops = () => {
-    const W = window.innerWidth;
-    const H = stage.clientHeight;
-    const top = el.getBoundingClientRect().top + window.scrollY;
-    const travel = el.offsetHeight - H;
-    const max = track.scrollWidth - W;
-    const at = panels.map((p) => top + clamp((p.offsetLeft + p.offsetWidth / 2 - W / 2) / max) * travel);
-    return { top, travel, at: [...new Set(at.map(Math.round))].sort((a, b) => a - b) };
-  };
-  const rest = () => {
-    if (finger) return;
-    const y = window.scrollY;
-    const s = stops();
-    const to = snapTarget(y, from, s.at, s.top, s.travel);
-    from = to ?? y;
-    if (to !== null && Math.abs(to - y) > 2) window.scrollTo({ top: to, behavior: 'smooth' });
-  };
-  const onScroll = () => {
-    window.clearTimeout(timer);
-    timer = window.setTimeout(rest, 150);
-  };
-  const down = () => {
-    finger = true;
-    from = window.scrollY;
-  };
-  const up = () => {
-    finger = false;
-    onScroll();
-  };
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('touchstart', down, { passive: true });
-  window.addEventListener('touchend', up, { passive: true });
-  window.addEventListener('touchcancel', up, { passive: true });
-  return () => {
-    window.clearTimeout(timer);
-    window.removeEventListener('scroll', onScroll);
-    window.removeEventListener('touchstart', down);
-    window.removeEventListener('touchend', up);
-    window.removeEventListener('touchcancel', up);
-  };
+export function sporStops(el: HTMLElement): number[] {
+  const track = el.querySelector<HTMLElement>('[data-trk]');
+  const stage = track?.parentElement;
+  if (!track || !stage) return [];
+  const W = window.innerWidth;
+  const H = stage.clientHeight;
+  const top = pageTop(el);
+  const travel = el.offsetHeight - H;
+  const max = track.scrollWidth - W;
+  if (travel <= 0 || max <= 0) return [];
+  return (Array.from(track.children) as HTMLElement[]).map((p) => top + clamp((p.offsetLeft + p.offsetWidth / 2 - W / 2) / max) * travel);
 }

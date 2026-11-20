@@ -2,10 +2,10 @@ import { describe, expect, test } from 'vitest';
 import { toPoster, toStrip } from './Forside';
 import { wavePath } from './Hero';
 import { DARK, HOLD, layerAt } from './Lagene';
-import { stateAt } from './Pour';
+import { CLOSE, OPEN, OPEN_MS, PARA, stateAt, stepOpen, WHY } from './Pour';
 import { luminance, toneOf } from './Topp';
 import { nearest } from './Trinn';
-import { snapTarget } from './Spor';
+import { touchTarget } from '@/lib/steps';
 
 describe('Kameleon: the header reads the ground under it', () => {
   test('white and the pale grounds are light; navy is dark; crimson is crimson', () => {
@@ -38,11 +38,25 @@ describe('Lagene: the section behind holds back at half speed and darkens 30%', 
 });
 
 describe('the pour scene, step by step', () => {
-  test('white first, then the paragraph, then the poster’s title, lead and second paragraph', () => {
-    expect(stateAt(0.1)).toEqual({ tx: false, h: false, lead: false, more: false });
-    expect(stateAt(0.3)).toEqual({ tx: true, h: false, lead: false, more: false });
-    expect(stateAt(0.65)).toEqual({ tx: true, h: true, lead: false, more: false });
-    expect(stateAt(0.9)).toEqual({ tx: true, h: true, lead: true, more: true });
+  test('as the dot opens: the poster’s title, then its lead, then its second paragraph', () => {
+    expect(stateAt(0.3)).toEqual({ h: false, lead: false, more: false });
+    expect(stateAt(0.65)).toEqual({ h: true, lead: false, more: false });
+    expect(stateAt(0.85)).toEqual({ h: true, lead: true, more: false });
+    expect(stateAt(1)).toEqual({ h: true, lead: true, more: true });
+  });
+
+  test('the dot opens on its clock in OPEN_MS, and closes faster', () => {
+    let o = 0;
+    for (let t = 0; t < OPEN_MS; t += 16) o = stepOpen(o, 1, 16);
+    expect(o).toBe(1);
+    expect(stepOpen(0.5, 1, OPEN_MS / 2)).toBe(1);
+    expect(stepOpen(1, 0, OPEN_MS * 0.3)).toBeCloseTo(0.5);
+    expect(stepOpen(0.4, 0.4, 100)).toBe(0.4);
+  });
+
+  test('the beats come in order: white, paragraph, called, poster, inside the scene', () => {
+    expect(CLOSE).toBeLessThan(OPEN);
+    expect(1 < PARA && PARA < CLOSE && OPEN < WHY && WHY < 2.1).toBe(true);
   });
 
   test('the pour’s surface spans the lockup and closes below it for the clip', () => {
@@ -75,19 +89,18 @@ describe('Aktuelt’s items', () => {
   });
 });
 
-describe('Sporet on a touch screen: a swipe settles on the next panel in its direction', () => {
-  const top = 1000;
-  const travel = 2000;
-  const stops = [1000, 1700, 2400, 3000];
-  test('down past a stop: on to the next one ahead', () => {
-    expect(snapTarget(1900, 1700, stops, top, travel)).toBe(2400);
+describe('on a touch screen, a swipe that comes to rest settles on the next beat in its direction', () => {
+  const zones = [[1000, 1700, 2400, 3000]];
+  test('down past a beat: on to the next one ahead', () => {
+    expect(touchTarget(1900, 1700, zones)).toBe(2400);
   });
   test('up: back to the one behind', () => {
-    expect(snapTarget(2200, 2400, stops, top, travel)).toBe(1700);
+    expect(touchTarget(2200, 2400, zones)).toBe(1700);
   });
-  test('at either end of the section, or not moving, it stays', () => {
-    expect(snapTarget(1000, 900, stops, top, travel)).toBeNull();
-    expect(snapTarget(3000, 2800, stops, top, travel)).toBeNull();
-    expect(snapTarget(1900, 1900, stops, top, travel)).toBeNull();
+  test('at either end of a zone, outside one, or not moving, it stays', () => {
+    expect(touchTarget(1000, 900, zones)).toBeUndefined();
+    expect(touchTarget(3000, 2800, zones)).toBeUndefined();
+    expect(touchTarget(500, 300, zones)).toBeUndefined();
+    expect(touchTarget(1900, 1900, zones)).toBeUndefined();
   });
 });
