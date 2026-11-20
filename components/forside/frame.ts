@@ -96,7 +96,7 @@ export function progress(el: Element, H: number): number {
 
 /**
  * An element's offset from the top of the page, by layout: unlike its bounding box it ignores the
- * transforms the scenes put on sections (Lagene holds a covered section back), so it stays put.
+ * transforms the scenes put on elements (the pour scene holds the hero back), so it stays put.
  */
 export function pageTop(el: HTMLElement): number {
   let y = 0;

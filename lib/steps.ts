@@ -112,10 +112,14 @@ export function steps(read: () => Beats): () => void {
   };
 
   const gesture = gestures();
+  let startY = lenis.animatedScroll;
   setGestureHandler(({ deltaX, deltaY, event }: VirtualScrollData) => {
     if (event.type.startsWith('touch') || (event as WheelEvent).ctrlKey || !deltaY || lenis.isStopped) return true;
     if (Math.abs(deltaX) > Math.abs(deltaY)) return true;
     const g = gesture(event.timeStamp || performance.now(), deltaY);
+    // where this gesture began: its beat is counted from there, so a flick that starts above a zone
+    // and carries into it still stops at the zone's first beat
+    if (g.fresh) startY = lenis.animatedScroll;
     window.clearTimeout(quiet);
     flying();
 
@@ -158,7 +162,7 @@ export function steps(read: () => Beats): () => void {
     if (g.notch || (g.fading >= 3 && g.n >= 4)) {
       // every beat is a stop here, however hard the flick (the skill's landing() would carry a fast
       // page past the next one): each stop is a page the owner wants seen
-      const to = next(z, lenis.animatedScroll, g.dir);
+      const to = next(z, g.notch ? lenis.animatedScroll : startY, g.dir);
       if (to !== undefined) {
         go(to, g.id);
         return swallow(event);
@@ -239,11 +243,15 @@ export function steps(read: () => Beats): () => void {
   };
 }
 
-/** Where a touch scroll that came to rest at `y`, having started at `from`, goes on to: the next beat in its direction, inside a zone, not at its ends. */
+/**
+ * Where a touch scroll that came to rest at `y`, having started at `from`, goes on to: inside a zone
+ * (not at its ends), the next beat in its direction counted from where the swipe began, so one swipe
+ * is one beat and a swipe that carries into a zone from above stops at its first beat.
+ */
 export function touchTarget(y: number, from: number, zones: number[][]): number | undefined {
   const zone = zones.find((z) => z.length > 1 && y > z[0] + 2 && y < z[z.length - 1] - 2);
   const dir = Math.sign(y - from);
-  return zone && dir ? next(zone, y, dir, 1) : undefined;
+  return zone && dir ? next(zone, from, dir, 1) : undefined;
 }
 
 /**

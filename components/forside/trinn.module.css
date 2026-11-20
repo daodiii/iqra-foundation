@@ -84,7 +84,7 @@
 }
 
 .it {
-  min-height: 62vh;
+  min-height: 44vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -92,11 +92,6 @@
   transition:
     opacity 0.7s var(--ease-out),
     transform 0.9s var(--ease-out);
-}
-
-:global(html[data-js]) .it:not([data-on]) {
-  opacity: 0.22;
-  transform: translateY(16px) scale(0.985);
 }
 
 .it h3 {
@@ -146,8 +141,7 @@
     margin-top: 40px;
   }
 
-  .it,
-  :global(html[data-js]) .it:not([data-on]) {
+  .it {
     min-height: 0;
     padding: 36px 0;
     opacity: 1;
@@ -172,8 +166,7 @@
     clip-path: none !important;
   }
 
-  .it,
-  :global(html[data-js]) .it:not([data-on]) {
+  .it {
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;

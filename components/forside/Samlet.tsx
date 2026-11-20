@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
-import { eio, onScrollFrame, progress, reducedMotion } from './frame';
+import { reducedMotion } from './frame';
 import { Knapp } from './Knapp';
 import f from './forside.module.css';
 import styles from './samlet.module.css';
@@ -19,7 +19,12 @@ const SCATTER = [
   [48, 10, -8],
 ];
 
-/** The finale, Samlet: the title's words gather as the page scrolls, exactly; then the text and the buttons. */
+/**
+ * The finale, Samlet: a signature moment played whole. When the crimson screen is well onto the
+ * screen, the title's words fly in from scattered places and gather into the sentence (on a clock,
+ * one after another), then the text and the buttons rise. It plays once and then stands; nothing
+ * here is half way while the reader scrolls.
+ */
 export function Samlet() {
   const sa = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState(false);
@@ -27,41 +32,38 @@ export function Samlet() {
   useEffect(() => {
     const el = sa.current;
     if (!el) return;
-    const words = Array.from(el.querySelectorAll<HTMLElement>('[data-w]'));
-    const reduce = reducedMotion();
-    const stage = el.firstElementChild as HTMLElement;
-    let shown = false;
-    return onScrollFrame(el, () => {
-      const k = reduce ? 1 : progress(el, stage.clientHeight);
-      words.forEach((w, i) => {
-        const g = eio(k / 0.55 - i * 0.06);
-        const p = SCATTER[i % SCATTER.length];
-        w.style.transform = `translate(${((1 - g) * p[0]).toFixed(2)}vw,${((1 - g) * p[1]).toFixed(2)}vh) rotate(${((1 - g) * p[2]).toFixed(2)}deg) scale(${(1 + (1 - g) * 0.25).toFixed(3)})`;
-        w.style.opacity = (0.18 + 0.82 * g).toFixed(3);
-      });
-      const now = k > 0.62;
-      if (now !== shown) {
-        shown = now;
-        setOn(now);
-      }
-    });
+    // under reduced motion the CSS stands everything as it is, so there is nothing to play
+    if (reducedMotion() || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        setOn(true);
+        io.disconnect();
+      },
+      { threshold: 0.45 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   return (
     <section id="sammen" className={`${f.layer} ${f.layerIn}`} style={{ zIndex: 5 }} aria-labelledby="sammen-tittel" data-lag="samlet">
-      <div ref={sa} className={styles.sa}>
+      <div ref={sa} className={styles.sa} data-on={on ? '' : undefined}>
         <div className={styles.stg}>
           <h2 id="sammen-tittel" className={styles.h2}>
-            {s.title.split(' ').map((w, i) => (
-              <span key={i}>
-                {i > 0 && ' '}
-                <span className={styles.w} data-w>
-                  {w}
+            {s.title.split(' ').map((w, i) => {
+              const p = SCATTER[i % SCATTER.length];
+              return (
+                <span key={i}>
+                  {i > 0 && ' '}
+                  <span className={styles.w} style={{ '--x': `${p[0]}vw`, '--y': `${p[1]}vh`, '--r': `${p[2]}deg`, '--i': i } as React.CSSProperties} data-w>
+                    {w}
+                  </span>
                 </span>
-              </span>
-            ))}
+              );
+            })}
           </h2>
-          <div className={styles.bot} data-on={on ? '' : undefined}>
+          <div className={styles.bot}>
             <p className={`${styles.say} ${styles.up}`}>{s.text}</p>
             <div className={`${styles.cta} ${styles.up} ${styles.d1}`}>
               <Knapp href={site.cta.partner.href} kind="fill" className={styles.b1}>

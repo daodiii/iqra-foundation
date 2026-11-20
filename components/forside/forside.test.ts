@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { toPoster, toStrip } from './Forside';
 import { wavePath } from './Hero';
-import { DARK, HOLD, layerAt } from './Lagene';
 import { CLOSE, OPEN, OPEN_MS, PARA, stateAt, stepOpen, WHY } from './Pour';
 import { luminance, toneOf } from './Topp';
 import { nearest } from './Trinn';
@@ -19,21 +18,6 @@ describe('Kameleon: the header reads the ground under it', () => {
   test('luminance is WCAG’s', () => {
     expect(luminance('rgb(255, 255, 255)')).toBeCloseTo(1);
     expect(luminance('rgb(0, 0, 0)')).toBe(0);
-  });
-});
-
-describe('Lagene: the section behind holds back at half speed and darkens 30%', () => {
-  test('nothing until the next section’s edge is on screen', () => {
-    expect(layerAt(800, 800)).toBeNull();
-    expect(layerAt(-800, 800)).toBeNull();
-  });
-
-  test('half way in: held back a quarter screen, darkened 15%', () => {
-    expect(layerAt(400, 800)).toEqual({ y: 800 * HOLD * 0.5, d: DARK * 0.5 });
-  });
-
-  test('fully over: held back half a screen, darkened 30%', () => {
-    expect(layerAt(0, 800)).toEqual({ y: 400, d: 0.3 });
   });
 });
 
@@ -96,6 +80,10 @@ describe('on a touch screen, a swipe that comes to rest settles on the next beat
   });
   test('up: back to the one behind', () => {
     expect(touchTarget(2200, 2400, zones)).toBe(1700);
+  });
+  test('one swipe is one beat, counted from where it began: in from above, it stops at the first', () => {
+    expect(touchTarget(1200, 500, zones)).toBe(1000);
+    expect(touchTarget(2600, 1700, zones)).toBe(2400);
   });
   test('at either end of a zone, outside one, or not moving, it stays', () => {
     expect(touchTarget(1000, 900, zones)).toBeUndefined();

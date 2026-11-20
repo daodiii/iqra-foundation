@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
-import { clamp, eio, onScrollFrame, reducedMotion } from './frame';
+import { reducedMotion } from './frame';
 import { Knapp } from './Knapp';
 import { EVENTS_HREF, NEWS_HREF } from './lenker';
 import f from './forside.module.css';
@@ -55,7 +55,7 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
     );
     el.querySelectorAll('[data-sv]').forEach((n) => rule.observe(n));
 
-    // the posters rise into place and un-tilt as they arrive, and lean toward a mouse
+    // the posters lean toward a mouse
     const posters = Array.from(el.querySelectorAll<HTMLElement>('[data-po]'));
     const offs = posters.map((po) => {
       const move = (e: PointerEvent) => {
@@ -81,19 +81,22 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
         po.removeEventListener('pointerleave', leave);
       };
     });
-    const stop = posters.length
-      ? onScrollFrame(el, () => {
-          const H = window.innerHeight;
-          posters.forEach((po, i) => {
-            if (po.matches(':hover')) return;
-            const r = po.getBoundingClientRect();
-            const g = reduce ? 1 : eio(clamp((H * 0.98 - r.top) / (H * 0.55) - i * 0.12));
-            po.style.setProperty('--rx', `${((1 - g) * 24).toFixed(2)}deg`);
-            po.style.setProperty('--ty', `${((1 - g) * 90).toFixed(1)}px`);
-            po.style.setProperty('--op', (0.15 + 0.85 * g).toFixed(3));
-          });
-        })
-      : () => {};
+    // the posters rise and un-tilt once as they arrive, one after another, and then stand
+    const arrive = new IntersectionObserver(
+      (es) => {
+        let n = 0;
+        es.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const po = e.target as HTMLElement;
+          po.style.setProperty('--d', `${n++ * 140}ms`);
+          po.dataset.in = '';
+          arrive.unobserve(po);
+        });
+      },
+      { rootMargin: '0px 0px -12% 0px' },
+    );
+    posters.forEach((po) => (reduce ? (po.dataset.in = '') : arrive.observe(po)));
+    const stop = () => arrive.disconnect();
     return () => {
       io.disconnect();
       rule.disconnect();
