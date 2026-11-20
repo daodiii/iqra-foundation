@@ -9,7 +9,6 @@ import { Pour } from './Pour';
 import { Samlet } from './Samlet';
 import { Spor } from './Spor';
 import { Takt } from './Takt';
-import { TekstValg } from './TekstValg';
 import { Trinn } from './Trinn';
 
 /** How many of each the front page shows (the owner, 2026-11-18: «3 would be good … and then you can click on it to see all»). */
@@ -83,7 +82,6 @@ export function Forside() {
       <Plakater events={events} news={news} />
       <Samlet />
       <Takt />
-      <TekstValg />
     </>
   );
 }

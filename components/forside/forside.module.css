@@ -73,16 +73,12 @@
   transition: transform 0.9s var(--ease-text) calc(var(--d, 0ms) + var(--k) * 80ms);
 }
 
-.wd {
-  display: inline-block;
-}
-
 /* The page's one curve for text: a strong ease-out, quick to start, long and soft to land */
 :global(html) {
   --ease-text: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* 31 «Linjene» (the default): each line rises out of its mask, 80 ms after the one above */
+/* 31 «Linjene» (the owner's pick): each line rises out of its mask, 80 ms after the one above */
 [data-lines='off'] .li {
   transform: translateY(110%);
 }
@@ -90,30 +86,6 @@
 /* Until the words are gathered into lines the text waits unseen (with JavaScript off it stands plain) */
 :global(html[data-js]) [data-lines='words'] {
   opacity: 0;
-}
-
-/* 32 «Ordene»: no masks; each word comes into focus, 28 ms after the one before, held to 1.4 s in all */
-:global(html[data-tekst='32']) .ln {
-  overflow: visible;
-}
-
-:global(html[data-tekst='32']) .li {
-  transform: none;
-  transition: none;
-}
-
-:global(html[data-tekst='32']) .wd {
-  transition:
-    opacity 0.7s var(--ease-text),
-    transform 0.7s var(--ease-text),
-    filter 0.7s var(--ease-text);
-  transition-delay: calc(var(--d, 0ms) + min(var(--j) * 28ms, 1400ms));
-}
-
-:global(html[data-tekst='32']) [data-lines='off'] .wd {
-  opacity: 0;
-  transform: translateY(0.35em);
-  filter: blur(6px);
 }
 
 /*
@@ -151,35 +123,6 @@
   scroll-snap-align: end;
 }
 
-/* The preview's switch between the ways for text to arrive (TekstValg.tsx); never on the live site */
-.valg {
-  position: fixed;
-  left: 12px;
-  bottom: 12px;
-  z-index: 100;
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  background: rgba(10, 20, 50, 0.88);
-  border-radius: 6px;
-  font: 500 13px/1 var(--font-sans, system-ui);
-}
-
-.valg button {
-  padding: 9px 11px;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  font: inherit;
-  cursor: pointer;
-}
-
-.valg button[aria-pressed='true'] {
-  background: #fff;
-  color: #0a1432;
-}
-
 /* The page's side margins */
 .pad {
   padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
@@ -210,11 +153,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .li,
-  .wd {
+  .li {
     transition: none !important;
     transform: none !important;
-    filter: none !important;
-    opacity: 1 !important;
   }
 }

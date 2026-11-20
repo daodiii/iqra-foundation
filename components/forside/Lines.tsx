@@ -5,11 +5,8 @@ import styles from './forside.module.css';
 
 /**
  * The page's one way for text to arrive (the owner, 2026-11-20: the text should «show up in a certain
- * manner and speed»). Two ways are laid out on one structure, and `html[data-tekst]` picks between them
- * in the CSS (forside.module.css):
- *
- * - 31 «Linjene» (the default): each line rises out of its own mask, one after the next.
- * - 32 «Ordene»: word by word, each coming into focus, at about the pace of reading.
+ * manner and speed»; mock 31 «Linjene» picked over 32 «Ordene», word by word): each line rises out of
+ * its own mask, one after the next (forside.module.css).
  *
  * The lines are the ones the browser lays out: the text is first set as words, each word's top is
  * read, and the words are gathered into lines. It is measured again when the web font arrives and when
@@ -126,18 +123,10 @@ export function Lines({
       </span>
     ));
   } else {
-    let j = 0;
     body = lines.map((l, i) => (
       <span key={`${pass}-${i}`} className={styles.ln}>
         <span className={styles.li} style={{ '--k': i } as CSSProperties}>
-          {l.map((w, n) => (
-            <span key={n}>
-              {n > 0 && ' '}
-              <span className={styles.wd} style={{ '--j': j++ } as CSSProperties}>
-                {w}
-              </span>
-            </span>
-          ))}
+          {l.join(' ')}
           {i < lines.length - 1 && ' '}
         </span>
       </span>
