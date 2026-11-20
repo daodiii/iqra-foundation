@@ -147,15 +147,18 @@
   pointer-events: none;
 }
 
-.dd {
-  font-weight: 600;
-  font-size: calc(clamp(90px, min(10vw, 17vh), 190px) * 1.03);
-  line-height: 0.776;
-  letter-spacing: -0.056em;
+/* the day beside its month, set as a number, not a poster (51 «Stram», the owner's pick of 2026-11-20) */
+.date {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 
-.mm {
-  margin-top: 14px;
+.dd {
+  font-weight: 600;
+  font-size: clamp(44px, min(3.9vw, 7vh), 56px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
 }
 
 .po h4 {
