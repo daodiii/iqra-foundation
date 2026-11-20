@@ -17,6 +17,24 @@ async function open(page: Page) {
   await expect(page.locator('h1')).toBeVisible();
 }
 
+/**
+ * The front page carries two parts beat by beat (Takt.tsx, 2026-11-20): the chapter turn under the
+ * hero and the sideways track. A gesture made there comes to rest on a beat, not where the hand
+ * sent it. From «Handling» down the page scrolls freely, so a test of the glide itself starts there,
+ * with room below for `px` more.
+ */
+async function toFreeGround(page: Page, px: number) {
+  const y = await page.evaluate(() => {
+    const el = document.querySelector<HTMLElement>('#handling')!;
+    const y = Math.round(el.getBoundingClientRect().top + window.scrollY);
+    (window as unknown as { __lenis: { scrollTo: (y: number, o: object) => void } }).__lenis.scrollTo(y, { immediate: true, force: true });
+    return y;
+  });
+  const room = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+  expect(room - y, 'room below «Handling» for the gesture').toBeGreaterThan(px + 100);
+  expect(Math.abs((await stillAt(page)) - y)).toBeLessThanOrEqual(2);
+}
+
 /** A gesture of `px` down the page at `speed` px/s, made in the middle of the screen. */
 async function gesture(page: Page, px: number, speed: number) {
   const { width, height } = page.viewportSize()!;
@@ -68,6 +86,7 @@ test('the page glides: it carries on after the hand has stopped, and comes to re
   test.skip(isMobile, 'the glide is for a touchpad, a TrackPoint or a mouse');
   await open(page);
   await expect.poll(() => glides(page)).toBe(true); // the glide starts once the page's script has run
+  await toFreeGround(page, 900);
   const from = await stillAt(page);
   await record(page);
   await gesture(page, 900, 1500);
@@ -127,6 +146,7 @@ test('an open menu holds the page still under a gesture, and closing it gives th
   await page.setViewportSize({ width: 820, height: 900 });
   await open(page);
   await expect.poll(() => glides(page)).toBe(true); // the glide starts once the page's script has run
+  await toFreeGround(page, 600);
   const from = await stillAt(page);
   await page.getByRole('button', { name: site.header.open }).click();
   await expect(page.locator('body')).toHaveAttribute('data-scroll-locked', '');
