@@ -19,25 +19,28 @@
   color: var(--fg);
 }
 
+/* Text is black on white and white on navy or burgundy, every line of it (the owner, 2026-11-20:
+   a think tank is read). The accent is the burgundy on white and white on the dark plates. */
 .white {
   --ground: #fff;
-  --fg: var(--navy);
-  --fg-2: var(--ink-2);
-  --fg-3: var(--ink-3);
-  --rule: rgba(27, 42, 74, 0.16);
-  --strong: var(--navy);
+  --fg: var(--ink);
+  --fg-2: var(--ink);
+  --fg-3: var(--ink);
+  --rule: rgba(0, 0, 0, 0.16);
+  --strong: var(--ink);
   --accent: var(--rod);
+  --focus: var(--rod);
 }
 .navy,
 .deep,
-.teal,
 .rod {
   --fg: #fff;
-  --fg-2: var(--on-navy-2);
-  --fg-3: var(--on-navy);
+  --fg-2: #fff;
+  --fg-3: #fff;
   --rule: rgba(255, 255, 255, 0.22);
   --strong: #fff;
-  --accent: var(--turkis);
+  --accent: #fff;
+  --focus: #fff;
 }
 .navy {
   --ground: var(--navy);
@@ -45,17 +48,8 @@
 .deep {
   --ground: var(--navy-deep);
 }
-.teal {
-  --ground: var(--teal);
-  --fg-2: #e6f4f3;
-  --fg-3: var(--teal-pale);
-  --accent: var(--teal-pale);
-}
 .rod {
   --ground: var(--rod);
-  --fg-2: #fbe4ea;
-  --fg-3: #f2cdd7;
-  --accent: var(--rod-pale);
 }
 
 .mid {

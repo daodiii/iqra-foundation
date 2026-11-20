@@ -5,7 +5,7 @@
  */
 .pk {
   background: #fff;
-  color: var(--navy);
+  color: var(--ink);
   padding: clamp(120px, 17vh, 190px) var(--gutter) clamp(110px, 16vh, 170px);
 }
 
@@ -45,7 +45,7 @@
 .all {
   --k-fg: var(--navy);
   --k-ink: #fff;
-  color: var(--navy);
+  color: var(--ink);
   padding-bottom: 6px;
 }
 
@@ -60,7 +60,7 @@
 .empty {
   font-weight: 500;
   font-size: clamp(18px, 1.4vw, 22px);
-  color: var(--ink-3);
+  color: var(--ink);
 }
 
 /* the reveal: each piece rises once it is on screen, one after another */
@@ -121,7 +121,7 @@
 }
 
 .po:focus-visible {
-  outline: 2px solid var(--turkis);
+  outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
 
@@ -130,11 +130,11 @@
 }
 
 .p2 {
-  background: var(--teal);
+  background: var(--rod);
 }
 
 .p3 {
-  background: var(--rod);
+  background: var(--navy);
 }
 
 .po::after {
@@ -156,7 +156,6 @@
 
 .mm {
   margin-top: 14px;
-  opacity: 0.85;
 }
 
 .po h4 {
@@ -168,7 +167,6 @@
 
 .po .meta {
   margin-top: 12px;
-  color: rgba(255, 255, 255, 0.85);
 }
 
 .pin {
@@ -178,11 +176,11 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--turkis);
+  background: var(--dot, #fff);
 }
 
 .meta {
-  color: var(--ink-3);
+  color: var(--ink);
 }
 
 /* a sample poster's mark (Forside.tsx EXAMPLES): never on the live site */
@@ -237,7 +235,7 @@
 .exNews {
   padding: 4px 8px;
   border: 1px dashed var(--ink-4);
-  color: var(--ink-3);
+  color: var(--ink);
   font-size: 11px;
 }
 
@@ -258,7 +256,7 @@
 }
 
 .sv:focus-visible {
-  outline: 2px solid var(--turkis);
+  outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
 
@@ -266,7 +264,7 @@
   margin-top: 12px !important;
   font-size: clamp(16px, min(1.15vw, 2.1vh), 19px);
   line-height: 1.612;
-  color: var(--ink-2);
+  color: var(--ink);
 }
 
 @media (max-width: 900px) {

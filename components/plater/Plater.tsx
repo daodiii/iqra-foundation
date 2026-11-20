@@ -5,8 +5,8 @@ import { clamp, eo, onScrollFrame } from '@/components/forside/frame';
 import f from '@/components/forside/forside.module.css';
 import styles from './plater.module.css';
 
-/** The plates' grounds: white, navy, teal, the deep navy of the foot, and the crimson of Støtt oss. */
-export type Tone = 'white' | 'navy' | 'teal' | 'deep' | 'rod';
+/** The plates' grounds: white, navy, the deep navy of the foot, and burgundy (three colours, 2026-11-20). */
+export type Tone = 'white' | 'navy' | 'deep' | 'rod';
 
 /**
  * How closed a plate still is (1 closed, 0 open) when its top stands `top` px from the top of a screen

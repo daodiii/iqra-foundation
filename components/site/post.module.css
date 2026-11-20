@@ -5,7 +5,7 @@
 }
 
 .back a {
-  color: var(--color-navy);
+  color: var(--color-ink);
   text-decoration: none;
 }
 
@@ -31,7 +31,7 @@
 }
 
 .action a {
-  color: var(--color-navy);
+  color: var(--color-ink);
   text-decoration: underline;
   text-underline-offset: 0.15em;
 }

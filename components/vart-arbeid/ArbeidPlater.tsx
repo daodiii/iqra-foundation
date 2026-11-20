@@ -7,7 +7,7 @@ import styles from './arbeid-plater.module.css';
 export type Area = { id: string; title: string; text: string; note?: string };
 
 /** The coloured grounds the areas take in turn; every other area stands on white between them. */
-const COLOURS: Tone[] = ['navy', 'teal', 'deep'];
+const COLOURS: Tone[] = ['navy', 'rod', 'navy'];
 
 /** A word this long cannot stand at poster size in seven of the twelve columns. */
 const LONG_WORD = 16;
@@ -88,7 +88,7 @@ function AreaPlate({ a, i }: { a: Area; i: number }) {
 /**
  * Vårt arbeid as «Platene» (mock 42, the owner's pick of 2026-11-20): the title and the intro on white,
  * then each area of work as its own plate in the client's order and words, coloured grounds (navy,
- * teal, deep navy) taking turns with white. Each plate carries the area's anchor, so links from other
+ * burgundy, navy) taking turns with white. Each plate carries the area's anchor, so links from other
  * pages land on it, and is named by the area's title.
  */
 export function ArbeidPlater({ title, intro, areas }: { title: string; intro: string; areas: Area[] }) {

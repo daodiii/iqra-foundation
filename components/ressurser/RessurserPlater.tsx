@@ -13,7 +13,7 @@ import styles from './ressurser-plater.module.css';
 const t = site.pages.resources;
 
 /** The categories' grounds after the white title plate, in their order: no two neighbours alike. */
-const TONES: Tone[] = ['navy', 'white', 'teal', 'deep'];
+const TONES: Tone[] = ['navy', 'white', 'rod', 'deep'];
 
 /**
  * Ressurser as «Platene» (mock 42, the owner's pick of 2026-11-20): the title and the client's intro on

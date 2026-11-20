@@ -10,7 +10,7 @@
   z-index: 60;
   padding: 12px 18px;
   background: #fff;
-  color: var(--navy);
+  color: var(--ink);
   font-weight: 500;
 }
 
@@ -117,12 +117,12 @@
 
 .link:focus-visible,
 .menu:focus-visible {
-  outline: 2px solid var(--turkis);
+  outline: 2px solid currentColor;
   outline-offset: 4px;
 }
 
 :global([data-forside][data-solid][data-tone='light']) :is(.link, .menu) {
-  color: var(--navy);
+  color: var(--ink);
 }
 
 /* Støtt oss: crimson; on a crimson ground, white */
@@ -312,7 +312,7 @@
 
 .close:focus-visible,
 .mnu a:focus-visible {
-  outline: 2px solid var(--turkis);
+  outline: 2px solid #fff;
   outline-offset: 4px;
 }
 
@@ -366,7 +366,7 @@
   font-size: 13px;
   letter-spacing: 0.1em;
   font-weight: 500;
-  color: var(--turkis);
+  color: #fff;
   min-width: 2.6em;
   transform: translateY(-0.9em);
 }
@@ -400,7 +400,7 @@
   align-self: end;
   font-size: 16px;
   line-height: 1.6;
-  color: #c9d1dc;
+  color: #fff;
   opacity: 0;
   transform: translateY(20px);
   transition:

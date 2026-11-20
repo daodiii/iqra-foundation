@@ -4,6 +4,7 @@
  * and a legal line.
  */
 .fw {
+  --focus: #fff;
   background: var(--navy);
   color: #fff;
   padding: clamp(90px, 14vh, 150px) var(--gutter) clamp(28px, 4vh, 40px);
@@ -15,7 +16,7 @@
 }
 
 .fw a:focus-visible {
-  outline: 2px solid var(--turkis);
+  outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -50,7 +51,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   line-height: normal;
-  color: var(--turkis);
+  color: #fff;
 }
 
 .grp ul {
@@ -78,7 +79,7 @@
   font-weight: 400;
   font-size: clamp(16px, 1.15vw, 18px);
   line-height: 1.664;
-  color: rgba(255, 255, 255, 0.82);
+  color: #fff;
 }
 
 .det b {
@@ -100,7 +101,7 @@
   align-items: center;
   font-weight: 500;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.66);
+  color: #fff;
 }
 
 .top {

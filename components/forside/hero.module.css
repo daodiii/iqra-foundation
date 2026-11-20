@@ -3,6 +3,7 @@
  * centred. Everything scales with the screen's height as well as its width, so it fits at every size.
  */
 .hero {
+  --focus: #fff;
   position: relative;
   z-index: 0;
   height: 100vh;
