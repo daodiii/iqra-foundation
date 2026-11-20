@@ -9,7 +9,7 @@ const t = klient.about;
 /**
  * Om Iqra Foundation as «Platene» (mock 42, the owner's pick of 2026-11-20): the title and the intro on
  * white, then a plate for each part in the client's order and words — the purpose on navy, the values
- * on white, who it is for on teal, the independence on the deep navy. «Navnet Iqra» is left out by the
+ * on white, who it is for on burgundy, the independence on the deep navy. «Navnet Iqra» is left out by the
  * owner.
  */
 export function OmOssPlater() {
@@ -54,7 +54,7 @@ export function OmOssPlater() {
         </p>
       </Plate>
 
-      <Plate tone="teal" label="om-hvem" mid data-part="audience">
+      <Plate tone="rod" label="om-hvem" mid data-part="audience">
         <h2 id="om-hvem" className={p.small} data-rise="">
           {t.audience.title}
         </h2>
