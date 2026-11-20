@@ -8,8 +8,8 @@ import styles from '@/components/forside/forside.module.css';
 
 /**
  * The front page's own shell, since the redesign (2026-11-19): its header «Kameleon» with the menu
- * layer, its navy foot, and Instrument Sans in place of the brand's two faces. The other pages keep
- * the site's shell (`app/(site)/layout.tsx`) until the owner takes the redesign further.
+ * layer, its navy foot, and Instrument Sans in place of the brand's two faces. The redesigned
+ * subpages share it (`app/(sider)/layout.tsx`); the rest keep the site's old shell (`app/(site)/layout.tsx`).
  *
  * The first script marks the page as running JavaScript before it paints, so what waits to be
  * revealed is hidden from the first frame; without JavaScript everything stands as laid out.

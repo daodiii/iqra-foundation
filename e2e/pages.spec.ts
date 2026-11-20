@@ -38,11 +38,13 @@ test('om iqra foundation: the client’s text, section by section', async ({ pag
   await expect(page).toHaveTitle(T(site.pages.about.title));
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', t.intro);
   await expect(page.locator('h1')).toHaveText(t.title);
-  await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText([t.name.title, t.purpose.title, t.values.title, t.audience.title, t.independent.title]);
-  for (const p of [t.intro, t.name.text, t.purpose.lead, ...t.purpose.points, t.values.lead, t.values.close, t.audience.text, ...t.independent.paragraphs]) {
+  await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText([t.purpose.title, t.values.title, t.audience.title, t.independent.title]);
+  for (const p of [t.intro, t.purpose.lead, ...t.purpose.points, t.values.lead, t.values.close, t.audience.text, ...t.independent.paragraphs]) {
     await expect(page.getByText(p, { exact: true })).toBeVisible();
   }
   await expect(page.getByRole('main').locator('[data-area]')).toHaveCount(0);
+  // «Navnet Iqra» is taken off the page (the owner, 2026-11-20)
+  await expect(page.getByText(t.name.text, { exact: true })).toHaveCount(0);
 });
 
 test.describe('the collections are honest while empty', () => {
@@ -65,13 +67,14 @@ test.describe('the collections are honest while empty', () => {
     await expect(page.getByText(klient.news.newsText, { exact: true })).toBeVisible();
     await expect(page.getByText(klient.news.eventsText, { exact: true })).toHaveCount(0);
     if (news.length) for (const n of news) await expect(page.getByRole('heading', { name: n.title })).toBeVisible();
-    else await expect(page.getByText(t.emptyNews, { exact: true })).toBeVisible();
+    // while nothing is published, the board shows the front page's three samples, each marked «Eksempel»
+    else await expect(page.getByRole('main').getByText('Eksempel', { exact: true })).toHaveCount(3);
     await page.goto('/aktuelt/arrangementer');
     await expect(page.getByText(klient.news.eventsText, { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: t.upcoming })).toBeVisible();
     await expect(page.getByRole('heading', { name: t.past })).toBeVisible();
     if (upcoming.length) for (const e of upcoming) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
-    else await expect(page.getByText(t.emptyUpcoming, { exact: true })).toBeVisible();
+    else await expect(page.getByRole('main').getByText('Eksempel', { exact: true })).toHaveCount(3);
     if (past.length) for (const e of past) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
     else await expect(page.getByText(t.emptyPast, { exact: true }).first()).toBeVisible();
     await page.getByRole('link', { name: t.archiveLink }).click();
@@ -93,7 +96,8 @@ test.describe('the collections are honest while empty', () => {
     await expect(page.locator('h1')).toHaveText(r.title);
     const main = page.getByRole('main');
     await expect(main.getByRole('heading', { level: 2 })).toHaveText(r.categories.map((c) => c.title));
-    await expect(main.getByRole('navigation', { name: site.pages.resources.categoriesLabel }).getByRole('link')).toHaveText(r.categories.map((c) => c.title));
+    // «Bokryggene»: each category is a book whose spine is a button that opens it
+    await expect(main.getByRole('heading', { level: 2 }).getByRole('button')).toHaveText(r.categories.map((c) => c.title));
     const items = getResources();
     for (const c of r.categories) {
       const section = main.locator(`section#${c.key}`);
@@ -138,15 +142,13 @@ test('phone: no page is wider than the screen at 320, 360 or 390, however long i
   }
 });
 
-test('kontakt: five cards in reading order — the map with the address on it, the address, the e-mail, the form under «Kontakt oss», the number — the client’s details, no placeholder, the form drawn, and no pin on a post box', async ({ page }) => {
+test('kontakt: «Ikonene» — three bands with drawn icons, e-mail, phone and the address, the form under «Kontakt oss» — the client’s details, no placeholder, the form drawn', async ({ page }) => {
   await page.goto('/kontakt');
   await expect(page).toHaveTitle(T(site.pages.contact.title));
   const t = site.pages.contact;
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
-  await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.addressLabel, t.emailLabel, t.form.title, t.phoneLabel]);
-  await expect(main.getByRole('heading', { level: 2, name: t.form.title })).toBeVisible();
-  expect(await main.locator('[data-card]').evaluateAll((els) => els.map((e) => e.getAttribute('data-card')))).toEqual(['kart', 'adresse', 'epost', 'skjema', 'telefon']);
+  await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.form.title);
+  expect(await main.locator('[data-way]').evaluateAll((els) => els.map((e) => e.getAttribute('data-way')))).toEqual(['epost', 'telefon', 'adresse']);
   // The client's details (D8, 2026-11-18): the e-mail and the number are links.
   await expect(main.locator(`a[href="mailto:${klient.contact.email}"]`)).toHaveCount(1);
   await expect(main.locator('a[href="tel:+4794143585"]')).toHaveCount(1);
@@ -154,15 +156,6 @@ test('kontakt: five cards in reading order — the map with the address on it, t
   await expect(main).toContainText(klient.contact.postcode);
   await expect(main).toContainText(klient.contact.orgnr);
   await expect(main).not.toContainText(/\[[^\]]+\]/);
-  // the map at both widths and served, its credit a link to the licence; no pin, since a post box is not a place
-  await expect(main.getByRole('img', { name: t.map.alt })).toHaveAttribute('srcset', '/kart-1024.webp 1024w, /kart-1536.webp 1536w');
-  for (const file of ['/kart-1024.webp', '/kart-1536.webp']) {
-    const res = await page.request.get(file);
-    expect(res.status()).toBe(200);
-    expect(res.headers()['content-type']).toContain('image/webp');
-  }
-  await expect(main.getByRole('link', { name: t.map.credit })).toHaveAttribute('href', t.map.creditHref);
-  await expect(main.locator('[data-pin]')).toHaveCount(0);
   // where to follow appears only once a handle is real
   for (const l of site.contact.follow) {
     if (isPlaceholder(l.href)) await expect(main.getByText(l.name, { exact: true })).toHaveCount(0);
@@ -183,7 +176,8 @@ test('støtt oss: the client’s text in their order, the ways to give under «G
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
   await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.uses.title, t.ways.title]);
   await expect(main.getByRole('heading', { level: 3 })).toHaveText(t.ways.items.map((w) => w.title));
-  const text = await main.innerText();
+  // a heading that rises line by line (Lines) breaks its lines: read the text with its spaces collapsed
+  const text = (await main.innerText()).replace(/\s+/g, ' ');
   // the client's sentences, in their order
   const order = [t.intro, t.uses.lead, ...t.uses.points, t.uses.close, ...t.ways.items.map((w) => w.text), t.close].map((s) => text.indexOf(s));
   expect(order.every((i) => i > -1), `missing: ${order.join(',')}`).toBe(true);
@@ -206,7 +200,7 @@ test('støtt oss is exactly as wide as the screen, and so is the page after it o
   const fits = () => page.evaluate(() => document.documentElement.scrollWidth === window.innerWidth);
   await page.goto('/stott-oss');
   expect(await fits()).toBe(true);
-  await page.getByRole('contentinfo').getByRole('link', { name: klient.menu.about, exact: true }).click();
+  await page.getByRole('contentinfo').getByRole('link', { name: klient.menu.aboutFoundation, exact: true }).click();
   await expect(page).toHaveURL(/\/om-oss$/);
   await expect(page.locator('h1')).toBeVisible();
   expect(await fits()).toBe(true);
