@@ -87,6 +87,8 @@ export const site = {
     close: 'Lukk menyen',
     /** The visible word on the menu's close button; `close` names it. */
     closeShort: 'Lukk',
+    /** Names the arrow beside Om oss and Aktuelt, read with the item: «Vis sidene under Om oss». */
+    subOpen: 'Vis sidene under',
     skip: 'Hopp til innholdet',
   },
   footer: {

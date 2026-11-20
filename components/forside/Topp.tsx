@@ -12,14 +12,43 @@ import f from './forside.module.css';
 import styles from './topp.module.css';
 
 const m = klient.menu;
-/** The header's and the menu's pages, in the mock's order; Støtt oss stands apart as the button. */
-export const LINKS = [
+
+/** The first sentence of a text (a parenthesis such as «(org.nr. …)» left out, so its full stops do not cut it). */
+export function firstSentence(s: string): string {
+  const t = s.replace(/\s*\([^)]*\)/g, '');
+  return t.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? t;
+}
+
+type Sub = { label: string; href: string; text: string };
+type Item = { label: string; href: string; sub?: readonly Sub[] };
+
+/**
+ * The header's and the menu's pages, in the client's order (M1, 2026-11-18): Om oss and Aktuelt with
+ * their pages under them, each under-page with the first sentence of its own intro (shown on a wide
+ * screen only); Støtt oss stands apart as the button.
+ */
+export const LINKS: readonly Item[] = [
   { label: m.home, href: '/' },
-  { label: m.about, href: '/om-oss' },
-  { label: m.news, href: '/aktuelt' },
+  {
+    label: m.about,
+    href: '/om-oss',
+    sub: [
+      { label: m.aboutFoundation, href: '/om-oss', text: firstSentence(klient.about.intro) },
+      { label: m.work, href: '/vart-arbeid', text: firstSentence(klient.work.intro) },
+      { label: m.people, href: '/menneskene-bak', text: firstSentence(klient.people.intro) },
+    ],
+  },
+  {
+    label: m.news,
+    href: '/aktuelt',
+    sub: [
+      { label: m.newsItems, href: '/aktuelt/nyheter', text: firstSentence(klient.news.newsText) },
+      { label: m.events, href: '/aktuelt/arrangementer', text: firstSentence(klient.news.eventsText) },
+    ],
+  },
   { label: m.resources, href: '/ressurser' },
   { label: m.contact, href: '/kontakt' },
-] as const;
+];
 export const SUPPORT = { label: m.support, href: '/stott-oss' } as const;
 
 /** The colour of the ground just under the header, in the middle of the screen: the first painted background below it. */
@@ -102,13 +131,59 @@ export function Topp({ mark = false }: { mark?: boolean }) {
 
   const close = useCallback(() => setOpen(false), []);
 
+  // «Linjen» (mock 49, the owner's pick of 2026-11-20): the pages under Om oss and Aktuelt in a second
+  // row of the header, opened by pointing at the item, tabbing to it, or its arrow; Escape, leaving the
+  // header or a new page puts it away.
+  const [under, setUnder] = useState<string | null>(null);
+  const leave = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // opened by the pointer passing over: a click on the arrow then keeps it open instead of closing it
+  const byPointer = useRef(false);
+  const show = (href: string, pointer = false) => {
+    clearTimeout(leave.current);
+    if (pointer && under !== href) byPointer.current = true;
+    setUnder(href);
+  };
+  const toggle = (href: string) => {
+    if (under === href && !byPointer.current) setUnder(null);
+    else show(href);
+    byPointer.current = false;
+  };
+  const hide = () => {
+    clearTimeout(leave.current);
+    leave.current = setTimeout(() => setUnder(null), 160);
+  };
+  useEffect(() => setUnder(null), [path]);
+  useEffect(() => {
+    if (!under) return;
+    const key = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      const chev = document.querySelector<HTMLElement>(`[data-under-for="${under}"]`);
+      setUnder(null);
+      if (bar.current?.contains(document.activeElement)) chev?.focus();
+    };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [under]);
+  useEffect(() => () => clearTimeout(leave.current), []);
+  const groupHere = (l: Item) => !!l.sub?.some((s) => here(s.href)) || here(l.href);
+  const slug = (href: string) => href.replace(/\W+/g, '');
+
   return (
     <>
       <a href="#innhold" className={styles.skip}>
         {site.header.skip}
       </a>
       <div className={styles.notch} aria-hidden="true" />
-      <header ref={bar} className={`${styles.bar} ${f.pad}`} data-topp>
+      <header
+        ref={bar}
+        className={`${styles.bar} ${f.pad}`}
+        data-topp
+        data-under={under ?? undefined}
+        onMouseLeave={hide}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setUnder(null);
+        }}
+      >
         <Link href="/" prefetch={false} className={styles.home} aria-label={site.header.homeLabel} data-dock>
           {/* a subpage has no hero to fly the logo in: it stands here from the start */}
           {mark && (
@@ -118,11 +193,38 @@ export function Topp({ mark = false }: { mark?: boolean }) {
           )}
         </Link>
         <nav className={styles.nav} aria-label={site.header.navLabel}>
-          {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} prefetch={false} className={styles.link} aria-current={here(l.href) ? 'page' : undefined}>
-              {l.label}
-            </Link>
-          ))}
+          {LINKS.map((l) =>
+            l.sub ? (
+              <div key={l.href} className={styles.grp} onMouseEnter={() => show(l.href, true)} onFocus={() => show(l.href)}>
+                <Link href={l.href} prefetch={false} className={styles.link} aria-current={groupHere(l) ? 'page' : undefined}>
+                  {l.label}
+                </Link>
+                <button
+                  type="button"
+                  className={styles.chev}
+                  aria-expanded={under === l.href}
+                  aria-controls={`under-${slug(l.href)}`}
+                  aria-label={`${site.header.subOpen} ${l.label}`}
+                  data-under-for={l.href}
+                  onClick={() => toggle(l.href)}
+                >
+                  <i aria-hidden="true" />
+                </button>
+              </div>
+            ) : (
+              <Link
+                key={l.href}
+                href={l.href}
+                prefetch={false}
+                className={styles.link}
+                aria-current={here(l.href) ? 'page' : undefined}
+                onMouseEnter={hide}
+                onFocus={() => setUnder(null)}
+              >
+                {l.label}
+              </Link>
+            ),
+          )}
           <Knapp href={SUPPORT.href} kind="fill" className={styles.give}>
             {SUPPORT.label}
           </Knapp>
@@ -131,14 +233,51 @@ export function Topp({ mark = false }: { mark?: boolean }) {
             <i className={styles.burger} aria-hidden="true" />
           </button>
         </nav>
+        {LINKS.filter((l) => l.sub).map((l) => (
+          <div
+            key={l.href}
+            id={`under-${slug(l.href)}`}
+            className={`${styles.row} ${f.pad}`}
+            data-open={under === l.href ? '' : undefined}
+            inert={under !== l.href}
+            onMouseEnter={() => show(l.href)}
+          >
+            <ul>
+              {l.sub!.map((s) => (
+                <li key={s.href}>
+                  <Link href={s.href} prefetch={false} className={styles.subLink} aria-current={path === s.href ? 'page' : undefined}>
+                    <b>{s.label}</b>
+                    <span>{s.text}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </header>
-      <Meny open={open} onClose={close} returnTo={button} />
+      <Meny open={open} onClose={close} returnTo={button} here={here} />
     </>
   );
 }
 
-/** The menu layer: Esc and Lukk close it, focus stays inside while it is open, and the page under it holds still. */
-function Meny({ open, onClose, returnTo }: { open: boolean; onClose: () => void; returnTo: React.RefObject<HTMLButtonElement | null> }) {
+/**
+ * The phone's menu, «Kortet» (mock 48, the owner's pick of 2026-11-20): a white sheet that comes up from
+ * the foot over the dimmed page, every page in it with the pages under Om oss and Aktuelt set in under
+ * their item, the page you are on in burgundy, Støtt oss as the button at its foot. Esc, Lukk or a tap
+ * on the page closes it, focus stays inside while it is open, and the page under it holds still.
+ */
+function Meny({
+  open,
+  onClose,
+  returnTo,
+  here,
+}: {
+  open: boolean;
+  onClose: () => void;
+  returnTo: React.RefObject<HTMLButtonElement | null>;
+  here: (href: string) => boolean;
+}) {
+  const path = usePathname() ?? '/';
   const ref = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
 
@@ -173,7 +312,6 @@ function Meny({ open, onClose, returnTo }: { open: boolean; onClose: () => void;
 
   useEffect(() => () => void delete document.body.dataset.scrollLocked, []);
 
-  const c = klient.contact;
   return (
     <div
       ref={ref}
@@ -186,48 +324,47 @@ function Meny({ open, onClose, returnTo }: { open: boolean; onClose: () => void;
       inert={!open}
       data-meny
     >
-      <div className={`${styles.mnuTop} ${f.pad}`}>
-        <svg className={styles.mnuLogo} viewBox="169.591 335.594 742.433 407.094" role="img" aria-label={site.logoAlt}>
-          <use href={`#${MARK}`} />
-        </svg>
-        <button type="button" className={styles.close} onClick={onClose} aria-label={site.header.close}>
-          <span aria-hidden="true">{site.header.closeShort}</span>
-          <i className={styles.x} aria-hidden="true" />
-        </button>
-      </div>
-      <div className={`${styles.mnuIn} ${f.pad}`}>
-        <ol className={styles.list}>
-          {LINKS.map((l, i) => (
-            <li key={l.href}>
-              <Link href={l.href} prefetch={false} className={styles.item} style={{ '--i': i } as React.CSSProperties} onClick={onClose}>
-                <small className={styles.num} aria-hidden="true">
-                  {String(i + 1).padStart(2, '0')}
-                </small>
-                <span className={styles.word}>{l.label}</span>
-                <em className={styles.go} aria-hidden="true">
-                  →
-                </em>
-              </Link>
-            </li>
-          ))}
-        </ol>
-        <div className={styles.side}>
-          <p>
-            <Link href={SUPPORT.href} prefetch={false} className={styles.mnuGive} onClick={onClose}>
-              {SUPPORT.label}
-            </Link>
-          </p>
-          <p>
-            <a href={`mailto:${c.email}`}>{c.email}</a>
-            <br />
-            <a href={`tel:${c.phone.replace(/\s/g, '')}`}>{c.phone}</a>
-          </p>
-          <p>
-            {c.postbox}
-            <br />
-            {c.postcode}
-          </p>
+      <div className={styles.scrim} aria-hidden="true" onClick={onClose} />
+      <div className={styles.sheet}>
+        <div className={styles.sheetTop}>
+          <i className={styles.grab} aria-hidden="true" />
+          <button type="button" className={styles.close} onClick={onClose} aria-label={site.header.close}>
+            <span aria-hidden="true">{site.header.closeShort}</span>
+            <i className={styles.x} aria-hidden="true" />
+          </button>
         </div>
+        <nav aria-label={site.header.navLabel}>
+          <ul className={styles.list}>
+            {LINKS.map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  prefetch={false}
+                  className={styles.item}
+                  aria-current={!l.sub && here(l.href) ? 'page' : undefined}
+                  onClick={onClose}
+                >
+                  {l.label}
+                </Link>
+                {l.sub && (
+                  <ul className={styles.subs}>
+                    {l.sub.map((s) => (
+                      <li key={s.href}>
+                        <Link href={s.href} prefetch={false} className={styles.subItem} aria-current={path === s.href ? 'page' : undefined} onClick={onClose}>
+                          {s.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <Link href={SUPPORT.href} prefetch={false} className={styles.mnuGive} onClick={onClose}>
+          <span>{SUPPORT.label}</span>
+          <span aria-hidden="true">→</span>
+        </Link>
       </div>
     </div>
   );
