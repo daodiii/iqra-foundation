@@ -33,6 +33,15 @@ export function onFrame(t: Tick): () => void {
   };
 }
 
+/*
+ * A count of the changes to what lies on screen that happen without the page moving (the crimson dot
+ * opens on its own clock). Whoever reads the screen itself, as the header does for its colour, adds it
+ * to its key.
+ */
+let painted = 0;
+export const repainted = () => void painted++;
+export const paintKey = () => painted;
+
 /** The page's position and size as of this frame (see `run`). */
 export const pageKey = () => key;
 
@@ -83,6 +92,16 @@ export const eo = (t: number) => 1 - Math.pow(1 - clamp(t), 3);
 export function progress(el: Element, H: number): number {
   const r = el.getBoundingClientRect();
   return r.height > H ? clamp(-r.top / (r.height - H)) : 0;
+}
+
+/**
+ * An element's offset from the top of the page, by layout: unlike its bounding box it ignores the
+ * transforms the scenes put on sections (Lagene holds a covered section back), so it stays put.
+ */
+export function pageTop(el: HTMLElement): number {
+  let y = 0;
+  for (let e: HTMLElement | null = el; e; e = e.offsetParent as HTMLElement | null) y += e.offsetTop;
+  return y;
 }
 
 export const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;

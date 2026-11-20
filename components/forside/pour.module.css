@@ -1,5 +1,5 @@
 /*
- * The scene after the hero (520vh, the screen holds): a flat white sheet slides up over the hero,
+ * The scene after the hero (310vh, the screen holds): a flat white sheet slides up over the hero,
  * which holds back and darkens; the opening paragraph glides in line by line, rests, and drifts
  * away; the crimson dot rises out of the white and opens into the «Hvorfor vi finnes» poster.
  * It starts behind the hero (a screen up), so the white rises from the foot of the hero.
@@ -11,7 +11,8 @@
 .sc {
   position: relative;
   z-index: 1;
-  height: 520vh;
+  /* the dot opens on a clock (Pour.tsx), so the scene needs only the white, the paragraph and a rest */
+  height: 310vh;
   margin-top: -100vh;
   margin-top: -100svh;
   pointer-events: none;
@@ -193,11 +194,6 @@
 }
 
 @media (max-width: 900px) {
-  /* Shorter on phones (the owner, 2026-11-20): every step of the scene, in fewer screens of swiping. */
-  .sc {
-    height: 360vh;
-  }
-
   .ct {
     padding-top: 96px;
     grid-template-rows: auto auto auto 1fr;
