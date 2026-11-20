@@ -110,7 +110,7 @@ test('the logo pours white, then docks into the header’s slot; the header foll
   await expect(page.locator('[data-forside]')).not.toHaveAttribute('data-solid');
 });
 
-test('«Meny» opens the menu layer: numbered pages, Støtt oss, the contact lines; focus stays in it; Escape closes it; the page holds still meanwhile', async ({ page }) => {
+test('«Meny» opens the sheet (mock 48): every page, the pages under Om oss and Aktuelt, Støtt oss; focus stays in it; Escape closes it; the page holds still meanwhile', async ({ page }) => {
   await page.setViewportSize({ width: 820, height: 900 });
   await page.goto('/');
   const button = page.getByRole('button', { name: site.header.open, exact: true });
@@ -118,9 +118,20 @@ test('«Meny» opens the menu layer: numbered pages, Støtt oss, the contact lin
   const menu = page.getByRole('dialog', { name: site.header.open });
   await expect(menu).toBeVisible();
   await expect(page.locator('body')).toHaveAttribute('data-scroll-locked', '');
-  await expect(menu.getByRole('list').getByRole('link')).toHaveText([/01\s*Hjem/, /02\s*Om oss/, /03\s*Aktuelt/, /04\s*Ressurser/, /05\s*Kontakt/]);
-  await expect(menu.getByRole('link', { name: klient.menu.support })).toHaveAttribute('href', '/stott-oss');
-  await expect(menu).toContainText(klient.contact.email);
+  const m = klient.menu;
+  await expect(menu.getByRole('navigation').getByRole('link')).toHaveText([
+    m.home,
+    m.about,
+    m.aboutFoundation,
+    m.work,
+    m.people,
+    m.news,
+    m.newsItems,
+    m.events,
+    m.resources,
+    m.contact,
+  ]);
+  await expect(menu.getByRole('link', { name: m.support })).toHaveAttribute('href', '/stott-oss');
   // tab from the last stop wraps to the first
   const stops = menu.locator('a, button');
   await stops.last().focus();
@@ -132,8 +143,31 @@ test('«Meny» opens the menu layer: numbered pages, Støtt oss, the contact lin
   await expect(page.locator('body')).not.toHaveAttribute('data-scroll-locked', '');
   // a page from the menu
   await button.click();
-  await menu.getByRole('link', { name: /Ressurser/ }).click();
-  await expect(page).toHaveURL(/\/ressurser$/);
+  await menu.getByRole('link', { name: m.people }).click();
+  await expect(page).toHaveURL(/\/menneskene-bak$/);
+});
+
+test('on a wide screen Om oss opens its pages in a second row of the header (mock 49): by pointer, by its arrow, closed by Escape', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/om-oss');
+  const m = klient.menu;
+  const row = page.locator('#under-omoss');
+  await expect(row).toBeHidden();
+  await page.getByRole('navigation', { name: site.header.navLabel }).getByRole('link', { name: m.about, exact: true }).hover();
+  await expect(row).toBeVisible();
+  await expect(row.getByRole('link')).toHaveCount(3);
+  await expect(row.getByRole('link', { name: new RegExp(m.aboutFoundation) })).toHaveAttribute('aria-current', 'page');
+  await page.mouse.move(700, 700);
+  await expect(row).toBeHidden();
+  const arrow = page.getByRole('button', { name: `${site.header.subOpen} ${m.about}` });
+  await arrow.click();
+  await expect(arrow).toHaveAttribute('aria-expanded', 'true');
+  await expect(row).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(row).toBeHidden();
+  await arrow.click();
+  await row.getByRole('link', { name: new RegExp(m.work) }).click();
+  await expect(page).toHaveURL(/\/vart-arbeid$/);
 });
 
 test('the front page logs no console error, down to the foot', async ({ page }) => {

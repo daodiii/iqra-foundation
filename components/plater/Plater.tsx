@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
 import { clamp, eo, onScrollFrame } from '@/components/forside/frame';
 import f from '@/components/forside/forside.module.css';
 import styles from './plater.module.css';
@@ -31,8 +31,48 @@ export function inset(k: number, w: number, h: number) {
  * by line (`Lines`). Without JavaScript, or with reduced motion, every plate stands open and every text
  * is there.
  */
+/**
+ * The page's opening (mock 54 «Rett på», the owner's pick of 2026-11-20: no whole screen for the page's
+ * name, «a small part, and then we go to the actual content»): the title, the intro and the page's parts
+ * stand in a column at the left that stays while the content runs from the top at the right. On a phone
+ * the column stands over the content and the content runs the full width.
+ */
+type Part = { id: string; label: string };
+
 export function Plater({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [parts, setParts] = useState<Part[]>([]);
+  const [here, setHere] = useState<string>();
+
+  // the page's parts, named by their own headings, and which of them is being read
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // the header's height, so the column and the content stand right under it
+    const bar = document.querySelector<HTMLElement>('[data-topp]');
+    const measure = () => el.style.setProperty('--top-h', `${Math.round(bar?.getBoundingClientRect().bottom ?? 91)}px`);
+    measure();
+    window.addEventListener('resize', measure);
+    const plates = Array.from(el.querySelectorAll<HTMLElement>('[data-plate]')).slice(1);
+    const found = plates
+      .map((p) => {
+        const id = p.getAttribute('aria-labelledby')?.split(' ')[0];
+        const h = id ? document.getElementById(id) : null;
+        return id && h ? { id, label: (h.textContent ?? '').replace(/\s+/g, ' ').trim() } : null;
+      })
+      .filter((x): x is Part => !!x && !!x.label);
+    setParts(found);
+    if (typeof IntersectionObserver === 'undefined') return () => window.removeEventListener('resize', measure);
+    const io = new IntersectionObserver(
+      (es) => es.forEach((e) => e.isIntersecting && setHere(e.target.getAttribute('aria-labelledby')?.split(' ')[0])),
+      { rootMargin: '-40% 0px -55% 0px' },
+    );
+    plates.forEach((p) => io.observe(p));
+    return () => {
+      io.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
@@ -75,9 +115,23 @@ export function Plater({ children, className }: { children: ReactNode; className
     };
   }, []);
 
+  const list = Children.toArray(children);
+
   return (
     <div ref={ref} className={`${styles.plater} ${className ?? ''}`} data-plater="">
-      {children}
+      <aside className={styles.side}>
+        {list[0]}
+        {parts.length > 1 && (
+          <nav className={styles.toc} aria-label="På denne siden">
+            {parts.map((p) => (
+              <a key={p.id} href={`#${p.id}`} aria-current={here === p.id ? 'true' : undefined}>
+                {p.label}
+              </a>
+            ))}
+          </nav>
+        )}
+      </aside>
+      <div className={styles.rest}>{list.slice(1)}</div>
     </div>
   );
 }

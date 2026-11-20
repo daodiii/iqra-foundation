@@ -82,7 +82,7 @@
   transition: color 0.3s;
 }
 .n.top h3 {
-  font-size: clamp(34px, 4.6vw, 78px);
+  font-size: clamp(26px, 2.6vw, 40px);
   line-height: 1;
   letter-spacing: -0.04em;
   max-width: 16em;
@@ -141,13 +141,13 @@
 .day {
   display: block;
   font-weight: 600;
-  font-size: clamp(80px, 10vw, 170px);
+  font-size: clamp(44px, 3.9vw, 56px);
   line-height: 0.82;
   letter-spacing: -0.07em;
   font-variant-numeric: tabular-nums;
 }
 .past .day {
-  font-size: clamp(56px, 6vw, 104px);
+  font-size: clamp(36px, 3vw, 44px);
   color: var(--fg-3);
 }
 .mo {
@@ -204,12 +204,12 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .n.top h3 {
-    font-size: 9.4vw;
+    font-size: 26px;
   }
   .day {
-    font-size: 28vw;
+    font-size: 44px;
   }
   .past .day {
-    font-size: 18vw;
+    font-size: 32px;
   }
 }

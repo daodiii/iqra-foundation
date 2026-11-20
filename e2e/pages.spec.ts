@@ -64,13 +64,13 @@ test.describe('the collections are honest while empty', () => {
     const news = getNews();
     const { upcoming, past } = splitEvents(getEvents(), todayISO());
     await page.goto('/aktuelt/nyheter');
-    await expect(page.getByText(klient.news.newsText, { exact: true })).toBeVisible();
-    await expect(page.getByText(klient.news.eventsText, { exact: true })).toHaveCount(0);
+    await expect(page.getByRole('main').getByText(klient.news.newsText, { exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByText(klient.news.eventsText, { exact: true })).toHaveCount(0);
     if (news.length) for (const n of news) await expect(page.getByRole('heading', { name: n.title })).toBeVisible();
     // while nothing is published, the board shows the front page's three samples, each marked «Eksempel»
     else await expect(page.getByRole('main').getByText('Eksempel', { exact: true })).toHaveCount(3);
     await page.goto('/aktuelt/arrangementer');
-    await expect(page.getByText(klient.news.eventsText, { exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByText(klient.news.eventsText, { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: t.upcoming })).toBeVisible();
     await expect(page.getByRole('heading', { name: t.past })).toBeVisible();
     if (upcoming.length) for (const e of upcoming) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
@@ -80,7 +80,7 @@ test.describe('the collections are honest while empty', () => {
     await page.getByRole('link', { name: t.archiveLink }).click();
     await expect(page).toHaveURL(/\/aktuelt\/arkiv$/);
     await expect(page.locator('h1')).toHaveText(t.archiveTitle);
-    await expect(page.getByText(klient.news.archiveText, { exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByText(klient.news.archiveText, { exact: true })).toBeVisible();
   });
   test('the old addresses land on Aktuelt', async ({ page }) => {
     await page.goto('/arrangementer');
@@ -175,10 +175,12 @@ test('støtt oss: the client’s text in their order, the ways to give under «G
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
   await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.uses.title, t.ways.title]);
   await expect(main.getByRole('heading', { level: 3 })).toHaveText(t.ways.items.map((w) => w.title));
+  // the page's parts at the left (mock 54) repeat its headings, the last of which is the closing line: read past them
+  await main.locator('nav[aria-label="På denne siden"]').evaluate((n) => n.remove());
   // a heading that rises line by line (Lines) breaks its lines: read the text with its spaces collapsed
   const text = (await main.innerText()).replace(/\s+/g, ' ');
-  // the client's sentences, in their order
-  const order = [t.intro, t.uses.lead, ...t.uses.points, t.uses.close, ...t.ways.items.map((w) => w.text), t.close].map((s) => text.indexOf(s));
+  // the client's sentences, in their order (the points shown with a capital, as the owner asked, 2026-11-20)
+  const order = [t.intro, t.uses.lead, ...t.uses.points.map((p) => p[0].toUpperCase() + p.slice(1)), t.uses.close, ...t.ways.items.map((w) => w.text), t.close].map((s) => text.indexOf(s));
   expect(order.every((i) => i > -1), `missing: ${order.join(',')}`).toBe(true);
   expect([...order].sort((x, y) => x - y)).toEqual(order);
   // Vipps and AvtaleGiro hang between «Gave» and «Samarbeid og partnerskap»

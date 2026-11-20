@@ -51,6 +51,7 @@ describe('Vårt arbeid', () => {
 
   test('no copy of our own: no eyebrows, numbers or links beyond the client’s text', () => {
     const { container } = render(<VartArbeid />);
+    container.querySelector('nav[aria-label="På denne siden"]')?.remove(); // the page's parts (mock 54) repeat its own headings
     const text = [klient.work.title, klient.work.intro, ...klient.work.areas.flatMap((a) => [a.title, a.text, 'note' in a ? a.note : ''])].join('');
     expect(container.textContent!.replace(/\s+/g, '')).toBe(text.replace(/\s+/g, ''));
     expect(container.querySelector('a')).toBeNull();

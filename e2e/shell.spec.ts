@@ -170,7 +170,7 @@ test('the skip link is the first tab stop and lands on the content', async ({ pa
 test('the footer carries the logo reversed, every page of the menu and the client’s contact line, and no thread of the four areas', async ({ page }) => {
   await page.goto('/personvern');
   const footer = page.getByRole('contentinfo');
-  await expect(footer.locator('img').first()).toHaveAttribute('src', /\/brand\/iqra-logo-(on-navy|on-dark|white)\.svg/);
+  await expect(footer.locator('img').first()).toHaveAttribute('src', /\/brand\/iqra-logo-(on-navy|on-navy-crimson|on-dark|white)\.svg/);
   await expect(footer.getByRole('navigation', { name: site.footer.navLabel }).getByRole('link')).toHaveText(site.links.map((n) => n.label));
   await expect(footer.locator('[data-thread]')).toHaveCount(0);
   await expect(footer).toContainText(klient.contact.name);

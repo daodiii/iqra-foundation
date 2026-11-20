@@ -75,8 +75,8 @@ describe('Ressurser', () => {
     tones.slice(1).forEach((tone, i) => expect(tone).not.toBe(tones[i]));
   });
 
-  test('no list of category links over the plates: each category is its own plate with its own anchor', () => {
+  test('no list of category links over the plates: each category is its own plate with its own anchor; the only list is the page’s parts beside them (mock 54)', () => {
     render(<Ressurser />);
-    expect(screen.queryByRole('navigation')).toBeNull();
+    expect(screen.queryAllByRole('navigation').map((n) => n.getAttribute('aria-label'))).toEqual(['På denne siden']);
   });
 });

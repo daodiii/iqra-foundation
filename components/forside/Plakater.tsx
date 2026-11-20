@@ -11,7 +11,7 @@ import { EVENTS_HREF, NEWS_HREF } from './lenker';
 import f from './forside.module.css';
 import styles from './plakater.module.css';
 
-/** A coming event as a poster: the day large, the month and year, the title, the time and the place. */
+/** A coming event as a poster: the day beside its month and year, the title, the time and the place. */
 export type Poster = { slug: string; day: string; month: string; title: string; meta: string; dateTime: string; example?: boolean };
 /** A news item in the strip: its date written out, its title, its ingress, and where it leads. */
 export type Strip = { slug: string; date: string; dateTime: string; title: string; summary: string; href: string; example?: boolean };
@@ -124,10 +124,12 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
               <Link href={EVENTS_HREF} prefetch={false} className={`${styles.po} ${POSTER[i % 3]}`} data-po>
                 {i === 0 && !e.example && <span className={styles.pin} aria-hidden="true" />}
                 {e.example && <span className={`${styles.ex} ${styles.label}`}>Eksempel</span>}
-                <time className={styles.dd} dateTime={e.dateTime}>
-                  {e.day}
-                </time>
-                <span className={`${styles.mm} ${styles.label}`}>{e.month}</span>
+                <span className={styles.date}>
+                  <time className={styles.dd} dateTime={e.dateTime}>
+                    {e.day}
+                  </time>
+                  <span className={styles.label}>{e.month}</span>
+                </span>
                 <h4>{e.title}</h4>
                 <span className={styles.meta}>{e.meta}</span>
               </Link>

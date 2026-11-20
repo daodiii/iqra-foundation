@@ -33,14 +33,14 @@
   grid-column: 4 / span 9;
   min-width: 0;
   font-weight: 600;
-  font-size: clamp(28px, 3.6vw, 60px);
+  font-size: clamp(24px, 2.4vw, 36px);
   line-height: 1.05;
   letter-spacing: -0.035em;
   overflow-wrap: anywhere;
 }
 /* the e-mail at poster size */
 [data-way='epost'] .vl {
-  font-size: min(7vw, 14vh);
+  font-size: clamp(28px, 3vw, 44px);
   line-height: 0.95;
   letter-spacing: -0.05em;
 }
@@ -146,10 +146,10 @@ a.w:focus-visible {
     grid-column: 1 / -1;
   }
   .vl {
-    font-size: 7.4vw;
+    font-size: 22px;
   }
   [data-way='epost'] .vl {
-    font-size: 10vw;
+    font-size: 28px;
   }
   .kf {
     margin-top: clamp(20px, 4vh, 36px);
