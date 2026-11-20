@@ -91,28 +91,15 @@ describe('Hjem, the owner’s redesign', () => {
     expect(within(aktuelt).getByRole('link', { name: site.pages.home.allEvents })).toHaveAttribute('href', '/aktuelt/arrangementer');
   });
 
-  test('Aktuelt with nothing published says so for each list on the live site, in the site’s own words', () => {
+  test('with no event coming, three sample posters stand in, each marked «Eksempel»; no news says so', () => {
     data.news = [];
     data.events = [];
-    vi.stubEnv('VERCEL_ENV', 'production');
     const { container } = page();
-    vi.unstubAllEnvs();
-    const aktuelt = container.querySelector('section#aktuelt') as HTMLElement;
-    expect(within(aktuelt).getByText(site.pages.news.emptyUpcoming)).toBeInTheDocument();
-    expect(within(aktuelt).getByText(site.pages.news.emptyNews)).toBeInTheDocument();
-    expect(within(aktuelt).queryAllByRole('heading', { level: 4 })).toHaveLength(0);
-  });
-
-  test('with no event coming, a preview shows three sample posters, each marked «Eksempel»', () => {
-    data.news = [];
-    data.events = [];
-    vi.stubEnv('VERCEL_ENV', 'preview');
-    const { container } = page();
-    vi.unstubAllEnvs();
     const aktuelt = container.querySelector('section#aktuelt') as HTMLElement;
     expect(within(aktuelt).queryByText(site.pages.news.emptyUpcoming)).toBeNull();
     expect(within(aktuelt).getAllByRole('heading', { level: 4 })).toHaveLength(3);
     expect(within(aktuelt).getAllByText('Eksempel')).toHaveLength(3);
+    expect(within(aktuelt).getByText(site.pages.news.emptyNews)).toBeInTheDocument();
   });
 
   test('«Sammen kan vi gjøre en forskjell» and its two buttons', () => {

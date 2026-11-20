@@ -31,9 +31,9 @@ export function toPoster(e: Event): Poster {
 
 /**
  * Three sample events (the owner, 2026-11-20: «make 3 arrangements, just mark so that we can see how
- * it will look»). Each poster says «Eksempel». They stand in only while no real event is coming, and
- * never on the live site: Vercel sets VERCEL_ENV to 'production' there, so they show locally and on
- * preview links only.
+ * it will look»). Each poster says «Eksempel». They stand in while no real event is coming, on the
+ * live site too (the owner, 2026-11-20: «show the sample events on the live site too»); the first
+ * real event replaces them.
  */
 export const EXAMPLES: Poster[] = [
   { slug: 'eksempel-1', day: '04', month: 'Desember 2026', title: 'Åpent foredrag: kunnskap og samfunn', meta: 'kl. 18:00 · Oslo', dateTime: '2026-12-04T18:00', example: true },
@@ -42,8 +42,8 @@ export const EXAMPLES: Poster[] = [
 ];
 
 /** The coming events to show: the real ones, or the samples where they may stand in. */
-export function shownEvents(real: Poster[], env = process.env.VERCEL_ENV): Poster[] {
-  return real.length || env === 'production' ? real : EXAMPLES;
+export function shownEvents(real: Poster[]): Poster[] {
+  return real.length ? real : EXAMPLES;
 }
 
 /** A news item in the strip; it leads to its article when it has one, else to the news. */
