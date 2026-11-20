@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import { toPoster, toStrip } from './Forside';
-import { wavePath } from './Hero';
+import { DOWN, flightGoal, UP, wavePath } from './Hero';
 import { CLOSE, OPEN, OPEN_MS, PARA, stateAt, stepOpen, WHY } from './Pour';
 import { luminance, toneOf } from './Topp';
 import { nearest } from './Trinn';
 import { touchTarget } from '@/lib/steps';
+import { snapPoints } from './Takt';
 
 describe('Kameleon: the header reads the ground under it', () => {
   test('white and the pale grounds are light; navy is dark; crimson is crimson', () => {
@@ -91,4 +92,19 @@ describe('on a touch screen, a swipe that comes to rest settles on the next beat
     expect(touchTarget(500, 300, zones)).toBeUndefined();
     expect(touchTarget(1900, 1900, zones)).toBeUndefined();
   });
+});
+
+test('a phone’s snap points: both carried parts’ beats and the section tops, merged, sorted, inside the page', () => {
+  const beats = { zones: [[0, 971, 1519], [2616, 3117, 3634, 4135]], marks: [4980, 6203, 7923, 3120] };
+  expect(snapPoints(beats, 9000)).toEqual([0, 971, 1519, 2616, 3117, 3634, 4135, 4980, 6203, 7923]);
+  expect(snapPoints({ zones: [[0, 500]], marks: [12000] }, 9000)).toEqual([0, 500, 9000]);
+});
+
+test('the logo goes to the header once the page leaves the top, back to the hero at the top, and never stops between', () => {
+  const H = 800;
+  expect(flightGoal(H * UP + 1, H, 0)).toBe(1);
+  expect(flightGoal(H * DOWN - 1, H, 1)).toBe(0);
+  // between the two it keeps its way, so a page resting there gets the logo to one end, not half way
+  expect(flightGoal(H * 0.04, H, 1)).toBe(1);
+  expect(flightGoal(H * 0.04, H, 0)).toBe(0);
 });

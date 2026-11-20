@@ -141,14 +141,6 @@
   font-size: clamp(17px, 1.35vw, 23px);
   line-height: 1.664;
   color: var(--rod-pale);
-  transition:
-    opacity 1s var(--ease-out),
-    transform 1.2s var(--ease-out);
-}
-
-:global(html[data-js]) .more:not([data-on]) {
-  opacity: 0;
-  transform: translateY(30px);
 }
 
 /* Without JavaScript the scene cannot play: it is laid out as plain flow, the paragraph on white, then the poster. */
@@ -230,10 +222,58 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .more {
-    transition: none !important;
-    transform: none !important;
-    opacity: 1 !important;
+/*
+ * On a phone the part after the hero is plain and open (the owner, 2026-11-20): the paragraph on white,
+ * then the «Hvorfor vi finnes» poster, in the page's flow, both whole. No sheet, no dot, no glide-in;
+ * scrolling back up comes straight to the text. Pour.tsx runs no scene here (frame.ts PLAIN_POUR).
+ */
+@media (max-width: 900px) {
+  .sc {
+    height: auto;
+    margin-top: 0;
+    pointer-events: auto;
   }
+
+  .stage {
+    position: relative;
+    height: auto;
+    overflow: visible;
+  }
+
+  .sheet {
+    display: none;
+  }
+
+  .tx {
+    position: relative;
+    inset: auto;
+    padding: clamp(80px, 13vh, 120px) var(--gutter);
+    background: #fff;
+  }
+
+  .red {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    opacity: 1;
+  }
+
+  .redIn {
+    position: relative;
+  }
+
+  .ct {
+    position: relative;
+    inset: auto;
+    min-height: 100svh;
+  }
+
+  .tone {
+    opacity: 0.9;
+  }
+
 }
+

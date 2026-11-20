@@ -86,13 +86,13 @@ export function Spor() {
           <div ref={trk} className={styles.trk} data-trk>
             <div className={styles.p0}>
               <Lines as="h2" id="skape-tittel" text={c.title} on={on[0]} />
-              <Lines className={styles.ingress} text={c.intro} on={on[0]} />
+              <Lines className={styles.ingress} text={c.intro} on={on[0]} delay={150} />
             </div>
             {c.areas.map((a, i) => (
               <article key={a.title} className={`${styles.cd} ${CARDS[i]}`} data-on={on[i + 1] ? '' : undefined}>
                 <Icon n={i} />
                 <Lines as="h3" text={a.title} on={on[i + 1]} />
-                <p className={styles.txt}>{a.text}</p>
+                <Lines className={styles.txt} text={a.text} on={on[i + 1]} delay={150} />
               </article>
             ))}
           </div>

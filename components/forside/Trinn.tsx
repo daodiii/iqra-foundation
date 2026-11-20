@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
 import { scrollToY } from '@/lib/smooth';
 import { onScrollFrame } from './frame';
+import { Lines } from './Lines';
 import f from './forside.module.css';
 import styles from './trinn.module.css';
 
@@ -33,23 +34,7 @@ export function Trinn() {
     if (!el) return;
     const its = Array.from(el.children) as HTMLElement[];
     let shown = -2;
-    // the parts arrive one after another: each rises in as it comes onto the screen, and parts that
-    // arrive together (a tall screen, a fast scroll) follow each other 220 ms apart
-    const root = el.closest('section');
-    const io = new IntersectionObserver(
-      (es) => {
-        let n = 0;
-        es.forEach((e) => {
-          if (!e.isIntersecting) return;
-          const t = e.target as HTMLElement;
-          t.style.setProperty('--d', `${n++ * 220}ms`);
-          t.dataset.in = '';
-          io.unobserve(t);
-        });
-      },
-      { rootMargin: '0px 0px -18% 0px' },
-    );
-    root?.querySelectorAll('[data-rv]').forEach((n) => io.observe(n));
+    // the texts arrive by themselves, the page's one way (Lines.tsx)
     const stop = onScrollFrame(el, () => {
       const best = nearest(
         its.map((it) => it.getBoundingClientRect()),
@@ -60,10 +45,7 @@ export function Trinn() {
         setCur(best);
       }
     });
-    return () => {
-      io.disconnect();
-      stop();
-    };
+    return () => stop();
   }, []);
 
   const go = (i: number) => {
@@ -77,9 +59,7 @@ export function Trinn() {
     <section id="handling" className={`${styles.tr} ${f.layer} ${f.layerIn}`} style={{ zIndex: 3 }} aria-labelledby="handling-tittel" data-lag="trinn">
       <div className={styles.g}>
         <div className={styles.lh}>
-          <h2 id="handling-tittel" className={styles.rv} data-rv>
-            {a.title}
-          </h2>
+          <Lines as="h2" id="handling-tittel" text={a.title} />
           <ul className={styles.idx}>
             {a.items.map((it, i) => (
               <li key={it.title}>
@@ -93,9 +73,9 @@ export function Trinn() {
         <div ref={items} className={styles.items}>
           {a.items.map((it, i) => (
             <article key={it.title} className={styles.it} data-on={cur === i ? '' : undefined}>
-              <div className={styles.rv} data-rv>
-                <h3>{it.title}</h3>
-                <p className={styles.txt}>{it.text}</p>
+              <div>
+                <Lines as="h3" text={it.title} />
+                <Lines className={styles.txt} text={it.text} delay={150} />
               </div>
             </article>
           ))}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
-import { clamp, eio, eo, onFrame, pageKey, reducedMotion, repainted } from './frame';
+import { clamp, eio, eo, onFrame, pageKey, PLAIN_POUR, plainPour, reducedMotion, repainted } from './frame';
 import { Lines } from './Lines';
 import { SWOOSH } from './logo-paths';
 import f from './forside.module.css';
@@ -62,6 +62,13 @@ export function Pour() {
     const dot = red.current;
     const inner = redIn.current;
     if (!el || !stage || !sheet.current || !tx.current || !dot || !inner || !tone.current) return;
+    // on a phone the paragraph and the poster stand plain and open (pour.module.css): nothing to play
+    if (plainPour()) {
+      const g = tone.current.querySelector('g');
+      const bb = g && typeof g.getBBox === 'function' ? g.getBBox() : null;
+      if (bb?.width) tone.current.setAttribute('viewBox', [bb.x, bb.y, bb.width, bb.height].join(' '));
+      return;
+    }
     const reduce = reducedMotion();
     let fit = false;
     let shown = '';
@@ -171,8 +178,8 @@ export function Pour() {
     <div ref={sc} className={`${styles.sc} ${f.layer}`} style={{ zIndex: 1 }} data-lag="sc">
       <div className={styles.stage}>
         <div ref={sheet} className={styles.sheet} />
-        <div ref={tx} className={styles.tx}>
-          <Lines text={h.paragraphs[0]} on={on.tx} />
+        <div ref={tx} className={styles.tx} data-pour-tx>
+          <Lines text={h.paragraphs[0]} on={on.tx} auto={PLAIN_POUR} />
         </div>
         <div ref={red} className={styles.red}>
           <div ref={redIn} className={styles.redIn}>
@@ -182,11 +189,9 @@ export function Pour() {
               </g>
             </svg>
             <section id="hvorfor" className={styles.ct} aria-labelledby="hvorfor-tittel">
-              <Lines as="h2" id="hvorfor-tittel" className={styles.h2} text={h.why.title} on={on.h} />
-              <Lines className={styles.lead} text={h.why.paragraphs[0]} on={on.lead} />
-              <p className={styles.more} data-on={on.more ? '' : undefined}>
-                {h.why.paragraphs[1]}
-              </p>
+              <Lines as="h2" id="hvorfor-tittel" className={styles.h2} text={h.why.title} on={on.h} auto={PLAIN_POUR} />
+              <Lines className={styles.lead} text={h.why.paragraphs[0]} on={on.lead} auto={PLAIN_POUR} delay={150} />
+              <Lines className={styles.more} text={h.why.paragraphs[1]} on={on.more} auto={PLAIN_POUR} delay={150} />
             </section>
           </div>
         </div>

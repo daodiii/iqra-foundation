@@ -70,12 +70,57 @@
 
 .li {
   display: block;
-  transform-origin: 0 100%;
-  transition: transform 1.3s var(--ease-out) calc(var(--k) * 90ms);
+  transition: transform 0.9s var(--ease-text) calc(var(--d, 0ms) + var(--k) * 80ms);
 }
 
+/* The page's one curve for text: a strong ease-out, quick to start, long and soft to land */
+:global(html) {
+  --ease-text: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* 31 «Linjene» (the owner's pick): each line rises out of its mask, 80 ms after the one above */
 [data-lines='off'] .li {
-  transform: translateY(112%) rotate(2.5deg);
+  transform: translateY(110%);
+}
+
+/* Until the words are gathered into lines the text waits unseen (with JavaScript off it stands plain) */
+:global(html[data-js]) [data-lines='words'] {
+  opacity: 0;
+}
+
+/*
+ * A phone's snap points (Takt.tsx phoneSnaps): empty markers laid at page offsets, each a place a
+ * fling may not pass. They sit on the document's own box (no positioned ancestor), so `top` is the
+ * offset from the top of the page.
+ */
+.snaps {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 0;
+  pointer-events: none;
+}
+
+.snaps > i {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/*
+ * With a phone's snapping on (Takt.tsx phoneSnaps), every block of the page is a snap area, start to
+ * start, so the reader rests anywhere inside one; only the markers above stop a fling.
+ */
+:global(html[data-snap-phone]) :is(:global([data-hero]), :global([data-pour-tx]), :global(#hvorfor), :global(#skape), :global(#handling), :global(#aktuelt), :global(#sammen)) {
+  scroll-snap-align: start;
+}
+
+:global(html[data-snap-phone]) :global([data-lag='fot']) {
+  scroll-snap-align: end;
 }
 
 /* The page's side margins */
