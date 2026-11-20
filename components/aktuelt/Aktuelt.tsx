@@ -1,24 +1,15 @@
 import Link from 'next/link';
 import styles from '@/components/site/page.module.css';
-import { PageTitle } from '@/components/site/PageTitle';
-import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
 import { getEvents, getNews, splitEvents, todayISO, type Event, type NewsItem } from '@/lib/content';
 import { writeDate, writeDateTime } from '@/lib/dates';
+import { newsHref, type View } from './links';
+import { EVENT_SAMPLES, NEWS_SAMPLES } from './samples';
+import { Tavla } from './Tavla';
 
 const t = site.pages.news;
 
-/** The three views of Aktuelt (M3): all, news, events. Each is its own address, so the filter is three links. */
-export type View = 'alle' | 'nyheter' | 'arrangementer';
-
-export const VIEWS: readonly { view: View; label: string; href: string }[] = [
-  { view: 'alle', label: klient.news.filter.all, href: '/aktuelt' },
-  { view: 'nyheter', label: klient.news.filter.news, href: '/aktuelt/nyheter' },
-  { view: 'arrangementer', label: klient.news.filter.events, href: '/aktuelt/arrangementer' },
-];
-
-export const ARCHIVE_HREF = '/aktuelt/arkiv';
-export const newsHref = (slug: string) => `/aktuelt/nyheter/${slug}`;
+export { ARCHIVE_HREF, VIEWS, newsHref, type View } from './links';
 
 /** A news item in a list: its date, its headline (a link to the article when it has a text), its ingress. */
 export function NewsCard({ n }: { n: NewsItem }) {
@@ -80,65 +71,27 @@ export function EventCard({ e, archive = false }: { e: Event; archive?: boolean 
   );
 }
 
-function Filter({ view }: { view: View }) {
-  return (
-    <nav className={styles.filter} aria-label={t.filterLabel}>
-      <ul>
-        {VIEWS.map((v) => (
-          <li key={v.view}>
-            <Link href={v.href} prefetch={false} aria-current={v.view === view ? 'page' : undefined}>
-              {v.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-}
-
 /**
  * Aktuelt: one page for news and events with the filter the client asks for — Alle, Nyheter,
- * Arrangementer (M3) — and their text (D5). Under Arrangementer the past events stand as the
- * archive, which also has a page of its own (the owner: «Archive can be both»). Events move
- * from upcoming to the archive by date on their own (`revalidate` on the routes).
+ * Arrangementer (M3) — and their text (D5), set as the owner's board «Tavla, hvit» (Tavla.tsx).
+ * Under Arrangementer the past events stand as the archive, which also has a page of its own.
+ * Events move from upcoming to the archive by date on their own (`revalidate` on the routes).
+ * While nothing is published the board shows the front page's samples, marked «Eksempel».
  */
 export function Aktuelt({ view }: { view: View }) {
-  const news = getNews();
-  const { upcoming, past } = splitEvents(getEvents(), todayISO());
-  const showNews = view !== 'arrangementer';
-  const showEvents = view !== 'nyheter';
+  const realNews = getNews();
+  const { upcoming: realUpcoming, past } = splitEvents(getEvents(), todayISO());
+  const sampleNews = !realNews.length;
+  const sampleEvents = !realUpcoming.length;
   return (
-    <article className={styles.page}>
-      <PageTitle href="/aktuelt" className={styles.title}>{t.title}</PageTitle>
-      <p className={styles.lede}>{klient.news.intro}</p>
-      <Filter view={view} />
-
-      {showNews && (
-        <section className={styles.section} aria-labelledby="nyheter">
-          <h2 id="nyheter">{t.newsTitle}</h2>
-          <p>{klient.news.newsText}</p>
-          {news.length ? <ul className={styles.list}>{news.map((n) => <NewsCard key={n.slug} n={n} />)}</ul> : <p className={styles.empty}>{t.emptyNews}</p>}
-        </section>
-      )}
-
-      {showEvents && (
-        <section className={styles.section} aria-labelledby="arrangementer">
-          <h2 id="arrangementer">{t.eventsTitle}</h2>
-          <p>{klient.news.eventsText}</p>
-          <h3 className={styles.subhead}>{t.upcoming}</h3>
-          {upcoming.length ? <ul className={styles.list}>{upcoming.map((e) => <EventCard key={e.slug} e={e} />)}</ul> : <p className={styles.empty}>{t.emptyUpcoming}</p>}
-          {view === 'arrangementer' && (
-            <>
-              <h3 className={styles.subhead} id="tidligere">{t.past}</h3>
-              {past.length ? <ul className={styles.list}>{past.map((e) => <EventCard key={e.slug} e={e} archive />)}</ul> : <p className={styles.empty}>{t.emptyPast}</p>}
-            </>
-          )}
-          <p className={styles.meta}>
-            <Link href={ARCHIVE_HREF} prefetch={false}>{t.archiveLink}</Link>
-          </p>
-        </section>
-      )}
-    </article>
+    <Tavla
+      view={view}
+      news={sampleNews ? NEWS_SAMPLES : realNews}
+      upcoming={sampleEvents ? EVENT_SAMPLES : realUpcoming}
+      past={past}
+      sampleNews={sampleNews}
+      sampleEvents={sampleEvents}
+    />
   );
 }
 

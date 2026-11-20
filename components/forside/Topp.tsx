@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
@@ -26,7 +27,8 @@ function ground(bar: HTMLElement): string {
   const y = bar.getBoundingClientRect().bottom + 3;
   const x = window.innerWidth * 0.5;
   for (const hit of document.elementsFromPoint(x, y)) {
-    if (hit.closest('[data-topp],[data-mk],[data-meny]')) continue;
+    // a Pilen button under the header is not the ground (Støtt oss's AvtaleGiro turned it crimson on white)
+    if (hit.closest('[data-topp],[data-mk],[data-meny],[data-knapp]')) continue;
     for (let e: Element | null = hit; e && e !== document.documentElement; e = e.parentElement) {
       const c = getComputedStyle(e).backgroundColor;
       if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') return c;
@@ -57,7 +59,9 @@ export function toneOf(c: string): 'light' | 'rod' | 'dark' {
  * The front page's header, «Kameleon»: the logo's slot (the hero's logo docks into it), the pages,
  * Støtt oss, and on a phone «Meny», which opens the full-screen menu.
  */
-export function Topp() {
+export function Topp({ mark = false }: { mark?: boolean }) {
+  const path = usePathname() ?? '/';
+  const here = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`));
   const bar = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
@@ -105,10 +109,17 @@ export function Topp() {
       </a>
       <div className={styles.notch} aria-hidden="true" />
       <header ref={bar} className={`${styles.bar} ${f.pad}`} data-topp>
-        <Link href="/" prefetch={false} className={styles.home} aria-label={site.header.homeLabel} data-dock />
+        <Link href="/" prefetch={false} className={styles.home} aria-label={site.header.homeLabel} data-dock>
+          {/* a subpage has no hero to fly the logo in: it stands here from the start */}
+          {mark && (
+            <svg className={styles.homeMark} viewBox="169.591 335.594 742.433 407.094" aria-hidden="true" focusable="false">
+              <use href={`#${MARK}`} />
+            </svg>
+          )}
+        </Link>
         <nav className={styles.nav} aria-label={site.header.navLabel}>
           {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} prefetch={false} className={styles.link} aria-current={l.href === '/' ? 'page' : undefined}>
+            <Link key={l.href} href={l.href} prefetch={false} className={styles.link} aria-current={here(l.href) ? 'page' : undefined}>
               {l.label}
             </Link>
           ))}

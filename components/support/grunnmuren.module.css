@@ -1,0 +1,368 @@
+/*
+ * Støtt oss, 30 «Grunnmuren» (the owner's pick, 2026-11-20), ported from the mock's elite.css.
+ * Every hiding rule (stones not yet dropped, uses not yet lit, things that wait to fade or rise)
+ * lives in the one block at the foot, under `html[data-js]` and only with motion allowed: without
+ * JavaScript, and under reduced motion, the page stands whole and the section does not hold.
+ */
+.root {
+  background: var(--navy-deep);
+}
+
+/* ---------- the title ---------- */
+.hero {
+  background: var(--navy-deep);
+  color: #fff;
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 24px;
+  align-content: end;
+  padding-top: 120px;
+  padding-bottom: clamp(44px, 8vh, 90px);
+  position: relative;
+  overflow: clip;
+}
+
+.h1 {
+  grid-column: 1 / span 8;
+  min-width: 0;
+  margin: 0;
+  font-weight: 600;
+  font-size: min(8.6vw, 14vh);
+  line-height: 0.97;
+  letter-spacing: -0.035em;
+}
+
+.intro {
+  grid-column: 9 / span 4;
+  min-width: 0;
+  align-self: end;
+  margin: 0;
+  font-size: clamp(16px, 1.2vw, 19px);
+  line-height: 1.6;
+  color: var(--on-navy);
+  transition:
+    opacity 1s var(--ease-out) 0.5s,
+    transform 1.2s var(--ease-out) 0.5s;
+}
+
+/* ---------- the held screen: the foundation, stone by stone ---------- */
+.pin {
+  position: relative;
+  background: var(--navy-deep);
+}
+
+.stage {
+  min-height: 100svh;
+  color: #fff;
+  background: var(--navy-deep);
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0 24px;
+  align-items: center;
+  padding-top: calc(90px + env(safe-area-inset-top, 0px));
+  padding-bottom: clamp(30px, 6vh, 60px);
+}
+
+.text {
+  --z: 1;
+  grid-column: 1 / span 5;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+}
+
+.text h2 {
+  margin: 0 0 calc(14px * var(--z));
+  font-weight: 600;
+  font-size: calc(clamp(32px, 3.4vw, 58px) * var(--z));
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+.lead {
+  margin: 0 0 calc(clamp(18px, 3vh, 30px) * var(--z));
+  font-size: calc(clamp(15px, 1.15vw, 18px) * var(--z));
+  line-height: 1.55;
+  color: var(--on-navy);
+}
+
+.text ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.text li {
+  position: relative;
+  min-width: 0;
+  padding: calc(clamp(9px, 1.5vh, 13px) * var(--z)) 0 calc(clamp(9px, 1.5vh, 13px) * var(--z)) 26px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 500;
+  font-size: calc(clamp(15px, 1.25vw, 20px) * var(--z));
+  line-height: 1.3;
+  color: #fff;
+  transition: color 0.6s;
+}
+
+/* each use's square in its stone's colour */
+.text li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  background: var(--sc);
+  transition:
+    transform 0.6s var(--ease-out),
+    opacity 0.6s;
+}
+
+.note {
+  margin: calc(clamp(14px, 2.6vh, 24px) * var(--z)) 0 0;
+  font-size: calc(clamp(13.5px, 1vw, 16px) * var(--z));
+  line-height: 1.55;
+  color: var(--on-navy);
+  transition: opacity 0.8s;
+}
+
+.scene {
+  grid-column: 7 / -1;
+  position: relative;
+  height: 100%;
+  min-height: min(60svh, 520px);
+}
+
+.scene svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.stone {
+  transform: translateY(var(--dy, 0px));
+  opacity: var(--o, 1);
+}
+
+.shadow {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  transform: scale(var(--ss, 1));
+  opacity: var(--so, 0.5);
+}
+
+.ground {
+  opacity: 0.5;
+}
+
+/* ---------- the ways to give ---------- */
+.ways {
+  background: #fff;
+  color: var(--navy);
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 24px;
+  padding-top: clamp(90px, 15vh, 160px);
+  padding-bottom: clamp(90px, 15vh, 160px);
+}
+
+.waysHead {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin-bottom: clamp(40px, 7vh, 80px);
+}
+
+.waysHead h2 {
+  margin: 0;
+  font-weight: 600;
+  font-size: clamp(36px, 3.8vw, 64px);
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.way {
+  grid-column: span 4;
+  min-width: 0;
+  border-top: 2px solid var(--navy);
+  padding-top: 22px;
+  transition:
+    opacity 1s var(--ease-out) var(--d, 0s),
+    transform 1.2s var(--ease-out) var(--d, 0s);
+}
+
+.way h3 {
+  margin: 0 0 12px;
+  font-weight: 600;
+  font-size: clamp(24px, 2.2vw, 36px);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.way > p {
+  margin: 0;
+  font-size: clamp(16px, 1.2vw, 19px);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.give {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.num {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  background: var(--navy);
+  color: #fff;
+  padding: 18px 20px;
+}
+
+.num b {
+  font-weight: 600;
+  font-size: clamp(30px, 2.8vw, 46px);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.num span {
+  font-weight: 500;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.k {
+  --k-bg: var(--rod);
+  --k-fg: #fff;
+  --k-hbg: var(--navy);
+  --k-hfg: #fff;
+  --k-py: 12px;
+  --k-px: 18px;
+  font-size: 15px;
+}
+
+/* ---------- their last line ---------- */
+.close {
+  background: var(--rod);
+  color: #fff;
+  padding: clamp(90px, 16vh, 170px) var(--gutter);
+  text-align: center;
+}
+
+.close p {
+  font-weight: 600;
+  font-size: min(6vw, 10vh);
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  max-width: 12em;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .h1,
+  .intro {
+    grid-column: 1 / -1;
+  }
+  .intro {
+    margin-top: 30px;
+  }
+  .h1 {
+    font-size: 13vw;
+  }
+
+  .stage {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    row-gap: 10px;
+    align-items: stretch;
+  }
+  .text {
+    grid-column: 1;
+  }
+  .text li {
+    padding-left: 22px;
+  }
+  .scene {
+    grid-column: 1;
+    min-height: min(46svh, 360px);
+  }
+
+  .way {
+    grid-column: 1 / -1;
+    margin-bottom: 40px;
+  }
+
+  .close p {
+    font-size: 9.6vw;
+  }
+}
+
+/*
+ * With JavaScript and motion: the screen holds for the five stones (480svh of scroll), the text is
+ * fitted to its box (Grunnmuren.tsx sets --z), and everything waits for its moment.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  :global(html[data-js]) .pin {
+    height: 480svh;
+  }
+  :global(html[data-js]) .stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    min-height: 0;
+    overflow: clip;
+  }
+  :global(html[data-js]) .text {
+    height: 100%;
+    overflow: hidden;
+  }
+  :global(html[data-js]) .scene {
+    min-height: 0;
+  }
+
+  /* a stone waits above its place until its step comes (the script then sets --dy and --o) */
+  :global(html[data-js]) .stone {
+    --dy: -620px;
+    --o: 0;
+  }
+  :global(html[data-js]) .shadow {
+    --ss: 0.25;
+    --so: 0;
+  }
+  :global(html[data-js]) .text li:not([data-on]) {
+    color: rgba(255, 255, 255, 0.28);
+  }
+  :global(html[data-js]) .text li:not([data-on])::before {
+    transform: scale(0.4);
+    opacity: 0.3;
+  }
+  :global(html[data-js]) .note:not([data-on]) {
+    opacity: 0;
+  }
+
+  :global(html[data-js]) .intro:not([data-in]),
+  :global(html[data-js]) .way:not([data-in]) {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  @media (max-width: 900px) {
+    /* the mock hid the lead on phones; the client's sentence stays (2026-11-20), and fit() shrinks the text to hold it */
+    :global(html[data-js]) .text {
+      height: auto;
+      max-height: 58svh;
+    }
+  }
+}
