@@ -5,6 +5,7 @@ import { DARK, HOLD, layerAt } from './Lagene';
 import { stateAt } from './Pour';
 import { luminance, toneOf } from './Topp';
 import { nearest } from './Trinn';
+import { snapTarget } from './Spor';
 
 describe('Kameleon: the header reads the ground under it', () => {
   test('white and the pale grounds are light; navy is dark; crimson is crimson', () => {
@@ -71,5 +72,22 @@ describe('Aktuelt’s items', () => {
     const n = { slug: 'n', title: 'Nytt', date: '2026-11-12', summary: 'Kort.', image: null, body: null };
     expect(toStrip(n)).toEqual({ slug: 'n', date: '12. november 2026', dateTime: '2026-11-12', title: 'Nytt', summary: 'Kort.', href: '/aktuelt/nyheter' });
     expect(toStrip({ ...n, body: 'Tekst' }).href).toBe('/aktuelt/nyheter/n');
+  });
+});
+
+describe('Sporet on a touch screen: a swipe settles on the next panel in its direction', () => {
+  const top = 1000;
+  const travel = 2000;
+  const stops = [1000, 1700, 2400, 3000];
+  test('down past a stop: on to the next one ahead', () => {
+    expect(snapTarget(1900, 1700, stops, top, travel)).toBe(2400);
+  });
+  test('up: back to the one behind', () => {
+    expect(snapTarget(2200, 2400, stops, top, travel)).toBe(1700);
+  });
+  test('at either end of the section, or not moving, it stays', () => {
+    expect(snapTarget(1000, 900, stops, top, travel)).toBeNull();
+    expect(snapTarget(3000, 2800, stops, top, travel)).toBeNull();
+    expect(snapTarget(1900, 1900, stops, top, travel)).toBeNull();
   });
 });
