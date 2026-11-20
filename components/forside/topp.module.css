@@ -236,11 +236,17 @@
   transform: scaleX(1);
 }
 
+.wrap {
+  display: contents;
+}
+
+/* outside the header, above the hero's logo (32), under the skip link and the menu */
 .row {
-  position: absolute;
-  top: 100%;
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 91px);
   left: 0;
   right: 0;
+  z-index: 33;
   padding-top: 26px;
   padding-bottom: 32px;
   background: var(--hg, var(--navy-deep));
