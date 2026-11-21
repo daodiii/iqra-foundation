@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { RingPil } from '@/components/forside/Knapp';
 import k from '@/components/forside/knapp.module.css';
 import { site } from '@/content/site.no';
 import type { Resource } from '@/lib/content';
@@ -30,8 +31,7 @@ export function Utgivelse({ r, style }: { r: Resource; style?: CSSProperties }) 
         <a href={go.href} className={`${k.k} ${k.ring} ${styles.go}`} data-knapp="ring">
           <span className={k.label}>{go.label}</span>
           <span className={k.arrow} aria-hidden="true">
-            <i>→</i>
-            <i>→</i>
+            <RingPil />
           </span>
         </a>
       )}

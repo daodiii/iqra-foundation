@@ -295,24 +295,21 @@
     font-size: 24px;
   }
 
+  /* the row as it was, cards the same size, but no longer a sideways scroller: clipped at the screen's
+     edge, so a swipe anywhere on it scrolls the page on to the news (the owner, 2026-11-22: «just
+     don't have that scrolling function inside … no matter where you touch on the mobile») */
   .posters {
     display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
+    overflow-x: clip;
     gap: 14px;
     margin: 0 calc(var(--gutter) * -1);
     padding: 0 var(--gutter) 24px;
-    scrollbar-width: none;
-  }
-
-  .posters::-webkit-scrollbar {
-    display: none;
+    touch-action: pan-y;
   }
 
   .posters > li {
     flex: none;
     width: 76vw;
-    scroll-snap-align: center;
   }
 
   .strip {
