@@ -290,8 +290,9 @@
 /*
  * Desktop: hero «13 · mellom», the owner's pick (2026-11-21) of fifteen mocked heroes. The mark in the
  * middle, the headline under it one sentence a line and nearly from margin to margin, then the lede
- * and the buttons. The headline is read: every word starts carved into the navy, like the mark before
- * its pour, and turns white one after another once the pour begins. The phone keeps the hero above.
+ * and the buttons. The headline starts carved into the navy like the mark, and turns white with it, all
+ * at once over the pour's 0.9 s (the owner, 2026-11-21: «make it pop up at the same time as the logo»).
+ * The phone keeps the hero above.
  */
 @media (min-width: 901px) {
   .main {
@@ -326,8 +327,8 @@
 
   .w {
     transition:
-      color 0.45s var(--ease-out) calc(0.87s + var(--i) * 0.26s),
-      text-shadow 0.45s var(--ease-out) calc(0.87s + var(--i) * 0.26s);
+      color 0.9s ease-in-out,
+      text-shadow 0.9s ease-in-out;
   }
 
   :global(html[data-js]) .hero:not([data-go]) .w {

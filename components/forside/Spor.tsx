@@ -56,19 +56,7 @@ export function Spor() {
     const panels = Array.from(track.children) as HTMLElement[];
     const stage = track.parentElement as HTMLElement;
     let shown = '';
-    // desktop: the three panels stand on one line (the owner, 2026-11-20), so nothing moves sideways;
-    // all of it opens once the section comes well into view
-    const row = window.matchMedia('(min-width: 901px)');
     return onScrollFrame(el, () => {
-      if (row.matches) {
-        track.style.transform = '';
-        const r = el.getBoundingClientRect();
-        if (shown !== '1111' && r.top < window.innerHeight * 0.75 && r.bottom > 0) {
-          shown = '1111';
-          setOn([true, true, true, true]);
-        }
-        return;
-      }
       const H = stage.clientHeight;
       const W = window.innerWidth;
       const r = el.getBoundingClientRect();
