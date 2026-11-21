@@ -37,7 +37,7 @@
 }
 
 .sub h2 {
-  font-size: clamp(30px, min(2.8vw, 5vh), 52px);
+  font-size: var(--t-h2);
   letter-spacing: -0.0175em;
   line-height: 0.98;
 }
@@ -163,13 +163,28 @@
 
 .po h4 {
   margin-top: auto;
-  font-size: clamp(24px, min(2.1vw, 3.8vh), 38px);
+  font-size: var(--t-h4);
   line-height: 1.08;
   letter-spacing: -0.021em;
 }
 
+/* time and place sit on the navy or burgundy poster, so they are white (the owner, 2026-11-20: «very hard to see») */
 .po .meta {
   margin-top: 12px;
+  color: #fff;
+}
+
+/* desktop: shorter posters (the owner, 2026-11-20: «coming arrangements can be shorter»), about half their old height */
+@media (min-width: 901px) {
+  .po {
+    aspect-ratio: auto;
+    max-height: none;
+    min-height: clamp(260px, 36vh, 360px);
+  }
+
+  .po h4 {
+    padding-top: clamp(28px, 4vh, 44px);
+  }
 }
 
 .pin {
@@ -244,7 +259,7 @@
 
 .sv h4 {
   margin-top: 10px;
-  font-size: clamp(22px, min(1.8vw, 3.2vh), 32px);
+  font-size: var(--t-h4);
   line-height: 1.12;
   letter-spacing: -0.0175em;
 }
@@ -265,7 +280,7 @@
 
 .sum {
   margin-top: 12px !important;
-  font-size: clamp(16px, min(1.15vw, 2.1vh), 19px);
+  font-size: var(--t-body);
   line-height: 1.612;
   color: var(--ink);
 }
@@ -273,6 +288,11 @@
 @media (max-width: 900px) {
   .sub h2 {
     font-size: calc(clamp(30px, 8.6vw, 40px) * 1.03);
+  }
+
+  /* the phone keeps its poster title size (the desktop scale's floor is 22) */
+  .po h4 {
+    font-size: 24px;
   }
 
   .posters {

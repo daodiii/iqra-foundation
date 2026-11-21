@@ -54,7 +54,7 @@
   max-width: 21em;
   text-align: center;
   font-weight: 400;
-  font-size: clamp(28px, 3.3vw, 60px);
+  font-size: var(--t-statement);
   line-height: 1.248;
   letter-spacing: -0.008em;
 }
@@ -123,7 +123,7 @@
   align-self: start;
   margin: 0;
   font-weight: 600;
-  font-size: clamp(30px, 3.4vw, 48px);
+  font-size: var(--t-h2);
   letter-spacing: -0.02em;
   line-height: 1.02;
 }
@@ -133,7 +133,7 @@
   grid-row: 1;
   margin: 0;
   font-weight: 400;
-  font-size: clamp(19px, 1.55vw, 22px);
+  font-size: var(--t-h4);
   line-height: 1.55;
 }
 
@@ -142,9 +142,38 @@
   grid-row: 2;
   align-self: start;
   margin: 24px 0 0;
-  font-size: clamp(16px, 1.25vw, 18px);
+  font-size: var(--t-body);
   line-height: 1.65;
   color: #fff;
+}
+
+/*
+ * Desktop (the owner, 2026-11-20: «Hvorfor vi finnes looks pretty empty on desktop»): the poster holds
+ * its title and text in the middle of the screen instead of the top third, the lead is set a step up
+ * (card-title size), and the reading column spans seven columns, the second paragraph kept to a measure.
+ */
+@media (min-width: 901px) {
+  .ct {
+    grid-template-rows: auto auto;
+    align-content: center;
+    padding-block: clamp(110px, 14vh, 150px);
+  }
+
+  .h2 {
+    grid-column: 1 / span 5;
+  }
+
+  .lead {
+    grid-column: 6 / span 7;
+    line-height: 1.4;
+    letter-spacing: -0.006em;
+  }
+
+  .more {
+    grid-column: 6 / span 7;
+    margin-top: clamp(24px, 3.4vh, 36px);
+    max-width: 40em;
+  }
 }
 
 /* Without JavaScript the scene cannot play: it is laid out as plain flow, the paragraph on white, then the poster. */

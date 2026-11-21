@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
 import { MARK } from './Merke';
+import { VIEWBOX } from './logo-paths';
 import { TilToppen } from './TilToppen';
 import f from './forside.module.css';
 import styles from './fot.module.css';
@@ -42,7 +43,7 @@ export function Fot() {
   return (
     <footer className={`${styles.fw} ${f.layer} ${f.layerIn}`} style={{ zIndex: 6 }} data-lag="fot">
       <div className={styles.g}>
-        <svg className={styles.lg} viewBox="169.591 335.594 742.433 407.094" role="img" aria-label={site.logoAlt}>
+        <svg className={styles.lg} viewBox={VIEWBOX.join(' ')} role="img" aria-label={site.logoAlt}>
           <use href={`#${MARK}`} />
         </svg>
         <div className={styles.row3}>

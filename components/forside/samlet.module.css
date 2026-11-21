@@ -26,9 +26,17 @@
   grid-column: 1 / span 11;
   margin: 0;
   font-weight: 600;
-  font-size: calc(clamp(52px, min(8.4vw, 14vh), 170px) * 1.03);
+  font-size: var(--t-display);
   letter-spacing: -0.04em;
   line-height: 0.8924;
+}
+
+/* desktop: the hero's display size and spacing (forside.module.css --t-display) */
+@media (min-width: 901px) {
+  .h2 {
+    letter-spacing: -0.032em;
+    line-height: 0.9312;
+  }
 }
 
 .w {
@@ -56,7 +64,7 @@
   grid-column: 1 / span 6;
   margin: 0;
   font-weight: 400;
-  font-size: clamp(17px, min(1.4vw, 2.5vh), 24px);
+  font-size: var(--t-lead);
   letter-spacing: -0.0048em;
   line-height: 1.456;
   color: #fff;
