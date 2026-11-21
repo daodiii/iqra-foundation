@@ -42,12 +42,10 @@ export function readBeats(): Beats {
     const el = document.querySelector<HTMLElement>(s);
     return el ? [pageTop(el)] : [];
   });
-  // On a laptop the chapter turn runs straight on to the track's start: from the poster one gesture
-  // carries to «Dette ønsker vi å skape» (the owner, 2026-11-21: the scroll between them was long; «it
-  // should easily just lock to» it). From there on the scroll is wholly free, with no pull at all (the
-  // owner, 2026-11-21: «from the second you hit "this is what we want to create," make it
-  // free-flowing … there's still some magnetism»). A phone keeps its track zone.
-  if (!plainMarks.length && track.length) return { zones: [[...zone, track[0]]], marks };
+  // On a laptop the whole page scrolls freely, with no stops at all (the owner, 2026-11-21, after
+  // trying stops in the chapter turn only: «This was weird. Just make the entire thing free flow»).
+  // The keys still step to the sections. A phone keeps its snapping.
+  if (!plainMarks.length && track.length) return { zones: [], marks };
   return { zones: [plainMarks.length ? [] : zone, track], marks: [...plainMarks, ...marks] };
 }
 
