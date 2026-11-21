@@ -22,6 +22,14 @@
   line-height: 0.9312;
 }
 
+/* desktop titles share the front page's scale (forside.module.css --t-*), set a little looser at these sizes */
+@media (min-width: 901px) {
+  .tr :is(h2, h3) {
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+  }
+}
+
 .lh {
   grid-column: 1 / span 5;
   position: sticky;
@@ -30,7 +38,7 @@
 }
 
 .lh h2 {
-  font-size: calc(clamp(48px, min(5.6vw, 10vh), 112px) * 1.03);
+  font-size: var(--t-h2);
 }
 
 .idx {
@@ -96,13 +104,13 @@
 }
 
 .it h3 {
-  font-size: calc(clamp(34px, min(3.6vw, 6.6vh), 68px) * 1.03);
+  font-size: var(--t-h3);
 }
 
 .txt {
   margin: clamp(20px, 3vh, 34px) 0 0;
   font-weight: 400;
-  font-size: clamp(19px, min(1.55vw, 2.8vh), 27px);
+  font-size: var(--t-lead);
   letter-spacing: -0.004em;
   line-height: 1.456;
   color: #fff;

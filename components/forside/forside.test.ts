@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { toPoster, toStrip } from './Forside';
 import { DOWN, flightGoal, UP, wavePath } from './Hero';
+import { VIEWBOX } from './logo-paths';
 import { CLOSE, OPEN, OPEN_MS, PARA, stateAt, stepOpen, WHY } from './Pour';
 import { luminance, toneOf } from './Topp';
 import { nearest } from './Trinn';
@@ -47,7 +48,8 @@ describe('the pour scene, step by step', () => {
   test('the pour’s surface spans the lockup and closes below it for the clip', () => {
     const open = wavePath(500, 10, 0, false);
     const closed = wavePath(500, 10, 0, true);
-    expect(open.startsWith('M139.6 ')).toBe(true);
+    // it starts 30 units left of the logo's frame
+    expect(open.startsWith(`M${(VIEWBOX[0] - 30).toFixed(1)} `)).toBe(true);
     expect(closed.endsWith('Z')).toBe(true);
     expect(open).not.toContain('NaN');
   });

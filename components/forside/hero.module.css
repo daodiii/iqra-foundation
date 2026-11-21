@@ -1,5 +1,5 @@
 /*
- * Hero «Midt», exactly one screen: the full lockup on one axis, the headline under it, the rest
+ * Hero «Midt», exactly one screen: the mark on one axis, the headline under it, the rest
  * centred. Everything scales with the screen's height as well as its width, so it fits at every size.
  */
 .hero {
@@ -28,7 +28,7 @@
   grid-column: 3 / span 8;
   justify-self: center;
   width: 100%;
-  aspect-ratio: 742.433 / 407.094;
+  aspect-ratio: 736.646 / 309.109;
   max-height: 34vh;
   margin-bottom: 3.6vh;
 }
@@ -38,7 +38,7 @@
   margin: 0;
   text-align: center;
   font-weight: 600;
-  font-size: calc(min(5.4vw, 7.6vh) * 1.03);
+  font-size: var(--t-display);
   letter-spacing: -0.032em;
   line-height: 0.9312;
 }
@@ -205,7 +205,8 @@
 
 /* «Smeltet»: white poured up inside the letters, with a lit surface riding on top */
 .lit {
-  --lf: #f0f0f1;
+  /* pure white like the text (the owner, 2026-11-21: «make the logo more white, like the text») */
+  --lf: #fff;
   --cf: var(--rod);
 }
 
@@ -217,7 +218,7 @@
 }
 
 .glow {
-  stroke: #bfe6e8;
+  stroke: #fff;
   stroke-width: 28;
 }
 
@@ -286,6 +287,58 @@
   }
 }
 
+/*
+ * Desktop: hero «13 · mellom», the owner's pick (2026-11-21) of fifteen mocked heroes. The mark in the
+ * middle, the headline under it one sentence a line and nearly from margin to margin, then the lede
+ * and the buttons. The headline is read: every word starts carved into the navy, like the mark before
+ * its pour, and turns white one after another once the pour begins. The phone keeps the hero above.
+ */
+@media (min-width: 901px) {
+  .main {
+    grid-template-rows: auto auto auto;
+    padding-block: calc(116px + env(safe-area-inset-top, 0px)) clamp(52px, 9vh, 96px);
+  }
+
+  .slot {
+    grid-column: 1 / -1;
+    max-height: 19vh;
+    margin: 0 0 clamp(32px, 5.4vh, 60px);
+  }
+
+  /* the longer sentence measures about 11.1 em, so a fourteenth of the width leaves air at both sides */
+  .h1 {
+    font-size: calc((100vw - 2 * var(--gutter)) / 14);
+    line-height: 0.96;
+  }
+
+  .side {
+    margin-top: clamp(28px, 4.6vh, 52px);
+  }
+
+  .lede {
+    font-size: var(--t-body);
+  }
+
+  /* no rise, so the word masks can open */
+  .wm {
+    overflow: visible;
+  }
+
+  .w {
+    transition:
+      color 0.45s var(--ease-out) calc(0.87s + var(--i) * 0.26s),
+      text-shadow 0.45s var(--ease-out) calc(0.87s + var(--i) * 0.26s);
+  }
+
+  :global(html[data-js]) .hero:not([data-go]) .w {
+    transform: none;
+    color: var(--carve-face);
+    text-shadow:
+      -2px -2px 0 var(--carve-shade),
+      2px 2px 0 var(--carve-hi);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .arr {
     animation: none;
@@ -297,3 +350,4 @@
     transition: none;
   }
 }
+

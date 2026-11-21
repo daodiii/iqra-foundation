@@ -8,6 +8,7 @@ import { site } from "@/content/site.no";
 import { onFrame, pageKey, paintKey } from "./frame";
 import { Knapp } from "./Knapp";
 import { MARK } from "./Merke";
+import { VIEWBOX } from "./logo-paths";
 import f from "./forside.module.css";
 import styles from "./topp.module.css";
 
@@ -237,7 +238,7 @@ export function Topp({ mark = false }: { mark?: boolean }) {
             {mark && (
               <svg
                 className={styles.homeMark}
-                viewBox="169.591 335.594 742.433 407.094"
+                viewBox={VIEWBOX.join(" ")}
                 aria-hidden="true"
                 focusable="false"
               >

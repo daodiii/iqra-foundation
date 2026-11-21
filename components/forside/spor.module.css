@@ -37,6 +37,14 @@
   line-height: 0.9118;
 }
 
+/* desktop titles share the front page's scale (forside.module.css --t-*), set a little looser at these sizes */
+@media (min-width: 901px) {
+  .trk :is(h2, h3) {
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+  }
+}
+
 .trk :global([data-lines]) [class] {
   transition-duration: 1.25s;
   transition-delay: calc(var(--k) * 85ms);
@@ -54,7 +62,7 @@
 }
 
 .p0 h2 {
-  font-size: calc(clamp(52px, min(5.8vw, 11vh), 132px) * 1.03);
+  font-size: var(--t-h2);
 }
 
 .ingress {
@@ -62,7 +70,7 @@
   font-weight: 400;
   letter-spacing: -0.006em;
   line-height: 1.352;
-  font-size: clamp(19px, min(1.6vw, 2.9vh), 30px);
+  font-size: var(--t-lead);
   max-width: 24em;
 }
 
@@ -96,7 +104,7 @@
 .cd h3 {
   grid-row: 3;
   max-width: min(100%, 7.6em);
-  font-size: calc(clamp(38px, min(3.9vw, 8vh), 84px) * 1.03);
+  font-size: var(--t-h3);
 }
 
 .txt {
@@ -104,7 +112,7 @@
   margin: clamp(20px, 3.2vh, 36px) 0 0;
   font-weight: 400;
   letter-spacing: -0.004em;
-  font-size: clamp(19px, min(1.6vw, 2.9vh), 27px);
+  font-size: var(--t-lead);
   line-height: 1.4352;
   max-width: 22em;
   color: #fff;
@@ -202,6 +210,72 @@
 
   .txt {
     font-size: 18px;
+  }
+}
+
+/*
+ * Desktop (the owner, 2026-11-20: «make the tiles on one line, at least on desktop, … it seems like it's
+ * room for it»): no sideways walk. The title and intro sit as in «Hvorfor vi finnes» (title left,
+ * text right), and the three panels stand under them in one row, spaced like the event posters.
+ */
+@media (min-width: 901px) {
+  .spor {
+    height: auto;
+    padding: clamp(120px, 17vh, 190px) var(--gutter) clamp(110px, 16vh, 170px);
+  }
+
+  .stg {
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+
+  .trk {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(16px, 1.8vw, 30px);
+    align-items: stretch;
+    padding: 0;
+    transform: none !important;
+  }
+
+  .p0 {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0 24px;
+    align-items: start;
+    width: auto;
+    padding-right: 0;
+    margin-bottom: clamp(40px, 6vh, 72px);
+  }
+
+  .p0 > :first-child {
+    grid-column: 1 / span 6;
+  }
+
+  .ingress {
+    grid-column: 7 / span 6;
+    margin: 0;
+    max-width: 34em;
+  }
+
+  .cd {
+    width: auto;
+    height: auto;
+    min-height: clamp(380px, 54vh, 540px);
+    padding: clamp(28px, 2.6vw, 44px);
+  }
+
+  .cd h3 {
+    max-width: none;
+    margin-top: clamp(28px, 4vh, 48px);
+  }
+
+  .ik {
+    width: clamp(88px, 7vw, 124px);
+    transform: none !important;
   }
 }
 

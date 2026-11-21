@@ -31,6 +31,20 @@
   --carve-face: #253b65;
 
   --gutter: clamp(20px, 3.4vw, 64px);
+
+  /*
+   * The front page's type scale on desktop (the owner, 2026-11-20: «varying sizes, but not too much»;
+   * «A is the best» of six mocked scales).
+   * At 1536x960: display 75, section title 60, part title 38, card title 28, lead 22, body 18.
+   * Phone sizes stay in each section's own media query.
+   */
+  --t-display: clamp(44px, min(4.9vw, 8vh), 80px);
+  --t-h2: clamp(34px, min(3.9vw, 6.6vh), 64px);
+  --t-h3: clamp(26px, min(2.5vw, 4.4vh), 42px);
+  --t-h4: clamp(22px, min(1.8vw, 3.2vh), 30px);
+  --t-lead: clamp(18px, min(1.45vw, 2.6vh), 24px);
+  --t-body: clamp(16px, 1.15vw, 19px);
+  --t-statement: clamp(28px, 3.3vw, 60px);
   --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --font: var(--font-instrument), system-ui, sans-serif;
