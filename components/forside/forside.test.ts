@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { toPoster, toStrip } from './Forside';
 import { DOWN, flightGoal, UP, wavePath } from './Hero';
 import { VIEWBOX } from './logo-paths';
-import { CLOSE, OPEN, OPEN_MS, PARA, stateAt, stepOpen, WHY } from './Pour';
+import { CLOSE, PARA, RISE, RISEN, riseAt, stateAt, WHY } from './Pour';
 import { luminance, toneOf } from './Topp';
 import { nearest } from './Trinn';
 import { touchTarget } from '@/lib/steps';
@@ -24,25 +24,23 @@ describe('Kameleon: the header reads the ground under it', () => {
 });
 
 describe('the pour scene, step by step', () => {
-  test('as the dot opens: the poster’s title, then its lead, then its second paragraph', () => {
+  test('as the crimson page rises: the poster’s title, then its lead, then its second paragraph', () => {
     expect(stateAt(0.3)).toEqual({ h: false, lead: false, more: false });
     expect(stateAt(0.65)).toEqual({ h: true, lead: false, more: false });
     expect(stateAt(0.85)).toEqual({ h: true, lead: true, more: false });
     expect(stateAt(1)).toEqual({ h: true, lead: true, more: true });
   });
 
-  test('the dot opens on its clock in OPEN_MS, and closes faster', () => {
-    let o = 0;
-    for (let t = 0; t < OPEN_MS; t += 16) o = stepOpen(o, 1, 16);
-    expect(o).toBe(1);
-    expect(stepOpen(0.5, 1, OPEN_MS / 2)).toBe(1);
-    expect(stepOpen(1, 0, OPEN_MS * 0.3)).toBeCloseTo(0.5);
-    expect(stepOpen(0.4, 0.4, 100)).toBe(0.4);
+  test('the crimson page rises with the scroll, with no clock: below RISE it is down, by RISEN it is up', () => {
+    expect(riseAt(1)).toBe(0);
+    expect(riseAt(RISE)).toBe(0);
+    expect(riseAt((RISE + RISEN) / 2)).toBeCloseTo(0.5);
+    expect(riseAt(RISEN)).toBe(1);
+    expect(riseAt(WHY)).toBe(1);
   });
 
-  test('the beats come in order: white, paragraph, called, poster, inside the scene', () => {
-    expect(CLOSE).toBeLessThan(OPEN);
-    expect(1 < PARA && PARA < CLOSE && OPEN < WHY && WHY < 2.1).toBe(true);
+  test('the beats come in order: white, paragraph, rise, poster, inside the scene', () => {
+    expect(1 < PARA && PARA < CLOSE && CLOSE <= RISE && RISE < RISEN && RISEN <= WHY && WHY < 2.1).toBe(true);
   });
 
   test('the pour’s surface spans the lockup and closes below it for the clip', () => {
@@ -110,3 +108,4 @@ test('the logo goes to the header once the page leaves the top, back to the hero
   expect(flightGoal(H * 0.04, H, 1)).toBe(1);
   expect(flightGoal(H * 0.04, H, 0)).toBe(0);
 });
+

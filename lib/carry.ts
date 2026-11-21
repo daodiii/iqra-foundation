@@ -1,4 +1,4 @@
-/* From the fixing-scroll-flow skill's reference code (carry.ts), unchanged but for this note: the
+/* From the fixing-scroll-flow skill's reference code (carry.ts), unchanged but for STALL and this note: the
    front page's beats (lib/steps.ts) read wheel gestures and land glides with it (2026-11-20). */
 /* The arithmetic of the carry in steps.ts: how wheel events are read into gestures, which beat a
    glide lands on, and the curve it lands on. Nothing here touches the page, so it can be tested.
@@ -11,6 +11,8 @@ const NOTCH = 40;
 /* A frame, ms, and the input rate (px a frame) above which momentum is still running. */
 const FRAME = 16.7;
 const FAST = 2.5;
+/* The longest a slow frame holds events back, ms. Measured stalls on the owner's laptop: 150-200. */
+const STALL = 300;
 /* A glide leaves at the page's own speed. Its start slope stays at most M_MAX (the curve is
    shortened instead) and never above 3, where the curve would stop being smooth; turning back, it
    swings on at most as far as M_MIN allows. */
@@ -52,7 +54,10 @@ export function gestures(pause = 80) {
     /* After a pause or a turn the rate starts afresh: the last gesture's events say nothing of
        this one. A pause while momentum still streamed in fast is a slow frame, not the fingers,
        even when what it held back arrives as one big event; a notch after notches is a new wish. */
-    const turn = dir !== g.dir || (gap > pause && (before < FAST || (a >= NOTCH && lastGap > 30)));
+    /* No frame is slower than STALL: a pause longer than that is the fingers, however fast the
+       input was before it. Without this cap a swipe that ended fast (fingers stopped, no fling) made
+       the next swipe, seconds later, part of it, and a spent one: swallowed whole (2026-11-21). */
+    const turn = dir !== g.dir || (gap > pause && (before < FAST || gap > STALL || (a >= NOTCH && lastGap > 30)));
     if (turn) seen.length = 0;
     seen.push({ t, s: a / Math.min(12, Math.max(1, gap / FRAME)) });
     while (seen.length > 4 || t - seen[0].t > 300) seen.shift();

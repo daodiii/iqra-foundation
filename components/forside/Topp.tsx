@@ -137,7 +137,6 @@ export function Topp({ mark = false }: { mark?: boolean }) {
     return onFrame(() => {
       // only when the page has moved or the logo has docked or left, and once more the frame after:
       // the scenes move in the same frame, some after this reads. A still page needs no new reading.
-      // the crimson dot opens by itself on a still page (Pour.tsx): paintKey counts that too
       const k = `${pageKey()}|${paintKey()}${"solid" in page.dataset ? "s" : ""}`;
       if (k === seen) {
         if (!again) return;

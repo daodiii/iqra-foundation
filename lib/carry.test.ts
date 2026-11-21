@@ -195,3 +195,16 @@ test('a second flick while the first still trickles in is a new gesture', () => 
   const secondPeak = all.findIndex(([t]) => t === second[9][0]);
   assert.ok(read[secondPeak].id >= 2, 'the second push is read as its own gesture');
 });
+
+test('a pause longer than any slow frame starts a new gesture, even after fast input', () => {
+  const read = gestures();
+  let g = read(0, 8);
+  for (let t = 16; t < 640; t += 16) g = read(t, 8);
+  const first = g.id;
+  assert.equal(read(640 + 1500, 8).id, first + 1);
+  // a 200 ms stall inside fast momentum is still the same gesture
+  const r2 = gestures();
+  let h = r2(0, 30);
+  for (let t = 16; t < 320; t += 16) h = r2(t, 30);
+  assert.equal(r2(320 + 200, 30).id, h.id);
+});
