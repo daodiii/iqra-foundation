@@ -23,9 +23,6 @@ import { setGestureHandler, smooth } from './smooth';
 export interface Beats {
   zones: number[][];
   marks: number[];
-  /* Free scrolling, but once the page comes to rest between the first and last of these it eases
-     to the nearest one: no stop per gesture, only no resting half way. */
-  soft?: number[];
 }
 
 const TOL = 40; /* beats closer than this merge; within this of a beat counts as standing on it */
@@ -36,23 +33,6 @@ const HALF = 0.45; /* a new push the same way past this much of a glide asks for
 const SPIN = 300; /* px of notches more in a spent spin of the wheel that move on another beat */
 const LULL = 320; /* ms of rest before a touchpad swipe the same way counts as new after a glide */
 const PAUSE = 80; /* ms between events that make a fresh push a new wish rather than momentum (carry.ts gestures) */
-const NUDGE = 0.1; /* of the gap between two soft beats: a rest further than this from the one behind goes on to the one ahead */
-
-/**
- * Where a page that came to rest at `y` among soft beats eases to, having moved `dir` last: on to the
- * beat ahead once it has left the one behind by more than a nudge (at least 60 px, or NUDGE of the
- * gap), else back. Not simply the nearest: scrolling up a third of a panel then let the page fall
- * back down the way it came (the owner, 2026-11-21: «you scroll up and it keeps going down»).
- */
-export function softTarget(soft: number[], y: number, dir: number): number {
-  const below = [...soft].reverse().find((b) => b <= y) ?? soft[0];
-  const above = soft.find((b) => b >= y) ?? soft[soft.length - 1];
-  if (below === above || !dir) return Math.abs(y - below) <= Math.abs(above - y) ? below : above;
-  const behind = dir > 0 ? below : above;
-  const ahead = dir > 0 ? above : below;
-  return Math.abs(y - behind) > Math.max(60, NUDGE * Math.abs(above - below)) ? ahead : behind;
-}
-
 /** Tidy a run of beats: in the page, sorted, near ones merged. */
 export function clean(list: number[], max: number): number[] {
   const sorted = list
@@ -72,8 +52,6 @@ export function steps(read: () => Beats): () => void {
   let wasNative = false;
 
   const limit = () => document.documentElement.scrollHeight - window.innerHeight;
-  const softs = () => clean(read().soft ?? [], limit());
-  const inSoft = (s: number[], y: number) => s.length > 1 && y > s[0] - SNAP && y < s[s.length - 1] + SNAP;
   const zones = () => read().zones.map((z) => clean(z, limit())).filter((z) => z.length > 1);
   const zoneAt = (y: number) => zones().find((z) => y >= z[0] - SNAP && y <= z[z.length - 1] + SNAP);
   const every = () => {
@@ -104,6 +82,7 @@ export function steps(read: () => Beats): () => void {
   let lastSpent = -1; /* the last gesture a glide was given: a surge right after it is still it */
   let spentDir = 0;
   let surged = -1;
+  let freed = -1; /* a spent gesture let go after its glide: the rest of it moves the page freely */
   const go = (to: number | undefined, gesture = -1) => {
     if (to === undefined) return;
     spent = gesture;
@@ -185,9 +164,17 @@ export function steps(read: () => Beats): () => void {
         }
         return swallow(event);
       }
+      // landed with a beat still ahead the same way: the rest of the momentum stays spent, so one
+      // gesture is one beat. Landed on a zone's end, going out: after a trickle it runs on freely
+      const zl = zoneAt(lenis.animatedScroll);
+      if (zl && next(zl, lenis.animatedScroll, g.dir) !== undefined) return swallow(event);
       if ((trickle += Math.abs(deltaY)) <= TRICKLE) return swallow(event);
       spent = -1;
+      freed = g.id;
     }
+    // A let-go gesture's momentum is free scrolling: it never asks for a beat or settles. It used to
+    // count again from where it began, behind the page, and glide back: up, then down (2026-11-21).
+    if (g.id === freed) return true;
 
     /* A new gesture while gliding: the same way, past half way, one beat further; the other way,
        back to the beat behind. */
@@ -209,23 +196,19 @@ export function steps(read: () => Beats): () => void {
     }
 
     const z = zoneAt(lenis.targetScroll + deltaY) ?? zoneAt(lenis.animatedScroll);
-    if (!z) {
-      // among the soft beats a mouse's notch moves one beat, as fingers ease to the one ahead
-      const s = softs();
-      if (g.notch && g.fresh && inSoft(s, lenis.animatedScroll)) {
-        const to = next(s, lenis.animatedScroll, g.dir);
-        if (to !== undefined) {
-          go(to, g.id);
-          return swallow(event);
-        }
-      }
-      return true;
-    }
+    if (!z) return true;
+    // Leaving a zone past its end beat is free: nothing ahead to stop at, so nothing pulls the page
+    // back. A small push down from the start of «Dette ønsker vi å skape» used to settle back up onto
+    // it (the owner, 2026-11-21: «sometimes you scroll down and it goes up»).
+    if (next(z, lenis.animatedScroll, g.dir) === undefined) return true;
     /* A notch is the whole wish at once; fingers are followed until their momentum fades. */
     if (g.notch || (g.fading >= 3 && g.n >= 4)) {
       // every beat is a stop here, however hard the flick (the skill's landing() would carry a fast
       // page past the next one): each stop is a page the owner wants seen
-      const to = next(z, g.notch ? lenis.animatedScroll : startY, g.dir);
+      let to = next(z, g.notch ? lenis.animatedScroll : startY, g.dir);
+      // a gesture that came in from outside the zone and is already past that beat goes to the next
+      // one ahead of it, never back behind the page
+      if (to !== undefined && (to - lenis.animatedScroll) * g.dir < -TOL) to = next(z, lenis.animatedScroll, g.dir);
       if (to !== undefined) {
         go(to, g.id);
         return swallow(event);
@@ -241,7 +224,8 @@ export function steps(read: () => Beats): () => void {
       const y = lenis.targetScroll;
       const near = nearest(zone, y);
       // counted from where the gesture began, like a flick: a slow drag that ran past a beat stops there
-      go(Math.abs(near - y) <= SNAP ? near : (next(zone, startY, g.dir) ?? near), id);
+      const ahead = next(zone, startY, g.dir);
+      go(Math.abs(near - y) <= SNAP || ahead === undefined || (ahead - y) * g.dir < -TOL ? near : ahead, id);
     }, QUIET);
     return true;
   });
@@ -284,18 +268,7 @@ export function steps(read: () => Beats): () => void {
   window.addEventListener('keydown', onKey);
 
   /* A scrollbar drag is native to the glide; it reports it clear 400 ms after it stops: settle then. */
-  let moved = 0;
-  let prevScroll = lenis.scroll;
   const onScroll = (l: Lenis) => {
-    if (Math.abs(l.scroll - prevScroll) > 0.5) moved = Math.sign(l.scroll - prevScroll);
-    prevScroll = l.scroll;
-    if (l.isScrolling === false && !wasNative && !flight) {
-      const soft = softs();
-      if (soft.length > 1 && l.scroll > soft[0] && l.scroll < soft[soft.length - 1]) {
-        const b = softTarget(soft, l.scroll, moved);
-        if (Math.abs(b - l.scroll) > 2) go(b);
-      }
-    }
     if (l.isScrolling === 'native') wasNative = true;
     else if (l.isScrolling === false && wasNative) {
       wasNative = false;

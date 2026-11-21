@@ -5,7 +5,7 @@ import { VIEWBOX } from './logo-paths';
 import { CLOSE, PARA, RISE, RISEN, riseAt, stateAt, WHY } from './Pour';
 import { luminance, toneOf } from './Topp';
 import { nearest } from './Trinn';
-import { softTarget, touchTarget } from '@/lib/steps';
+import { touchTarget } from '@/lib/steps';
 import { snapPoints } from './Takt';
 
 describe('Kameleon: the header reads the ground under it', () => {
@@ -109,16 +109,3 @@ test('the logo goes to the header once the page leaves the top, back to the hero
   expect(flightGoal(H * 0.04, H, 0)).toBe(0);
 });
 
-test('free scroll after Visjon: a rest goes on the way the page moved, once past a nudge', () => {
-  const soft = [2976, 4033, 5088];
-  // up a third of a panel pair from 4033: on up to 2976, not back down (the owner, 2026-11-21)
-  expect(softTarget(soft, 3700, -1)).toBe(2976);
-  expect(softTarget(soft, 3900, -1)).toBe(2976);
-  // a few pixels is no wish: back
-  expect(softTarget(soft, 4000, -1)).toBe(4033);
-  // down the same
-  expect(softTarget(soft, 4300, 1)).toBe(5088);
-  expect(softTarget(soft, 4060, 1)).toBe(4033);
-  // no direction known: the nearest
-  expect(softTarget(soft, 4300, 0)).toBe(4033);
-});

@@ -44,10 +44,10 @@ export function readBeats(): Beats {
   });
   // On a laptop the chapter turn runs straight on to the track's start: from the poster one gesture
   // carries to «Dette ønsker vi å skape» (the owner, 2026-11-21: the scroll between them was long; «it
-  // should easily just lock to» it). From there on the scroll is free («almost a free scroll»): the
-  // panels no longer stop one a gesture, the page only eases to the nearest pair once it comes to
-  // rest, so no panel stands cut in half. A phone keeps its track zone.
-  if (!plainMarks.length && track.length) return { zones: [[...zone, track[0]]], marks, soft: track };
+  // should easily just lock to» it). From there on the scroll is wholly free, with no pull at all (the
+  // owner, 2026-11-21: «from the second you hit "this is what we want to create," make it
+  // free-flowing … there's still some magnetism»). A phone keeps its track zone.
+  if (!plainMarks.length && track.length) return { zones: [[...zone, track[0]]], marks };
   return { zones: [plainMarks.length ? [] : zone, track], marks: [...plainMarks, ...marks] };
 }
 
