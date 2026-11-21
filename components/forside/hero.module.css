@@ -57,7 +57,7 @@
 
 .w {
   display: inline-block;
-  transition: transform 1.05s var(--ease-out) calc(var(--i) * 70ms);
+  transition: transform 0.84s var(--ease-out) calc(var(--i) * 56ms);
 }
 
 .side {
@@ -69,8 +69,8 @@
   margin-top: 3vh;
   padding-bottom: 6px;
   transition:
-    opacity 0.9s var(--ease-out) 0.2s,
-    transform 1.1s var(--ease-out) 0.2s;
+    opacity 0.72s var(--ease-out) 0.16s,
+    transform 0.88s var(--ease-out) 0.16s;
 }
 
 .lede {
@@ -87,8 +87,8 @@
   justify-content: center;
   gap: 14px 28px;
   transition:
-    opacity 0.8s var(--ease-out) 0.3s,
-    transform 1s var(--ease-out) 0.3s;
+    opacity 0.64s var(--ease-out) 0.24s,
+    transform 0.8s var(--ease-out) 0.24s;
 }
 
 /*
@@ -156,7 +156,7 @@
 .arr {
   position: absolute;
   inset: 0;
-  animation: arr 1.3s var(--ease-out) 0.1s both;
+  animation: arr 1.04s var(--ease-out) 0.08s both;
 }
 
 @keyframes arr {
@@ -327,8 +327,8 @@
 
   .w {
     transition:
-      color 0.9s ease-in-out,
-      text-shadow 0.9s ease-in-out;
+      color 0.72s ease-in-out,
+      text-shadow 0.72s ease-in-out;
   }
 
   :global(html[data-js]) .hero:not([data-go]) .w {

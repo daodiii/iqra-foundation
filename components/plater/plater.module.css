@@ -376,11 +376,14 @@
   overflow: hidden;
   background: var(--navy-deep);
 }
-/* the first part starts at once, at the top of its plate, not at its foot */
-.rest > .plate:first-child {
+/* every part is as tall as its text, starting at the top of its plate: a short paragraph used to
+   stand at the foot of a whole screen of colour (the owner, 2026-11-21: «a lot of empty space … a
+   lot more tight on the sub pages») */
+.rest > .plate {
   align-items: flex-start;
   min-height: 0;
-  padding-top: clamp(48px, 8vh, 80px);
+  padding-top: clamp(48px, 7vh, 80px);
+  padding-bottom: clamp(48px, 7vh, 80px);
 }
 
 @media (max-width: 900px) {
@@ -400,6 +403,13 @@
   .rest {
     margin: 0;
     border-radius: 0;
+  }
+  .side > .plate {
+    min-height: 0;
+  }
+  .rest > .plate {
+    padding-top: 48px;
+    padding-bottom: 48px;
   }
 }
 

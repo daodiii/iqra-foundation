@@ -72,6 +72,20 @@
   height: 0;
 }
 
+/* «Foundation» under the mark (Merke.tsx Ordmerke): spread across the width it is given, as in the
+   official lockup; its size and colour come from the caller (--ord-size, --ord-color) */
+.ord {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-instrument), system-ui, sans-serif;
+  font-size: var(--ord-size, 12px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--ord-color, #fff);
+  pointer-events: none;
+}
+
 /* A line of a text that glides in (Lines.tsx): its mask, and the line in it */
 .ln {
   display: block;

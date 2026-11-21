@@ -14,8 +14,8 @@ const VB = VIEWBOX;
 const R = VB[3] / VB[2];
 const VIEW = VB.join(' ');
 /** The pour's length once it starts, and when it starts by itself. */
-const POUR_MS = 900;
-const AUTO_MS = 1000;
+const POUR_MS = 720;
+const AUTO_MS = 800;
 /** The logo's glide between the hero and the header, either way. */
 export const FLY_MS = 700;
 /** It leaves for the header once the page is this far down (share of a screen), and comes back below DOWN. */
@@ -181,8 +181,8 @@ export function Hero() {
       const dt = last === null ? 16 : Math.min(50, now - last);
       last = now;
       // the light swings round over the opening, then turns toward the pointer
-      if (ts < 2300) {
-        angle = ((215 + eio((ts - 500) / 1800) * 110) * Math.PI) / 180;
+      if (ts < 1840) {
+        angle = ((215 + eio((ts - 400) / 1440) * 110) * Math.PI) / 180;
         want = angle;
         light();
       } else if (Math.abs(want - angle) > 1e-4) {
