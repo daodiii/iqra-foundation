@@ -378,12 +378,17 @@
 }
 /* every part is as tall as its text, starting at the top of its plate: a short paragraph used to
    stand at the foot of a whole screen of colour (the owner, 2026-11-21: «a lot of empty space … a
-   lot more tight on the sub pages») */
+   lot more tight on the sub pages»), then as tall as its text was too tight: «somewhere in the
+   middle» */
 .rest > .plate {
   align-items: flex-start;
   min-height: 0;
-  padding-top: clamp(48px, 7vh, 80px);
-  padding-bottom: clamp(48px, 7vh, 80px);
+  padding-top: clamp(96px, 17vh, 180px);
+  padding-bottom: clamp(96px, 17vh, 180px);
+}
+/* the first part sits right under the rounded corner, as before */
+.rest > .plate:first-child {
+  padding-top: clamp(48px, 8vh, 80px);
 }
 
 @media (max-width: 900px) {
@@ -408,8 +413,11 @@
     min-height: 0;
   }
   .rest > .plate {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+  .rest > .plate:first-child {
     padding-top: 48px;
-    padding-bottom: 48px;
   }
 }
 

@@ -31,6 +31,7 @@ const QUIET = 90; /* ms without input before a drag that simply stopped settles 
 const TRICKLE = 180; /* px of a spent gesture's momentum swallowed after the glide has landed */
 const HALF = 0.45; /* a new push the same way past this much of a glide asks for the next beat */
 const SPIN = 300; /* px of notches more in a spent spin of the wheel that move on another beat */
+const LULL = 320; /* ms of rest before a touchpad swipe the same way counts as new after a glide */
 const PAUSE = 80; /* ms between events that make a fresh push a new wish rather than momentum (carry.ts gestures) */
 
 /** Tidy a run of beats: in the page, sorted, near ones merged. */
@@ -138,7 +139,11 @@ export function steps(read: () => Beats): () => void {
       // Its deltas can be as big as a wheel's notch, so it is told apart by the missing pause alone (a
       // real new notch or swipe comes after a pause: carry.ts gestures), and a surge never counts as
       // a spin of the wheel either.
-      const surge = lastSpent >= 0 && g.id === lastSpent + 1 && g.dir === spentDir && gap <= PAUSE;
+      // A touchpad's momentum can also stall: a slow frame (the crimson dot opening) held it back 150
+      // to 200 ms, and the slow tail after the stall was read as a new swipe that went on past
+      // «Hvorfor vi finnes» (the owner, 2026-11-21, after #102). So for fingers a new swipe the same
+      // way needs a real rest, LULL, before it; a wheel's notch keeps PAUSE.
+      const surge = lastSpent >= 0 && g.id === lastSpent + 1 && g.dir === spentDir && gap <= (g.notch ? PAUSE : LULL);
       if (surge) spent = surged = g.id;
       // where this gesture began: its beat is counted from there, so a flick that starts above a zone
       // and carries into it still stops at the zone's first beat
