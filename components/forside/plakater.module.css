@@ -295,24 +295,18 @@
     font-size: 24px;
   }
 
+  /* one under another, no sideways row: a swipe anywhere on them scrolls the page on to the news
+     (the owner, 2026-11-22: «no matter where you touch on the mobile, it should not scroll on the
+     arrangement part»). Shorter than 3:4, like the desktop's, so three do not fill three screens. */
   .posters {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
+    grid-template-columns: 1fr;
     gap: 14px;
-    margin: 0 calc(var(--gutter) * -1);
-    padding: 0 var(--gutter) 24px;
-    scrollbar-width: none;
   }
 
-  .posters::-webkit-scrollbar {
-    display: none;
-  }
-
-  .posters > li {
-    flex: none;
-    width: 76vw;
-    scroll-snap-align: center;
+  .po {
+    aspect-ratio: auto;
+    max-height: none;
+    min-height: clamp(220px, 30vh, 280px);
   }
 
   .strip {
