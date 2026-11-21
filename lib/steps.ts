@@ -23,6 +23,9 @@ import { setGestureHandler, smooth } from './smooth';
 export interface Beats {
   zones: number[][];
   marks: number[];
+  /* Free scrolling, but once the page comes to rest between the first and last of these it eases
+     to the nearest one: no stop per gesture, only no resting half way. */
+  soft?: number[];
 }
 
 const TOL = 40; /* beats closer than this merge; within this of a beat counts as standing on it */
@@ -253,6 +256,13 @@ export function steps(read: () => Beats): () => void {
 
   /* A scrollbar drag is native to the glide; it reports it clear 400 ms after it stops: settle then. */
   const onScroll = (l: Lenis) => {
+    if (l.isScrolling === false && !wasNative && !flight) {
+      const soft = clean(read().soft ?? [], limit());
+      if (soft.length > 1 && l.scroll > soft[0] && l.scroll < soft[soft.length - 1]) {
+        const b = nearest(soft, l.scroll);
+        if (Math.abs(b - l.scroll) > 2) go(b);
+      }
+    }
     if (l.isScrolling === 'native') wasNative = true;
     else if (l.isScrolling === false && wasNative) {
       wasNative = false;
