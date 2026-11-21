@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { klient } from '@/content/klient.no';
-import { clamp, eio, eo, onFrame, pageKey, PLAIN_POUR, plainPour, reducedMotion, repainted } from './frame';
+import { clamp, eio, onFrame, pageKey, PLAIN_POUR, plainPour, reducedMotion } from './frame';
 import { Lines } from './Lines';
 import { SWOOSH } from './logo-paths';
 import f from './forside.module.css';
@@ -12,33 +12,29 @@ type On = { tx: boolean; h: boolean; lead: boolean; more: boolean };
 
 /*
  * Where things happen, in screens scrolled into the scene (the stage's height). The white covers the
- * hero by 1; the paragraph rests at PARA (a beat, Takt.tsx); past OPEN the crimson dot rises and
- * opens by itself, on a clock (the owner, 2026-11-20: «perhaps the dot should just open automatically
- * and open the entire thing»); back above CLOSE it closes again; the poster rests at WHY (a beat).
+ * hero by 1; the paragraph rests at PARA (a beat, Takt.tsx) and drifts away past CLOSE; from RISE to
+ * RISEN the crimson «Hvorfor vi finnes» page rises over the white with the scroll, as the white rose
+ * over the hero; it rests at WHY (a beat). It replaced a crimson dot that opened by itself on a clock
+ * (the owner, 2026-11-21: «take away the dot … it doesn't really look that professional and it messes
+ * up the scrolling»: its frames stalled a touchpad's momentum).
  */
 export const PARA = 1.15;
-export const OPEN = 1.25;
 export const CLOSE = 1.18;
+export const RISE = 1.2;
+export const RISEN = 1.75;
 export const WHY = 1.8;
-/** How long the dot takes to rise and open (closing goes faster). */
-export const OPEN_MS = 1100;
 
-/** What the poster shows at open progress `o` (0–1, on the clock). */
+/** How far the crimson page has risen at scene position `s` (0 to 1, with the scroll). */
+export const riseAt = (s: number) => clamp((s - RISE) / (RISEN - RISE));
+
+/** What the poster shows at rise `o` (0–1). */
 export function stateAt(o: number): Omit<On, 'tx'> {
   return { h: o > 0.6, lead: o > 0.78, more: o > 0.92 };
 }
 
-/** The dot's way toward `want` (0 or 1) after `dt` ms: opening takes OPEN_MS, closing 60% of that. */
-export function stepOpen(o: number, want: number, dt: number): number {
-  if (o < want) return Math.min(want, o + dt / OPEN_MS);
-  if (o > want) return Math.max(want, o - dt / (OPEN_MS * 0.6));
-  return o;
-}
-
 /**
- * The pour scene: the white sheet over the hero, the opening paragraph, and the crimson dot that
- * opens into «Hvorfor vi finnes». The sheet and the paragraph follow the scroll exactly; the dot,
- * once called, plays on its own clock.
+ * The pour scene: the white sheet over the hero, the opening paragraph, and the crimson page of
+ * «Hvorfor vi finnes» rising over it. All of it follows the scroll exactly.
  */
 export function Pour() {
   const sc = useRef<HTMLDivElement>(null);
@@ -59,9 +55,8 @@ export function Pour() {
     const stage = el?.firstElementChild as HTMLElement | null;
     const hero = document.querySelector<HTMLElement>('[data-hero]');
     const heroShade = hero?.querySelector<HTMLElement>('[data-shade]');
-    const dot = red.current;
-    const inner = redIn.current;
-    if (!el || !stage || !sheet.current || !tx.current || !dot || !inner || !tone.current) return;
+    const crimson = red.current;
+    if (!el || !stage || !sheet.current || !tx.current || !crimson || !tone.current) return;
     // on a phone the paragraph and the poster stand plain and open (pour.module.css): nothing to play
     if (plainPour()) {
       const g = tone.current.querySelector('g');
@@ -72,20 +67,14 @@ export function Pour() {
     const reduce = reducedMotion();
     let fit = false;
     let shown = '';
-    let size = '';
     let held = false;
     // once the paragraph has glided in it stays in its lines; scrolling back above it fades it out
     // with the white, instead of sliding it back down its masks while it is still being read
     let seen = false;
-    let o = 0;
-    let want = 0;
-    let last: number | null = null;
     let page = '';
-    return onFrame((now) => {
-      const dt = last === null ? 16 : Math.min(50, now - last);
-      last = now;
-      // a still page with the dot at rest costs nothing
-      if (pageKey() === page && o === want) return;
+    return onFrame(() => {
+      // a still page costs nothing
+      if (pageKey() === page) return;
       page = pageKey();
       if (!fit && tone.current) {
         const g = tone.current.querySelector('g');
@@ -96,7 +85,6 @@ export function Pour() {
         }
       }
       const r = el.getBoundingClientRect();
-      const W = stage.clientWidth;
       const H = stage.clientHeight;
       // no layout yet: a 0/0 here would poison everything after it
       if (!H || r.height <= H) {
@@ -125,41 +113,16 @@ export function Pour() {
       const fade = seen ? clamp((s - 0.7) / 0.25) : 1;
       tx.current!.style.transform = `translateY(${(-H * 0.12 * away).toFixed(1)}px)`;
       tx.current!.style.opacity = ((1 - away) * fade).toFixed(3);
-      // 3: the crimson dot, called past OPEN, rises to the middle and opens to the whole screen by itself
-      if (s >= OPEN) want = 1;
-      else if (s < CLOSE) want = 0;
-      const was = o;
-      o = reduce ? want : stepOpen(o, want, dt);
-      if (o !== was) repainted();
-      const rise = eo(o / 0.28);
-      const open = eio((o - 0.18) / 0.82);
-      const full = Math.hypot(W, H) / 2 + 4;
-      if (size !== `${W}x${H}`) {
-        size = `${W}x${H}`;
-        const d = `${(2 * full).toFixed(1)}px`;
-        Object.assign(dot.style, {
-          width: d,
-          height: d,
-          margin: `${(-full).toFixed(1)}px 0 0 ${(-full).toFixed(1)}px`,
-        });
-        Object.assign(inner.style, {
-          width: `${W}px`,
-          height: `${H}px`,
-          left: `${(full - W / 2).toFixed(1)}px`,
-          top: `${(full - H / 2).toFixed(1)}px`,
-        });
-      }
-      const R = o <= 0 ? 0 : 14 + (full - 14) * open;
-      const dy = ((118 - 68 * rise) / 100) * H - H / 2;
-      if (R <= 0) {
-        dot.style.opacity = '';
-        dot.style.pointerEvents = '';
+      // 3: the crimson page rises over the white with the scroll
+      const o = riseAt(s);
+      if (o <= 0) {
+        crimson.style.opacity = '';
+        crimson.style.pointerEvents = '';
+        crimson.style.transform = '';
       } else {
-        const k = Math.min(1, R / full);
-        dot.style.opacity = '1';
-        dot.style.pointerEvents = 'auto';
-        dot.style.transform = `translate3d(0,${dy.toFixed(1)}px,0) scale(${k.toFixed(5)})`;
-        inner.style.transform = `scale(${(1 / k).toFixed(5)}) translate3d(0,${(-dy).toFixed(1)}px,0)`;
+        crimson.style.opacity = '1';
+        crimson.style.pointerEvents = 'auto';
+        crimson.style.transform = `translate3d(0,${((1 - o) * H).toFixed(1)}px,0)`;
       }
       const q = eio((o - 0.3) / 0.7);
       tone.current!.style.transform = `translate(${((1 - q) * 14).toFixed(2)}vw,${((1 - q) * 34).toFixed(2)}vh) rotate(${((1 - q) * -14).toFixed(2)}deg)`;

@@ -1,7 +1,7 @@
 /*
  * The scene after the hero (310vh, the screen holds): a flat white sheet slides up over the hero,
  * which holds back and darkens; the opening paragraph glides in line by line, rests, and drifts
- * away; the crimson dot rises out of the white and opens into the «Hvorfor vi finnes» poster.
+ * away; the crimson «Hvorfor vi finnes» page rises over the white.
  * It starts behind the hero (a screen up), so the white rises from the foot of the hero.
  */
 /*
@@ -11,7 +11,6 @@
 .sc {
   position: relative;
   z-index: 1;
-  /* the dot opens on a clock (Pour.tsx), so the scene needs only the white, the paragraph and a rest */
   height: 310vh;
   margin-top: -100vh;
   margin-top: -100svh;
@@ -60,30 +59,26 @@
 }
 
 /*
- * The crimson dot: a circle as wide as the screen's diagonal, centred on the stage and scaled down to
- * a dot. The poster inside is scaled up by the same amount and moved back, so it stands still while
- * the circle grows over it. Both are transforms, which a phone composes without repainting; the
- * clip-path circle this replaces repainted the whole screen every frame.
+ * The crimson page of «Hvorfor vi finnes»: a sheet like the white one, risen with the scroll
+ * (Pour.tsx). A transform only, which the compositor moves without repainting.
  */
 .red {
   --focus: #fff;
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
+  inset: 0;
   overflow: hidden;
   background: var(--rod);
   color: #fff;
-  /* closed: unseen and not in the pointer's way, but still read out (Pour.tsx sets the opacity) */
+  box-shadow: 0 -24px 60px -24px rgba(4, 8, 18, 0.45);
+  transform: translate3d(0, 110vh, 0);
+  /* below: unseen and not in the pointer's way, but still read out (Pour.tsx sets the opacity) */
   opacity: 0;
   will-change: transform;
 }
 
 .redIn {
   position: absolute;
-  will-change: transform;
+  inset: 0;
 }
 
 .tone {
@@ -199,11 +194,9 @@
 
 :global(html:not([data-js])) .red {
   position: relative;
-  left: auto;
-  top: auto;
-  width: auto;
-  height: auto;
-  border-radius: 0;
+  inset: auto;
+  transform: none;
+  box-shadow: none;
   opacity: 1;
   min-height: 100vh;
 }
@@ -260,7 +253,7 @@
 
 /*
  * On a phone the part after the hero is plain and open (the owner, 2026-11-20): the paragraph on white,
- * then the «Hvorfor vi finnes» poster, in the page's flow, both whole. No sheet, no dot, no glide-in;
+ * then the «Hvorfor vi finnes» poster, in the page's flow, both whole. No sheets, no glide-in;
  * scrolling back up comes straight to the text. Pour.tsx runs no scene here (frame.ts PLAIN_POUR).
  */
 @media (max-width: 900px) {
@@ -289,11 +282,9 @@
 
   .red {
     position: relative;
-    left: auto;
-    top: auto;
-    width: auto;
-    height: auto;
-    border-radius: 0;
+    inset: auto;
+    transform: none;
+    box-shadow: none;
     opacity: 1;
   }
 
