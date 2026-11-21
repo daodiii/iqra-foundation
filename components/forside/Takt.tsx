@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { WHERE } from '@/lib/smooth';
 import { clean, steps, touchSettle, type Beats } from '@/lib/steps';
 import { pageTop, plainPour } from './frame';
@@ -116,14 +116,17 @@ export function Takt() {
     };
     where.addEventListener('change', follow);
     const stopTouch = touchSettle(() => readBeats().zones);
-    const stopSnaps = phoneSnaps();
     return () => {
       where.removeEventListener('change', follow);
       cancelAnimationFrame(raf);
       stop();
       stopTouch();
-      stopSnaps();
     };
   }, []);
+  // The phone's snapping is on the whole document, so it must go with the page itself: a layout
+  // effect's cleanup runs as the front page leaves, before the next page scrolls to its top. In a
+  // plain effect it stayed on a moment longer and snapped that scroll to one of the front page's
+  // points, so every link from the front page opened the next page 650 to 950 px down (2026-11-21).
+  useLayoutEffect(() => phoneSnaps(), []);
   return null;
 }
