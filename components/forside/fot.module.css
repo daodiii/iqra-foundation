@@ -36,6 +36,18 @@
   --cf: var(--rod);
 }
 
+.lg svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* «Foundation» under the mark, as in the official lockup: about a tenth of its width */
+.lgWord {
+  margin-top: 0.7em;
+  --ord-size: clamp(16px, 1.45vw, 24px);
+}
+
 .row3 {
   grid-column: 5 / span 5;
   display: grid;

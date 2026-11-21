@@ -69,6 +69,29 @@
   --cf: var(--rod);
 }
 
+.homeWord {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 5px);
+  --ord-size: 11px;
+  --ord-color: #fff;
+  opacity: 0;
+  transition:
+    opacity 0.45s,
+    color 0.45s;
+}
+
+/* on the front page it comes with the docked logo; on a subpage it stands from the start */
+.homeWordOn,
+:global([data-forside][data-solid]) .homeWord {
+  opacity: 1;
+}
+
+:global([data-forside][data-solid][data-tone='light']) .homeWord {
+  --ord-color: var(--navy);
+}
+
 .homeMark use {
   transition: fill 0.45s;
 }
@@ -332,6 +355,11 @@
   .home {
     width: 64px;
     height: 27px;
+  }
+
+  .homeWord {
+    top: calc(100% + 3px);
+    --ord-size: 8px;
   }
 
   .nav {

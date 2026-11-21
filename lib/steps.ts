@@ -31,6 +31,7 @@ const QUIET = 90; /* ms without input before a drag that simply stopped settles 
 const TRICKLE = 180; /* px of a spent gesture's momentum swallowed after the glide has landed */
 const HALF = 0.45; /* a new push the same way past this much of a glide asks for the next beat */
 const SPIN = 300; /* px of notches more in a spent spin of the wheel that move on another beat */
+const PAUSE = 80; /* ms between events that make a fresh push a new wish rather than momentum (carry.ts gestures) */
 
 /** Tidy a run of beats: in the page, sorted, near ones merged. */
 export function clean(list: number[], max: number): number[] {
@@ -78,11 +79,18 @@ export function steps(read: () => Beats): () => void {
   let flight: { to: number; dir: number; start: number; duration: number; spun: number } | null = null;
   let spent = -1;
   let trickle = 0;
+  let lastSpent = -1; /* the last gesture a glide was given: a surge right after it is still it */
+  let spentDir = 0;
+  let surged = -1;
   const go = (to: number | undefined, gesture = -1) => {
     if (to === undefined) return;
     spent = gesture;
     trickle = 0;
     const from = lenis.animatedScroll;
+    if (gesture >= 0) {
+      lastSpent = gesture;
+      spentDir = Math.sign(to - from) || spentDir;
+    }
     const g = glide(to - from, speed);
     if (!g) {
       flight = null;
@@ -113,13 +121,31 @@ export function steps(read: () => Beats): () => void {
 
   const gesture = gestures();
   let startY = lenis.animatedScroll;
+  let prevT = -Infinity;
   setGestureHandler(({ deltaX, deltaY, event }: VirtualScrollData) => {
     if (event.type.startsWith('touch') || (event as WheelEvent).ctrlKey || !deltaY || lenis.isStopped) return true;
     if (Math.abs(deltaX) > Math.abs(deltaY)) return true;
-    const g = gesture(event.timeStamp || performance.now(), deltaY);
-    // where this gesture began: its beat is counted from there, so a flick that starts above a zone
-    // and carries into it still stops at the zone's first beat
-    if (g.fresh) startY = lenis.animatedScroll;
+    const t = event.timeStamp || performance.now();
+    const g = gesture(t, deltaY);
+    const gap = t - prevT;
+    prevT = t;
+    if (g.fresh) {
+      // A «push» read inside an unbroken stream (no pause, same way) is a touchpad's own
+      // momentum surging, not a new wish: a laptop's touchpad sends uneven momentum, and a surge read
+      // as a push while the glide was past half way sent the page on past the paragraph straight to
+      // «Hvorfor vi finnes» (the owner, 2026-11-21: «sometimes it doesn't go to the next part»). It
+      // inherits the spent gesture's place, so it can never ask for another beat.
+      // Its deltas can be as big as a wheel's notch, so it is told apart by the missing pause alone (a
+      // real new notch or swipe comes after a pause: carry.ts gestures), and a surge never counts as
+      // a spin of the wheel either.
+      const surge = lastSpent >= 0 && g.id === lastSpent + 1 && g.dir === spentDir && gap <= PAUSE;
+      if (surge) spent = surged = g.id;
+      // where this gesture began: its beat is counted from there, so a flick that starts above a zone
+      // and carries into it still stops at the zone's first beat
+      else startY = lenis.animatedScroll;
+    }
+    if (spent >= 0) lastSpent = spent;
+    if (spent === g.id) spentDir = g.dir;
     window.clearTimeout(quiet);
     flying();
 
@@ -127,7 +153,7 @@ export function steps(read: () => Beats): () => void {
        asks for another beat; after landing a little more trickles in, then it is free. */
     if (g.id === spent) {
       if (flight) {
-        if (g.notch && g.dir === flight.dir && (flight.spun += Math.abs(deltaY)) >= SPIN && through() > 0.3) {
+        if (g.notch && g.id !== surged && g.dir === flight.dir && (flight.spun += Math.abs(deltaY)) >= SPIN && through() > 0.3) {
           const z = zoneAt(flight.to);
           go(z && next(z, flight.to, g.dir), g.id);
         }
@@ -177,7 +203,8 @@ export function steps(read: () => Beats): () => void {
       if (!zone) return;
       const y = lenis.targetScroll;
       const near = nearest(zone, y);
-      go(Math.abs(near - y) <= SNAP ? near : (next(zone, lenis.animatedScroll, g.dir) ?? near), id);
+      // counted from where the gesture began, like a flick: a slow drag that ran past a beat stops there
+      go(Math.abs(near - y) <= SNAP ? near : (next(zone, startY, g.dir) ?? near), id);
     }, QUIET);
     return true;
   });

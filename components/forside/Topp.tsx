@@ -7,7 +7,7 @@ import { klient } from "@/content/klient.no";
 import { site } from "@/content/site.no";
 import { onFrame, pageKey, paintKey } from "./frame";
 import { Knapp } from "./Knapp";
-import { MARK } from "./Merke";
+import { MARK, Ordmerke } from "./Merke";
 import { VIEWBOX } from "./logo-paths";
 import f from "./forside.module.css";
 import styles from "./topp.module.css";
@@ -245,6 +245,9 @@ export function Topp({ mark = false }: { mark?: boolean }) {
                 <use href={`#${MARK}`} />
               </svg>
             )}
+            {/* «Foundation» under the slot: with the mark from the start on a subpage; on the front
+                page once the hero's logo has docked, never in the hero itself (the owner, 2026-11-21) */}
+            <Ordmerke className={`${styles.homeWord} ${mark ? styles.homeWordOn : ''}`} />
           </Link>
           <nav className={styles.nav} aria-label={site.header.navLabel}>
             {LINKS.map((l) =>

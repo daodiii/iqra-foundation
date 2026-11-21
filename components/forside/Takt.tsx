@@ -42,6 +42,10 @@ export function readBeats(): Beats {
     const el = document.querySelector<HTMLElement>(s);
     return el ? [pageTop(el)] : [];
   });
+  // On a laptop the chapter turn runs straight on into the track: from the poster one gesture carries
+  // to «Dette ønsker vi å skape» (the owner, 2026-11-21: the scroll between them was long; «it should
+  // easily just lock to» it). A phone keeps them apart.
+  if (!plainMarks.length && track.length) return { zones: [[...zone, ...track]], marks };
   return { zones: [plainMarks.length ? [] : zone, track], marks: [...plainMarks, ...marks] };
 }
 
