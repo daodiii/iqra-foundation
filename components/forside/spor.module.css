@@ -213,72 +213,6 @@
   }
 }
 
-/*
- * Desktop (the owner, 2026-11-20: «make the tiles on one line, at least on desktop, … it seems like it's
- * room for it»): no sideways walk. The title and intro sit as in «Hvorfor vi finnes» (title left,
- * text right), and the three panels stand under them in one row, spaced like the event posters.
- */
-@media (min-width: 901px) {
-  .spor {
-    height: auto;
-    padding: clamp(120px, 17vh, 190px) var(--gutter) clamp(110px, 16vh, 170px);
-  }
-
-  .stg {
-    position: static;
-    height: auto;
-    overflow: visible;
-  }
-
-  .trk {
-    position: static;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(16px, 1.8vw, 30px);
-    align-items: stretch;
-    padding: 0;
-    transform: none !important;
-  }
-
-  .p0 {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 0 24px;
-    align-items: start;
-    width: auto;
-    padding-right: 0;
-    margin-bottom: clamp(40px, 6vh, 72px);
-  }
-
-  .p0 > :first-child {
-    grid-column: 1 / span 6;
-  }
-
-  .ingress {
-    grid-column: 7 / span 6;
-    margin: 0;
-    max-width: 34em;
-  }
-
-  .cd {
-    width: auto;
-    height: auto;
-    min-height: clamp(380px, 54vh, 540px);
-    padding: clamp(28px, 2.6vw, 44px);
-  }
-
-  .cd h3 {
-    max-width: none;
-    margin-top: clamp(28px, 4vh, 48px);
-  }
-
-  .ik {
-    width: clamp(88px, 7vw, 124px);
-    transform: none !important;
-  }
-}
-
 /* Without JavaScript the panels stand in a row that scrolls sideways by hand. */
 :global(html:not([data-js])) .spor {
   height: auto;
@@ -302,5 +236,20 @@
     opacity: 1 !important;
     transform: none !important;
     stroke-dashoffset: 0 !important;
+  }
+}
+
+/*
+ * Desktop: every title on one line (the owner, 2026-11-21: «I meant the titles, if they can fit in one
+ * line»). The panel title no longer breaks after «og», and the intro keeps less room at its right so
+ * «Dette ønsker vi å skape» fits its column.
+ */
+@media (min-width: 901px) {
+  .p0 {
+    padding-right: 2vw;
+  }
+
+  .cd h3 {
+    max-width: none;
   }
 }
