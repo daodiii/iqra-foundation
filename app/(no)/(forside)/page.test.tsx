@@ -93,15 +93,15 @@ describe('Hjem, the owner’s redesign', () => {
     expect(within(aktuelt).getByRole('link', { name: site.pages.home.allEvents })).toHaveAttribute('href', '/aktuelt/arrangementer');
   });
 
-  test('with nothing published, three sample events and three sample news posts stand in, each marked «Eksempel»', () => {
+  test('with nothing published, each list says so and no sample stands in (the site went live, 2026-11-22)', () => {
     data.news = [];
     data.events = [];
     const { container } = page();
     const aktuelt = container.querySelector('section#aktuelt') as HTMLElement;
-    expect(within(aktuelt).queryByText(site.pages.news.emptyUpcoming)).toBeNull();
-    expect(within(aktuelt).queryByText(site.pages.news.emptyNews)).toBeNull();
-    expect(within(aktuelt).getAllByRole('heading', { level: 4 })).toHaveLength(6);
-    expect(within(aktuelt).getAllByText('Eksempel')).toHaveLength(6);
+    expect(within(aktuelt).getByText(site.pages.news.emptyUpcoming)).toBeInTheDocument();
+    expect(within(aktuelt).getByText(site.pages.news.emptyNews)).toBeInTheDocument();
+    expect(within(aktuelt).queryAllByRole('heading', { level: 4 })).toHaveLength(0);
+    expect(within(aktuelt).queryByText('Eksempel')).toBeNull();
   });
 
   test('«Sammen kan vi gjøre en forskjell» and its two buttons', () => {

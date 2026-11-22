@@ -151,8 +151,6 @@ export const site = {
     en: { short: 'EN', name: 'English' },
     inNorwegian: 'På norsk',
   },
-  /** The mark on a sample post or event, standing in while nothing real is published. */
-  sample: 'Eksempel',
   /** The months, in full: a date is written out as «24. september 2026». */
   months: ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'],
   pages: {

@@ -39,13 +39,14 @@ describe('Home, in English (2026-11-22)', () => {
     expect(within(main).getAllByRole('heading', { level: 2 }).map((e) => e.textContent)).toEqual([h.why.title, h.create.title, h.action.title, site.pages.news.upcoming, site.pages.news.newsTitle, h.together.title]);
   });
 
-  test('while nothing is published, the samples are English and marked «Example»', () => {
+  test('while nothing is published, each list says so in English and no sample stands in', () => {
     data.news = [];
     data.events = [];
     page();
-    expect(screen.getByText('Open lecture: knowledge and society')).toBeInTheDocument();
-    expect(screen.getByText('A new series of open lectures this winter')).toBeInTheDocument();
-    expect(screen.getAllByText(site.sample).length).toBeGreaterThanOrEqual(6);
+    expect(screen.getByText(site.pages.news.emptyUpcoming)).toBeInTheDocument();
+    expect(screen.getByText(site.pages.news.emptyNews)).toBeInTheDocument();
+    expect(screen.queryByText('Example')).toBeNull();
+    expect(screen.queryByText('Open lecture: knowledge and society')).toBeNull();
   });
 
   test('what an editor wrote stays Norwegian, says so, and carries lang="nb"', () => {

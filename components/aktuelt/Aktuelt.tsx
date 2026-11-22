@@ -5,7 +5,6 @@ import { PATHS, type Lang } from '@/content/paths';
 import { getEvents, getNews, splitEvents, todayISO, type Event, type NewsItem } from '@/lib/content';
 import { writeDate, writeDateTime } from '@/lib/dates';
 import { newsHref, type View } from './links';
-import { samplesFor } from './samples';
 import { AktueltPlater } from './AktueltPlater';
 
 export { ARCHIVE_HREF, VIEWS, viewsFor, newsHref, type View } from './links';
@@ -80,25 +79,11 @@ export function EventCard({ e, archive = false, lang = 'no' }: { e: Event; archi
  * Arrangementer (M3) — and their text (D5), set as «Platene» (AktueltPlater.tsx, mock 42, 2026-11-20).
  * Under Arrangementer the past events stand as the archive, which also has a page of its own.
  * Events move from upcoming to the archive by date on their own (`revalidate` on the routes).
- * While nothing is published the page shows the front page's samples, marked «Eksempel».
+ * While a collection is empty its list says so in the site's own words.
  */
 export function Aktuelt({ view, lang = 'no' }: { view: View; lang?: Lang }) {
-  const samples = samplesFor(lang);
-  const realNews = getNews();
-  const { upcoming: realUpcoming, past } = splitEvents(getEvents(), todayISO());
-  const sampleNews = !realNews.length;
-  const sampleEvents = !realUpcoming.length;
-  return (
-    <AktueltPlater
-      view={view}
-      lang={lang}
-      news={sampleNews ? samples.news : realNews}
-      upcoming={sampleEvents ? samples.events : realUpcoming}
-      past={past}
-      sampleNews={sampleNews}
-      sampleEvents={sampleEvents}
-    />
-  );
+  const { upcoming, past } = splitEvents(getEvents(), todayISO());
+  return <AktueltPlater view={view} lang={lang} news={getNews()} upcoming={upcoming} past={past} />;
 }
 
 /** The archive: every past event, newest first, with its write-up and recording where they exist. */

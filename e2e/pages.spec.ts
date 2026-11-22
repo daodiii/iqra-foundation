@@ -67,14 +67,16 @@ test.describe('the collections are honest while empty', () => {
     await expect(page.getByRole('main').getByText(klient.news.newsText, { exact: true })).toBeVisible();
     await expect(page.getByRole('main').getByText(klient.news.eventsText, { exact: true })).toHaveCount(0);
     if (news.length) for (const n of news) await expect(page.getByRole('heading', { name: n.title })).toBeVisible();
-    // while nothing is published, the board shows the front page's three samples, each marked «Eksempel»
-    else await expect(page.getByRole('main').getByText('Eksempel', { exact: true })).toHaveCount(3);
+    else await expect(page.getByText(t.emptyNews, { exact: true })).toBeVisible();
+    // no sample stands in on the live site (2026-11-22)
+    await expect(page.getByRole('main').getByText('Eksempel', { exact: true })).toHaveCount(0);
     await page.goto('/aktuelt/arrangementer');
     await expect(page.getByRole('main').getByText(klient.news.eventsText, { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: t.upcoming })).toBeVisible();
     await expect(page.getByRole('heading', { name: t.past })).toBeVisible();
     if (upcoming.length) for (const e of upcoming) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
-    else await expect(page.getByRole('main').getByText('Eksempel', { exact: true })).toHaveCount(3);
+    else await expect(page.getByText(t.emptyUpcoming, { exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByText('Eksempel', { exact: true })).toHaveCount(0);
     if (past.length) for (const e of past) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
     else await expect(page.getByText(t.emptyPast, { exact: true }).first()).toBeVisible();
     await page.getByRole('link', { name: t.archiveLink }).click();

@@ -334,7 +334,7 @@ export function Topp({ mark = false }: { mark?: boolean }) {
 /**
  * The phone's menu, «Kortet» (mock 48, the owner's pick of 2026-11-20): a white sheet that comes up from
  * the foot over the dimmed page, every page in it with the pages under Om oss and Aktuelt set in under
- * their item, the page you are on in burgundy, Støtt oss as the button at its foot. Esc, Lukk or a tap
+ * their item, the page you are on in burgundy, Støtt oss as the button at its foot, «NO · EN» at its top. Esc, Lukk or a tap
  * on the page closes it, focus stays inside while it is open, and the page under it holds still.
  */
 function Meny({
@@ -404,6 +404,8 @@ function Meny({
       <div className={styles.sheet}>
         <div className={styles.sheetTop}>
           <i className={styles.grab} aria-hidden="true" />
+          {/* «NO · EN» at the very top of the sheet, large (2026-11-22): it does not fit in the phone's bar */}
+          <LangSwitch className={styles.mnuLang} />
           <button
             type="button"
             className={styles.close}
@@ -457,7 +459,6 @@ function Meny({
           <span>{SUPPORT.label}</span>
           <span aria-hidden="true">→</span>
         </Link>
-        <LangSwitch className={styles.mnuLang} />
       </div>
     </div>
   );

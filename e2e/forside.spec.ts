@@ -44,11 +44,11 @@ test('the client’s front page in their order, every word theirs', async ({ pag
   const { upcoming } = splitEvents(getEvents(), todayISO());
   const aktuelt = main.locator('section#aktuelt');
   if (news.length) for (const n of news) await expect(aktuelt.getByRole('heading', { name: n.title })).toBeAttached();
-  // with none published, the three sample news posts stand in (Forside.tsx shownNews)
-  else await expect(aktuelt.locator('[data-sv]').getByText('Eksempel', { exact: true })).toHaveCount(3);
+  else await expect(aktuelt.getByText(site.pages.news.emptyNews, { exact: true })).toBeAttached();
   if (upcoming.length) for (const e of upcoming.slice(0, 3)) await expect(aktuelt.getByRole('heading', { name: e.title })).toBeAttached();
-  // with none coming, the three sample posters stand in (Forside.tsx shownEvents)
-  else await expect(aktuelt.locator('[data-po]').getByText('Eksempel', { exact: true })).toHaveCount(3);
+  else await expect(aktuelt.getByText(site.pages.news.emptyUpcoming, { exact: true })).toBeAttached();
+  // no sample stands in on the live site (2026-11-22)
+  await expect(aktuelt.getByText('Eksempel', { exact: true })).toHaveCount(0);
   await expect(aktuelt.getByRole('link', { name: h.news.all })).toHaveAttribute('href', '/aktuelt/nyheter');
   const sammen = main.locator('section#sammen');
   await expect(sammen.getByRole('link', { name: site.cta.partner.label })).toHaveAttribute('href', site.cta.partner.href);
