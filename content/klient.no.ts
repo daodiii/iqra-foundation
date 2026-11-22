@@ -32,15 +32,15 @@ export const klient = {
   home: {
     headline: 'Kunnskap som inspirerer. Fellesskap som styrker.',
     paragraphs: [
-      'Iqra Foundation er en allmennyttig stiftelse i Oslo som arbeider for kunnskap, dialog, gjensidig forståelse og aktiv samfunnsdeltakelse. Arbeidet vårt bygger på islamske verdier og prinsipper, og retter seg særlig mot ungdom og voksne.',
-      'Vi skaper møteplasser der mennesker kan lære, utveksle erfaringer og ta ansvar – for egen utvikling og for samfunnet rundt seg.',
+      'Iqra Foundation er en allmennyttig stiftelse i Oslo, bygget på islamske verdier og prinsipper. Vi arbeider for kunnskap og dialog, og for at folk skal forstå hverandre og ta aktivt del i samfunnet. Vi retter oss særlig mot ungdom og voksne.',
+      'På møteplassene våre kan folk lære, dele erfaringer og ta ansvar for egen utvikling og for samfunnet rundt seg.',
     ],
     buttons: { about: 'Les mer om oss', events: 'Se kommende arrangementer' },
     why: {
       title: 'Hvorfor vi finnes',
       paragraphs: [
-        'Kunnskap gir mennesker forutsetninger for å forstå sin egen situasjon, delta i samfunnet og påvirke det. Samtidig skapes tillit og fellesskap når mennesker med ulik bakgrunn møtes, lytter og samarbeider.',
-        'Iqra Foundation er opprettet for å bygge en varig og uavhengig plattform for nettopp dette: et sted der læring, refleksjon og engasjement kan utvikles over tid, og der mennesker får verktøy til å bidra aktivt i det norske samfunnet.',
+        'Med kunnskap kan mennesker forstå sin egen situasjon, delta i samfunnet og påvirke det. Når folk med ulik bakgrunn møtes, lytter og samarbeider, vokser det fram tillit og fellesskap.',
+        'Iqra Foundation ble opprettet for å gi dette et varig og uavhengig sted. Her skal læring og engasjement få tid til å vokse. Folk skal få verktøy til å bidra aktivt i det norske samfunnet.',
       ],
     },
     /** M2: replaces the four boxes Kunnskap, Samfunnsdeltakelse, Dialog and Møteplasser. */
@@ -77,7 +77,7 @@ export const klient = {
   /** D2: Om Iqra Foundation. */
   about: {
     title: 'Om Iqra Foundation',
-    intro: 'Iqra Foundation STI er en privat, selveiende og allmennyttig stiftelse med forretningskontor i Oslo (org.nr. 817 388 752). Stiftelsen er opprettet og drives i samsvar med lov om stiftelser og er underlagt tilsyn av Stiftelsestilsynet.',
+    intro: 'Iqra Foundation STI er en allmennyttig stiftelse med forretningskontor i Oslo. Den er privat og selveiende, og organisasjonsnummeret er 817 388 752. Stiftelsen er opprettet og drives etter lov om stiftelser, og Stiftelsestilsynet fører tilsyn med den.',
     name: {
       title: 'Navnet Iqra',
       text: 'Iqra er arabisk og betyr «les». Ordet er det første som ble åpenbart i Koranen, og det uttrykker en grunnleggende oppfordring til å søke kunnskap og forståelse. Navnet sier hva vi står for: at læring og opplysning er selve fundamentet for menneskelig utvikling og et godt samfunn.',
@@ -129,7 +129,7 @@ export const klient = {
       { title: 'Dialog og gjensidig forståelse', text: 'Vi tar initiativ til samtaler og samarbeid mellom mennesker og miljøer som sjelden møtes. Målet er økt kulturforståelse, færre fordommer og sterkere tillit i samfunnet.' },
       { title: 'Prosjekter, frivillighet og lederskap', text: 'Vi initierer, støtter og gjennomfører prosjekter som fremmer deltakelse, frivillighet, lederskap og samfunnsansvar. Vi ønsker særlig å gi ungdom og unge voksne erfaring med å ta ansvar, lede prosesser og engasjere seg i lokalsamfunnet.' },
       { title: 'Kunnskapsformidling og publikasjoner', text: 'Vi produserer og formidler artikler, rapporter, digitale ressurser og annet opplysningsmateriell. Gjennom dette gjør vi faglig og samfunnsrelevant kunnskap tilgjengelig for et bredere publikum.' },
-      { title: 'Møteplasser og læringsarenaer', text: 'Vi arbeider for å etablere fysiske og digitale arenaer for læring, dialog og fellesskap. På sikt er målet å utvikle egne lokaler, som læringssenter, aktivitetssenter og konferansearena, som kan tjene både stiftelsens virksomhet og andre aktører med beslektede formål.' },
+      { title: 'Møteplasser og læringsarenaer', text: 'Vi vil skape steder der folk kan lære og møtes, fysisk og på nett. På sikt ønsker vi egne lokaler, for eksempel et læringssenter, et aktivitetssenter og en konferansearena. Stiftelsen skal bruke dem selv, og andre med beslektede formål skal også kunne bruke dem.' },
       { title: 'Samarbeid og partnerskap', text: 'Vi samarbeider med nasjonale og internasjonale organisasjoner, institusjoner og fagmiljøer når det styrker gjennomføringen av stiftelsens formål. Samarbeid skjer på grunnlag av felles mål, åpenhet og gjensidig respekt.' },
     ],
   },
@@ -171,10 +171,10 @@ export const klient = {
   /** D6 and M5: Ressurser. M5 has four categories; D6 gives texts for three (Q3). */
   resources: {
     title: 'Ressurser',
-    intro: 'Kunnskap skal være tilgjengelig og kunne deles. I ressursbiblioteket samler vi materiale som bidrar til læring, refleksjon og forståelse.',
+    intro: 'Kunnskap skal være lett å finne og lett å dele. I ressursbiblioteket samler vi materiale for læring og ettertanke.',
     categories: [
       { key: 'publikasjoner', title: 'Publikasjoner og rapporter', text: 'Faglige rapporter, notater og annet skriftlig materiale fra stiftelsens arbeid.' },
-      { key: 'artikler', title: 'Artikler og fagstoff', text: 'Fordypende innhold om kunnskap, dialog, samfunnsdeltakelse og fellesskap.' },
+      { key: 'artikler', title: 'Artikler og fagstoff', text: 'Lengre tekster om dialog, samfunnsdeltakelse og fellesskap.' },
       { key: 'videoer', title: 'Videoer og presentasjoner', text: null },
       { key: 'styringsdokumenter', title: 'Styringsdokumenter', text: 'Stiftelsens vedtekter, årsregnskap, årsberetning og andre sentrale dokumenter. Vi publiserer disse for å sikre åpenhet om hvordan stiftelsen styres og hvordan midlene brukes.' },
     ],
@@ -182,8 +182,8 @@ export const klient = {
 
   /** D7: Støtt oss. The account or Vipps number after «Gave» is not in the document (Q6). */
   support: {
-    title: 'Bidra til kunnskap, dialog og fellesskap',
-    intro: 'Iqra Foundation er avhengig av gaver og samarbeid for å kunne utvikle nye tilbud. Med din støtte kan vi gjennomføre flere kurs, arrangementer og prosjekter – og bygge møteplasser som kommer mange til gode, i dag og for kommende generasjoner.',
+    title: 'Støtt Iqra Foundation',
+    intro: 'Gaver og samarbeid er det som lar oss lage nye tilbud. Med flere gaver kan vi holde flere kurs, arrangementer og prosjekter. Vi kan også bygge møteplasser som mange får glede av i årene som kommer.',
     uses: {
       title: 'Hva bidraget går til',
       lead: 'Alle bidrag brukes utelukkende til stiftelsens allmennyttige formål, blant annet:',

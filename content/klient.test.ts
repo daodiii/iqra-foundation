@@ -24,6 +24,56 @@ const file = readFileSync(FILE, 'utf8').replaceAll(EMAIL.old, EMAIL.now);
 /** Markdown emphasis off, whitespace collapsed: what a reader of the sources sees. */
 const plain = (s: string) => s.replace(/\*/g, '').replace(/\s+/g, ' ').trim();
 
+/**
+ * Option D from the plain-copy proposal, without «du» (the owner, 2026-11-22): the client's
+ * words on the left, the site's on the right. The test reads the sources with each rewrite in
+ * place, so both directions still hold; every left side must still be in the sources.
+ */
+const REWRITES: [string, string][] = [
+  [
+    'Iqra Foundation er en allmennyttig stiftelse i Oslo som arbeider for kunnskap, dialog, gjensidig forståelse og aktiv samfunnsdeltakelse. Arbeidet vårt bygger på islamske verdier og prinsipper, og retter seg særlig mot ungdom og voksne.',
+    'Iqra Foundation er en allmennyttig stiftelse i Oslo, bygget på islamske verdier og prinsipper. Vi arbeider for kunnskap og dialog, og for at folk skal forstå hverandre og ta aktivt del i samfunnet. Vi retter oss særlig mot ungdom og voksne.',
+  ],
+  [
+    'Vi skaper møteplasser der mennesker kan lære, utveksle erfaringer og ta ansvar – for egen utvikling og for samfunnet rundt seg.',
+    'På møteplassene våre kan folk lære, dele erfaringer og ta ansvar for egen utvikling og for samfunnet rundt seg.',
+  ],
+  [
+    'Kunnskap gir mennesker forutsetninger for å forstå sin egen situasjon, delta i samfunnet og påvirke det. Samtidig skapes tillit og fellesskap når mennesker med ulik bakgrunn møtes, lytter og samarbeider.',
+    'Med kunnskap kan mennesker forstå sin egen situasjon, delta i samfunnet og påvirke det. Når folk med ulik bakgrunn møtes, lytter og samarbeider, vokser det fram tillit og fellesskap.',
+  ],
+  [
+    'Iqra Foundation er opprettet for å bygge en varig og uavhengig plattform for nettopp dette: et sted der læring, refleksjon og engasjement kan utvikles over tid, og der mennesker får verktøy til å bidra aktivt i det norske samfunnet.',
+    'Iqra Foundation ble opprettet for å gi dette et varig og uavhengig sted. Her skal læring og engasjement få tid til å vokse. Folk skal få verktøy til å bidra aktivt i det norske samfunnet.',
+  ],
+  [
+    'Vi arbeider for å etablere fysiske og digitale arenaer for læring, dialog og fellesskap. På sikt er målet å utvikle egne lokaler, som læringssenter, aktivitetssenter og konferansearena, som kan tjene både stiftelsens virksomhet og andre aktører med beslektede formål.',
+    'Vi vil skape steder der folk kan lære og møtes, fysisk og på nett. På sikt ønsker vi egne lokaler, for eksempel et læringssenter, et aktivitetssenter og en konferansearena. Stiftelsen skal bruke dem selv, og andre med beslektede formål skal også kunne bruke dem.',
+  ],
+  [
+    'Iqra Foundation STI er en privat, selveiende og allmennyttig stiftelse med forretningskontor i Oslo (org.nr. 817 388 752). Stiftelsen er opprettet og drives i samsvar med lov om stiftelser og er underlagt tilsyn av Stiftelsestilsynet.',
+    'Iqra Foundation STI er en allmennyttig stiftelse med forretningskontor i Oslo. Den er privat og selveiende, og organisasjonsnummeret er 817 388 752. Stiftelsen er opprettet og drives etter lov om stiftelser, og Stiftelsestilsynet fører tilsyn med den.',
+  ],
+  [
+    'Kunnskap skal være tilgjengelig og kunne deles. I ressursbiblioteket samler vi materiale som bidrar til læring, refleksjon og forståelse.',
+    'Kunnskap skal være lett å finne og lett å dele. I ressursbiblioteket samler vi materiale for læring og ettertanke.',
+  ],
+  [
+    'Fordypende innhold om kunnskap, dialog, samfunnsdeltakelse og fellesskap.',
+    'Lengre tekster om dialog, samfunnsdeltakelse og fellesskap.',
+  ],
+  [
+    'Iqra Foundation er avhengig av gaver og samarbeid for å kunne utvikle nye tilbud. Med din støtte kan vi gjennomføre flere kurs, arrangementer og prosjekter – og bygge møteplasser som kommer mange til gode, i dag og for kommende generasjoner.',
+    'Gaver og samarbeid er det som lar oss lage nye tilbud. Med flere gaver kan vi holde flere kurs, arrangementer og prosjekter. Vi kan også bygge møteplasser som mange får glede av i årene som kommer.',
+  ],
+  [
+    'Bidra til kunnskap, dialog og fellesskap',
+    'Støtt Iqra Foundation',
+  ],
+];
+const rewritten = (s: string) => REWRITES.reduce((t, [was, now]) => t.replaceAll(was, now), s);
+
+
 const [, rest] = file.split('\n## M\n');
 const [m, d] = rest.split('\n## D\n');
 
@@ -39,7 +89,7 @@ const keys = new Set<string>(klient.resources.categories.map((c) => c.key));
 const ours = strings(klient).filter((s) => !keys.has(s));
 
 describe('every string in klient.no.ts is the client’s, unchanged', () => {
-  const sources = plain(m) + ' ' + plain(d);
+  const sources = rewritten(plain(m) + ' ' + plain(d));
   test.each(ours)('%s', (s) => {
     expect(sources).toContain(plain(s));
   });
@@ -67,7 +117,7 @@ const LEFTOVERS = [
 describe('every paragraph of the client’s document is carried', () => {
   const paragraphs = d
     .split(/\n\s*\n/)
-    .map((p) => plain(p.replace(/^- /, '')))
+    .map((p) => rewritten(plain(p.replace(/^- /, ''))))
     .filter(Boolean);
   const pieces = [...ours].map(plain).sort((a, b) => b.length - a.length);
 
@@ -90,4 +140,8 @@ test('the message’s four Ressurser categories, in its order', () => {
 
 test('Menneskene bak: the five board members, and no one else', () => {
   expect(klient.people.members).toHaveLength(5);
+});
+
+test.each(REWRITES)('the rewritten text is still the client’s to begin with: %s', (was) => {
+  expect(plain(m) + ' ' + plain(d)).toContain(was);
 });

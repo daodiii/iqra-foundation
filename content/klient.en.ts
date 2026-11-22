@@ -29,15 +29,15 @@ export const klient = {
   home: {
     headline: 'Knowledge that inspires. Community that strengthens.',
     paragraphs: [
-      'Iqra Foundation is a non-profit foundation in Oslo working for knowledge, dialogue, mutual understanding and active participation in society. Our work is grounded in Islamic values and principles, and is aimed particularly at young people and adults.',
-      'We create meeting places where people can learn, share experiences and take responsibility, both for their own development and for the society around them.',
+      'Iqra Foundation is a non-profit foundation in Oslo, grounded in Islamic values and principles. We work for knowledge and dialogue, and for people to understand each other and take an active part in society. Our work is aimed particularly at young people and adults.',
+      'At our meeting places people can learn, share experiences and take responsibility for their own development and for the society around them.',
     ],
     buttons: { about: 'Read more about us', events: 'See upcoming events' },
     why: {
       title: 'Why we exist',
       paragraphs: [
-        'Knowledge gives people what they need to understand their own situation, take part in society and influence it. Trust and community also grow when people from different backgrounds meet, listen and work together.',
-        'Iqra Foundation was established to build a lasting and independent platform for exactly this: a place where learning, reflection and engagement can develop over time, and where people are given the tools to contribute actively to Norwegian society.',
+        'With knowledge, people can understand their own situation, take part in society and influence it. When people from different backgrounds meet, listen and work together, trust and community grow.',
+        'Iqra Foundation was set up to give this a lasting and independent home. Here, learning and engagement have time to grow. People get the tools to contribute actively to Norwegian society.',
       ],
     },
     create: {
@@ -71,7 +71,7 @@ export const klient = {
 
   about: {
     title: 'About Iqra Foundation',
-    intro: 'Iqra Foundation STI is a private, self-owned, non-profit foundation with its registered office in Oslo (org. no. 817 388 752). The foundation was established and is run in accordance with the Norwegian Foundations Act, and is supervised by the Norwegian Foundation Authority (Stiftelsestilsynet).',
+    intro: 'Iqra Foundation STI is a non-profit foundation with its registered office in Oslo. It is private and self-owned, and its organisation number is 817 388 752. The foundation was established and is run under the Norwegian Foundations Act, and the Norwegian Foundation Authority (Stiftelsestilsynet) supervises it.',
     name: {
       title: 'The name Iqra',
       text: 'Iqra is Arabic for “read”. It was the first word revealed in the Quran, and it expresses a basic call to seek knowledge and understanding. The name says what we stand for: that learning and enlightenment are the foundation of human development and of a good society.',
@@ -122,7 +122,7 @@ export const klient = {
       { title: 'Dialogue and mutual understanding', text: 'We start conversations and cooperation between people and communities that rarely meet. The aim is greater cultural understanding, less prejudice and stronger trust in society.' },
       { title: 'Projects, volunteering and leadership', text: 'We initiate, support and carry out projects that promote participation, volunteering, leadership and social responsibility. We particularly want to give young people and young adults experience in taking responsibility, leading processes and getting involved in their local community.' },
       { title: 'Sharing knowledge and publications', text: 'We produce and share articles, reports, digital resources and other educational material. In this way we make academic and socially relevant knowledge available to a wider audience.' },
-      { title: 'Meeting places and learning spaces', text: 'We work to establish physical and digital spaces for learning, dialogue and community. In the longer term, the aim is to develop our own premises, such as a learning centre, an activity centre and a conference venue, which can serve both the foundation and other organisations with related aims.' },
+      { title: 'Meeting places and learning spaces', text: 'We want to create places where people can learn and meet, in person and online. In the longer term we want our own premises, for example a learning centre, an activity centre and a conference venue. The foundation will use them, and so can other organisations with related aims.' },
       { title: 'Cooperation and partnerships', text: 'We work with national and international organisations, institutions and professional communities when this strengthens the foundation’s purpose. Cooperation is based on shared goals, openness and mutual respect.' },
     ],
   },
@@ -159,18 +159,18 @@ export const klient = {
 
   resources: {
     title: 'Resources',
-    intro: 'Knowledge should be accessible and easy to share. Our resource library collects material that supports learning, reflection and understanding.',
+    intro: 'Knowledge should be easy to find and easy to share. Our resource library collects material for learning and reflection.',
     categories: [
       { key: 'publikasjoner', title: 'Publications and reports', text: 'Reports, notes and other written material from the foundation’s work.' },
-      { key: 'artikler', title: 'Articles and background reading', text: 'In-depth material on knowledge, dialogue, civic participation and community.' },
+      { key: 'artikler', title: 'Articles and background reading', text: 'Longer pieces on dialogue, civic participation and community.' },
       { key: 'videoer', title: 'Videos and presentations', text: null },
       { key: 'styringsdokumenter', title: 'Governing documents', text: 'The foundation’s statutes, annual accounts, annual report and other key documents. We publish them to be open about how the foundation is run and how its funds are used.' },
     ],
   },
 
   support: {
-    title: 'Contribute to knowledge, dialogue and community',
-    intro: 'Iqra Foundation depends on donations and partnerships to develop new programmes. With your support we can run more courses, events and projects, and build meeting places that benefit many people, today and for generations to come.',
+    title: 'Support Iqra Foundation',
+    intro: 'Donations and partnerships are what let us develop new programmes. With more donations we can hold more courses, events and projects. We can also build meeting places that many people will benefit from for years to come.',
     uses: {
       title: 'Where your contribution goes',
       lead: 'All contributions are used solely for the foundation’s charitable purpose, including:',
