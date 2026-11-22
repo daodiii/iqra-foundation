@@ -257,6 +257,12 @@
     white-space: nowrap;
   }
 
+  /* English (2026-11-22): «Community that strengthens.» is about 13.2 em to the Norwegian 11.1, so the size
+     comes down by the same ratio and the line keeps the Norwegian's air at the sides */
+  :global(html[lang='en']) .h1 {
+    font-size: min(5.97vw, 3.87vh);
+  }
+
   .side {
     grid-column: 1 / -1;
     margin-top: clamp(16px, 2.6vh, 24px);
@@ -310,6 +316,10 @@
   .h1 {
     font-size: calc((100vw - 2 * var(--gutter)) / 14);
     line-height: 0.96;
+  }
+
+  :global(html[lang='en']) .h1 {
+    font-size: calc((100vw - 2 * var(--gutter)) / 16.6);
   }
 
   .side {

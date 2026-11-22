@@ -1,5 +1,7 @@
 import Link from 'next/link';
-import { site } from '@/content/site.no';
+import { copy } from '@/content/copy';
+import type { Lang } from '@/content/paths';
+import { LangSwitch } from './LangSwitch';
 import { Logo } from './Logo';
 import styles from './site.module.css';
 
@@ -9,11 +11,12 @@ import styles from './site.module.css';
  * organisation number, the address, the telephone and the e-mail. The red thread of the four
  * areas is gone with the four areas; the client replaced them.
  */
-export function Footer() {
+export function Footer({ lang = 'no' }: { lang?: Lang }) {
+  const { site } = copy(lang);
   return (
     <footer className={styles.footer} data-header="dark">
       <div className={styles.footerTop}>
-        <Link href="/" prefetch={false} className={styles.footerHome} aria-label={site.header.homeLabel}>
+        <Link href={site.nav[0].href} prefetch={false} className={styles.footerHome} aria-label={site.header.homeLabel}>
           <Logo ground="navy" crimson height={44} decorative />
         </Link>
         <nav aria-label={site.footer.navLabel}>
@@ -61,6 +64,7 @@ export function Footer() {
           ))}
         </ul>
       </nav>
+      <LangSwitch className={styles.footerLang} />
     </footer>
   );
 }

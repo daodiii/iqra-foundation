@@ -1,45 +1,52 @@
 import Link from 'next/link';
-import { klient } from '@/content/klient.no';
-import { site } from '@/content/site.no';
+import { LangSwitch } from '@/components/site/LangSwitch';
+import { copy, type Copy } from '@/content/copy';
+import type { Lang } from '@/content/paths';
+import { PATHS } from '@/content/paths';
 import { MARK, Ordmerke } from './Merke';
 import { VIEWBOX } from './logo-paths';
 import { TilToppen } from './TilToppen';
 import f from './forside.module.css';
 import styles from './fot.module.css';
 
-const m = klient.menu;
-const c = klient.contact;
-
-/** The foot's three groups, as the mock gives them: Om oss, Aktuelt, and the pages that stand alone. */
-export const GROUPS = [
-  {
-    title: m.about,
-    links: [
-      { label: m.aboutFoundation, href: '/om-oss' },
-      { label: m.work, href: '/vart-arbeid' },
-      { label: m.people, href: '/menneskene-bak' },
-    ],
-  },
-  {
-    title: m.news,
-    links: [
-      { label: m.newsItems, href: '/aktuelt/nyheter' },
-      { label: m.events, href: '/aktuelt/arrangementer' },
-      { label: m.resources, href: '/ressurser' },
-    ],
-  },
-  {
-    title: site.footer.navLabel,
-    links: [
-      { label: m.home, href: '/' },
-      { label: m.contact, href: '/kontakt' },
-      { label: m.support, href: '/stott-oss' },
-    ],
-  },
-] as const;
+/** The foot's three groups, as the mock gives them: Om oss, Aktuelt, and the pages that stand alone. In the page's language. */
+export function fotGroups({ lang, site, klient }: Copy) {
+  const m = klient.menu;
+  const p = (k: keyof typeof PATHS) => PATHS[k][lang];
+  return [
+    {
+      title: m.about,
+      links: [
+        { label: m.aboutFoundation, href: p('about') },
+        { label: m.work, href: p('work') },
+        { label: m.people, href: p('people') },
+      ],
+    },
+    {
+      title: m.news,
+      links: [
+        { label: m.newsItems, href: p('newsItems') },
+        { label: m.events, href: p('events') },
+        { label: m.resources, href: p('resources') },
+      ],
+    },
+    {
+      title: site.footer.navLabel,
+      links: [
+        { label: m.home, href: p('home') },
+        { label: m.contact, href: p('contact') },
+        { label: m.support, href: p('support') },
+      ],
+    },
+  ];
+}
 
 /** The front page's navy foot: the last layer, sliding over the finale. */
-export function Fot() {
+export function Fot({ lang = 'no' }: { lang?: Lang }) {
+  const t = copy(lang);
+  const { site } = t;
+  const c = t.klient.contact;
+  const GROUPS = fotGroups(t);
   return (
     <footer className={`${styles.fw} ${f.layer} ${f.layerIn}`} style={{ zIndex: 6 }} data-lag="fot">
       <div className={styles.g}>
@@ -89,6 +96,7 @@ export function Fot() {
             <span className={styles.ul}>{l.label}</span>
           </Link>
         ))}
+        <LangSwitch className={styles.lang} />
         <TilToppen className={styles.top} />
       </nav>
     </footer>

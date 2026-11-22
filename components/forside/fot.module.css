@@ -122,6 +122,17 @@
   white-space: nowrap;
 }
 
+/* «NO · EN» (2026-11-22): at the right, before «Til toppen» */
+.legal .lang {
+  margin-left: auto;
+  color: #fff;
+  font-size: 14px;
+}
+
+.lang + .top {
+  margin-left: 0;
+}
+
 .top span {
   display: inline-block;
   transition: transform 0.35s var(--ease-out);
@@ -142,7 +153,8 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .top {
+  .top,
+  .legal .lang {
     margin-left: 0;
   }
 }

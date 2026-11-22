@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { klient } from '@/content/klient.no';
-import { site } from '@/content/site.no';
+import { useCopy } from '@/components/site/Lang';
 import { eio, onFrame, pageKey, plainPour, reducedMotion } from './frame';
 import { Knapp } from './Knapp';
 import { LETTERS, MARK } from './Merke';
@@ -48,8 +47,8 @@ export function wavePath(level: number, amp: number, ph: number, closed: boolean
 }
 
 /** The headline in its two sentences, each word in its own mask. */
-function headline(): string[][] {
-  return klient.home.headline.split(/(?<=\.)\s+/).map((s) => s.split(' '));
+function headline(text: string): string[][] {
+  return text.split(/(?<=\.)\s+/).map((s) => s.split(' '));
 }
 
 /**
@@ -59,6 +58,7 @@ function headline(): string[][] {
  * the header's logo.
  */
 export function Hero() {
+  const { klient, site } = useCopy();
   const hero = useRef<HTMLElement>(null);
   const slot = useRef<HTMLDivElement>(null);
   const mk = useRef<HTMLDivElement>(null);
@@ -257,7 +257,7 @@ export function Hero() {
             </svg>
           </div>
           <h1 id="hero-tittel" className={styles.h1}>
-            {headline().map((words, l) => (
+            {headline(h.headline).map((words, l) => (
               <span key={l}>
                 {l > 0 && ' '}
                 <span className={styles.ln}>

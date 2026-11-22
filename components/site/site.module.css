@@ -557,6 +557,12 @@
 }
 
 /* Personvern and Vilkår: small, under the facts, not part of the nine. */
+/* «NO · EN» (2026-11-22) under the legal links, on the navy foot */
+.footer .footerLang {
+  margin-top: 20px;
+  color: #fff;
+}
+
 .legalList {
   display: flex;
   flex-wrap: wrap;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { klient } from '@/content/klient.no';
+import { useCopy } from '@/components/site/Lang';
 import { clamp, eio, onFrame, pageKey, PLAIN_POUR, plainPour, reducedMotion } from './frame';
 import { Lines } from './Lines';
 import { SWOOSH } from './logo-paths';
@@ -37,6 +37,7 @@ export function stateAt(o: number): Omit<On, 'tx'> {
  * «Hvorfor vi finnes» rising over it. All of it follows the scroll exactly.
  */
 export function Pour() {
+  const { klient } = useCopy();
   const sc = useRef<HTMLDivElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const tx = useRef<HTMLDivElement>(null);

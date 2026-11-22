@@ -1,4 +1,5 @@
 import styles from '@/components/site/page.module.css';
+import type { Lang } from '@/content/paths';
 
 type Section = { id: string; heading: string; paragraphs: readonly string[]; list?: readonly string[] };
 
@@ -6,7 +7,7 @@ type Section = { id: string; heading: string; paragraphs: readonly string[]; lis
  * A legal page: the one layout of the subpages (page.module.css) with its sections under hairlines, and the
  * date it was last changed under them. Plain text, read top to bottom; nothing here moves.
  */
-export function LegalPage({ title, lede, sections, updated }: { title: string; lede: string; sections: readonly Section[]; updated: string }) {
+export function LegalPage({ title, lede, sections, updated, lang = 'no' }: { title: string; lede: string; sections: readonly Section[]; updated: string; lang?: Lang }) {
   return (
     <article className={styles.page}>
       <h1 className={styles.title}>{title}</h1>
@@ -26,7 +27,7 @@ export function LegalPage({ title, lede, sections, updated }: { title: string; l
           )}
         </section>
       ))}
-      <p className={styles.section}>Sist oppdatert {updated}.</p>
+      <p className={styles.section}>{lang === 'en' ? 'Last updated' : 'Sist oppdatert'} {updated}.</p>
     </article>
   );
 }

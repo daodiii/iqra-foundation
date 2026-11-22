@@ -4,11 +4,10 @@ import k from '@/components/forside/knapp.module.css';
 import { Plate, Plater } from '@/components/plater/Plater';
 import { after } from '@/components/plater/after';
 import p from '@/components/plater/plater.module.css';
-import { site } from '@/content/site.no';
+import { copy } from '@/content/copy';
+import type { Lang } from '@/content/paths';
 import styles from './kontakt-plater.module.css';
 
-const t = site.pages.contact;
-const c = site.contact;
 
 /** One way to reach the foundation, as a line between rules: its label, then its value set large. A link when there is somewhere to go. */
 function Way({ way, href, label, i, children }: { way: string; href?: string; label: string; i: number; children: ReactNode }) {
@@ -54,7 +53,10 @@ function Field({ label, full }: { label: string; full?: boolean }) {
  * The form is not wired, so it is drawn: hairline fields and Send as spans, with no control to type
  * into, hidden from a reader; the notice beside Send says so and is read.
  */
-export function KontaktPlater() {
+export function KontaktPlater({ lang = 'no' }: { lang?: Lang }) {
+  const { site } = copy(lang);
+  const t = site.pages.contact;
+  const c = site.contact;
   const f = t.form;
   return (
     <Plater>

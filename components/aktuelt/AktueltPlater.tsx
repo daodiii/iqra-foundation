@@ -5,43 +5,51 @@ import { Lines } from '@/components/forside/Lines';
 import { Plate, Plater } from '@/components/plater/Plater';
 import { after } from '@/components/plater/after';
 import p from '@/components/plater/plater.module.css';
-import { klient } from '@/content/klient.no';
-import { site } from '@/content/site.no';
+import { copy, type Copy } from '@/content/copy';
+import { PATHS, type Lang } from '@/content/paths';
 import type { Event, NewsItem } from '@/lib/content';
-import { writeDate } from '@/lib/dates';
-import { ARCHIVE_HREF, VIEWS, newsHref, type View } from './links';
-import { SAMPLE } from './samples';
+import { writeDate, writeTime } from '@/lib/dates';
+import { newsHref, viewsFor, type View } from './links';
 import styles from './aktuelt-plater.module.css';
 
-const t = site.pages.news;
-
-const Sample = () => <span className={p.ex}>{SAMPLE}</span>;
+/**
+ * The mark beside an item's date: «Eksempel» on a sample; on an English page, «In Norwegian» on what
+ * an editor wrote (the owner's choice, 2026-11-22: the posts stay Norwegian, and say so).
+ */
+function Mark({ c, sample }: { c: Copy; sample: boolean }) {
+  if (sample) return <span className={p.ex}>{c.site.sample}</span>;
+  if (c.lang === 'en') return <span className={p.ex}>{c.site.language.inNorwegian}</span>;
+  return null;
+}
 
 /** A news item: its date, the headline (a link to the article when it has one), the ingress. The newest is set at poster size. */
-function NewsItemPlate({ n, sample, top, i }: { n: NewsItem; sample: boolean; top: boolean; i: number }) {
+function NewsItemPlate({ n, sample, top, i, c }: { n: NewsItem; sample: boolean; top: boolean; i: number; c: Copy }) {
   const linked = !sample && !!n.body;
+  const foreign = !sample && c.lang === 'en' ? 'nb' : undefined;
   return (
     <li className={`${styles.n} ${top ? styles.top : ''} ${linked ? styles.linked : ''}`} data-rise="" style={after(i * 0.08)}>
       <p className={styles.mt}>
-        <time dateTime={n.date}>{writeDate(n.date)}</time>
-        {sample && <Sample />}
+        <time dateTime={n.date}>{writeDate(n.date, c.lang)}</time>
+        <Mark c={c} sample={sample} />
       </p>
-      <h3>
+      <h3 lang={foreign}>
         {linked ? (
-          <Link href={newsHref(n.slug)} prefetch={false} className={styles.stretch}>
+          <Link href={newsHref(n.slug, c.lang)} prefetch={false} className={styles.stretch}>
             {n.title}
           </Link>
         ) : (
           n.title
         )}
       </h3>
-      <p className={styles.sum}>{n.summary}</p>
+      <p className={styles.sum} lang={foreign}>{n.summary}</p>
     </li>
   );
 }
 
 /** An event as a calendar leaf: the day set huge, the month and year under it, the title, the time and place, and what else it has. */
-function EventLeaf({ e, sample, past = false, i }: { e: Event; sample: boolean; past?: boolean; i: number }) {
+function EventLeaf({ e, sample, past = false, i, c }: { e: Event; sample: boolean; past?: boolean; i: number; c: Copy }) {
+  const t = c.site.pages.news;
+  const foreign = !sample && c.lang === 'en' ? 'nb' : undefined;
   const [y, m, d] = e.start.split('-').map(Number);
   const end: ReactNode =
     !sample && past && e.recording ? (
@@ -55,31 +63,31 @@ function EventLeaf({ e, sample, past = false, i }: { e: Event; sample: boolean; 
         {String(d).padStart(2, '0')}
       </span>
       <span className={styles.mo} aria-hidden="true">
-        {site.months[m - 1]} {y}
+        {c.site.months[m - 1]} {y}
       </span>
       <time dateTime={e.start} className={p.sr}>
-        {writeDate(e.start)}
+        {writeDate(e.start, c.lang)}
       </time>
-      <h3>{e.title}</h3>
+      <h3 lang={foreign}>{e.title}</h3>
       <p className={styles.wh}>
         {e.time && (
           <>
-            <time dateTime={`${e.start}T${e.time}`}>kl. {e.time}</time>
+            <time dateTime={`${e.start}T${e.time}`}>{writeTime(e.time, c.lang)}</time>
             <span aria-hidden="true">·</span>
           </>
         )}
         <span>{e.place}</span>
-        {sample && <Sample />}
+        <Mark c={c} sample={sample} />
       </p>
-      {e.text && <p className={styles.sum}>{e.text}</p>}
+      {e.text && <p className={styles.sum} lang={foreign}>{e.text}</p>}
       {e.program && (
         <p className={styles.sum}>
-          <strong>{t.program}</strong> {e.program}
+          <strong>{t.program}</strong> <span lang={foreign}>{e.program}</span>
         </p>
       )}
       {past && e.report && (
         <p className={styles.sum}>
-          <strong>{t.report}</strong> {e.report}
+          <strong>{t.report}</strong> <span lang={foreign}>{e.report}</span>
         </p>
       )}
       {end && <p className={styles.end}>{end}</p>}
@@ -108,14 +116,19 @@ export function AktueltPlater({
   past,
   sampleNews,
   sampleEvents,
+  lang = 'no',
 }: {
   view: View;
+  lang?: Lang;
   news: NewsItem[];
   upcoming: Event[];
   past: Event[];
   sampleNews: boolean;
   sampleEvents: boolean;
 }) {
+  const c = copy(lang);
+  const t = c.site.pages.news;
+  const klient = c.klient;
   const showNews = view !== 'arrangementer';
   const showEvents = view !== 'nyheter';
   return (
@@ -127,7 +140,7 @@ export function AktueltPlater({
         </p>
         <nav className={styles.tabs} aria-label={t.filterLabel} data-rise="">
           <ul>
-            {VIEWS.map((v) => (
+            {viewsFor(lang).map((v) => (
               <li key={v.view}>
                 <Link href={v.href} prefetch={false} scroll={false} aria-current={v.view === view ? 'page' : undefined}>
                   {v.label}
@@ -147,7 +160,7 @@ export function AktueltPlater({
           {news.length ? (
             <ul className={styles.news}>
               {news.map((n, i) => (
-                <NewsItemPlate key={n.slug} n={n} sample={sampleNews} top={i === 0} i={i} />
+                <NewsItemPlate key={n.slug} n={n} sample={sampleNews} top={i === 0} i={i} c={c} />
               ))}
             </ul>
           ) : (
@@ -166,7 +179,7 @@ export function AktueltPlater({
           {upcoming.length ? (
             <ol className={styles.cal}>
               {upcoming.map((e, i) => (
-                <EventLeaf key={e.slug} e={e} sample={sampleEvents} i={i} />
+                <EventLeaf key={e.slug} e={e} sample={sampleEvents} i={i} c={c} />
               ))}
             </ol>
           ) : (
@@ -180,7 +193,7 @@ export function AktueltPlater({
               {past.length ? (
                 <ol className={`${styles.cal} ${styles.past}`}>
                   {past.map((e, i) => (
-                    <EventLeaf key={e.slug} e={e} sample={false} past i={i} />
+                    <EventLeaf key={e.slug} e={e} sample={false} past i={i} c={c} />
                   ))}
                 </ol>
               ) : (
@@ -189,7 +202,7 @@ export function AktueltPlater({
             </>
           )}
           <p className={styles.arch} data-rise="">
-            <Knapp href={ARCHIVE_HREF} kind="ring">
+            <Knapp href={PATHS.archive[lang]} kind="ring">
               {t.archiveLink}
             </Knapp>
           </p>

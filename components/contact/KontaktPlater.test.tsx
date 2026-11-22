@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { klient } from '@/content/klient.no';
 import { site } from '@/content/site.no';
-import Kontakt from '@/app/(sider)/kontakt/page';
+import Kontakt from '@/app/(no)/(sider)/kontakt/page';
 
 const t = site.pages.contact;
 

@@ -1,15 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { klient } from '@/content/klient.no';
-import { site } from '@/content/site.no';
+import { useCopy } from '@/components/site/Lang';
 import { reducedMotion } from './frame';
 import { Knapp } from './Knapp';
 import { Lines } from './Lines';
 import f from './forside.module.css';
 import styles from './samlet.module.css';
 
-const s = klient.home.together;
 /** Where each word starts: across (vw), down (vh), turned (deg). Six words, six places. */
 const SCATTER = [
   [-38, -34, -14],
@@ -27,6 +25,8 @@ const SCATTER = [
  * here is half way while the reader scrolls.
  */
 export function Samlet() {
+  const { klient, site } = useCopy();
+  const s = klient.home.together;
   const sa = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState(false);
 

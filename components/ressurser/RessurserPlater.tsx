@@ -4,13 +4,11 @@ import { after } from '@/components/plater/after';
 import p from '@/components/plater/plater.module.css';
 import { Morph } from '@/components/site/Morph';
 import { morphName } from '@/components/site/TitleLink';
-import { klient } from '@/content/klient.no';
-import { site } from '@/content/site.no';
+import { copy } from '@/content/copy';
+import type { Lang } from '@/content/paths';
 import type { Resource } from '@/lib/content';
 import { Utgivelse } from './Utgivelse';
 import styles from './ressurser-plater.module.css';
-
-const t = site.pages.resources;
 
 /** The categories' grounds after the white title plate, in their order: no two neighbours alike. */
 const TONES: Tone[] = ['navy', 'white', 'rod', 'deep'];
@@ -22,7 +20,9 @@ const TONES: Tone[] = ['navy', 'white', 'rod', 'deep'];
  * newest first (or the empty line). Each category keeps its anchor (`#<key>`), so the old
  * Styringsdokumenter address lands on its plate. A video plays on the page (Utgivelse).
  */
-export function RessurserPlater({ items }: { items: Resource[] }) {
+export function RessurserPlater({ items, lang = 'no' }: { items: Resource[]; lang?: Lang }) {
+  const { klient, site } = copy(lang);
+  const t = site.pages.resources;
   const r = klient.resources;
   return (
     <Plater>
@@ -49,7 +49,7 @@ export function RessurserPlater({ items }: { items: Resource[] }) {
             {inIt.length ? (
               <ul className={styles.list}>
                 {inIt.map((i, n) => (
-                  <Utgivelse key={i.slug} r={i} style={after(n * 0.08)} />
+                  <Utgivelse key={i.slug} r={i} style={after(n * 0.08)} lang={lang} />
                 ))}
               </ul>
             ) : (
