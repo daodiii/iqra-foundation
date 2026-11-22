@@ -1,14 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { klient } from '@/content/klient.no';
+import { useCopy } from '@/components/site/Lang';
 import { scrollToY } from '@/lib/smooth';
 import { onScrollFrame } from './frame';
 import { Lines } from './Lines';
 import f from './forside.module.css';
 import styles from './trinn.module.css';
 
-const a = klient.home.action;
 
 /** The part whose middle is nearest the middle of the screen, among those on screen; -1 for none. */
 export function nearest(rects: { top: number; bottom: number }[], H: number): number {
@@ -26,6 +25,7 @@ export function nearest(rects: { top: number; bottom: number }[], H: number): nu
 
 /** «Fra kunnskap til handling», Trinnene: the index follows the reading; a click in it brings that part to the middle. */
 export function Trinn() {
+  const a = useCopy().klient.home.action;
   const items = useRef<HTMLDivElement>(null);
   const [cur, setCur] = useState(-1);
 

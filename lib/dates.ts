@@ -1,16 +1,22 @@
+import type { Lang } from '@/content/paths';
+import { site as siteEn } from '@/content/site.en';
 import { site } from '@/content/site.no';
 
-/** An ISO date written out the way the site writes dates: «24. september 2026». */
-export function writeDate(iso: string): string {
+/** An ISO date written out the way the site writes dates: «24. september 2026»; in English «24 September 2026». */
+export function writeDate(iso: string, lang: Lang = 'no'): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
   if (!m) throw new Error(`not an ISO date: ${iso}`);
   const [, y, mo, d] = m;
-  return `${Number(d)}. ${site.months[Number(mo) - 1]} ${y}`;
+  return lang === 'en' ? `${Number(d)} ${siteEn.months[Number(mo) - 1]} ${y}` : `${Number(d)}. ${site.months[Number(mo) - 1]} ${y}`;
 }
 
-/** The same, with the time when there is one: «24. september 2026 kl. 18:00». */
-export function writeDateTime(iso: string, time: string | null): string {
-  return time ? `${writeDate(iso)} kl. ${time}` : writeDate(iso);
+/** A clock time as the site writes it: «kl. 18:00»; in English the time alone, «18:00». */
+export const writeTime = (time: string, lang: Lang = 'no'): string => (lang === 'en' ? time : `kl. ${time}`);
+
+/** The same, with the time when there is one: «24. september 2026 kl. 18:00»; «24 September 2026, 18:00». */
+export function writeDateTime(iso: string, time: string | null, lang: Lang = 'no'): string {
+  if (!time) return writeDate(iso, lang);
+  return lang === 'en' ? `${writeDate(iso, lang)}, ${time}` : `${writeDate(iso)} kl. ${time}`;
 }
 
 /**

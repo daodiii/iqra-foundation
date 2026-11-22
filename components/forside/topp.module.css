@@ -144,8 +144,21 @@
   outline-offset: 4px;
 }
 
-:global([data-forside][data-solid][data-tone='light']) :is(.link, .menu) {
+:global([data-forside][data-solid][data-tone='light']) :is(.link, .menu, .lang) {
   color: var(--ink);
+}
+
+/* «NO · EN» (2026-11-22): beside Støtt oss on a wide screen, in the header's tone; on a phone it moves into the menu */
+.lang {
+  color: #fff;
+  transition: color 0.45s;
+}
+
+.sheet .mnuLang {
+  margin-top: 22px;
+  align-self: flex-start;
+  color: var(--ink);
+  font-size: 15px;
 }
 
 /* Støtt oss: crimson; on a crimson ground, white */
@@ -385,7 +398,8 @@
 
   .link,
   .chev,
-  .row {
+  .row,
+  .nav .lang {
     display: none;
   }
 

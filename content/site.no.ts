@@ -140,6 +140,19 @@ export const site = {
   },
   /** The logo's alt text, on every ground. */
   logoAlt: 'Iqra Foundation',
+  /**
+   * The language switch in the header and the foot (2026-11-22): each language named in itself,
+   * short on the switch and in full for a screen reader. `inNorwegian` marks what an editor wrote
+   * in Norwegian when it stands on an English page; on a Norwegian page it never shows.
+   */
+  language: {
+    label: 'Språk',
+    no: { short: 'NO', name: 'Norsk' },
+    en: { short: 'EN', name: 'English' },
+    inNorwegian: 'På norsk',
+  },
+  /** The mark on a sample post or event, standing in while nothing real is published. */
+  sample: 'Eksempel',
   /** The months, in full: a date is written out as «24. september 2026». */
   months: ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'],
   pages: {

@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { klient } from '@/content/klient.no';
+import { useCopy } from '@/components/site/Lang';
 import { clamp, onScrollFrame, pageTop, progress } from './frame';
 import { Lines } from './Lines';
 import f from './forside.module.css';
 import styles from './spor.module.css';
 
-const c = klient.home.create;
 const CARDS = [styles.c1, styles.c2, styles.c3];
 
 /** The three icons, on a 120 grid: Læring (arcs spreading from the dot), Engasjement (rising steps), Samarbeid (three circles). */
@@ -45,6 +44,7 @@ function Icon({ n }: { n: number }) {
 
 /** «Dette ønsker vi å skape», Sporet: the track moves sideways with the scroll, exactly; a panel opens as it comes in. */
 export function Spor() {
+  const c = useCopy().klient.home.create;
   const spor = useRef<HTMLDivElement>(null);
   const trk = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState([false, false, false, false]);

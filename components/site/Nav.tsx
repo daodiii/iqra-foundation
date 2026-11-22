@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { site } from '@/content/site.no';
+import { useCopy } from './Lang';
 import styles from './site.module.css';
 
 /**
@@ -25,6 +25,7 @@ import styles from './site.module.css';
  * pointer that can hover it stands in the row beside its item, so a touch never has to find it.
  */
 export function Nav() {
+  const { site } = useCopy();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   // The list under an item, put away by Escape until the pointer or the focus leaves the item.
@@ -83,7 +84,7 @@ export function Nav() {
     };
   }, [open, close]);
 
-  const current = (href: string) => (href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/'));
+  const current = (href: string) => (href === site.nav[0].href ? pathname === href : pathname === href || pathname.startsWith(href + '/'));
 
   return (
     <nav className={styles.nav} aria-label={site.header.navLabel} data-open={open || undefined}>

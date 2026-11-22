@@ -2,12 +2,23 @@ import { Lines } from '@/components/forside/Lines';
 import { Plate, Plater } from '@/components/plater/Plater';
 import { after } from '@/components/plater/after';
 import p from '@/components/plater/plater.module.css';
-import { klient } from '@/content/klient.no';
+import { copy } from '@/content/copy';
+import type { Lang } from '@/content/paths';
 import { site } from '@/content/site.no';
 import type { Person } from '@/lib/content';
 import styles from './menneskene-plater.module.css';
 
-const t = klient.people;
+/**
+ * A board member's role as the record writes it (in Norwegian, lower case), said in English on an
+ * English page. A role not listed here is shown as written.
+ */
+const ROLES_EN: Record<string, string> = {
+  styreleder: 'Chair',
+  nestleder: 'Deputy chair',
+  styremedlem: 'Board member',
+  varamedlem: 'Deputy board member',
+};
+const roleIn = (role: string, lang: Lang) => (lang === 'en' ? (ROLES_EN[role.trim().toLowerCase()] ?? role) : role);
 
 /**
  * The client's sentence with its e-mail address as a link; the words stay exactly theirs. The
@@ -35,15 +46,15 @@ export function WithMailLink({ text }: { text: string }) {
 }
 
 /** One board member under a heavy rule: the photo when there is one, the name set large, the role, the bio when there is one. */
-function Member({ m, i }: { m: Person; i: number }) {
+function Member({ m, i, lang }: { m: Person; i: number; lang: Lang }) {
   return (
     <li className={styles.m} data-photo={m.photo ? '' : undefined} data-rise="" style={after(i * 0.08)}>
       {m.photo && <img className={styles.photo} src={m.photo.src} alt={m.photo.alt} loading="lazy" decoding="async" />}
       <div className={styles.who}>
         <h3 className={styles.name}>{m.name}</h3>
-        <p className={styles.role}>{m.role}</p>
+        <p className={styles.role}>{roleIn(m.role, lang)}</p>
       </div>
-      {m.bio && <p className={styles.bio}>{m.bio}</p>}
+      {m.bio && <p className={styles.bio} lang={lang === 'en' ? 'nb' : undefined}>{m.bio}</p>}
     </li>
   );
 }
@@ -54,7 +65,9 @@ function Member({ m, i }: { m: Person; i: number }) {
  * set large under heavy rules with the role under each (a photo and a short bio only when supplied);
  * then Kontakt styret on white with the board's address set large. The foundation council is not shown.
  */
-export function MenneskenePlater({ people }: { people: Person[] }) {
+export function MenneskenePlater({ people, lang = 'no' }: { people: Person[]; lang?: Lang }) {
+  const c = copy(lang);
+  const t = c.klient.people;
   return (
     <Plater>
       <Plate tone="white" label="menneskene-tittel">
@@ -72,12 +85,12 @@ export function MenneskenePlater({ people }: { people: Person[] }) {
         {people.length ? (
           <ul className={styles.board}>
             {people.map((m, i) => (
-              <Member key={m.slug} m={m} i={i} />
+              <Member key={m.slug} m={m} i={i} lang={lang} />
             ))}
           </ul>
         ) : (
           <p className={styles.empty} data-rise="">
-            {site.pages.people.empty}
+            {c.site.pages.people.empty}
           </p>
         )}
       </Plate>

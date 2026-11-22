@@ -1,10 +1,10 @@
-import { klient } from '@/content/klient.no';
+import { copy } from '@/content/copy';
+import type { Lang } from '@/content/paths';
 import { Lines } from '@/components/forside/Lines';
 import { Plate, Plater } from '@/components/plater/Plater';
 import { after } from '@/components/plater/after';
 import p from '@/components/plater/plater.module.css';
 
-const t = klient.about;
 
 /**
  * Om Iqra Foundation as «Platene» (mock 42, the owner's pick of 2026-11-20): the title and the intro on
@@ -12,7 +12,8 @@ const t = klient.about;
  * on white, who it is for on burgundy, the independence on the deep navy. «Navnet Iqra» is left out by the
  * owner.
  */
-export function OmOssPlater() {
+export function OmOssPlater({ lang = 'no' }: { lang?: Lang }) {
+  const t = copy(lang).klient.about;
   return (
     <Plater>
       <Plate tone="white" label="om-tittel">

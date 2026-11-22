@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { klient } from "@/content/klient.no";
-import { site } from "@/content/site.no";
+import { useCopy } from "@/components/site/Lang";
+import { LangSwitch } from "@/components/site/LangSwitch";
+import type { Copy } from "@/content/copy";
+import { PATHS } from "@/content/paths";
 import { onFrame, pageKey, paintKey } from "./frame";
 import { Knapp } from "./Knapp";
 import { MARK, Ordmerke } from "./Merke";
 import { VIEWBOX } from "./logo-paths";
 import f from "./forside.module.css";
 import styles from "./topp.module.css";
-
-const m = klient.menu;
 
 /** The first sentence of a text (a parenthesis such as «(org.nr. …)» left out, so its full stops do not cut it). */
 export function firstSentence(s: string): string {
@@ -26,51 +26,37 @@ type Item = { label: string; href: string; sub?: readonly Sub[] };
 /**
  * The header's and the menu's pages, in the client's order (M1, 2026-11-18): Om oss and Aktuelt with
  * their pages under them, each under-page with the first sentence of its own intro (shown on a wide
- * screen only); Støtt oss stands apart as the button.
+ * screen only); Støtt oss stands apart as the button. In the page's language, at its addresses.
  */
-export const LINKS: readonly Item[] = [
-  { label: m.home, href: "/" },
-  {
-    label: m.about,
-    href: "/om-oss",
-    sub: [
+export function toppLinks({ lang, klient }: Copy): { links: readonly Item[]; support: { label: string; href: string } } {
+  const m = klient.menu;
+  const p = (k: keyof typeof PATHS) => PATHS[k][lang];
+  return {
+    links: [
+      { label: m.home, href: p("home") },
       {
-        label: m.aboutFoundation,
-        href: "/om-oss",
-        text: firstSentence(klient.about.intro),
+        label: m.about,
+        href: p("about"),
+        sub: [
+          { label: m.aboutFoundation, href: p("about"), text: firstSentence(klient.about.intro) },
+          { label: m.work, href: p("work"), text: firstSentence(klient.work.intro) },
+          { label: m.people, href: p("people"), text: firstSentence(klient.people.intro) },
+        ],
       },
       {
-        label: m.work,
-        href: "/vart-arbeid",
-        text: firstSentence(klient.work.intro),
+        label: m.news,
+        href: p("news"),
+        sub: [
+          { label: m.newsItems, href: p("newsItems"), text: firstSentence(klient.news.newsText) },
+          { label: m.events, href: p("events"), text: firstSentence(klient.news.eventsText) },
+        ],
       },
-      {
-        label: m.people,
-        href: "/menneskene-bak",
-        text: firstSentence(klient.people.intro),
-      },
+      { label: m.resources, href: p("resources") },
+      { label: m.contact, href: p("contact") },
     ],
-  },
-  {
-    label: m.news,
-    href: "/aktuelt",
-    sub: [
-      {
-        label: m.newsItems,
-        href: "/aktuelt/nyheter",
-        text: firstSentence(klient.news.newsText),
-      },
-      {
-        label: m.events,
-        href: "/aktuelt/arrangementer",
-        text: firstSentence(klient.news.eventsText),
-      },
-    ],
-  },
-  { label: m.resources, href: "/ressurser" },
-  { label: m.contact, href: "/kontakt" },
-];
-export const SUPPORT = { label: m.support, href: "/stott-oss" } as const;
+    support: { label: m.support, href: p("support") },
+  };
+}
 
 /** The colour of the ground just under the header, in the middle of the screen: the first painted background below it. */
 function ground(bar: HTMLElement): string {
@@ -119,9 +105,13 @@ export function toneOf(c: string): "light" | "rod" | "dark" {
  * Støtt oss, and on a phone «Meny», which opens the full-screen menu.
  */
 export function Topp({ mark = false }: { mark?: boolean }) {
+  const c = useCopy();
+  const { site } = c;
+  const { links: LINKS, support: SUPPORT } = toppLinks(c);
+  const home = PATHS.home[c.lang];
   const path = usePathname() ?? "/";
   const here = (href: string) =>
-    href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`);
+    href === home ? path === home : path === href || path.startsWith(`${href}/`);
   const bar = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
@@ -227,7 +217,7 @@ export function Topp({ mark = false }: { mark?: boolean }) {
           data-under={under ?? undefined}
         >
           <Link
-            href="/"
+            href={home}
             prefetch={false}
             className={styles.home}
             aria-label={site.header.homeLabel}
@@ -291,6 +281,7 @@ export function Topp({ mark = false }: { mark?: boolean }) {
                 </Link>
               ),
             )}
+            <LangSwitch className={styles.lang} />
             <Knapp href={SUPPORT.href} kind="fill" className={styles.give}>
               {SUPPORT.label}
             </Knapp>
@@ -335,7 +326,7 @@ export function Topp({ mark = false }: { mark?: boolean }) {
           </div>
         ))}
       </div>
-      <Meny open={open} onClose={close} returnTo={button} here={here} />
+      <Meny open={open} onClose={close} returnTo={button} here={here} links={LINKS} support={SUPPORT} />
     </>
   );
 }
@@ -351,12 +342,17 @@ function Meny({
   onClose,
   returnTo,
   here,
+  links: LINKS,
+  support: SUPPORT,
 }: {
   open: boolean;
   onClose: () => void;
   returnTo: React.RefObject<HTMLButtonElement | null>;
   here: (href: string) => boolean;
+  links: readonly Item[];
+  support: { label: string; href: string };
 }) {
+  const { site } = useCopy();
   const path = usePathname() ?? "/";
   const ref = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
@@ -461,6 +457,7 @@ function Meny({
           <span>{SUPPORT.label}</span>
           <span aria-hidden="true">→</span>
         </Link>
+        <LangSwitch className={styles.mnuLang} />
       </div>
     </div>
   );

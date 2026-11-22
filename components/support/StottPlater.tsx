@@ -1,5 +1,5 @@
-import { klient } from '@/content/klient.no';
-import { site } from '@/content/site.no';
+import { copy } from '@/content/copy';
+import type { Lang } from '@/content/paths';
 import { Knapp } from '@/components/forside/Knapp';
 import { Lines } from '@/components/forside/Lines';
 import { Plate, Plater } from '@/components/plater/Plater';
@@ -8,7 +8,6 @@ import p from '@/components/plater/plater.module.css';
 import { numbers } from './gaver';
 import styles from './stott-plater.module.css';
 
-const t = klient.support;
 
 /**
  * Støtt oss as «Platene» (mock 42, the owner's pick of 2026-11-20), in the client's order and words
@@ -17,7 +16,9 @@ const t = klient.support;
  * Vipps number set big, the account number once the client has given it, Q6) and AvtaleGiro; their
  * last line as a statement on the page's crimson.
  */
-export function StottPlater() {
+export function StottPlater({ lang = 'no' }: { lang?: Lang }) {
+  const { klient, site } = copy(lang);
+  const t = klient.support;
   const [gave, ...rest] = t.ways.items;
   return (
     <Plater>
@@ -52,7 +53,7 @@ export function StottPlater() {
             <h3>{gave.title}</h3>
             <p className={styles.text}>{gave.text}</p>
             <div className={styles.give} data-give="">
-              {numbers().map((n) => (
+              {numbers(site.support).map((n) => (
                 <p key={n.key} className={`${styles.num} ${n.key === 'vipps' ? styles.big : ''}`} data-num={n.key}>
                   <b>{n.value}</b>
                   <span>{n.label}</span>
