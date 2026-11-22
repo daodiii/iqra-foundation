@@ -11,9 +11,9 @@ import f from './forside.module.css';
 import styles from './plakater.module.css';
 
 /** A coming event as a poster: the day beside its month and year, the title, the time and the place. */
-export type Poster = { slug: string; day: string; month: string; title: string; meta: string; dateTime: string; example?: boolean; foreign?: boolean };
+export type Poster = { slug: string; day: string; month: string; title: string; meta: string; dateTime: string; foreign?: boolean };
 /** A news item in the strip: its date written out, its title, its ingress, and where it leads. */
-export type Strip = { slug: string; date: string; dateTime: string; title: string; summary: string; href: string; example?: boolean; foreign?: boolean };
+export type Strip = { slug: string; date: string; dateTime: string; title: string; summary: string; href: string; foreign?: boolean };
 
 const POSTER = [styles.p1, styles.p2, styles.p3];
 
@@ -124,8 +124,7 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
           {events.map((e, i) => (
             <li key={e.slug}>
               <Link href={EVENTS_HREF} prefetch={false} className={`${styles.po} ${POSTER[i % 3]}`} data-po>
-                {i === 0 && !e.example && !e.foreign && <span className={styles.pin} aria-hidden="true" />}
-                {e.example && <span className={`${styles.ex} ${styles.label}`}>{site.sample}</span>}
+                {i === 0 && !e.foreign && <span className={styles.pin} aria-hidden="true" />}
                 {e.foreign && <span className={`${styles.ex} ${styles.label}`}>{site.language.inNorwegian}</span>}
                 <span className={styles.date}>
                   <time className={styles.dd} dateTime={e.dateTime}>
@@ -160,7 +159,6 @@ export function Plakater({ events, news }: { events: Poster[]; news: Strip[] }) 
                   <time className={`${styles.meta} ${styles.label}`} dateTime={n.dateTime}>
                     {n.date}
                   </time>
-                  {n.example && <span className={`${styles.exNews} ${styles.label}`}>{site.sample}</span>}
                   {n.foreign && <span className={`${styles.exNews} ${styles.label}`}>{site.language.inNorwegian}</span>}
                 </span>
                 <h4 lang={n.foreign ? 'nb' : undefined}>

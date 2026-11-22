@@ -51,11 +51,22 @@ test('the switch in the foot takes you to the same page in the other language, a
   await expect(page.locator('h1')).toHaveText('Our work');
 });
 
-test('phone: the switch is in the menu; desktop: in the header', async ({ page, isMobile }) => {
+test('phone: the switch heads the open menu, above the pages, a 44 px target; desktop: in the header', async ({ page, isMobile }) => {
   await page.goto('/en/contact');
   if (isMobile) {
     await page.getByRole('button', { name: 'Menu' }).click();
-    await expect(page.locator('#meny [role=group]').getByRole('link', { name: 'Norsk' })).toHaveAttribute('href', '/kontakt');
+    const link = page.locator('#meny [role=group]').getByRole('link', { name: 'Norsk' });
+    await expect(link).toHaveAttribute('href', '/kontakt');
+    await expect(link).toBeInViewport();
+    const box = (await link.boundingBox())!;
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    // both read in one frame: the sheet is still sliding up when the menu has just opened
+    const above = await page.evaluate(() => {
+      const a = document.querySelector('#meny [role=group] a')!.getBoundingClientRect();
+      return a.bottom <= document.querySelector('#meny nav')!.getBoundingClientRect().top;
+    });
+    expect(above).toBe(true);
   } else {
     await expect(page.locator('header [role=group]').getByRole('link', { name: 'Norsk' })).toBeVisible();
   }

@@ -148,17 +148,35 @@
   color: var(--ink);
 }
 
-/* «NO · EN» (2026-11-22): beside Støtt oss on a wide screen, in the header's tone; on a phone it moves into the menu */
+/* «NO · EN» (2026-11-22): beside Støtt oss on a wide screen, in the header's tone; on a phone at the top of the menu */
 .lang {
   color: #fff;
   transition: color 0.45s;
 }
 
+/* On a phone the bar has no room for it (measured at 360-430 px, 2026-11-22), so it heads the open
+   menu, large, each language a 44 px square to tap */
 .sheet .mnuLang {
-  margin-top: 22px;
-  align-self: flex-start;
+  margin-left: -12px;
   color: var(--ink);
-  font-size: 15px;
+  font-size: 20px;
+  letter-spacing: 0.06em;
+}
+
+.sheet .mnuLang :is(a, [aria-current]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+}
+
+.sheet .mnuLang a {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  text-decoration-thickness: 2px;
 }
 
 /* Støtt oss: crimson; on a crimson ground, white */
@@ -464,7 +482,8 @@
 .sheetTop {
   position: relative;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   padding-top: 10px;
 }
 
