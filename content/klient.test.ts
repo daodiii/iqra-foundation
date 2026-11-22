@@ -25,8 +25,8 @@ const file = readFileSync(FILE, 'utf8').replaceAll(EMAIL.old, EMAIL.now);
 const plain = (s: string) => s.replace(/\*/g, '').replace(/\s+/g, ' ').trim();
 
 /**
- * Option D from the plain-copy proposal, without «du» (the owner, 2026-11-22): the client's
- * words on the left, the site's on the right. The test reads the sources with each rewrite in
+ * Option D from the plain-copy proposal, without «du», on all the client's prose (the owner,
+ * 2026-11-22): the client's words on the left, the site's on the right. The test reads the sources with each rewrite in
  * place, so both directions still hold; every left side must still be in the sources.
  */
 const REWRITES: [string, string][] = [
@@ -69,6 +69,114 @@ const REWRITES: [string, string][] = [
   [
     'Bidra til kunnskap, dialog og fellesskap',
     'Støtt Iqra Foundation',
+  ],
+  [
+    'Gjennom aktiviteter, samarbeid og kunnskapsformidling vil Iqra Foundation bidra til et mer opplyst, inkluderende og engasjert samfunn.',
+    'Med aktiviteter, samarbeid og formidling vil Iqra Foundation bidra til et mer opplyst og inkluderende samfunn, der flere engasjerer seg.',
+  ],
+  [
+    'Vi skaper muligheter for læring og personlig utvikling gjennom kurs, foredrag og undervisning.',
+    'Kurs, foredrag og undervisning gir folk mulighet til å lære og utvikle seg.',
+  ],
+  [
+    'Vi inspirerer ungdom og voksne til å ta initiativ, engasjere seg og bidra til positiv samfunnsutvikling.',
+    'Vi oppmuntrer ungdom og voksne til å ta initiativ og engasjere seg i samfunnet rundt seg.',
+  ],
+  [
+    'Vi bygger relasjoner og arenaer hvor mennesker, organisasjoner og fagmiljøer kan møtes og samarbeide.',
+    'Vi bygger relasjoner og lager steder der folk, organisasjoner og fagmiljøer kan møtes og jobbe sammen.',
+  ],
+  [
+    'Kurs, foredrag og opplæring som styrker både faglig kompetanse og personlig utvikling. Vi vektlegger kvalitet, kritisk refleksjon og relevans for deltakernes hverdag.',
+    'Kurs, foredrag og opplæring som gir faglig påfyll og personlig utvikling. Vi legger vekt på kvalitet og kritisk tenkning, og på at det skal være nyttig i hverdagen.',
+  ],
+  [
+    'Vi inspirerer ungdom og voksne til å ta initiativ, utvikle lederskap og bidra gjennom frivillighet og samfunnsansvar – lokalt og nasjonalt.',
+    'Vi oppmuntrer ungdom og voksne til å ta initiativ og lede. Vi vil også at flere skal bidra som frivillige, lokalt og nasjonalt.',
+  ],
+  [
+    'Vi etablerer fysiske og digitale arenaer for dialog og samarbeid mellom enkeltpersoner, organisasjoner, fagmiljøer og offentlige institusjoner.',
+    'Vi lager steder for samtale og samarbeid, fysisk og på nett. Der kan enkeltpersoner, organisasjoner, fagmiljøer og offentlige institusjoner møtes.',
+  ],
+  [
+    'Varig samfunnsutvikling skapes gjennom felles innsats. Vi ønsker samarbeid med organisasjoner, institusjoner, fagmiljøer, virksomheter og enkeltpersoner – nasjonalt og internasjonalt – som deler vårt engasjement for kunnskap, dialog og fellesskap.',
+    'Varige endringer i samfunnet krever at mange gjør noe sammen. Vi vil gjerne samarbeide med organisasjoner, fagmiljøer, virksomheter og enkeltpersoner i Norge og internasjonalt som er opptatt av kunnskap og dialog.',
+  ],
+  [
+    'Iqra er arabisk og betyr «les». Ordet er det første som ble åpenbart i Koranen, og det uttrykker en grunnleggende oppfordring til å søke kunnskap og forståelse. Navnet sier hva vi står for: at læring og opplysning er selve fundamentet for menneskelig utvikling og et godt samfunn.',
+    'Iqra er arabisk og betyr «les». Det var det første ordet som ble åpenbart i Koranen, en oppfordring til å søke kunnskap og forståelse. Navnet viser hva vi står for. Vi mener læring og opplysning er grunnlaget for at mennesker og samfunn utvikler seg.',
+  ],
+  [
+    'Verdigrunnlaget er forankret i stiftelsens vedtekter og skal ivaretas i all virksomhet, også på lang sikt.',
+    'Verdiene står i stiftelsens vedtekter. De skal gjelde for alt stiftelsen gjør, også på lang sikt.',
+  ],
+  [
+    'Virksomheten retter seg primært mot ungdom og voksne. Våre arrangementer og tilbud er åpne for alle som ønsker å lære, delta og bidra.',
+    'Vi retter oss mest mot ungdom og voksne. Arrangementene og tilbudene er åpne for alle som vil lære og bidra.',
+  ],
+  [
+    'Iqra Foundation omsetter kunnskap, verdier og engasjement til konkrete tiltak. Arbeidet er organisert i seks innsatsområder.',
+    'Iqra Foundation gjør kunnskap og verdier om til konkrete tiltak. Arbeidet er delt inn i seks områder.',
+  ],
+  [
+    'Vi gjennomfører og støtter undervisning, kurs og kompetansehevende tiltak. Tilbudene skal gi deltakerne faglig påfyll, styrke evnen til kritisk refleksjon og gjøre dem bedre rustet til å delta i arbeidsliv, utdanning og samfunnsliv.',
+    'Vi holder og støtter kurs og undervisning. Deltakerne skal lære noe nytt og bli flinkere til å tenke kritisk. Det skal gjøre det lettere å delta i arbeid, utdanning og samfunnsliv.',
+  ],
+  [
+    'Vi arrangerer seminarer, foredrag, konferanser, debatter og panelsamtaler om faglige og samfunnsaktuelle spørsmål. Vi inviterer fagpersoner, praktikere og beslutningstakere, og legger vekt på at ulike perspektiver kommer til orde.',
+    'Vi holder seminarer, foredrag og debatter om faglige spørsmål og saker i samfunnet. Fagfolk, praktikere og beslutningstakere blir invitert, og ulike syn skal komme fram.',
+  ],
+  [
+    'Vi tar initiativ til samtaler og samarbeid mellom mennesker og miljøer som sjelden møtes. Målet er økt kulturforståelse, færre fordommer og sterkere tillit i samfunnet.',
+    'Vi tar initiativ til samtaler og samarbeid mellom mennesker og miljøer som sjelden møtes. Målet er at folk skal forstå og stole mer på hverandre, med færre fordommer.',
+  ],
+  [
+    'Vi initierer, støtter og gjennomfører prosjekter som fremmer deltakelse, frivillighet, lederskap og samfunnsansvar. Vi ønsker særlig å gi ungdom og unge voksne erfaring med å ta ansvar, lede prosesser og engasjere seg i lokalsamfunnet.',
+    'Vi starter og støtter prosjekter der folk er frivillige og lærer å lede. Særlig ungdom og unge voksne skal få erfaring med å ta ansvar og engasjere seg der de bor.',
+  ],
+  [
+    'Vi produserer og formidler artikler, rapporter, digitale ressurser og annet opplysningsmateriell. Gjennom dette gjør vi faglig og samfunnsrelevant kunnskap tilgjengelig for et bredere publikum.',
+    'Vi skriver og deler artikler, rapporter og digitale ressurser. Slik blir faglig kunnskap tilgjengelig for flere.',
+  ],
+  [
+    'Vi samarbeider med nasjonale og internasjonale organisasjoner, institusjoner og fagmiljøer når det styrker gjennomføringen av stiftelsens formål. Samarbeid skjer på grunnlag av felles mål, åpenhet og gjensidig respekt.',
+    'Vi samarbeider med organisasjoner, institusjoner og fagmiljøer i Norge og i utlandet når det hjelper stiftelsen å nå formålet. Samarbeidet bygger på felles mål, åpenhet og respekt.',
+  ],
+  [
+    'Iqra Foundation ledes av et styre med bred erfaring fra samfunnsfag, organisasjonsliv, språk og formidling. Styret er stiftelsens øverste organ.',
+    'Iqra Foundation ledes av et styre, som er stiftelsens øverste organ. Medlemmene har erfaring fra samfunnsfag, organisasjonsliv, språk og formidling.',
+  ],
+  [
+    'Styret har det overordnede ansvaret for stiftelsens strategi, økonomi, organisering og gjennomføring av formålet, og representerer stiftelsen utad. Styret består av fem medlemmer som velges for to år av gangen. Ett av medlemmene har særskilt ansvar for økonomi.',
+    'Styret har ansvaret for stiftelsens strategi, økonomi og organisering, og for at formålet blir fulgt. Det representerer også stiftelsen utad. Styret har fem medlemmer, valgt for to år av gangen, og ett av dem har særlig ansvar for økonomi.',
+  ],
+  [
+    'Her finner du nyheter, kunngjøringer og arrangementer fra Iqra Foundation.',
+    'Nyheter, kunngjøringer og arrangementer fra Iqra Foundation.',
+  ],
+  [
+    'Kommende seminarer, konferanser, foredrag og kurs, med informasjon om tid, sted, program og påmelding. Arkivet viser tidligere arrangementer med referater og opptak der det er tilgjengelig.',
+    'Kommende seminarer, foredrag og kurs, med tid, sted, program og påmelding. Arkivet viser tidligere arrangementer med referater og opptak der det er tilgjengelig.',
+  ],
+  [
+    'Meld deg på nyhetsbrevet',
+    'Nyhetsbrevet',
+  ],
+  [
+    'for å få invitasjoner og oppdateringer direkte.',
+    'sender invitasjoner og oppdateringer direkte på e-post.',
+  ],
+  [
+    'Stiftelsens vedtekter, årsregnskap, årsberetning og andre sentrale dokumenter. Vi publiserer disse for å sikre åpenhet om hvordan stiftelsen styres og hvordan midlene brukes.',
+    'Stiftelsens vedtekter, årsregnskap, årsberetning og andre viktige dokumenter. De ligger her så alle kan se hvordan stiftelsen styres og hvordan pengene brukes.',
+  ],
+  [
+    'Slik kan du bidra',
+    'Måter å bidra på',
+  ],
+  [
+    'Bidra med tid, kompetanse og engasjement i arrangementer og prosjekter.',
+    'Frivillige hjelper til med tid og kompetanse i arrangementer og prosjekter.',
   ],
 ];
 const rewritten = (s: string) => REWRITES.reduce((t, [was, now]) => t.replaceAll(was, now), s);
