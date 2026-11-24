@@ -68,14 +68,38 @@ a.w:focus-visible {
 }
 
 /* ---------- the form, as hairlines ---------- */
+/* the whole width of the plate, under its heading (2026-11-25: «take the width of the thing it has») */
 .kf {
-  grid-column: 8 / span 5;
-  align-self: end;
+  grid-column: 1 / -1;
+  align-self: start;
   --ta: 110px;
   --row: clamp(18px, 3vh, 28px);
   display: flex;
   flex-direction: column;
+  gap: 14px;
+}
+/* the fields and the confirmation in one cell: the plate keeps its height when one gives way to the other */
+.stage {
+  display: grid;
+}
+.stage > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.body {
+  display: flex;
+  flex-direction: column;
   gap: var(--row);
+  transition:
+    opacity 0.28s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.28s cubic-bezier(0.23, 1, 0.32, 1),
+    visibility 0s linear 0s;
+}
+.kf[data-sent] .body {
+  opacity: 0;
+  transform: translateY(-10px);
+  visibility: hidden;
+  transition-delay: 0s, 0s, 0.28s;
 }
 .fields {
   display: grid;
@@ -201,6 +225,87 @@ a.w:focus-visible {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 0.15em;
+}
+
+/* ---------- sent: the mark draws itself, the line rises ---------- */
+.done {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(18px, 2.6vh, 28px);
+}
+.mark {
+  display: block;
+  width: clamp(56px, 5vw, 76px);
+  height: auto;
+  overflow: visible;
+}
+.mark circle,
+.mark path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.mark circle {
+  animation: draw 0.6s cubic-bezier(0.65, 0, 0.35, 1) 0.18s forwards;
+}
+.mark path {
+  stroke-width: 3.5;
+  animation: draw 0.34s cubic-bezier(0.23, 1, 0.32, 1) 0.66s forwards;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.doneText {
+  margin: 0;
+  max-width: 22em;
+  text-wrap: balance;
+  font-weight: 600;
+  font-size: clamp(26px, 2.6vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  opacity: 0;
+  transform: translateY(14px);
+  animation: rise 0.5s cubic-bezier(0.23, 1, 0.32, 1) 0.5s forwards;
+}
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* read out by the status line, shown by the panel */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .body,
+  .kf[data-sent] .body {
+    transform: none;
+    transition: none;
+  }
+  .mark circle,
+  .mark path,
+  .doneText {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (max-width: 900px) {
