@@ -1,4 +1,4 @@
-/* Kontakt on «Platene» (KontaktPlater.tsx): the three ways as lines between rules, the e-mail at poster size; the form drawn as hairlines. */
+/* Kontakt on «Platene» (KontaktPlater.tsx): the three ways as lines between rules, the e-mail at poster size; the form as hairlines (KontaktSkjema.tsx). */
 
 /* ---------- the ways ---------- */
 .ways {
@@ -67,7 +67,7 @@ a.w:focus-visible {
   outline-offset: 4px;
 }
 
-/* ---------- the form, drawn as hairlines ---------- */
+/* ---------- the form, as hairlines ---------- */
 .kf {
   grid-column: 8 / span 5;
   align-self: end;
@@ -96,23 +96,62 @@ a.w:focus-visible {
 .full {
   grid-column: 1 / -1;
 }
-/* an input: one line of 16–19 px text at 1.5, 8 px over and 10 px under, a hairline below */
+/*
+ * an input: one line of 16–19 px text at 1.5, 8 px over and 10 px under, a hairline below. The
+ * hairline is --strong at 32%, as drawn; on the colour, not the element, so typed text is full strength.
+ */
 .box {
+  --fs: clamp(16px, 1.2vw, 19px);
   display: block;
   box-sizing: border-box;
-  height: calc(clamp(16px, 1.2vw, 19px) * 1.5 + 18px);
-  border-bottom: 1px solid var(--strong);
-  opacity: 0.32;
+  width: 100%;
+  height: calc(var(--fs) * 1.5 + 18px);
+  margin: 0;
+  padding: 8px 0 10px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--strong) 32%, transparent);
+  border-radius: 0;
+  background: transparent;
+  appearance: none;
+  font: inherit;
+  font-weight: 400;
+  font-size: var(--fs);
+  line-height: 1.5;
+  letter-spacing: normal;
+  color: var(--fg);
 }
-/* the textarea: its ruled lines */
+.box:focus {
+  outline: none;
+}
+.box:focus-visible {
+  border-bottom-color: var(--strong);
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+.box[aria-invalid='true'] {
+  border-bottom-color: var(--focus);
+}
+/* the textarea: its ruled lines (--rule at the same 32%), one under each line of text, scrolling with it */
 .area {
-  --fs: clamp(16px, 1.2vw, 19px);
+  --lh: calc(var(--fs) * 1.5 + 12px);
   height: auto;
   min-height: var(--ta);
+  padding: 0;
+  line-height: var(--lh);
+  resize: vertical;
   background-image: repeating-linear-gradient(
-    transparent 0 calc(var(--fs) * 1.5 + 11px),
-    var(--rule) calc(var(--fs) * 1.5 + 11px) calc(var(--fs) * 1.5 + 12px)
+    transparent 0 calc(var(--lh) - 1px),
+    color-mix(in srgb, var(--rule) 32%, transparent) calc(var(--lh) - 1px) var(--lh)
   );
+  background-attachment: local;
+}
+/* the honeypot: off the page, not display:none, which some bots skip */
+.hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 .send {
   display: flex;
@@ -121,8 +160,13 @@ a.w:focus-visible {
   gap: 14px 24px;
   margin-top: 6px;
 }
-/* Send: the front page's «Pilen», drawn (inside .send, to win over knapp.module.css's own .k) */
+/* Send: the front page's «Pilen» (inside .send, to win over knapp.module.css's own .k); a <button>, so its own border and font go */
 .send .k {
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: var(--font);
   --k-bg: var(--accent);
   --k-fg: var(--ground);
   --k-hbg: var(--strong);
@@ -131,12 +175,24 @@ a.w:focus-visible {
   --k-px: 18px;
   font-size: 16px;
 }
+.send .k:disabled {
+  cursor: progress;
+}
 .notice {
   font-size: 14px;
   line-height: 1.5;
   color: var(--fg-3);
   max-width: 28em;
   margin: 0;
+}
+/* the status line before anything is sent: kept in the tree for a reader, out of the row's gaps */
+.notice:empty {
+  position: absolute;
+}
+.notice a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 @media (max-width: 900px) {

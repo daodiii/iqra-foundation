@@ -201,7 +201,10 @@ export const site = {
         orgnr: 'Organisation number',
         message: 'Message',
         send: 'Send',
-        notice: 'The form is not connected yet. Please send us an email in the meantime.',
+        sent: '[FORM_SENT]',
+        invalid: '[FORM_INVALID]',
+        failed: '[FORM_FAILED]',
+        privacy: '[FORM_PRIVACY]',
       },
     },
     support: {
