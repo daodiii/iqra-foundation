@@ -23,7 +23,7 @@ export { assertPath, StaleError, type Change, type Store } from './files';
 export function getStore(env: NodeJS.ProcessEnv = process.env): Store | null {
   const token = env.REDAKSJON_GITHUB_TOKEN;
   if (token) {
-    const [owner, repo] = (env.REDAKSJON_REPO ?? 'daodiii/iqra-foundation').split('/');
+    const [owner, repo] = (env.REDAKSJON_REPO ?? 'iqrasti/iqra-foundation').split('/');
     return new GitHubStore({ token, owner, repo, branch: env.REDAKSJON_BRANCH ?? 'main' });
   }
   if (env.NODE_ENV === 'production' && !env.REDAKSJON_LOCAL_ROOT) return null;

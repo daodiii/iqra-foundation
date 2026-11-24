@@ -54,6 +54,8 @@ export async function readSave<S extends Section>(
   const b = raw as Record<string, unknown>;
   const f = b.fields && typeof b.fields === 'object' ? (b.fields as Record<string, unknown>) : {};
   const fields = coerce(section, f, typeof f.body === 'string' ? f.body : '');
+  // An empty address is none: the server makes one (an event whose title has no Latin letters).
+  if (b.slug === '') delete b.slug;
   if (b.slug !== undefined && !isSlug(b.slug)) {
     throw new EditorError(422, 'Nettadressen kan bare ha små bokstaver, tall og bindestrek.', [{ key: 'slug', text: 'Nettadresse' }]);
   }

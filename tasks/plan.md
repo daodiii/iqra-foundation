@@ -57,30 +57,30 @@ go to Vercel Blob.
 - [ ] Not yet verified: the Clerk path itself (needs the owner's keys, at setup)
 
 ### Phase 2: News, end to end
-- [ ] T4 API routes for sections (list, read, save, delete), checked and validated
-- [ ] T5 The shell and start page (rail, «Hva vil du dele i dag?», «Sist endret»), phone top bar
-- [ ] T6 The writing sheet: headline, ingress, TipTap text and toolbar, Markdown out
-- [ ] T7 The side panel and saving: «Vis på nettsiden», date, «Nettadresse», checklist, card
+- [x] T4 API routes for sections (list, read, save, delete), checked and validated
+- [x] T5 The shell and start page (rail, «Hva vil du dele i dag?», «Sist endret»), phone top bar
+- [x] T6 The writing sheet: headline, ingress, TipTap text and toolbar, Markdown out
+- [x] T7 The side panel and saving: «Vis på nettsiden», date, «Nettadresse», checklist, card
       preview, «Lagre» with status, the phone save bar
-- [ ] T8 Pictures: the cover with its description, pictures in the text, shrink and upload
+- [x] T8 Pictures: the cover with its description, pictures in the text, shrink and upload
 
 ### Checkpoint 2: a news post goes from editor to page
-- [ ] e2e: log in (test seam), write, add a picture, save, see it in «Sist endret», edit, delete
+- [x] e2e: log in (test seam), write, add a picture, save, see it in «Sist endret», edit, delete
 - [ ] Saved files render on /aktuelt in a production build
 - [ ] Screenshots at 1440 and 390 shown to the owner against mockup A
 
 ### Phase 3: The other sections
-- [ ] T9 Arrangementer in the Arket layout
-- [ ] T10 Menneskene bak
-- [ ] T11 Ressurser, with PDF and video through Vercel Blob
-- [ ] T12 Section lists, and delete with one confirmation
+- [x] T9 Arrangementer in the Arket layout
+- [x] T10 Menneskene bak
+- [x] T11 Ressurser, with PDF and video through Vercel Blob
+- [x] T12 Section lists, and delete with one confirmation
 
 ### Checkpoint 3: complete
 - [ ] e2e for every section at 1440, 1024, 390 and 320; no sideways scroll
 - [ ] Code review (Addy's `code-reviewer`) and security review (`security-auditor`) on the branch
 
 ### Phase 4: Live
-- [ ] T13 README «Redaksjon» setup steps; the PR (not merged without the owner's word)
+- [x] T13 README «Redaksjon» setup steps; the PR (not merged without the owner's word)
 - [ ] The owner sets up Clerk, Blob, the token and `EDITOR_EMAILS`; then a live test post
 - [ ] Ask: remove Keystatic and its postinstall now?
 

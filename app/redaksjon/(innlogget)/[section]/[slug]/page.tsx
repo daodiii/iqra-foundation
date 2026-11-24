@@ -1,9 +1,12 @@
 import { notFound } from 'next/navigation';
 import { ArrangementEditor } from '@/components/redaksjon/ArrangementEditor';
 import { NyhetEditor } from '@/components/redaksjon/NyhetEditor';
+import { PersonEditor } from '@/components/redaksjon/PersonEditor';
+import { RessursEditor } from '@/components/redaksjon/RessursEditor';
 import { todayISO } from '@/lib/content';
 import { opened } from '@/lib/redaksjon/load';
-import { blank, isSection, type Arrangement, type EntryOf, type Nyhet, type Section } from '@/lib/redaksjon/schema';
+import { blank, isSection, type Arrangement, type EntryOf, type Nyhet, type Person, type Ressurs, type Section } from '@/lib/redaksjon/schema';
+import { fileMode } from '@/lib/redaksjon/upload';
 
 /** Writing: `/redaksjon/<section>/ny` for a new post, `/redaksjon/<section>/<address>` to edit one. */
 export default async function Skriv({ params }: PageProps<'/redaksjon/[section]/[slug]'>) {
@@ -25,7 +28,9 @@ export default async function Skriv({ params }: PageProps<'/redaksjon/[section]/
       return <NyhetEditor key={key} initial={entry.fields as Nyhet} slug={entry.slug} version={entry.version} />;
     case 'arrangementer':
       return <ArrangementEditor key={key} initial={entry.fields as Arrangement} slug={entry.slug} version={entry.version} today={today} />;
-    default:
-      notFound();
+    case 'ressurser':
+      return <RessursEditor key={key} initial={entry.fields as Ressurs} slug={entry.slug} version={entry.version} files={fileMode()} />;
+    case 'menneskene':
+      return <PersonEditor key={key} initial={entry.fields as Person} slug={entry.slug} version={entry.version} />;
   }
 }

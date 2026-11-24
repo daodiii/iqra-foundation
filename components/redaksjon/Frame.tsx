@@ -17,19 +17,21 @@ export const NEW_LABEL: Record<Section, string> = {
  * and «Lagre»; the sheet; the panel beside it; on a phone, «Lagre» fixed at the bottom. A saved
  * entry can be deleted from here, after one question that names it.
  */
-export function Frame<S extends Section>({ entry, liveHref, sheet, panel, panelLabel }: {
+export function Frame<S extends Section>({ entry, liveHref, sheet, panel, panelLabel, hold }: {
   entry: EntryState<S>;
   /** The entry on the site, when it is there as it is now. */
   liveHref?: string | null;
   sheet: React.ReactNode;
   panel: React.ReactNode;
   panelLabel: string;
+  /** Why «Lagre» must wait, e.g. a file still uploading. */
+  hold?: string;
 }) {
   const { section, issues, status, dirty, busy, saved, error } = entry;
   const ask = useRef<HTMLDialogElement>(null);
   const name = saved ? titleOf(section, saved.fields) || LABELS[section].one : '';
 
-  const saveLabel = issues.length ? `Mangler: ${issues.map((x) => x.text.toLowerCase()).join(', ')}` : undefined;
+  const saveLabel = hold ?? (issues.length ? `Mangler: ${issues.map((x) => x.text.toLowerCase()).join(', ')}` : undefined);
   const statusEl = (
     <span className={s.status} data-tone={status.tone} role="status" aria-live="polite">
       {status.tone === 'ok' && <Icon name="check" />}
@@ -38,7 +40,7 @@ export function Frame<S extends Section>({ entry, liveHref, sheet, panel, panelL
     </span>
   );
   const saveBtn = (
-    <button type="button" className={`${s.btn} ${s.go}`} onClick={entry.save} disabled={busy || issues.length > 0 || !dirty} title={saveLabel} aria-describedby={issues.length ? 'redaksjon-mangler' : undefined}>
+    <button type="button" className={`${s.btn} ${s.go}`} onClick={entry.save} disabled={busy || Boolean(hold) || issues.length > 0 || !dirty} title={saveLabel} aria-describedby={issues.length ? 'redaksjon-mangler' : undefined}>
       {status.tone === 'busy' && status.text.startsWith('Lagrer') ? 'Lagrer …' : 'Lagre'}
     </button>
   );

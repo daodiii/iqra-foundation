@@ -95,6 +95,12 @@ function readPic(section: Section, key: string, v: unknown): Pic {
   return { src: src.startsWith('/') || /^https?:\/\//.test(src) ? src : publicBase(section, key) + src, alt: s(o.alt) };
 }
 
+/** A resource's file or video as an address: a bare file name (as Keystatic writes it) is under the collection's public folder. */
+function readFile(section: Section, key: string, v: unknown): string {
+  const f = s(v);
+  return f === '' || f.startsWith('/') || /^https?:\/\//.test(f) ? f : publicBase(section, key) + f;
+}
+
 const KNOWN: Record<Section, string[]> = {
   nyheter: ['title', 'date', 'summary', 'image', 'publish'],
   arrangementer: ['title', 'start', 'time', 'end', 'place', 'text', 'link', 'program', 'report', 'recording', 'image'],
@@ -119,7 +125,10 @@ export function coerce<S extends Section>(section: S, raw: Raw, body = ''): Entr
       };
       break;
     case 'ressurser':
-      fields = { title: s(raw.title), category: s(raw.category), date: s(raw.date), summary: s(raw.summary), file: s(raw.file), video: s(raw.video), url: s(raw.url) };
+      fields = {
+        title: s(raw.title), category: s(raw.category), date: s(raw.date), summary: s(raw.summary),
+        file: readFile(section, 'file', raw.file), video: readFile(section, 'video', raw.video), url: s(raw.url),
+      };
       break;
     default:
       fields = { name: s(raw.name), role: s(raw.role), photo: readPic(section, 'photo', raw.photo), bio: s(raw.bio), order: typeof raw.order === 'number' ? raw.order : 10 };

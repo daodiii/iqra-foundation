@@ -70,7 +70,7 @@ const uniqueName = (name: string) => `${Date.now().toString(36)}-${name.toLowerC
 
 export default config({
   storage: github
-    ? { kind: 'github', repo: { owner: 'daodiii', name: 'iqra-foundation' } }
+    ? { kind: 'github', repo: { owner: 'iqrasti', name: 'iqra-foundation' } }
     : { kind: 'local' },
   ui: {
     brand: { name: 'Iqra Foundation', mark },

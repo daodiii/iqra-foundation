@@ -20,8 +20,22 @@ async function clerkProxy() {
   return clerk;
 }
 
+/**
+ * A write must come from this site's own pages. A browser marks a request from another site with
+ * its `Origin` and `Sec-Fetch-Site`; a page elsewhere could otherwise post a «simple» request that
+ * rides the editor's login and publishes a post (`text/plain` needs no preflight).
+ */
+export function crossSiteWrite(req: Request): boolean {
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return false;
+  const site = req.headers.get('sec-fetch-site');
+  if (site && site !== 'same-origin' && site !== 'none') return true;
+  const origin = req.headers.get('origin');
+  return Boolean(origin) && origin !== new URL(req.url).origin;
+}
+
 export default async function proxy(req: NextRequest, ev: NextFetchEvent) {
   if (!editorEnabled()) return new NextResponse(null, { status: 404 });
+  if (crossSiteWrite(req)) return NextResponse.json({ error: 'Ugyldig opphav.' }, { status: 403 });
   if (testEditor()) return NextResponse.next();
   return (await clerkProxy())(req, ev);
 }

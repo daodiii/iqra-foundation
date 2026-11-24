@@ -16,6 +16,9 @@ export type Status = { tone: 'idle' | 'busy' | 'ok' | 'error'; text: string };
 type Local = { name: string; blob: Blob; path?: string };
 
 /** The time as Norwegian writes it: «11.34». */
+/** What one save may send, under Vercel's 4.5 MB limit for a request to a function. */
+const MAX_REQUEST = 4 * 1024 * 1024;
+
 const hhmm = () => new Date().toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
 
 /**
@@ -92,6 +95,11 @@ export function useEntry<S extends Section>(section: S, initial: EntryOf[S], sav
       fail('Kunne ikke lese et av bildene. Prøv å velge det på nytt.');
       return;
     }
+    // A save is one request, and Vercel takes at most 4.5 MB: new pictures beyond that wait for a second save.
+    if (uploads.reduce((n, u) => n + u.data.length, 0) + text.length > MAX_REQUEST) {
+      fail('For mange nye bilder i én lagring. Fjern et bilde, lagre, og legg det til igjen etterpå.');
+      return;
+    }
     const r = saved && version
       ? await api.save(section, saved.slug, fields, version, to, uploads)
       : await api.create(section, fields, to, uploads);
@@ -108,9 +116,10 @@ export function useEntry<S extends Section>(section: S, initial: EntryOf[S], sav
     setSaved({ fields: f, slug: r.value.slug });
     setStatus({ tone: 'ok', text: r.value.note.replace(/^Lagret/, `Lagret kl. ${hhmm()}`) });
     // A new or moved post gets its address in the bar without leaving the page (a new page would
-    // show the pictures from the site, which has them only after its rebuild).
+    // show the pictures from the site, which has them only after its rebuild). No refresh after a
+    // save: this state is already what was saved, and a refresh would render the page anew under
+    // the new address and a new key, dropping anything typed while the save was under way.
     if (moved) window.history.replaceState(null, '', `/redaksjon/${section}/${r.value.slug}`);
-    else router.refresh();
   };
 
   /** Deletes the saved entry, then goes to the section's list. False when it was refused. */

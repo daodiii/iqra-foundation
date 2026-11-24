@@ -124,14 +124,57 @@ function taken(section: Section): EditorError {
   return new EditorError(409, text[section], [{ key: section === 'nyheter' ? 'slug' : LABELS[section].titleKey, text: section === 'nyheter' ? 'Nettadresse' : section === 'menneskene' ? 'Navn' : 'Tittel' }]);
 }
 
+/** A picture the site serves itself: under `/opplastet/` (the editor's) or `/media/` (by hand). */
+const OWN_PICTURE = /^\/(opplastet|media)\/[A-Za-z0-9._\/-]+$/;
+/** A resource's file or video: here (`/files/ressurser/`, `/opplastet/ressurser/`) or in a public Blob store under `ressurser/`. */
+const OWN_FILE = /^(\/(files|opplastet)\/ressurser\/[A-Za-z0-9._\/-]+|https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\/ressurser\/[a-z0-9.-]+)$/;
+const clean = (v: string, re: RegExp) => v === '' || (re.test(v) && !v.split('/').includes('..'));
+
+/**
+ * What the browser cannot see but the server must: every picture, file and video points at the
+ * site's own folders or the Blob store, never at another site (the page would fail to build, or
+ * «Last ned» would hand out someone else's file).
+ */
+function references(section: Section, fields: EntryOf[Section]): { key: string; text: string }[] {
+  const f = fields as Record<string, unknown>;
+  const out: { key: string; text: string }[] = [];
+  for (const key of ['image', 'photo']) {
+    const pic = f[key] as { src?: unknown } | null | undefined;
+    if (pic && !clean(String(pic.src ?? ''), OWN_PICTURE)) out.push({ key, text: 'Bildet må lastes opp her' });
+  }
+  if (typeof f.body === 'string') {
+    for (const m of f.body.matchAll(/!\[[^\]]*\]\(([^)\s]*)/g)) {
+      if (!clean(m[1], OWN_PICTURE)) { out.push({ key: 'body', text: 'Bilder i teksten må lastes opp her' }); break; }
+    }
+  }
+  if (section === 'ressurser') {
+    for (const key of ['file', 'video']) if (!clean(String(f[key] ?? ''), OWN_FILE)) out.push({ key, text: key === 'file' ? 'Filen må lastes opp her' : 'Videoen må lastes opp her' });
+  }
+  return out;
+}
+
 function check<S extends Section>(section: S, fields: EntryOf[S]) {
-  const p = problems(section, fields);
+  const p = [...problems(section, fields), ...references(section, fields)];
   if (p.length) throw new EditorError(422, `Mangler: ${p.map((x) => x.text).join(', ')}.`, p);
+}
+
+/**
+ * The address a new entry is saved under. News has its own field for it. The others take it
+ * from the title or name; when that gives none (a title with no Latin letters) or «ny», the
+ * section's word and a short random tail stand in, since nobody sees those addresses.
+ */
+function newSlug(section: Section, given: string | undefined, fields: EntryOf[Section]): string {
+  if (section === 'nyheter') return given || slugify(titleOf(section, fields));
+  const slug = given || slugify(titleOf(section, fields));
+  return isSlug(slug) && slug !== 'ny' ? slug : `${slugify(LABELS[section].one)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /** The commit message: «Nyhet: <title> (<email>)», «Slettet nyhet: …» for a delete. */
 const message = (section: Section, title: string, email: string, deleted = false) =>
-  `${deleted ? `Slettet ${LABELS[section].one.toLowerCase()}` : LABELS[section].one}: ${title} (${email})`;
+  `${deleted ? `Slettet ${LABELS[section].one.toLowerCase()}` : LABELS[section].one}: ${oneLine(title)} (${email})`;
+
+/** A title on one line and of a sane length, so it cannot add lines (or trailers) to the commit. */
+const oneLine = (t: string) => t.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100);
 
 /** What the editor says after a save. */
 function note(section: Section, fields: Record<string, unknown>): string {
@@ -146,7 +189,7 @@ export async function createEntry<S extends Section>(
   store: Store, section: S, input: { fields: EntryOf[S]; slug?: string; uploads?: Upload[] }, email: string,
 ): Promise<Saved> {
   check(section, input.fields);
-  const slug = input.slug ?? slugify(titleOf(section, input.fields));
+  const slug = newSlug(section, input.slug, input.fields);
   usable(slug);
   if ((await readAll(store, section, slug)).exists) {
     throw taken(section);

@@ -16,13 +16,20 @@ import type { NextConfig } from "next";
  * scripts, frames, plug-ins and form posts from anywhere else. Not applied to the content
  * editor under /keystatic, which loads GitHub's own scripts and talks to its API.
  */
+/**
+ * Where the editor's PDFs and videos live: Vercel Blob's public stores. A resource's video plays on
+ * /ressurser from there, so the site lets media come from it; the editor's browser uploads go to
+ * Blob's API at vercel.com (`app/api/redaksjon/fil/route.ts`).
+ */
+const BLOB_HOSTS = 'https://*.public.blob.vercel-storage.com';
+
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "media-src 'self'",
+  `media-src 'self' ${BLOB_HOSTS}`,
   "connect-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
@@ -49,8 +56,9 @@ const editorCsp = [
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}${clerk ? ` https://${clerk} https://challenges.cloudflare.com` : ''}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob:${clerk ? ' https://img.clerk.com' : ''}`,
+  `media-src 'self' blob: ${BLOB_HOSTS}`,
   "font-src 'self' data:",
-  `connect-src 'self'${clerk ? ` https://${clerk}` : ''}`,
+  `connect-src 'self' https://vercel.com ${BLOB_HOSTS}${clerk ? ` https://${clerk}` : ''}`,
   `frame-src${clerk ? ' https://challenges.cloudflare.com' : " 'none'"}`,
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
@@ -114,7 +122,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: '/((?!keystatic|api/keystatic|redaksjon|api/redaksjon).*)', headers: securityHeaders },
+      { source: '/((?!(?:keystatic|api/keystatic|redaksjon|api/redaksjon)(?:/|$)).*)', headers: securityHeaders },
       {
         source: '/:dir(redaksjon|api/redaksjon)/:rest*',
         headers: [

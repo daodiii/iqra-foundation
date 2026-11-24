@@ -6,7 +6,7 @@ import StarterKit from '@tiptap/starter-kit';
 /**
  * What a news text may hold, and its conversion to and from Markdown (`body.mdoc`, which the
  * site renders with Markdoc). Only the formats the toolbar offers: headings at levels 2 and 3,
- * bold, italic, links, lists, quotes and pictures. Anything else pasted in (a table, a colour,
+ * bold, italic, links, lists, quotes, pictures and dividers (`---`, which Keystatic offers). Anything else pasted in (a table, a colour,
  * a level-1 heading) is dropped or turned into one of these by the schema.
  */
 export const EXTENSIONS: AnyExtension[] = [
@@ -16,7 +16,6 @@ export const EXTENSIONS: AnyExtension[] = [
     codeBlock: false,
     strike: false,
     underline: false,
-    horizontalRule: false,
     link: { openOnClick: false, autolink: true, defaultProtocol: 'https', protocols: ['http', 'https', 'mailto'] },
   }),
   Image.configure({ inline: false, allowBase64: false }),

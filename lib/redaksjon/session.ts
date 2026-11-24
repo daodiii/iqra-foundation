@@ -15,7 +15,9 @@ export async function currentEditor(): Promise<Who> {
   const { currentUser } = await import('@clerk/nextjs/server');
   const user = await currentUser();
   if (!user) return { kind: 'anon' };
-  const email = (user.primaryEmailAddress?.emailAddress ?? '').toLowerCase();
+  // Only an address Clerk has verified counts: a sign-in method added later must not let someone claim an editor's address.
+  const primary = user.primaryEmailAddress;
+  const email = primary?.verification?.status === 'verified' ? primary.emailAddress.toLowerCase() : '';
   return mayEdit(email) ? { kind: 'editor', email } : { kind: 'denied', email };
 }
 

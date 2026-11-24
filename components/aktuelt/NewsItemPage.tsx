@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { NewsCard } from '@/components/aktuelt/Aktuelt';
-import { Lesing } from '@/components/aktuelt/Lesing';
+import { Lesing, LESING_WORDS } from '@/components/aktuelt/Lesing';
 import a from '@/components/aktuelt/artikkel.module.css';
 import { Body } from '@/components/site/Body';
 import page from '@/components/site/page.module.css';
@@ -30,7 +30,7 @@ export function newsItemMeta(slug: string, lang: Lang): Metadata {
 /** The few words this page has of its own, in both languages. */
 const WORDS = {
   no: { read: (m: number) => `${m} min lesing`, more: 'Flere nyheter', toAll: 'Til Aktuelt' },
-  en: { read: (m: number) => `${m} min read`, more: 'More news', toAll: 'To Aktuelt' },
+  en: { read: (m: number) => `${m} min read`, more: 'More news', toAll: 'All news' },
 } as const;
 
 /**
@@ -65,7 +65,7 @@ export function NewsItemPage({ slug, lang }: { slug: string; lang: Lang }) {
 
       <div className={a.sheet}>
         <Lesing
-          parts={parts} textId="artikkel-tekst"
+          parts={parts} textId="artikkel-tekst" words={LESING_WORDS[lang]} partsLang={foreign}
           meta={<p className={a.meta}>{back}<br />{date}<br />{read}{inNorwegian && <><br />{inNorwegian}</>}</p>}
         />
         <div className={a.main} id="artikkel-tekst">

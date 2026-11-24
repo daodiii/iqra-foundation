@@ -26,7 +26,8 @@ test('a news post goes from the sheet to the start page and back out', async ({ 
   await page.goto(`${BASE}/redaksjon`);
   await expect(page.getByRole('heading', { name: 'Hva vil du dele i dag?' })).toBeVisible();
   await page.getByRole('link', { name: /Ny nyhet/ }).click();
-  await expect(page.locator('.ProseMirror')).toBeVisible();
+  // The text editor mounts after the page's script has loaded; a loaded machine can take over 5 s.
+  await expect(page.locator('.ProseMirror')).toBeVisible({ timeout: 15_000 });
 
   const lagre = page.getByRole('button', { name: 'Lagre' }).locator('visible=true').first();
   await expect(lagre).toBeDisabled();

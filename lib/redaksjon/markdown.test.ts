@@ -16,6 +16,8 @@ describe('Markdown in and out', () => {
     ['numbered list', '1. en\n2. to\n'],
     ['quote', '> Kunnskap er lys.\n'],
     ['picture', '![Folk i et lyst rom](/opplastet/nyheter/a/b.webp)\n'],
+    // Keystatic offers a divider; a post written there must keep it when edited here.
+    ['divider', 'Første del.\n\n---\n\nAndre del.\n'],
   ])('%s survives', (_name, src) => {
     expect(round(src)).toBe(src);
   });

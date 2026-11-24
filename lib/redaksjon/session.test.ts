@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { editorEmails, editorEnabled, mayEdit, testEditor } from './access';
 
 vi.mock('server-only', () => ({}));
-const user = vi.hoisted(() => ({ current: null as null | { primaryEmailAddress: { emailAddress: string } | null } }));
+const user = vi.hoisted(() => ({ current: null as null | { primaryEmailAddress: { emailAddress: string; verification?: { status: string } } | null } }));
 vi.mock('@clerk/nextjs/server', () => ({ currentUser: async () => user.current }));
 const { currentEditor, guard } = await import('./session');
 
@@ -53,11 +53,14 @@ describe('the gate on every route', () => {
   test('no session is 401, an address off the list 403, a listed one passes', async () => {
     set({ ...CONFIGURED, REDAKSJON_TEST_EDITOR: '' });
     expect(((await guard()) as Response).status).toBe(401);
-    user.current = { primaryEmailAddress: { emailAddress: 'per@example.org' } };
+    user.current = { primaryEmailAddress: { emailAddress: 'per@example.org', verification: { status: 'verified' } } };
     expect(((await guard()) as Response).status).toBe(403);
     expect(await currentEditor()).toEqual({ kind: 'denied', email: 'per@example.org' });
-    user.current = { primaryEmailAddress: { emailAddress: 'Ola@Example.org' } };
+    user.current = { primaryEmailAddress: { emailAddress: 'Ola@Example.org', verification: { status: 'verified' } } };
     expect(await guard()).toEqual({ email: 'ola@example.org' });
+    // A listed address Clerk has not verified does not count.
+    user.current = { primaryEmailAddress: { emailAddress: 'ola@example.org', verification: { status: 'unverified' } } };
+    expect(((await guard()) as Response).status).toBe(403);
   });
   test('the test editor needs no Clerk', async () => {
     set({ NODE_ENV: 'development', REDAKSJON_TEST_EDITOR: 'test@example.org', NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: '', CLERK_SECRET_KEY: '' });

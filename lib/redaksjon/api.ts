@@ -25,7 +25,11 @@ async function call<T>(method: string, url: string, body?: unknown): Promise<Res
   }
   if (res.ok) return { ok: true, value: (res.status === 204 ? undefined : await res.json()) as T };
   const b = (await res.json().catch(() => ({}))) as { error?: string; fields?: Problem[] };
-  const error = b.error ?? (res.status === 401 ? 'Du er logget ut. Logg inn igjen.' : 'Noe gikk galt. Prøv igjen.');
+  const error = b.error ?? (
+    res.status === 401 ? 'Du er logget ut. Logg inn igjen.'
+      : res.status === 413 ? 'Det du lagrer er for stort. Fjern et bilde, lagre, og legg det til igjen etterpå.'
+        : 'Noe gikk galt. Prøv igjen.'
+  );
   return { ok: false, status: res.status, error, fields: b.fields ?? [] };
 }
 

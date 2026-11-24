@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
-const user = vi.hoisted(() => ({ current: null as null | { primaryEmailAddress: { emailAddress: string } } }));
+const user = vi.hoisted(() => ({ current: null as null | { primaryEmailAddress: { emailAddress: string; verification?: { status: string } } } }));
 vi.mock('@clerk/nextjs/server', () => ({ currentUser: async () => user.current }));
 
 const list = await import('./[section]/route');
@@ -52,7 +52,7 @@ describe('the gate', () => {
     vi.stubEnv('REDAKSJON_LOCAL_ROOT', root);
     expect((await POST('nyheter', nyhet())).status).toBe(401);
     expect((await GET1('nyheter', 'x')).status).toBe(401);
-    user.current = { primaryEmailAddress: { emailAddress: 'per@example.org' } };
+    user.current = { primaryEmailAddress: { emailAddress: 'per@example.org', verification: { status: 'verified' } } };
     expect((await PUT('nyheter', 'x', nyhet())).status).toBe(403);
     expect((await DEL('nyheter', 'x', '')).status).toBe(403);
     expect(existsSync(path.join(root, 'content'))).toBe(false);
@@ -94,11 +94,30 @@ describe('a news post through the API', () => {
   });
 
   test('an invalid post is 422 with the fields named, and nothing is written', async () => {
-    const r = await POST('nyheter', nyhet({ title: ' ', summary: '', image: { src: '/x.webp', alt: '' } }));
+    const r = await POST('nyheter', nyhet({ title: ' ', summary: '', image: { src: '/opplastet/nyheter/x/a.webp', alt: '' } }));
     expect(r.status).toBe(422);
     const body = (await r.json()) as { fields: { key: string }[] };
     expect(body.fields.map((f) => f.key)).toEqual(['title', 'summary', 'image']);
     expect(existsSync(path.join(root, 'content'))).toBe(false);
+  });
+
+  test('pictures, files and videos must be the site\'s own or in the Blob store', async () => {
+    const keys = async (section: string, fields: Record<string, unknown>) =>
+      ((await (await POST(section, { fields })).json()) as { fields: { key: string }[] }).fields.map((f) => f.key);
+    expect(await keys('nyheter', nyhet({ image: { src: 'https://evil.example/x.jpg', alt: 'x' } }).fields)).toEqual(['image']);
+    expect(await keys('nyheter', nyhet({ body: 'Se ![x](https://evil.example/x.jpg)' }).fields)).toEqual(['body']);
+    expect(await keys('nyheter', nyhet({ image: { src: '/opplastet/../../x.webp', alt: 'x' } }).fields)).toEqual(['image']);
+    const ressurs = { title: 'Rapport', category: 'publikasjoner', date: '2026-11-24', summary: 'Kort.', url: '' };
+    expect(await keys('ressurser', { ...ressurs, file: 'https://evil.example/malware.pdf' })).toEqual(['file']);
+    expect(await keys('ressurser', { ...ressurs, video: 'https://abc123.public.blob.vercel-storage.com/annet/x.mp4' })).toEqual(['video']);
+    const ok = await POST('ressurser', { fields: { ...ressurs, file: 'https://abc123.public.blob.vercel-storage.com/ressurser/rapport-ab12cd.pdf' } });
+    expect(ok.status).toBe(201);
+  });
+
+  test('an event whose title gives no address still saves, under a stand-in', async () => {
+    const r = await POST('arrangementer', { fields: { title: 'محاضرة', start: '2027-01-10', place: 'Oslo', text: 'Et foredrag.' }, slug: '' });
+    expect(r.status).toBe(201);
+    expect(((await r.json()) as { slug: string }).slug).toMatch(/^arrangement-[a-z0-9]{6}$/);
   });
 
   test('fields of the wrong type are read as empty, not trusted', async () => {
