@@ -1,0 +1,186 @@
+/*
+ * The front page's ground rules (the owner's redesign, 2026-11-18/19).
+ *
+ * Colour: three, since 2026-11-20 (the owner): navy #1b2a4a and white carry the page, a deep
+ * burgundy #67112f is kept for what must be seen. Text is black on light grounds, white on navy.
+ * Teal and turquoise are gone from the site (they stay in the brand's own print and logo work).
+ * Type: Instrument Sans everywhere, 600 for titles, 400 for text, 500 for labels and controls.
+ */
+.page {
+  --navy: #1b2a4a;
+  --navy-dark: #13213a;
+  --navy-deep: #101c32;
+  /* three colours: navy, white and a deep burgundy for what must be seen (the owner, 2026-11-20) */
+  --rod: #67112f;
+  --rod-dyp: #4e0b22;
+  --rod-pale: #fcedf0;
+  /* text: black on light grounds, white on navy (the owner, 2026-11-20: a think tank is read) */
+  --ink: #000;
+  /* the keyboard ring: burgundy on light grounds, white where the ground is navy or burgundy */
+  --focus: var(--rod);
+  --on-navy: #fff;
+  /* a grey of the navy family, for a dashed line */
+  --ink-4: #7f8ba6;
+  /* the carved logo's layers (Hero.tsx) */
+  --carve-soft: #060c1a;
+  --carve-soft-c: #21030b;
+  --carve-shade: #0b1427;
+  --carve-shade-c: #3c0416;
+  --carve-hi: #496396;
+  --carve-hi-c: #bc5b71;
+  --carve-face: #253b65;
+
+  --gutter: clamp(20px, 3.4vw, 64px);
+
+  /*
+   * The front page's type scale on desktop (the owner, 2026-11-20: «varying sizes, but not too much»;
+   * «A is the best» of six mocked scales).
+   * At 1536x960: display 75, section title 60, part title 38, card title 28, lead 22, body 18.
+   * Phone sizes stay in each section's own media query.
+   */
+  --t-display: clamp(44px, min(4.9vw, 8vh), 80px);
+  --t-h2: clamp(34px, min(3.9vw, 6.6vh), 64px);
+  --t-h3: clamp(26px, min(2.5vw, 4.4vh), 42px);
+  --t-h4: clamp(22px, min(1.8vw, 3.2vh), 30px);
+  --t-lead: clamp(18px, min(1.45vw, 2.6vh), 24px);
+  --t-body: clamp(16px, 1.15vw, 19px);
+  --t-statement: clamp(28px, 3.3vw, 60px);
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --font: var(--font-instrument), system-ui, sans-serif;
+
+  font-family: var(--font);
+  font-weight: 400;
+  color: var(--ink);
+  background: #fff;
+}
+
+.page :is(h1, h2, h3, h4) {
+  font-family: var(--font);
+  text-wrap: wrap;
+}
+
+/* The page under the header: the hero is the first screen, so main has no room kept for the header. */
+.main {
+  padding-top: 0;
+}
+
+/* The logo's lines, drawn once and used everywhere on the page (Merke.tsx) */
+.defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* «Foundation» under the mark (Merke.tsx Ordmerke): spread across the width it is given, as in the
+   official lockup; its size and colour come from the caller (--ord-size, --ord-color) */
+.ord {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-instrument), system-ui, sans-serif;
+  font-size: var(--ord-size, 12px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--ord-color, #fff);
+  pointer-events: none;
+}
+
+/* A line of a text that glides in (Lines.tsx): its mask, and the line in it */
+.ln {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+.li {
+  display: block;
+  transition: transform 0.9s var(--ease-text) calc(var(--d, 0ms) + var(--k) * 80ms);
+}
+
+/* The page's one curve for text: a strong ease-out, quick to start, long and soft to land */
+:global(html) {
+  --ease-text: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* 31 «Linjene» (the owner's pick): each line rises out of its mask, 80 ms after the one above */
+[data-lines='off'] .li {
+  transform: translateY(110%);
+}
+
+/* Until the words are gathered into lines the text waits unseen (with JavaScript off it stands plain) */
+:global(html[data-js]) [data-lines='words'] {
+  opacity: 0;
+}
+
+/*
+ * A phone's snap points (Takt.tsx phoneSnaps): empty markers laid at page offsets, each a place a
+ * fling may not pass. They sit on the document's own box (no positioned ancestor), so `top` is the
+ * offset from the top of the page.
+ */
+.snaps {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 0;
+  pointer-events: none;
+}
+
+.snaps > i {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/*
+ * With a phone's snapping on (Takt.tsx phoneSnaps), every block of the page is a snap area, start to
+ * start, so the reader rests anywhere inside one; only the markers above stop a fling.
+ */
+:global(html[data-snap-phone]) :is(:global([data-hero]), :global([data-pour-tx]), :global(#hvorfor), :global(#skape), :global(#handling), :global(#aktuelt), :global(#sammen)) {
+  scroll-snap-align: start;
+}
+
+:global(html[data-snap-phone]) :global([data-lag='fot']) {
+  scroll-snap-align: end;
+}
+
+/* The page's side margins */
+.pad {
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+}
+
+/*
+ * Lagene: each section slides over the one before, which holds back at half speed and darkens by
+ * up to 30% (Lagene.tsx sets the hold and `--fxd`). The later section always lies higher.
+ */
+.layer {
+  position: relative;
+}
+
+/* sections lie side by side now (the owner's trial of a calmer scroll, 2026-11-20): no edge shadow */
+.layerIn {
+  box-shadow: none;
+}
+
+/* the shade over a section as the next comes over it: its own element, so a frame changes one opacity and restyles nothing else */
+.shade {
+  position: absolute;
+  inset: 0;
+  background: #040812;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .li {
+    transition: none !important;
+    transform: none !important;
+  }
+}

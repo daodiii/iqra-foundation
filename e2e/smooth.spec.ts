@@ -17,6 +17,24 @@ async function open(page: Page) {
   await expect(page.locator('h1')).toBeVisible();
 }
 
+/**
+ * The front page carries two parts beat by beat (Takt.tsx, 2026-11-20): the chapter turn under the
+ * hero and the sideways track. A gesture made there comes to rest on a beat, not where the hand
+ * sent it. From «Handling» down the page scrolls freely, so a test of the glide itself starts there,
+ * with room below for `px` more.
+ */
+async function toFreeGround(page: Page, px: number) {
+  const y = await page.evaluate(() => {
+    const el = document.querySelector<HTMLElement>('#handling')!;
+    const y = Math.round(el.getBoundingClientRect().top + window.scrollY);
+    (window as unknown as { __lenis: { scrollTo: (y: number, o: object) => void } }).__lenis.scrollTo(y, { immediate: true, force: true });
+    return y;
+  });
+  const room = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+  expect(room - y, 'room below «Handling» for the gesture').toBeGreaterThan(px + 100);
+  expect(Math.abs((await stillAt(page)) - y)).toBeLessThanOrEqual(2);
+}
+
 /** A gesture of `px` down the page at `speed` px/s, made in the middle of the screen. */
 async function gesture(page: Page, px: number, speed: number) {
   const { width, height } = page.viewportSize()!;
@@ -68,6 +86,7 @@ test('the page glides: it carries on after the hand has stopped, and comes to re
   test.skip(isMobile, 'the glide is for a touchpad, a TrackPoint or a mouse');
   await open(page);
   await expect.poll(() => glides(page)).toBe(true); // the glide starts once the page's script has run
+  await toFreeGround(page, 900);
   const from = await stillAt(page);
   await record(page);
   await gesture(page, 900, 1500);
@@ -107,116 +126,6 @@ test('every page glides, not the home page alone, and a link to another page sto
   expect(await stillAt(page)).toBe(0);
 });
 
-/** A thumb's swipe up the screen of `px`, as raw touch events, held still before it lifts so nothing flings (as sea.spec's). */
-async function swipe(page: Page, px: number) {
-  const cdp = await page.context().newCDPSession(page);
-  const x = 180;
-  const from = Math.round(page.viewportSize()!.height * 0.85);
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: from }] });
-  for (let d = 16; d < px + 16; d += 16) {
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: from - Math.min(px, d) }] });
-    await page.waitForTimeout(16);
-  }
-  await page.waitForTimeout(300);
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-}
-
-test('the name goes back into the header on the scroll and lands exactly on the header’s logo, which takes over', async ({ page }) => {
-  await open(page);
-  // The greeting has played (1.7 s from hydration); then half a screen down, past the dock's end.
-  await page.waitForTimeout(2500);
-  await page.evaluate(() => window.scrollTo(0, Math.round(window.innerHeight * 0.5)));
-  const off = () =>
-    page.evaluate(() => {
-      const name = document.getElementById('hovedtekst')!.getBoundingClientRect();
-      const logo = [...document.querySelectorAll<HTMLElement>('#topp img[data-logo]')].find((el) => el.getBoundingClientRect().width > 0)!.getBoundingClientRect();
-      return Math.max(Math.abs(name.left - logo.left), Math.abs(name.top - logo.top), Math.abs(name.width - logo.width));
-    });
-  await expect.poll(off, { timeout: 10_000 }).toBeLessThan(1.5);
-  await expect(page.locator('#topp')).not.toHaveAttribute('data-lockup');
-});
-
-test('phone: a little scroll sends the logo into the header by itself, on the clock, and the top brings it back out', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'the phone’s timed glide');
-  await open(page);
-  await page.waitForTimeout(2500);
-  const logo = page.locator('#hovedtekst');
-  const start = (await logo.boundingBox())!;
-  // A small scroll, then the finger stops: the logo must still go all the way in (Hero.tsx GLIDE_MS, TOUCH_IN).
-  await page.evaluate(() => window.scrollTo(0, Math.round(innerHeight * 0.15)));
-  await page.waitForTimeout(200);
-  // At 200 ms of 700 it is on its way: smaller than it stood, still larger than the header's logo, not landed.
-  const mid = await page.evaluate(() => {
-    const home = [...document.querySelectorAll<HTMLElement>('#topp img[data-logo]')].find((el) => el.getBoundingClientRect().width > 0)!;
-    return { w: document.getElementById('hovedtekst')!.getBoundingClientRect().width, home: home.getBoundingClientRect().width, landed: document.getElementById('topp')!.hasAttribute('data-landed') };
-  });
-  expect(mid.w, 'a glide, not a jump').toBeLessThan(start.width - 1);
-  expect(mid.w, 'a glide, not a jump').toBeGreaterThan(mid.home + 1);
-  expect(mid.landed).toBe(false);
-  await expect(page.locator('#topp')).toHaveAttribute('data-landed', '', { timeout: 1500 });
-  // It lands exactly on the header's logo.
-  const at = await page.evaluate(() => {
-    const r = document.getElementById('hovedtekst')!.getBoundingClientRect();
-    const home = [...document.querySelectorAll<HTMLElement>('#topp img[data-logo]')].find((el) => el.getBoundingClientRect().width > 0)!;
-    const h = home.getBoundingClientRect();
-    return { dx: Math.abs(r.left - h.left), dy: Math.abs(r.top - h.top), dw: Math.abs(r.width - h.width) };
-  });
-  expect(at.dx).toBeLessThan(1);
-  expect(at.dy).toBeLessThan(1);
-  expect(at.dw).toBeLessThan(1);
-  // Back at the top it comes out again, to where it stood.
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await expect(page.locator('#topp')).not.toHaveAttribute('data-landed');
-  await page.waitForTimeout(1000);
-  const back = (await logo.boundingBox())!;
-  expect(Math.abs(back.y - start.y)).toBeLessThan(1);
-  expect(Math.abs(back.width - start.width)).toBeLessThan(1);
-});
-
-test('phone: a quick scroll to the hero’s foot lets the logo land in a white header, as the white header’s logo', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'the phone’s timed glide');
-  await open(page);
-  await page.waitForTimeout(2500);
-  // The owner's case (2026-10-20): a flick that stops with the hero's foot, the two buttons, under the header,
-  // so the header turns white and would go away while the logo is still on its way in.
-  const foot = await page.evaluate(() => {
-    const hero = document.querySelector('[data-hero]')!;
-    return Math.round(hero.getBoundingClientRect().bottom - document.getElementById('topp')!.getBoundingClientRect().height / 2 + 6);
-  });
-  // First a flick that stops short of the foot, past the line where the header goes away on the way down (0.6
-  // of a screen) but before the sea, under which it stays: the header must wait for the logo.
-  for (let k = 1; k <= 4; k++) {
-    await page.evaluate((y) => window.scrollTo(0, y), Math.round((foot * 0.85 * k) / 4));
-    await page.waitForTimeout(20);
-  }
-  await page.waitForTimeout(40);
-  const early = await page.evaluate(() => ({
-    landed: document.getElementById('topp')!.hasAttribute('data-landed'),
-    away: document.getElementById('topp')!.hasAttribute('data-away'),
-  }));
-  expect(early.landed, 'still on its way').toBe(false);
-  expect(early.away, 'the header waits for the logo').toBe(false);
-  // Then on to the foot: the header turns white while the logo is still on its way.
-  await page.evaluate((y) => window.scrollTo(0, y), foot);
-  // Past the cross-fade (--dur-2, 240 ms), still inside the 700 ms glide.
-  await page.waitForTimeout(260);
-  const mid = await page.evaluate(() => {
-    const header = document.getElementById('topp')!;
-    const imgs = [...document.querySelectorAll<HTMLImageElement>('#hovedtekst img')];
-    return {
-      away: header.hasAttribute('data-away'),
-      dark: header.hasAttribute('data-dark'),
-      shown: imgs.map((i) => Number(getComputedStyle(i).opacity)),
-    };
-  });
-  expect(mid.away, 'the header waits for the logo').toBe(false);
-  expect(mid.dark, 'the header is white over the page').toBe(false);
-  // The white ground's logo (the second) is what flies in; the navy ground's, white letters, is not seen.
-  expect(mid.shown[1]).toBeGreaterThan(0.9);
-  expect(mid.shown[0]).toBeLessThan(0.1);
-  await expect(page.locator('#topp')).toHaveAttribute('data-landed', '', { timeout: 1500 });
-});
-
 test('a phone keeps its own scroll: no glide', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'the phone');
   await open(page);
@@ -237,6 +146,7 @@ test('an open menu holds the page still under a gesture, and closing it gives th
   await page.setViewportSize({ width: 820, height: 900 });
   await open(page);
   await expect.poll(() => glides(page)).toBe(true); // the glide starts once the page's script has run
+  await toFreeGround(page, 600);
   const from = await stillAt(page);
   await page.getByRole('button', { name: site.header.open }).click();
   await expect(page.locator('body')).toHaveAttribute('data-scroll-locked', '');

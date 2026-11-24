@@ -1,0 +1,364 @@
+/*
+ * Hero «Midt», exactly one screen: the mark on one axis, the headline under it, the rest
+ * centred. Everything scales with the screen's height as well as its width, so it fits at every size.
+ */
+.hero {
+  --focus: #fff;
+  position: relative;
+  z-index: 0;
+  height: 100vh;
+  height: 100svh;
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  background: var(--navy);
+  color: #fff;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 24px;
+  align-content: center;
+  padding-block: calc(84px + env(safe-area-inset-top, 0px)) 4.5vh;
+}
+
+.slot {
+  position: relative;
+  grid-column: 3 / span 8;
+  justify-self: center;
+  width: 100%;
+  aspect-ratio: 736.646 / 309.109;
+  max-height: 34vh;
+  margin-bottom: 3.6vh;
+}
+
+.h1 {
+  grid-column: 1 / -1;
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+  font-size: var(--t-display);
+  letter-spacing: -0.032em;
+  line-height: 0.9312;
+}
+
+.ln {
+  display: block;
+}
+
+.wm {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+.w {
+  display: inline-block;
+  transition: transform 0.84s var(--ease-out) calc(var(--i) * 56ms);
+}
+
+.side {
+  grid-column: 3 / span 8;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: min(24px, 2.6vh);
+  margin-top: 3vh;
+  padding-bottom: 6px;
+  transition:
+    opacity 0.72s var(--ease-out) 0.16s,
+    transform 0.88s var(--ease-out) 0.16s;
+}
+
+.lede {
+  margin: 0;
+  max-width: 34em;
+  font-size: clamp(15px, min(1.25vw, 2.2vh), 20px);
+  line-height: 1.612;
+}
+
+.acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 28px;
+  transition:
+    opacity 0.64s var(--ease-out) 0.24s,
+    transform 0.8s var(--ease-out) 0.24s;
+}
+
+/*
+ * The words wait under their masks and rise once the pour begins (Hero.tsx sets data-go). The
+ * layout's first script marks the page as running JavaScript before it paints; without it they stand.
+ */
+:global(html[data-js]) .hero:not([data-go]) .w {
+  transform: translateY(150%);
+}
+
+:global(html[data-js]) .hero:not([data-go]) .side {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+:global(html[data-js]) .hero:not([data-go]) .acts {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.about {
+  --k-bg: var(--rod);
+  --k-fg: #fff;
+  --k-hbg: #fff;
+  --k-hfg: var(--rod);
+}
+
+.events {
+  --k-fg: #fff;
+  --k-ink: var(--navy);
+  color: #fff;
+  padding-bottom: 8px;
+}
+
+/*
+ * The logo. It lies over the page (fixed, outside the hero, so the hero's hold-back cannot carry it)
+ * and flies from the slot into the header's slot as the page scrolls (Hero.tsx sizes and places it).
+ * Without JavaScript it cannot fly: the slot shows the white lockup instead.
+ */
+.mk {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 32;
+  pointer-events: none;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+:global(html:not([data-js])) .mk {
+  display: none;
+}
+
+.still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+:global(html[data-js]) .still {
+  visibility: hidden;
+}
+
+.arr {
+  position: absolute;
+  inset: 0;
+  animation: arr 1.04s var(--ease-out) 0.08s both;
+}
+
+@keyframes arr {
+  from {
+    clip-path: inset(100% -60% -60% -60%);
+    transform: translateY(40px);
+  }
+  to {
+    clip-path: inset(-60% -60% -60% -60%);
+    transform: none;
+  }
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+
+/* carved into the plate: a soft shadow, a shade, a highlight and the face, moved by the light */
+.soft {
+  --lf: var(--carve-soft);
+  --cf: var(--carve-soft-c);
+  opacity: calc(0.6 * var(--sh, 1));
+}
+
+.shade {
+  --lf: var(--carve-shade);
+  --cf: var(--carve-shade-c);
+  opacity: calc(0.75 * var(--sh, 1));
+}
+
+.hi {
+  --lf: var(--carve-hi);
+  --cf: var(--carve-hi-c);
+  opacity: var(--sh, 1);
+}
+
+.face {
+  --lf: var(--carve-face);
+  --cf: var(--rod);
+}
+
+/* «Smeltet»: white poured up inside the letters, with a lit surface riding on top */
+.lit {
+  /* pure white like the text (the owner, 2026-11-21: «make the logo more white, like the text») */
+  --lf: #fff;
+  --cf: var(--rod);
+}
+
+.surf {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 4;
+  opacity: var(--sv, 0);
+}
+
+.glow {
+  stroke: #fff;
+  stroke-width: 28;
+}
+
+/* Kameleon: navy on a light ground; on crimson the accents turn white */
+:global([data-forside][data-solid][data-tone='light']) .lit {
+  --lf: var(--navy);
+}
+
+:global([data-forside][data-solid][data-tone='light']) :is(.carved, .surf) {
+  visibility: hidden;
+}
+
+:global([data-forside][data-solid][data-tone='rod']) .lit {
+  --cf: #fff;
+}
+
+@media (max-width: 900px) {
+  .main {
+    padding-block: calc(56px + env(safe-area-inset-top, 0px)) 4vh;
+  }
+
+  .slot {
+    grid-column: 2 / span 10;
+    max-height: 22vh;
+    margin: 0 0 clamp(36px, 7vh, 64px);
+  }
+
+  /* two lines, one sentence each */
+  .h1 {
+    font-size: min(7.1vw, 4.6vh);
+    line-height: 1.04;
+    letter-spacing: -0.028em;
+  }
+
+  .ln {
+    white-space: nowrap;
+  }
+
+  /* English (2026-11-22): «Community that strengthens.» is about 13.2 em to the Norwegian 11.1, so the size
+     comes down by the same ratio and the line keeps the Norwegian's air at the sides */
+  :global(html[lang='en']) .h1 {
+    font-size: min(5.97vw, 3.87vh);
+  }
+
+  .side {
+    grid-column: 1 / -1;
+    margin-top: clamp(16px, 2.6vh, 24px);
+    gap: clamp(22px, 3.6vh, 32px);
+  }
+
+  .lede {
+    max-width: 30em;
+    font-size: min(15px, 1.9vh);
+    line-height: 1.55;
+    color: var(--on-navy);
+  }
+
+  .acts {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .about {
+    --k-py: 13px;
+    --k-px: 20px;
+    font-size: 15px;
+  }
+
+  .events {
+    font-size: 15px;
+  }
+}
+
+/*
+ * Desktop: hero «13 · mellom», the owner's pick (2026-11-21) of fifteen mocked heroes. The mark in the
+ * middle, the headline under it one sentence a line and nearly from margin to margin, then the lede
+ * and the buttons. The headline starts carved into the navy like the mark, and turns white with it, all
+ * at once over the pour's 0.9 s (the owner, 2026-11-21: «make it pop up at the same time as the logo»).
+ * The phone keeps the hero above.
+ */
+@media (min-width: 901px) {
+  .main {
+    grid-template-rows: auto auto auto;
+    padding-block: calc(116px + env(safe-area-inset-top, 0px)) clamp(52px, 9vh, 96px);
+  }
+
+  .slot {
+    grid-column: 1 / -1;
+    max-height: 19vh;
+    margin: 0 0 clamp(32px, 5.4vh, 60px);
+  }
+
+  /* the longer sentence measures about 11.1 em, so a fourteenth of the width leaves air at both sides */
+  .h1 {
+    font-size: calc((100vw - 2 * var(--gutter)) / 14);
+    line-height: 0.96;
+  }
+
+  :global(html[lang='en']) .h1 {
+    font-size: calc((100vw - 2 * var(--gutter)) / 16.6);
+  }
+
+  .side {
+    margin-top: clamp(28px, 4.6vh, 52px);
+  }
+
+  .lede {
+    font-size: var(--t-body);
+  }
+
+  /* no rise, so the word masks can open */
+  .wm {
+    overflow: visible;
+  }
+
+  .w {
+    transition:
+      color 0.72s ease-in-out,
+      text-shadow 0.72s ease-in-out;
+  }
+
+  :global(html[data-js]) .hero:not([data-go]) .w {
+    transform: none;
+    color: var(--carve-face);
+    text-shadow:
+      -2px -2px 0 var(--carve-shade),
+      2px 2px 0 var(--carve-hi);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arr {
+    animation: none;
+  }
+
+  .w,
+  .side,
+  .acts {
+    transition: none;
+  }
+}
+

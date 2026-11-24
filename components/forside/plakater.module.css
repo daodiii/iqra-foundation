@@ -1,0 +1,339 @@
+/*
+ * «Aktuelt» = Plakatene: the coming events as tall date posters that rise and un-tilt as they arrive,
+ * then lean toward a mouse with a soft light; the news as an editorial strip under crimson rules that
+ * draw in. With nothing published, each list says so.
+ */
+.pk {
+  background: #fff;
+  color: var(--ink);
+  padding: clamp(120px, 17vh, 190px) var(--gutter) clamp(110px, 16vh, 170px);
+}
+
+.pk :is(h2, h3, h4) {
+  margin: 0;
+  font-weight: 600;
+}
+
+.pk p {
+  margin: 0;
+}
+
+.pk a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px;
+  margin: clamp(56px, 9vh, 100px) 0 clamp(22px, 3.4vh, 34px);
+}
+
+/* the first heading opens the section now, so it has no room kept above it */
+.first {
+  margin-top: 0;
+}
+
+.sub h2 {
+  font-size: var(--t-h2);
+  letter-spacing: -0.0175em;
+  line-height: 0.98;
+}
+
+.all {
+  --k-fg: var(--navy);
+  --k-ink: #fff;
+  color: var(--ink);
+  padding-bottom: 6px;
+}
+
+/* a label: tracked capitals */
+.label {
+  font-weight: 500;
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.empty {
+  font-weight: 500;
+  font-size: clamp(18px, 1.4vw, 22px);
+  color: var(--ink);
+}
+
+/* the reveal: each piece rises once it is on screen, one after another */
+.rv {
+  transition:
+    opacity 1s var(--ease-out),
+    transform 1.2s var(--ease-out);
+}
+
+:global(html[data-js]) .rv:not([data-in]) {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.posters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 1.8vw, 30px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  perspective: 1100px;
+}
+
+.po {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  max-height: 76vh;
+  color: #fff;
+  padding: clamp(24px, 2.4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--ty, 0px));
+  opacity: var(--op, 1);
+  transition:
+    transform 1.1s var(--ease-out) var(--d, 0ms),
+    opacity 0.9s var(--ease-out) var(--d, 0ms);
+  box-shadow: 0 40px 70px -40px rgba(15, 19, 24, 0.55);
+}
+
+/* a poster is a link: `.pk a` (inherit) would otherwise make its text navy on its own navy */
+.pk a.po {
+  color: #fff;
+}
+
+/* waiting below, tilted back, until it arrives (Plakater.tsx sets data-in once) */
+:global(html[data-js]) .po:not([data-in]) {
+  --rx: 24deg;
+  --ty: 90px;
+  --op: 0;
+}
+
+/* under the mouse the lean follows quickly */
+.po:hover {
+  transition: transform 0.25s ease-out;
+}
+
+.po:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.p1 {
+  background: var(--navy);
+}
+
+.p2 {
+  background: var(--rod);
+}
+
+.p3 {
+  background: var(--navy);
+}
+
+.po::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--lx, 50%) var(--ly, 0%), rgba(255, 255, 255, 0.22), transparent 55%);
+  opacity: var(--lo, 0);
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+/* the day beside its month, set as a number, not a poster (51 «Stram», the owner's pick of 2026-11-20) */
+.date {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.dd {
+  font-weight: 600;
+  font-size: clamp(44px, min(3.9vw, 7vh), 56px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.po h4 {
+  margin-top: auto;
+  font-size: var(--t-h4);
+  line-height: 1.08;
+  letter-spacing: -0.021em;
+}
+
+/* time and place sit on the navy or burgundy poster, so they are white (the owner, 2026-11-20: «very hard to see») */
+.po .meta {
+  margin-top: 12px;
+  color: #fff;
+}
+
+/* desktop: shorter posters (the owner, 2026-11-20: «coming arrangements can be shorter»), about half their old height */
+@media (min-width: 901px) {
+  .po {
+    aspect-ratio: auto;
+    max-height: none;
+    min-height: clamp(260px, 36vh, 360px);
+  }
+
+  .po h4 {
+    padding-top: clamp(28px, 4vh, 44px);
+  }
+}
+
+.pin {
+  position: absolute;
+  right: clamp(24px, 2.4vw, 40px);
+  top: clamp(24px, 2.4vw, 40px);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--dot, #fff);
+}
+
+.meta {
+  color: var(--ink);
+}
+
+/* a sample poster's mark (Forside.tsx EXAMPLES): never on the live site */
+.ex {
+  position: absolute;
+  right: clamp(20px, 2vw, 32px);
+  top: clamp(20px, 2vw, 32px);
+  padding: 5px 9px;
+  border: 1px dashed rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(24px, 2.4vw, 44px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sv {
+  display: block;
+  padding-top: 22px;
+  position: relative;
+}
+
+.sv::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--rod);
+  transition: transform 1.1s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+:global(html[data-js]) .sv:not([data-in])::before {
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+/* the date, and a sample post's mark beside it (Forside.tsx NEWS_EXAMPLES) */
+.svTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.exNews {
+  padding: 4px 8px;
+  border: 1px dashed var(--ink-4);
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.sv h4 {
+  margin-top: 10px;
+  font-size: var(--t-h4);
+  line-height: 1.12;
+  letter-spacing: -0.0175em;
+}
+
+.tl {
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1.5px no-repeat;
+  transition: background-size 0.45s var(--ease-out);
+}
+
+.sv:is(:hover, :focus-visible) .tl {
+  background-size: 100% 1.5px;
+}
+
+.sv:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.sum {
+  margin-top: 12px !important;
+  font-size: var(--t-body);
+  line-height: 1.612;
+  color: var(--ink);
+}
+
+@media (max-width: 900px) {
+  .sub h2 {
+    font-size: calc(clamp(30px, 8.6vw, 40px) * 1.03);
+  }
+
+  /* the phone keeps its poster title size (the desktop scale's floor is 22) */
+  .po h4 {
+    font-size: 24px;
+  }
+
+  /* the row as it was, cards the same size, but no longer a sideways scroller: clipped at the screen's
+     edge, so a swipe anywhere on it scrolls the page on to the news (the owner, 2026-11-22: «just
+     don't have that scrolling function inside … no matter where you touch on the mobile») */
+  .posters {
+    display: flex;
+    overflow-x: clip;
+    gap: 14px;
+    margin: 0 calc(var(--gutter) * -1);
+    padding: 0 var(--gutter) 24px;
+    touch-action: pan-y;
+  }
+
+  .posters > li {
+    flex: none;
+    width: 76vw;
+  }
+
+  .strip {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .sub {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv,
+  .sv::before {
+    transition: none !important;
+  }
+
+  :global(html[data-js]) .rv:not([data-in]) {
+    opacity: 1;
+    transform: none;
+  }
+
+  :global(html[data-js]) .sv:not([data-in])::before {
+    transform: none;
+  }
+}

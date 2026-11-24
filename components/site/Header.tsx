@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { site } from '@/content/site.no';
+import { copy } from '@/content/copy';
+import type { Lang } from '@/content/paths';
 import { HeaderMotion } from './HeaderMotion';
 import { Logo } from './Logo';
 import { Nav } from './Nav';
@@ -16,14 +17,15 @@ import styles from './site.module.css';
  * moment the reader goes up). Both are decorative — the link is named. The header keeps its place
  * through a page change (`site-header` in globals.css): it is the frame the page changes inside.
  */
-export function Header() {
+export function Header({ lang = 'no' }: { lang?: Lang }) {
+  const { site } = copy(lang);
   return (
     <>
       <a href="#innhold" className={styles.skip}>
         {site.header.skip}
       </a>
       <header id="topp" className={styles.header} style={{ viewTransitionName: 'site-header' }}>
-        <Link href="/" prefetch={false} className={styles.home} aria-label={site.header.homeLabel}>
+        <Link href={site.nav[0].href} prefetch={false} className={styles.home} aria-label={site.header.homeLabel}>
           <Logo ground="white" height={40} decorative priority className={styles.logoOnWhite} />
           <Logo ground="navy" crimson height={40} decorative priority className={styles.logoOnNavy} />
         </Link>

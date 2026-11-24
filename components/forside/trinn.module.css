@@ -1,0 +1,161 @@
+/*
+ * «Fra kunnskap til handling» = Trinnene: the title and an index hold on the left; the part nearest
+ * the middle of the screen lights up on the right.
+ */
+.tr {
+  --focus: #fff;
+  background: var(--navy-deep);
+  color: #fff;
+  padding: clamp(120px, 18vh, 200px) var(--gutter);
+}
+
+.g {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 24px;
+}
+
+.tr :is(h2, h3) {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.032em;
+  line-height: 0.9312;
+}
+
+/* desktop titles share the front page's scale (forside.module.css --t-*), set a little looser at these sizes */
+@media (min-width: 901px) {
+  .tr :is(h2, h3) {
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+  }
+}
+
+.lh {
+  grid-column: 1 / span 5;
+  position: sticky;
+  top: clamp(130px, 22vh, 220px);
+  align-self: start;
+}
+
+.lh h2 {
+  font-size: var(--t-h2);
+}
+
+.idx {
+  list-style: none;
+  margin: clamp(36px, 6vh, 64px) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.idx button {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font);
+  font-weight: 500;
+  font-size: clamp(16px, min(1.25vw, 2.3vh), 20px);
+  color: rgba(255, 255, 255, 0.42);
+  transition: color 0.5s var(--ease-out);
+}
+
+.idx button::before {
+  content: '';
+  width: 18px;
+  height: 2px;
+  background: var(--rod);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition:
+    transform 0.6s var(--ease-out),
+    width 0.6s var(--ease-out);
+}
+
+.idx button[aria-current='true'] {
+  color: #fff;
+}
+
+.idx button[aria-current='true']::before {
+  transform: scaleX(1);
+  width: 40px;
+}
+
+.idx button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.items {
+  grid-column: 7 / span 6;
+}
+
+.it {
+  min-height: 44vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transform-origin: 0 50%;
+  transition:
+    opacity 0.7s var(--ease-out),
+    transform 0.9s var(--ease-out);
+}
+
+.it h3 {
+  font-size: var(--t-h3);
+}
+
+.txt {
+  margin: clamp(20px, 3vh, 34px) 0 0;
+  font-weight: 400;
+  font-size: var(--t-lead);
+  letter-spacing: -0.004em;
+  line-height: 1.456;
+  color: #fff;
+  max-width: 24em;
+}
+
+@media (max-width: 900px) {
+  .lh {
+    position: static;
+    grid-column: 1 / -1;
+  }
+
+  .lh h2 {
+    font-size: calc(clamp(44px, 12vw, 62px) * 1.03);
+  }
+
+  .idx {
+    display: none;
+  }
+
+  .items {
+    grid-column: 1 / -1;
+    margin-top: 40px;
+  }
+
+  .it {
+    min-height: 0;
+    padding: 36px 0;
+    opacity: 1;
+    transform: none;
+  }
+
+  .it h3 {
+    font-size: calc(clamp(30px, 8.4vw, 40px) * 1.03);
+  }
+
+  .txt {
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .it {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

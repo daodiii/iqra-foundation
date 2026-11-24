@@ -3,7 +3,8 @@ import { site } from '../content/site.no';
 import { klient } from '../content/klient.no';
 
 /**
- * The shell on every page: the header with the client's menu (M1, 2026-11-18), the drawer on a
+ * The site's old shell, which the legal pages, the archive and the article keep (the redesigned
+ * pages and the front page share the front page's shell, e2e/forside.spec.ts). The shell: the header with the client's menu (M1, 2026-11-18), the drawer on a
  * phone, the skip link, and the footer with the logo, the links and the contact line.
  * Asserted as contracts — the items come from the content file — so a renamed label does
  * not fail here, and a dropped one does.
@@ -20,7 +21,7 @@ async function headerLinks(page: Page) {
 }
 
 test('the header carries the logo home and the client’s menu in order', async ({ page }) => {
-  await page.goto('/om-oss');
+  await page.goto('/personvern');
   const home = page.getByRole('banner').getByRole('link', { name: site.header.homeLabel });
   await expect(home).toHaveAttribute('href', '/');
   // Two logos are in the link (the reversed one waits for the navy drawer); one is shown, the guide's for the ground.
@@ -47,7 +48,7 @@ test('desktop: every item is on screen at 1440, 1280 and 1024, what stands under
   test.skip(isMobile, 'the phone has the drawer');
   for (const width of [1440, 1280, 1024]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/');
+    await page.goto('/personvern');
     const links = await headerLinks(page);
     await links.filter({ hasText: m.news }).first().hover();
     const shown = [m.home, m.about, m.news, m.newsItems, m.events, m.resources, m.contact, m.support];
@@ -63,7 +64,7 @@ test('desktop: every item is on screen at 1440, 1280 and 1024, what stands under
   }
   // One click on a top item: Ressurser.
   await page.setViewportSize({ width: 1024, height: 900 });
-  await page.goto('/');
+  await page.goto('/personvern');
   await page.getByRole('navigation', { name: site.header.navLabel }).getByRole('link', { name: m.resources, exact: true }).click();
   await expect(page).toHaveURL(/\/ressurser$/);
   await expect(page.locator('h1')).toBeVisible();
@@ -71,7 +72,7 @@ test('desktop: every item is on screen at 1440, 1280 and 1024, what stands under
 
 test('desktop: Nyheter and Arrangementer stand under Aktuelt, shown when Aktuelt is pointed at or tabbed to, put away by Escape, one click from their page', async ({ page, isMobile }) => {
   test.skip(isMobile, 'the phone has the drawer, where they stand under Aktuelt always');
-  await page.goto('/kontakt');
+  await page.goto('/personvern');
   const nav = page.getByRole('navigation', { name: site.header.navLabel });
   const aktuelt = nav.getByRole('link', { name: m.news, exact: true });
   const under = nav.locator('a[href="/aktuelt/nyheter"]');
@@ -95,8 +96,6 @@ test('desktop: Nyheter and Arrangementer stand under Aktuelt, shown when Aktuelt
   await aktuelt.hover();
   await under.click();
   await expect(page).toHaveURL(/\/aktuelt\/nyheter$/);
-  await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
-  await expect(aktuelt).toHaveAttribute('data-branch', '');
 });
 
 test('the current page is marked, once', async ({ page }) => {
@@ -108,7 +107,7 @@ test('the current page is marked, once', async ({ page }) => {
 
 test('phone: the drawer holds every item, traps focus, closes on Escape and locks the page', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'the drawer is the phone layout');
-  await page.goto('/');
+  await page.goto('/personvern');
   const button = page.getByRole('button', { name: site.header.open });
   await expect(button).toBeVisible();
   await expect(button).toHaveAttribute('aria-expanded', 'false');
@@ -145,7 +144,7 @@ test('phone: the drawer holds every item, traps focus, closes on Escape and lock
 
 test('phone: the header and drawer items are targets a thumb can hit', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'touch targets');
-  await page.goto('/');
+  await page.goto('/personvern');
   const button = page.getByRole('button', { name: site.header.open });
   const b = await button.boundingBox();
   expect(b!.height).toBeGreaterThanOrEqual(44);
@@ -169,9 +168,9 @@ test('the skip link is the first tab stop and lands on the content', async ({ pa
 });
 
 test('the footer carries the logo reversed, every page of the menu and the client’s contact line, and no thread of the four areas', async ({ page }) => {
-  await page.goto('/ressurser');
+  await page.goto('/personvern');
   const footer = page.getByRole('contentinfo');
-  await expect(footer.locator('img').first()).toHaveAttribute('src', /\/brand\/iqra-logo-(on-navy|on-dark|white)\.svg/);
+  await expect(footer.locator('img').first()).toHaveAttribute('src', /\/brand\/iqra-logo-(on-navy|on-navy-crimson|on-dark|white)\.svg/);
   await expect(footer.getByRole('navigation', { name: site.footer.navLabel }).getByRole('link')).toHaveText(site.links.map((n) => n.label));
   await expect(footer.locator('[data-thread]')).toHaveCount(0);
   await expect(footer).toContainText(klient.contact.name);

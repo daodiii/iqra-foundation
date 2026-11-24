@@ -17,7 +17,7 @@
   margin: 0 0 12px;
   font: 500 14px/1 var(--font-sans);
   letter-spacing: var(--tracking-label);
-  color: var(--color-navy);
+  color: var(--color-ink);
 }
 
 .eyebrow::before {
@@ -109,7 +109,7 @@
 }
 
 .jump a {
-  color: var(--color-navy);
+  color: var(--color-ink);
   text-underline-offset: 4px;
 }
 
@@ -140,7 +140,7 @@
   border: 1px solid var(--color-navy);
   border-radius: var(--radius-pill);
   font: 500 15px/1 var(--font-sans);
-  color: var(--color-navy);
+  color: var(--color-ink);
   text-decoration: none;
 }
 
@@ -241,7 +241,7 @@
 
 .buttonSecondary {
   border: 1px solid var(--color-navy);
-  color: var(--color-navy);
+  color: var(--color-ink);
 }
 
 .buttonSecondary:hover {
@@ -266,5 +266,5 @@
   margin-top: 0;
   font-size: var(--step-1);
   line-height: 1.5;
-  color: var(--color-navy);
+  color: var(--color-ink);
 }

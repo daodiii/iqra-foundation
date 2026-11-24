@@ -17,7 +17,7 @@
   /* SECONDARY */
   --color-light: #f0f0f1;
   --color-dark: #393e46;
-  --color-crimson: #ab5261;
+  --color-crimson: #67112f;
   --color-white: #ffffff;
 
   /*
@@ -40,8 +40,9 @@
    * sizes; `ink-soft` is navy lifted for secondary lines — at 76% it still clears 4.5:1
    * on the light ground (#f0f0f1), which 72% did not; the hairline is navy at 12%.
    */
-  --color-ink: #2c394b;
-  --color-ink-soft: color-mix(in srgb, #2c394b 76%, #ffffff);
+  /* text is black on light grounds and white on navy (the owner, 2026-11-20) */
+  --color-ink: #000000;
+  --color-ink-soft: #000000;
   --color-hairline: color-mix(in srgb, #2c394b 12%, #ffffff);
   --color-turquoise-pale: color-mix(in srgb, #67c1bf 18%, #ffffff);
   --color-turquoise-deep: color-mix(in srgb, #67c1bf 70%, #2c394b);

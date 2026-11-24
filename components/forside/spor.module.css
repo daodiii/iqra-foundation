@@ -1,0 +1,255 @@
+/*
+ * «Dette ønsker vi å skape» = Sporet (320vh, the screen holds): the title, then three colour panels
+ * (navy, burgundy, navy) pass sideways as the page scrolls. All text is white on the panels; each
+ * panel's line icon draws itself, closed by the logo's dot.
+ */
+.spor {
+  position: relative;
+  /* carried panel to panel (Takt.tsx), so it needs less scroll than when it was scrubbed by hand */
+  height: 320vh;
+  background: #fff;
+}
+
+.stg {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.trk {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 2.6vw;
+  padding: clamp(80px, 10vh, 110px) var(--gutter) 0;
+  will-change: transform;
+}
+
+.trk :is(h2, h3) {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.036em;
+  line-height: 0.9118;
+}
+
+/* desktop titles share the front page's scale (forside.module.css --t-*), set a little looser at these sizes */
+@media (min-width: 901px) {
+  .trk :is(h2, h3) {
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+  }
+}
+
+.trk :global([data-lines]) [class] {
+  transition-duration: 1.25s;
+  transition-delay: calc(var(--k) * 85ms);
+}
+
+/*
+ * On a wide screen every part is as wide as half the room between the margins, so two stand whole
+ * side by side at every rest (Spor.tsx sporStops); each swipe moves the track on by one part.
+ */
+.p0 {
+  flex: none;
+  width: calc((100vw - 2 * var(--gutter) - 2.6vw) / 2);
+  color: var(--ink);
+  padding-right: 4vw;
+}
+
+.p0 h2 {
+  font-size: var(--t-h2);
+}
+
+.ingress {
+  margin: clamp(28px, 5vh, 60px) 0 0;
+  font-weight: 400;
+  letter-spacing: -0.006em;
+  line-height: 1.352;
+  font-size: var(--t-lead);
+  max-width: 24em;
+}
+
+.cd {
+  flex: none;
+  position: relative;
+  overflow: hidden;
+  width: calc((100vw - 2 * var(--gutter) - 2.6vw) / 2);
+  height: min(74vh, 740px);
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  padding: clamp(32px, 4vw, 68px);
+  color: #fff;
+}
+
+.c1 {
+  background: var(--navy);
+  --dc: #fff;
+}
+
+.c2 {
+  background: var(--rod);
+  --dc: var(--navy);
+}
+
+.c3 {
+  background: var(--navy);
+  --dc: #fff;
+}
+
+.cd h3 {
+  grid-row: 3;
+  max-width: min(100%, 7.6em);
+  font-size: var(--t-h3);
+}
+
+.txt {
+  grid-row: 4;
+  margin: clamp(20px, 3.2vh, 36px) 0 0;
+  font-weight: 400;
+  letter-spacing: -0.004em;
+  font-size: var(--t-lead);
+  line-height: 1.4352;
+  max-width: 22em;
+  color: #fff;
+  transition:
+    opacity 1s var(--ease-out) 0.35s,
+    transform 1.2s var(--ease-out) 0.35s;
+}
+
+:global(html[data-js]) .cd:not([data-on]) .txt {
+  opacity: 0;
+  transform: translateY(26px);
+}
+
+/*
+ * The icons: one family, fine lines on a 120 grid, each closed by the logo's dot. Each draws itself
+ * line by line as its panel comes in, and the dot pops in last (the owner, 2026-11-20: «yes» to the
+ * draw-on the mock meant but never played).
+ */
+.ik {
+  display: block;
+  overflow: visible;
+  color: #fff;
+  width: min(30vh, 19vw);
+  height: auto;
+  will-change: transform;
+}
+
+.s {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.5s cubic-bezier(0.33, 1, 0.68, 1) calc(var(--j, 0) * 40ms);
+}
+
+.d {
+  fill: var(--dc);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s;
+}
+
+:global(html[data-js]) .cd:not([data-on]) .s {
+  stroke-dashoffset: 1;
+}
+
+:global(html[data-js]) .cd:not([data-on]) .d {
+  transform: scale(0);
+}
+
+
+
+@media (max-width: 900px) {
+  .p0 {
+    width: 84vw;
+  }
+
+  .p0 h2 {
+    font-size: calc(clamp(44px, 12vw, 62px) * 1.03);
+  }
+
+  .ingress {
+    font-size: 20px;
+  }
+
+  .cd {
+    width: 84vw;
+    height: 70vh;
+    padding: 28px;
+  }
+
+  .ik {
+    width: 36vw;
+  }
+
+  .cd h3 {
+    font-size: calc(clamp(36px, 10vw, 50px) * 1.03);
+  }
+
+  /*
+   * «Engasjement og deltakelse» keeps «og» on its first line, like the other two titles (the owner,
+   * 2026-11-20). «Engasjement og» is 7.16 em wide; the panel holds 84vw less its 2 × 28px padding.
+   */
+  .c2 h3 {
+    font-size: min(calc(clamp(36px, 10vw, 50px) * 1.03), calc((84vw - 56px) / 7.3));
+  }
+
+  /* Shorter on phones (the owner, 2026-11-20): the same sideways walk in fewer screens of swiping. */
+  .spor {
+    height: 280vh;
+  }
+
+  .txt {
+    font-size: 18px;
+  }
+}
+
+/* Without JavaScript the panels stand in a row that scrolls sideways by hand. */
+:global(html:not([data-js])) .spor {
+  height: auto;
+}
+
+:global(html:not([data-js])) .stg {
+  position: relative;
+  overflow-x: auto;
+}
+
+:global(html:not([data-js])) .trk {
+  position: relative;
+  padding-bottom: 10vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .txt,
+  .s,
+  .d {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+/*
+ * Desktop: every title on one line (the owner, 2026-11-21: «I meant the titles, if they can fit in one
+ * line»). The panel title no longer breaks after «og», and the intro keeps less room at its right so
+ * «Dette ønsker vi å skape» fits its column.
+ */
+@media (min-width: 901px) {
+  .p0 {
+    padding-right: 2vw;
+  }
+
+  .cd h3 {
+    max-width: none;
+  }
+}

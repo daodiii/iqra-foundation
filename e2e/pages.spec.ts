@@ -12,46 +12,6 @@ import { isPlaceholder } from '../lib/placeholder';
 
 const T = (page: string) => `${page} – ${site.name}`;
 
-test('the home page: the name as the heading, then the client’s front page in their order, every word theirs', async ({ page }) => {
-  const h = klient.home;
-  await page.goto('/');
-  await expect(page).toHaveTitle(site.name);
-  const main = page.getByRole('main');
-  await expect(main.locator('h1')).toHaveAccessibleName(site.logoAlt);
-  // the hero: the client's headline, two paragraphs and two buttons (D1)
-  await expect(main.getByText(h.headline, { exact: true })).toBeVisible();
-  for (const p of h.paragraphs) await expect(main.getByText(p, { exact: true })).toBeVisible();
-  await expect(main.getByRole('link', { name: site.cta.about.label })).toHaveAttribute('href', '/om-oss');
-  await expect(main.getByRole('link', { name: site.cta.events.label })).toHaveAttribute('href', '/aktuelt/arrangementer');
-  // the sections, in order
-  await expect(main.getByRole('heading', { level: 2 })).toHaveText([h.why.title, h.create.title, h.action.title, h.news.title, h.together.title]);
-  const all = [
-    ...h.why.paragraphs,
-    h.create.intro,
-    ...h.create.areas.flatMap((a) => [a.title, a.text]),
-    ...h.action.items.flatMap((a) => [a.title, a.text]),
-    h.news.intro,
-    h.together.text,
-  ];
-  for (const text of all) await expect(main.getByText(text, { exact: true })).toBeVisible();
-  // «Dette ønsker vi å skape» replaces the four boxes: an icon for each of its three, and none of the four anywhere
-  await expect(main.locator('section#skape svg[data-ikon]')).toHaveCount(3);
-  for (const old of ['Samfunnsdeltakelse', 'Møteplasser', 'Visjon', 'Misjon']) await expect(main.getByText(old, { exact: true })).toHaveCount(0);
-  // Aktuelt: at most three news and three events, and the way on to all of them
-  const news = getNews().slice(0, 3);
-  const { upcoming } = splitEvents(getEvents(), todayISO());
-  const aktuelt = main.locator('section#aktuelt');
-  if (news.length) for (const n of news) await expect(aktuelt.getByRole('heading', { name: n.title })).toBeVisible();
-  else await expect(aktuelt.getByText(site.pages.news.emptyNews, { exact: true })).toBeVisible();
-  if (upcoming.length) for (const e of upcoming.slice(0, 3)) await expect(aktuelt.getByRole('heading', { name: e.title })).toBeVisible();
-  else await expect(aktuelt.getByText(site.pages.news.emptyUpcoming, { exact: true })).toBeVisible();
-  await expect(aktuelt.getByRole('link', { name: h.news.all })).toHaveAttribute('href', '/aktuelt/nyheter');
-  // the close: «Bli samarbeidspartner» and «Støtt arbeidet»
-  const sammen = main.locator('section#sammen');
-  await expect(sammen.getByRole('link', { name: site.cta.partner.label })).toHaveAttribute('href', site.cta.partner.href);
-  await expect(sammen.getByRole('link', { name: site.cta.support.label })).toHaveAttribute('href', '/stott-oss');
-});
-
 test('phone: the home page is never wider than the screen', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'a phone only');
   for (const width of [320, 360, 390]) {
@@ -78,11 +38,13 @@ test('om iqra foundation: the client’s text, section by section', async ({ pag
   await expect(page).toHaveTitle(T(site.pages.about.title));
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', t.intro);
   await expect(page.locator('h1')).toHaveText(t.title);
-  await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText([t.name.title, t.purpose.title, t.values.title, t.audience.title, t.independent.title]);
-  for (const p of [t.intro, t.name.text, t.purpose.lead, ...t.purpose.points, t.values.lead, t.values.close, t.audience.text, ...t.independent.paragraphs]) {
+  await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText([t.purpose.title, t.values.title, t.audience.title, t.independent.title]);
+  for (const p of [t.intro, t.purpose.lead, ...t.purpose.points, t.values.lead, t.values.close, t.audience.text, ...t.independent.paragraphs]) {
     await expect(page.getByText(p, { exact: true })).toBeVisible();
   }
   await expect(page.getByRole('main').locator('[data-area]')).toHaveCount(0);
+  // «Navnet Iqra» is taken off the page (the owner, 2026-11-20)
+  await expect(page.getByText(t.name.text, { exact: true })).toHaveCount(0);
 });
 
 test.describe('the collections are honest while empty', () => {
@@ -102,22 +64,25 @@ test.describe('the collections are honest while empty', () => {
     const news = getNews();
     const { upcoming, past } = splitEvents(getEvents(), todayISO());
     await page.goto('/aktuelt/nyheter');
-    await expect(page.getByText(klient.news.newsText, { exact: true })).toBeVisible();
-    await expect(page.getByText(klient.news.eventsText, { exact: true })).toHaveCount(0);
+    await expect(page.getByRole('main').getByText(klient.news.newsText, { exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByText(klient.news.eventsText, { exact: true })).toHaveCount(0);
     if (news.length) for (const n of news) await expect(page.getByRole('heading', { name: n.title })).toBeVisible();
     else await expect(page.getByText(t.emptyNews, { exact: true })).toBeVisible();
+    // no sample stands in on the live site (2026-11-22)
+    await expect(page.getByRole('main').getByText('Eksempel', { exact: true })).toHaveCount(0);
     await page.goto('/aktuelt/arrangementer');
-    await expect(page.getByText(klient.news.eventsText, { exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByText(klient.news.eventsText, { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: t.upcoming })).toBeVisible();
     await expect(page.getByRole('heading', { name: t.past })).toBeVisible();
     if (upcoming.length) for (const e of upcoming) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
     else await expect(page.getByText(t.emptyUpcoming, { exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByText('Eksempel', { exact: true })).toHaveCount(0);
     if (past.length) for (const e of past) await expect(page.getByRole('heading', { name: e.title })).toBeVisible();
     else await expect(page.getByText(t.emptyPast, { exact: true }).first()).toBeVisible();
     await page.getByRole('link', { name: t.archiveLink }).click();
     await expect(page).toHaveURL(/\/aktuelt\/arkiv$/);
     await expect(page.locator('h1')).toHaveText(t.archiveTitle);
-    await expect(page.getByText(klient.news.archiveText, { exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByText(klient.news.archiveText, { exact: true })).toBeVisible();
   });
   test('the old addresses land on Aktuelt', async ({ page }) => {
     await page.goto('/arrangementer');
@@ -133,7 +98,6 @@ test.describe('the collections are honest while empty', () => {
     await expect(page.locator('h1')).toHaveText(r.title);
     const main = page.getByRole('main');
     await expect(main.getByRole('heading', { level: 2 })).toHaveText(r.categories.map((c) => c.title));
-    await expect(main.getByRole('navigation', { name: site.pages.resources.categoriesLabel }).getByRole('link')).toHaveText(r.categories.map((c) => c.title));
     const items = getResources();
     for (const c of r.categories) {
       const section = main.locator(`section#${c.key}`);
@@ -178,15 +142,14 @@ test('phone: no page is wider than the screen at 320, 360 or 390, however long i
   }
 });
 
-test('kontakt: five cards in reading order — the map with the address on it, the address, the e-mail, the form under «Kontakt oss», the number — the client’s details, no placeholder, the form drawn, and no pin on a post box', async ({ page }) => {
+test('kontakt: «Platene» — the title, then e-mail, phone and the address, the form under «Kontakt oss» — the client’s details, no placeholder, the form drawn', async ({ page }) => {
   await page.goto('/kontakt');
   await expect(page).toHaveTitle(T(site.pages.contact.title));
   const t = site.pages.contact;
   const main = page.getByRole('main');
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
-  await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.addressLabel, t.emailLabel, t.form.title, t.phoneLabel]);
   await expect(main.getByRole('heading', { level: 2, name: t.form.title })).toBeVisible();
-  expect(await main.locator('[data-card]').evaluateAll((els) => els.map((e) => e.getAttribute('data-card')))).toEqual(['kart', 'adresse', 'epost', 'skjema', 'telefon']);
+  expect(await main.locator('[data-way]').evaluateAll((els) => els.map((e) => e.getAttribute('data-way')))).toEqual(['epost', 'telefon', 'adresse']);
   // The client's details (D8, 2026-11-18): the e-mail and the number are links.
   await expect(main.locator(`a[href="mailto:${klient.contact.email}"]`)).toHaveCount(1);
   await expect(main.locator('a[href="tel:+4794143585"]')).toHaveCount(1);
@@ -194,15 +157,6 @@ test('kontakt: five cards in reading order — the map with the address on it, t
   await expect(main).toContainText(klient.contact.postcode);
   await expect(main).toContainText(klient.contact.orgnr);
   await expect(main).not.toContainText(/\[[^\]]+\]/);
-  // the map at both widths and served, its credit a link to the licence; no pin, since a post box is not a place
-  await expect(main.getByRole('img', { name: t.map.alt })).toHaveAttribute('srcset', '/kart-1024.webp 1024w, /kart-1536.webp 1536w');
-  for (const file of ['/kart-1024.webp', '/kart-1536.webp']) {
-    const res = await page.request.get(file);
-    expect(res.status()).toBe(200);
-    expect(res.headers()['content-type']).toContain('image/webp');
-  }
-  await expect(main.getByRole('link', { name: t.map.credit })).toHaveAttribute('href', t.map.creditHref);
-  await expect(main.locator('[data-pin]')).toHaveCount(0);
   // where to follow appears only once a handle is real
   for (const l of site.contact.follow) {
     if (isPlaceholder(l.href)) await expect(main.getByText(l.name, { exact: true })).toHaveCount(0);
@@ -223,9 +177,12 @@ test('støtt oss: the client’s text in their order, the ways to give under «G
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
   await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.uses.title, t.ways.title]);
   await expect(main.getByRole('heading', { level: 3 })).toHaveText(t.ways.items.map((w) => w.title));
-  const text = await main.innerText();
-  // the client's sentences, in their order
-  const order = [t.intro, t.uses.lead, ...t.uses.points, t.uses.close, ...t.ways.items.map((w) => w.text), t.close].map((s) => text.indexOf(s));
+  // the page's parts at the left (mock 54) repeat its headings, the last of which is the closing line: read past them
+  await main.locator('nav[aria-label="På denne siden"]').evaluate((n) => n.remove());
+  // a heading that rises line by line (Lines) breaks its lines: read the text with its spaces collapsed
+  const text = (await main.innerText()).replace(/\s+/g, ' ');
+  // the client's sentences, in their order (the points shown with a capital, as the owner asked, 2026-11-20)
+  const order = [t.intro, t.uses.lead, ...t.uses.points.map((p) => p[0].toUpperCase() + p.slice(1)), t.uses.close, ...t.ways.items.map((w) => w.text), t.close].map((s) => text.indexOf(s));
   expect(order.every((i) => i > -1), `missing: ${order.join(',')}`).toBe(true);
   expect([...order].sort((x, y) => x - y)).toEqual(order);
   // Vipps and AvtaleGiro hang between «Gave» and «Samarbeid og partnerskap»
@@ -246,7 +203,7 @@ test('støtt oss is exactly as wide as the screen, and so is the page after it o
   const fits = () => page.evaluate(() => document.documentElement.scrollWidth === window.innerWidth);
   await page.goto('/stott-oss');
   expect(await fits()).toBe(true);
-  await page.getByRole('contentinfo').getByRole('link', { name: klient.menu.about, exact: true }).click();
+  await page.getByRole('contentinfo').getByRole('link', { name: klient.menu.aboutFoundation, exact: true }).click();
   await expect(page).toHaveURL(/\/om-oss$/);
   await expect(page.locator('h1')).toBeVisible();
   expect(await fits()).toBe(true);

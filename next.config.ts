@@ -83,7 +83,12 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/': ['./content/**/*'],
     '/arrangementer': ['./content/**/*'],
+    // the English site reads the same records (2026-11-22)
+    '/en': ['./content/**/*'],
+    '/en/news-and-events/**': ['./content/**/*'],
   },
+  /** One root layout per language (app/(no), app/en): an unmatched address gets app/global-not-found.tsx. */
+  experimental: { globalNotFound: true },
   /*
    * Everything under /media is a build artefact of the film and the stills, and it is
    * heavy: the 720p loop alone is 470KB. Vercel serves /public with

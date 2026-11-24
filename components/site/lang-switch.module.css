@@ -1,0 +1,55 @@
+/* «NO · EN»: in the colour of whatever it stands on, so it follows the header's tone and the foot's navy */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.dot {
+  padding: 0 6px;
+  opacity: 0.5;
+}
+
+.here {
+  color: inherit;
+}
+
+.other {
+  color: inherit;
+  opacity: 0.6;
+  text-decoration: none;
+  padding: 6px 0;
+  transition: opacity 0.3s;
+}
+
+.other:hover {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px;
+}
+
+.other:focus-visible {
+  opacity: 1;
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

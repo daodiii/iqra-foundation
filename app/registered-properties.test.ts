@@ -27,8 +27,10 @@ const globals = readFileSync(path.join(root, 'app/globals.css'), 'utf8');
 const tokens = new Set([...globals.matchAll(/^\s*(--[\w-]+)\s*:/gm)].map((m) => m[1]));
 
 describe('registered custom properties', () => {
-  test('there are some to check', () => {
-    expect(registered.length).toBeGreaterThan(0);
+  // the Støtt oss banners, the one module that registered any, gave way to Grunnmuren (2026-11-20):
+  // there may be none now, so check that the search would still find one
+  test('the search finds a registration', () => {
+    expect([...'@property --x { syntax: "<number>"; }'.matchAll(/@property\s+(--[\w-]+)/g)].map((m) => m[1])).toEqual(['--x']);
   });
 
   test('none shares a name with a token in globals.css', () => {

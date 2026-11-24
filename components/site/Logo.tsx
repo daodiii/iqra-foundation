@@ -5,8 +5,9 @@ import { site } from '@/content/site.no';
  *
  * The files are the guide's own art, cut out of the PDF as SVG (`public/brand/`), one
  * per colour combination: the mark is never recoloured here, a ground picks its variant.
- * On white, light and the turquoise plate: navy with the crimson accent and a navy
- * «Foundation». Reversed on navy, dark grey and crimson as the guide draws them.
+ * On white and light: navy with the burgundy accent and a navy «Foundation». The accent in
+ * the files the site loads is the site's deep burgundy #67112f since 2026-11-20 (the owner:
+ * the Q in the new burgundy too); the guide's other variants keep its own colours.
  */
 export type Ground = 'white' | 'light' | 'turquoise' | 'navy' | 'dark' | 'crimson';
 

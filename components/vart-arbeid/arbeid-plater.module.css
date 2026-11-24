@@ -1,0 +1,62 @@
+/* Vårt arbeid on «Platene» (ArbeidPlater.tsx): three ways to set an area, so seven areas read as seven chapters. */
+
+/* a heading that takes the whole width: its longest word would not fit in seven columns */
+h2.wide {
+  grid-column: 1 / -1;
+}
+
+/* the text under a wide heading, set off by a rule at the right */
+.drop {
+  grid-column: 7 / -1;
+  margin-top: clamp(28px, 6vh, 70px);
+  padding-top: clamp(22px, 3vh, 30px);
+  border-top: 1px solid var(--rule);
+  font-size: clamp(19px, 1.6vw, 26px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  overflow-wrap: break-word;
+}
+
+/* the text at the right of a heading, and a note under it */
+.side {
+  grid-column: 8 / span 5;
+  align-self: start;
+  padding-top: 0.4em;
+}
+.text {
+  font-size: clamp(17px, 1.3vw, 21px);
+  line-height: 1.55;
+  color: var(--fg-2);
+  overflow-wrap: break-word;
+}
+.sideNote {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  font-size: clamp(15px, 1.05vw, 17px);
+  line-height: 1.6;
+  color: var(--fg-3);
+}
+
+/* a statement: a little smaller than the shared one, so a two-sentence text keeps to a short screen */
+p.say {
+  font-size: clamp(22px, 2.2vw, 32px);
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 900px) {
+  .drop,
+  .side {
+    grid-column: 1 / -1;
+  }
+  .side {
+    padding-top: 0;
+  }
+  /* «kompetanseutvikling» and «Kunnskapsformidling» each stand on one line at 390 px */
+  h2.h {
+    font-size: 28px;
+  }
+  p.say {
+    font-size: 22px;
+  }
+}

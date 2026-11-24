@@ -85,6 +85,10 @@ export const site = {
     navLabel: 'Hovedmeny',
     open: 'Meny',
     close: 'Lukk menyen',
+    /** The visible word on the menu's close button; `close` names it. */
+    closeShort: 'Lukk',
+    /** Names the arrow beside Om oss and Aktuelt, read with the item: «Vis sidene under Om oss». */
+    subOpen: 'Vis sidene under',
     skip: 'Hopp til innholdet',
   },
   footer: {
@@ -94,6 +98,8 @@ export const site = {
     emailLabel: 'E-post',
     phoneLabel: 'Telefon',
     addressLabel: 'Adresse',
+    /** The front page's foot: back to the top. */
+    toTop: 'Til toppen',
   },
   /**
    * The foundation's contact details, as the client's document gives them (D8, 2026-11-18).
@@ -134,6 +140,17 @@ export const site = {
   },
   /** The logo's alt text, on every ground. */
   logoAlt: 'Iqra Foundation',
+  /**
+   * The language switch in the header and the foot (2026-11-22): each language named in itself,
+   * short on the switch and in full for a screen reader. `inNorwegian` marks what an editor wrote
+   * in Norwegian when it stands on an English page; on a Norwegian page it never shows.
+   */
+  language: {
+    label: 'Språk',
+    no: { short: 'NO', name: 'Norsk' },
+    en: { short: 'EN', name: 'English' },
+    inNorwegian: 'På norsk',
+  },
   /** The months, in full: a date is written out as «24. september 2026». */
   months: ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'],
   pages: {

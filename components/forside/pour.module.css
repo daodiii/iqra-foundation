@@ -1,0 +1,306 @@
+/*
+ * The scene after the hero (310vh, the screen holds): a flat white sheet slides up over the hero,
+ * which holds back and darkens; the opening paragraph glides in line by line, rests, and drifts
+ * away; the crimson «Hvorfor vi finnes» page rises over the white.
+ * It starts behind the hero (a screen up), so the white rises from the foot of the hero.
+ */
+/*
+ * The scene lies over the hero, so it lets the pointer through to the hero's buttons; the sheet and the
+ * poster take it back where they are drawn (the header reads the ground under it by hit-testing).
+ */
+.sc {
+  position: relative;
+  z-index: 1;
+  height: 310vh;
+  margin-top: -100vh;
+  margin-top: -100svh;
+  pointer-events: none;
+}
+
+.sheet {
+  pointer-events: auto;
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.sheet {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  box-shadow: 0 -24px 60px -24px rgba(4, 8, 18, 0.45);
+  transform: translate3d(0, 110vh, 0);
+  will-change: transform;
+}
+
+.tx {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 var(--gutter);
+  color: var(--ink);
+  will-change: transform, opacity;
+}
+
+.tx p {
+  margin: 0;
+  max-width: 21em;
+  text-align: center;
+  font-weight: 400;
+  font-size: var(--t-statement);
+  line-height: 1.248;
+  letter-spacing: -0.008em;
+}
+
+/*
+ * The crimson page of «Hvorfor vi finnes»: a sheet like the white one, risen with the scroll
+ * (Pour.tsx). A transform only, which the compositor moves without repainting.
+ */
+.red {
+  --focus: #fff;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--rod);
+  color: #fff;
+  box-shadow: 0 -24px 60px -24px rgba(4, 8, 18, 0.45);
+  transform: translate3d(0, 110vh, 0);
+  /* below: unseen and not in the pointer's way, but still read out (Pour.tsx sets the opacity) */
+  opacity: 0;
+  will-change: transform;
+}
+
+.redIn {
+  position: absolute;
+  inset: 0;
+}
+
+.tone {
+  position: absolute;
+  right: -14vw;
+  bottom: -30vh;
+  width: 78vw;
+  height: auto;
+  overflow: visible;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.tone path {
+  fill: var(--rod-dyp);
+}
+
+.ct {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  gap: 0 24px;
+  padding: clamp(120px, 17vh, 190px) var(--gutter) clamp(56px, 9vh, 100px);
+}
+
+.ct :global([data-lines]) [class] {
+  transition-duration: 1.2s;
+}
+
+/* 51 «Stram» (the owner's pick of 2026-11-20): the title at the left, both paragraphs read in one column at the right */
+.h2 {
+  grid-column: 1 / span 4;
+  grid-row: 1 / span 2;
+  align-self: start;
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--t-h2);
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+
+.lead {
+  grid-column: 6 / span 6;
+  grid-row: 1;
+  margin: 0;
+  font-weight: 400;
+  font-size: var(--t-h4);
+  line-height: 1.55;
+}
+
+.more {
+  grid-column: 6 / span 6;
+  grid-row: 2;
+  align-self: start;
+  margin: 24px 0 0;
+  font-size: var(--t-body);
+  line-height: 1.65;
+  color: #fff;
+}
+
+/*
+ * Desktop (the owner, 2026-11-20: «Hvorfor vi finnes looks pretty empty on desktop»): the poster holds
+ * its title and text in the middle of the screen instead of the top third, the lead is set a step up
+ * (card-title size), and the reading column spans seven columns, the second paragraph kept to a measure.
+ */
+@media (min-width: 901px) {
+  .ct {
+    grid-template-rows: auto auto;
+    align-content: center;
+    padding-block: clamp(110px, 14vh, 150px);
+  }
+
+  .h2 {
+    grid-column: 1 / span 5;
+  }
+
+  .lead {
+    grid-column: 6 / span 7;
+    line-height: 1.4;
+    letter-spacing: -0.006em;
+  }
+
+  .more {
+    grid-column: 6 / span 7;
+    margin-top: clamp(24px, 3.4vh, 36px);
+    max-width: 40em;
+  }
+}
+
+/* Without JavaScript the scene cannot play: it is laid out as plain flow, the paragraph on white, then the poster. */
+:global(html:not([data-js])) .sc {
+  height: auto;
+  margin-top: 0;
+  background: #fff;
+}
+
+:global(html:not([data-js])) .stage {
+  position: relative;
+  height: auto;
+}
+
+:global(html:not([data-js])) .sheet {
+  display: none;
+}
+
+:global(html:not([data-js])) .tx {
+  position: relative;
+  padding-block: 18vh;
+}
+
+:global(html:not([data-js])) .red {
+  position: relative;
+  inset: auto;
+  transform: none;
+  box-shadow: none;
+  opacity: 1;
+  min-height: 100vh;
+}
+
+:global(html:not([data-js])) .redIn {
+  position: relative;
+  min-height: 100vh;
+}
+
+:global(html:not([data-js])) .ct {
+  position: relative;
+  min-height: 100vh;
+}
+
+@media (max-width: 900px) {
+  .ct {
+    padding-top: 96px;
+    grid-template-rows: auto auto auto 1fr;
+  }
+
+  .h2 {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    font-size: 30px;
+    line-height: 1.08;
+  }
+
+  .lead {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 24px;
+    font-size: 19px;
+    line-height: 1.5;
+  }
+
+  .more {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 20px;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  .tone {
+    width: 150vw;
+    right: -60vw;
+    bottom: -14vh;
+  }
+
+  .tx p {
+    font-size: clamp(25px, 7vw, 34px);
+  }
+}
+
+/*
+ * On a phone the part after the hero is plain and open (the owner, 2026-11-20): the paragraph on white,
+ * then the «Hvorfor vi finnes» poster, in the page's flow, both whole. No sheets, no glide-in;
+ * scrolling back up comes straight to the text. Pour.tsx runs no scene here (frame.ts PLAIN_POUR).
+ */
+@media (max-width: 900px) {
+  .sc {
+    height: auto;
+    margin-top: 0;
+    pointer-events: auto;
+  }
+
+  .stage {
+    position: relative;
+    height: auto;
+    overflow: visible;
+  }
+
+  .sheet {
+    display: none;
+  }
+
+  .tx {
+    position: relative;
+    inset: auto;
+    padding: clamp(80px, 13vh, 120px) var(--gutter);
+    background: #fff;
+  }
+
+  .red {
+    position: relative;
+    inset: auto;
+    transform: none;
+    box-shadow: none;
+    opacity: 1;
+  }
+
+  .redIn {
+    position: relative;
+  }
+
+  .ct {
+    position: relative;
+    inset: auto;
+    min-height: 100svh;
+  }
+
+  .tone {
+    opacity: 0.9;
+  }
+
+}
+

@@ -1,0 +1,151 @@
+/*
+ * The finale «Sammen kan vi gjøre en forskjell» = Samlet, one screen of crimson: when it is well on
+ * screen the words of the title fly in from scattered places until the sentence stands whole, then
+ * the text and the two buttons rise (Samlet.tsx sets data-on once). It plays on a clock, not the scroll.
+ */
+.sa {
+  --focus: #fff;
+  position: relative;
+  background: var(--rod);
+  color: #fff;
+}
+
+.stg {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 24px;
+  align-content: center;
+  padding: clamp(100px, 14vh, 150px) var(--gutter) clamp(48px, 8vh, 90px);
+}
+
+.h2 {
+  grid-column: 1 / span 11;
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--t-display);
+  letter-spacing: -0.04em;
+  line-height: 0.8924;
+}
+
+/* desktop: the hero's display size and spacing (forside.module.css --t-display) */
+@media (min-width: 901px) {
+  .h2 {
+    letter-spacing: -0.032em;
+    line-height: 0.9312;
+  }
+}
+
+.w {
+  display: inline-block;
+  transition:
+    transform 1.25s var(--ease-out) calc(var(--i) * 90ms),
+    opacity 0.9s var(--ease-out) calc(var(--i) * 90ms);
+}
+
+:global(html[data-js]) .sa:not([data-on]) .w {
+  transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1.25);
+  opacity: 0;
+}
+
+.bot {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 24px;
+  margin-top: clamp(36px, 6vh, 72px);
+  align-items: end;
+}
+
+.say {
+  grid-column: 1 / span 6;
+  margin: 0;
+  font-weight: 400;
+  font-size: var(--t-lead);
+  letter-spacing: -0.0048em;
+  line-height: 1.456;
+  color: #fff;
+}
+
+.cta {
+  grid-column: 8 / span 5;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 14px 16px;
+}
+
+.up {
+  transition:
+    opacity 1s var(--ease-out) 0.95s,
+    transform 1.2s var(--ease-out) 0.95s;
+}
+
+.d1 {
+  transition-delay: 1.07s;
+}
+
+:global(html[data-js]) .sa:not([data-on]) .up {
+  opacity: 0;
+  transform: translateY(34px);
+}
+
+.b1,
+.b2 {
+  gap: 10px;
+}
+
+.b1 {
+  --k-bg: #fff;
+  --k-fg: var(--rod);
+  --k-hbg: var(--navy-deep);
+  --k-hfg: #fff;
+}
+
+.b2 {
+  --k-fg: #fff;
+  --k-hbg: #fff;
+  --k-hfg: var(--rod);
+}
+
+@media (max-width: 900px) {
+  .h2 {
+    grid-column: 1 / -1;
+    font-size: calc(clamp(44px, 12.4vw, 64px) * 1.03);
+  }
+
+  .bot {
+    display: block;
+  }
+
+  .say {
+    font-size: 16px;
+  }
+
+  .cta {
+    margin-top: 24px;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .b1,
+  .b2 {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .up,
+  .w {
+    transition: none;
+  }
+
+  :global(html[data-js]) .sa:not([data-on]) :is(.up, .w) {
+    opacity: 1;
+    transform: none;
+  }
+}

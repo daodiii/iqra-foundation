@@ -1,4 +1,5 @@
-import Lenis from 'lenis';
+import Lenis, { type VirtualScrollData } from 'lenis';
+import { glide, hermite } from './carry';
 
 /*
  * The page's glide (2026-09-25).
@@ -28,9 +29,11 @@ import Lenis from 'lenis';
  * here, so a flick has gone 95 % of the way about 1.2 s after the last of it arrives. Larger is
  * lighter and shorter, smaller heavier and longer. The owner, trying the first build (2026-09-25):
  * «make it twice as heavy» — twice the time constant of the 0.085 the scroll-flow skill's site
- * settled on, measured on this same laptop.
+ * settled on, measured on this same laptop. On 2026-11-20, with the redesigned front page's long
+ * pinned scenes, the owner: «the scrolling also needs to be better»; the glide is lighter again,
+ * 0.07 (a time constant of 0.24 s), so a scene answers the hand sooner and stops sooner.
  */
-export const LERP = 0.0425;
+export const LERP = 0.07;
 
 /** Where the page glides: a precise pointer (a touchpad, a TrackPoint, a mouse) and motion wanted. */
 export const WHERE = '(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)';
@@ -41,25 +44,9 @@ export const WHERE = '(hover: hover) and (pointer: fine) and (prefers-reduced-mo
  * 0.55 to 1.25 s by the square root of the distance. From rest that is an ease in and out; moving
  * already, it takes up that speed rather than braking it in a frame.
  */
-/** How hard the start may lean on a fast page (the curve is shortened instead), and how far a turn may swing. */
-const M_MAX = 2.4;
-const M_MIN = -1.2;
-
-/** From 0 to 1, leaving at slope `m` (the page's speed in distances per duration) and arriving at rest. */
-export const hermite = (m: number) => (u: number) => m * (u * u * u - 2 * u * u + u) + 3 * u * u - 2 * u * u * u;
-
-/** The glide over `distance` px for a page moving at `speed` px/s: its duration in seconds and its curve; null for no distance. */
-export function glideFor(distance: number, speed: number) {
-  if (Math.abs(distance) < 1) return null;
-  let duration = Math.min(1.25, Math.max(0.55, 0.45 + 0.55 * Math.sqrt(Math.abs(distance) / 1000)));
-  let m = (speed * duration) / distance;
-  if (m > M_MAX) {
-    duration = Math.max(0.25, (M_MAX * distance) / speed);
-    m = Math.min(3, (speed * duration) / distance);
-  }
-  m = Math.max(M_MIN, m);
-  return { duration, m, ease: hermite(m) };
-}
+/* The curve itself lives in carry.ts, shared with the front page's beats (steps.ts). */
+export const glideFor = glide;
+export { hermite };
 
 let lenis: Lenis | null = null;
 const listeners = new Set<() => void>();
@@ -70,6 +57,16 @@ let lastT = 0;
 
 /** The glide, while it runs. */
 export const smooth = () => lenis;
+
+/** The page's speed in px/s while the glide moves it (0 at rest). */
+export const glideSpeed = () => speed;
+
+/*
+ * A hook in front of the glide's wheel handling, for the front page's beats (steps.ts): it sees each
+ * wheel event first and returns false to drop it (calling preventDefault itself when it swallows).
+ */
+let gesture: ((d: VirtualScrollData) => boolean) | null = null;
+export const setGestureHandler = (fn: typeof gesture) => void (gesture = fn);
 
 const tell = () => listeners.forEach((fn) => fn());
 
@@ -119,7 +116,15 @@ export function startSmooth(): () => void {
   };
   const start = () => {
     if (lenis || !where.matches) return;
-    const l = new Lenis({ lerp: LERP, smoothWheel: true, syncTouch: false, autoRaf: true, allowNestedScroll: true, stopInertiaOnNavigate: true });
+    const l = new Lenis({
+      lerp: LERP,
+      smoothWheel: true,
+      syncTouch: false,
+      autoRaf: true,
+      allowNestedScroll: true,
+      stopInertiaOnNavigate: true,
+      virtualScroll: (data) => (gesture ? gesture(data) : true),
+    });
     lenis = l;
     speed = 0;
     lastT = 0;
