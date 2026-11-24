@@ -89,8 +89,6 @@ describe('contentPlaceholders', () => {
    * What the site still lacks, exactly: the account number (the Vipps number arrived
    * 2026-09-23) and the Facebook and Instagram handles the client's document names but has
    * not supplied (2026-11-18). The rest of the contact line came with the document.
-   * And the contact form's four lines (2026-11-24): sent, a field refused, sending failed,
-   * and the privacy line, which the owner writes.
    * Nothing else on the site is a stand-in, so anything more here is a placeholder someone
    * added and should account for.
    */
@@ -99,10 +97,6 @@ describe('contentPlaceholders', () => {
     expect(paths).toEqual([
       'contact.follow[0].href',
       'contact.follow[1].href',
-      'pages.contact.form.failed',
-      'pages.contact.form.invalid',
-      'pages.contact.form.privacy',
-      'pages.contact.form.sent',
       'support.account.value',
     ]);
   });

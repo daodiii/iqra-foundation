@@ -256,10 +256,10 @@ export const site = {
       /**
        * The form: its heading the owner's words (2026-09-22, «kontakt oss above the message form»), its fields what
        * they are called — the writer's name, e-mail, mobile number and organisation number (the owner's two of the same
-       * day), the message. It sends to the foundation's inbox (2026-11-24). The four lines after `send` are the
-       * owner's to write and stand bracketed until they do: what the writer sees once the message is sent, when a
-       * field is wrong, and when sending failed (the e-mail address follows that one as a link), and the privacy line
-       * beside Send, which shows only once it is real.
+       * day), the message. It sends to the foundation's inbox (2026-11-24). The four lines after `send` are what the
+       * writer sees once the message is sent, when a field is wrong, and when sending failed (the e-mail address
+       * follows that one as a link), and the privacy line beside Send. Drafted 2026-11-24 and approved by the user
+       * that day, for the owner to change if they wish.
        */
       form: {
         title: 'Kontakt oss',
@@ -269,10 +269,10 @@ export const site = {
         orgnr: 'Organisasjonsnummer',
         message: 'Melding',
         send: 'Send',
-        sent: '[SKJEMA_SENDT]',
-        invalid: '[SKJEMA_UGYLDIG]',
-        failed: '[SKJEMA_FEILET]',
-        privacy: '[SKJEMA_PERSONVERN]',
+        sent: 'Takk! Meldingen er sendt. Vi svarer så snart vi kan.',
+        invalid: 'Sjekk feltet som er markert.',
+        failed: 'Meldingen ble ikke sendt. Skriv til oss på',
+        privacy: 'Vi bruker opplysningene bare til å svare deg.',
       },
     },
     support: {

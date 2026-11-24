@@ -17,7 +17,7 @@ export const privacy: Legal = {
   title: 'Privacy',
   description: 'What information the Iqra Foundation website processes, why, and what your rights are.',
   lede: 'We collect as little as possible. This page explains what the website does and what you can ask us for. It is a translation; if it differs from the Norwegian version, the Norwegian applies.',
-  updated: '18 October 2026',
+  updated: '24 November 2026',
   sections: [
     {
       id: 'ansvarlig',
@@ -29,7 +29,7 @@ export const privacy: Legal = {
       heading: 'When you visit the website',
       paragraphs: [
         'The website is hosted by Vercel, which delivers the pages to your browser. To do this, and to protect the site against misuse, the provider processes technical information about your visit, including your IP address, the time and the page you requested. The legal basis is our legitimate interest in delivering and securing the website (GDPR Article 6(1)(f)).',
-        'We have no logins, user accounts or forms that send information to us.',
+        'We have no logins or user accounts.',
       ],
     },
     {
@@ -50,14 +50,15 @@ export const privacy: Legal = {
       id: 'epost',
       heading: 'When you write to us',
       paragraphs: [
-        `If you email us (${c.email}), we use what you write and your address to reply and to follow up your enquiry. We keep it for as long as that takes, and no longer. The legal basis is our legitimate interest in answering enquiries (Article 6(1)(f)).`,
+        `If you email us (${c.email}) or use the form on the Contact page, we use what you send to reply and to follow up your enquiry: your name, your email address, your message, and your mobile number and organisation number if you give them. We keep it for as long as that takes, and no longer. The legal basis is our legitimate interest in answering enquiries (Article 6(1)(f)).`,
+        'The form sends your message to us as email through our email provider, Webhuset. The website does not store the message itself. To stop misuse, the website remembers your IP address for up to fifteen minutes after you send, in memory only, not in any database.',
       ],
     },
     {
       id: 'andre',
       heading: 'Other websites',
       paragraphs: [
-        'The website links to services we do not control. “Set up AvtaleGiro” takes you to Solidus, where the agreement is made and you enter your payment details. Their privacy notice applies there, not this one. The same goes for Vipps and your bank when you give that way. The map on the Contact page is an image stored on our own website; the link to OpenStreetMap is only a credit.',
+        'The website links to services we do not control. “Set up AvtaleGiro” takes you to Solidus, where the agreement is made and you enter your payment details. Their privacy notice applies there, not this one. The same goes for Vipps and your bank when you give that way.',
       ],
     },
     {

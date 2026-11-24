@@ -4,11 +4,10 @@ import { site } from './site.no.ts';
  * The two legal pages, in plain bokmål: personvern (the privacy notice) and vilkår (the terms of use).
  *
  * A DRAFT, written 2026-10-18 from what the site does today and nothing more — it says no more than is
- * true of the code: no cookies and no browser storage, no form that sends anything, one counting tool
- * without cookies, one host. It names no agreement, certification or retention period the foundation has
+ * true of the code: no cookies and no browser storage, one counting tool without cookies, one host, and
+ * (since 2026-11-24) the contact form, which sends its message as e-mail through Webhuset. It names no agreement, certification or retention period the foundation has
  * not told us about. The foundation (and, if it wishes, a lawyer) must read it before the site is
- * announced, and it must be changed the day any of those facts changes: a form that sends mail, a
- * second tool, a cookie. The organisation number and the address stand as the site's own placeholders
+ * announced, and it must be changed the day any of those facts changes: a second tool, a cookie. The organisation number and the address stand as the site's own placeholders
  * (`site.contact`), so the build reports them like every other bracketed value.
  */
 
@@ -23,7 +22,7 @@ export const privacy: Legal = {
   title: 'Personvern',
   description: 'Hvilke opplysninger nettsiden til Iqra Foundation behandler, hvorfor, og hvilke rettigheter du har.',
   lede: 'Vi samler inn så lite som mulig. Her står det hva nettsiden gjør, og hva du kan be oss om.',
-  updated: '18. oktober 2026',
+  updated: '24. november 2026',
   sections: [
     {
       id: 'ansvarlig',
@@ -35,7 +34,7 @@ export const privacy: Legal = {
       heading: 'Når du besøker nettsiden',
       paragraphs: [
         'Nettsiden ligger hos Vercel, som leverer sidene til nettleseren din. For å gjøre det, og for å beskytte siden mot misbruk, behandler leverandøren tekniske opplysninger om besøket, blant annet IP-adressen din, tidspunktet og hvilken side du ba om. Grunnlaget er vår berettigede interesse i å levere og sikre nettsiden (personvernforordningen artikkel 6 nr. 1 bokstav f).',
-        'Vi har ikke innlogging, brukerkontoer eller skjemaer som sender opplysninger til oss.',
+        'Vi har ikke innlogging eller brukerkontoer.',
       ],
     },
     {
@@ -56,14 +55,15 @@ export const privacy: Legal = {
       id: 'epost',
       heading: 'Når du skriver til oss',
       paragraphs: [
-        `Hvis du sender oss e-post (${c.email}), bruker vi det du skriver og avsenderadressen til å svare deg og følge opp henvendelsen. Vi lagrer den så lenge det trengs for det, og ikke lenger. Grunnlaget er vår berettigede interesse i å svare på henvendelser (artikkel 6 nr. 1 bokstav f).`,
+        `Hvis du sender oss e-post (${c.email}) eller bruker skjemaet på Kontakt-siden, bruker vi det du skriver til å svare deg og følge opp henvendelsen: navnet ditt, e-postadressen, meldingen, og mobilnummeret og organisasjonsnummeret hvis du oppgir dem. Vi lagrer det så lenge det trengs for det, og ikke lenger. Grunnlaget er vår berettigede interesse i å svare på henvendelser (artikkel 6 nr. 1 bokstav f).`,
+        'Skjemaet sender meldingen som e-post til oss gjennom e-postleverandøren vår, Webhuset. Nettsiden lagrer ikke meldingen selv. For å stoppe misbruk husker nettsiden IP-adressen din i inntil et kvarter etter at du har sendt, og bare i minnet, ikke i noen database.',
       ],
     },
     {
       id: 'andre',
       heading: 'Andre nettsteder',
       paragraphs: [
-        'Nettsiden lenker til tjenester vi ikke styrer. «Opprett AvtaleGiro» fører til Solidus, der avtalen opprettes og betalingsopplysningene dine oppgis. Der gjelder deres personvernerklæring, ikke denne. Det samme gjelder Vipps og banken din når du gir på den måten. Kartet på Kontakt-siden er et bilde som ligger på vår egen nettside; lenken til OpenStreetMap er bare en kildehenvisning.',
+        'Nettsiden lenker til tjenester vi ikke styrer. «Opprett AvtaleGiro» fører til Solidus, der avtalen opprettes og betalingsopplysningene dine oppgis. Der gjelder deres personvernerklæring, ikke denne. Det samme gjelder Vipps og banken din når du gir på den måten.',
       ],
     },
     {
