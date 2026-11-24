@@ -142,7 +142,7 @@ test('phone: no page is wider than the screen at 320, 360 or 390, however long i
   }
 });
 
-test('kontakt: «Platene» — the title, then e-mail, phone and the address, the form under «Kontakt oss» — the client’s details, no placeholder, the form drawn', async ({ page }) => {
+test('kontakt: «Platene» — the title, then e-mail, phone and the address, the form under «Kontakt oss» — the client’s details, no placeholder, a real form', async ({ page }) => {
   await page.goto('/kontakt');
   await expect(page).toHaveTitle(T(site.pages.contact.title));
   const t = site.pages.contact;
@@ -162,11 +162,51 @@ test('kontakt: «Platene» — the title, then e-mail, phone and the address, th
     if (isPlaceholder(l.href)) await expect(main.getByText(l.name, { exact: true })).toHaveCount(0);
     else await expect(main.getByRole('link', { name: l.name })).toHaveAttribute('href', l.href);
   }
-  // the form is a drawing: its five fields as text, nothing to fill in, hidden from a reader, the honest line under it
-  await expect(main.locator('form, input, textarea, button, select')).toHaveCount(0);
-  await expect(main.locator('[data-form]')).toHaveAttribute('aria-hidden', 'true');
-  for (const word of [t.form.name, t.form.email, t.form.mobile, t.form.orgnr, t.form.message]) await expect(main.locator('[data-form]')).toContainText(word);
-  await expect(main.getByText(t.form.notice, { exact: true })).toBeVisible();
+  // the form is real: five labelled controls and Send, the status line empty until something is sent
+  const f = t.form;
+  const form = main.locator('form');
+  for (const word of [f.name, f.email, f.mobile, f.orgnr, f.message]) await expect(form.getByRole('textbox', { name: word, exact: true })).toBeEditable();
+  await expect(form.getByRole('button', { name: f.send })).toBeEnabled();
+  await expect(form.getByRole('status')).toBeEmpty();
+  await expect(main).not.toContainText('ikke koblet til');
+});
+
+/*
+ * Sending, without sending: both paths stop on the server before it opens a connection to the mail
+ * server, so a `.env.local` with the real mailbox in it never sends a mail from this suite. The
+ * paths that do send are vitest's (lib/kontakt/handle.test.ts), with nodemailer mocked.
+ */
+test.describe('kontakt: the form, sent', () => {
+  const t = site.pages.contact.form;
+  const fill = async (page: import('@playwright/test').Page, name: string) => {
+    await page.goto('/kontakt');
+    const main = page.getByRole('main').locator('form');
+    await main.getByRole('textbox', { name: t.name, exact: true }).fill(name);
+    await main.getByRole('textbox', { name: t.email, exact: true }).fill('test@example.invalid');
+    await main.getByRole('textbox', { name: t.message, exact: true }).fill('En prøve fra e2e.\nTo linjer.');
+    return main;
+  };
+
+  test('a name of spaces passes the browser but not the server: the name is marked, the line says so, nothing typed is lost', async ({ page }) => {
+    const main = await fill(page, '   ');
+    await main.getByRole('button', { name: t.send }).click();
+    await expect(main.getByRole('status')).toHaveText(t.invalid);
+    await expect(main.getByRole('textbox', { name: t.name, exact: true })).toHaveAttribute('aria-invalid', 'true');
+    await expect(main.getByRole('textbox', { name: t.email, exact: true })).not.toHaveAttribute('aria-invalid');
+    await expect(main.getByRole('textbox', { name: t.message, exact: true })).toHaveValue('En prøve fra e2e.\nTo linjer.');
+    await expect(main.getByRole('textbox', { name: t.email, exact: true })).toHaveValue('test@example.invalid');
+  });
+
+  test('a filled honeypot is refused as a failure, never a success, and points to the e-mail address', async ({ page }) => {
+    const main = await fill(page, 'Prøve');
+    await page.locator('input[name="nettsted"]').fill('http://spam.example', { force: true });
+    await main.getByRole('button', { name: t.send }).click();
+    const status = main.getByRole('status');
+    await expect(status).toContainText(t.failed);
+    await expect(status).not.toContainText(t.sent);
+    await expect(status.getByRole('link', { name: klient.contact.email })).toHaveAttribute('href', `mailto:${klient.contact.email}`);
+    await expect(main.getByRole('textbox', { name: t.message, exact: true })).toHaveValue('En prøve fra e2e.\nTo linjer.');
+  });
 });
 
 test('støtt oss: the client’s text in their order, the ways to give under «Gave» — Vipps real, no bracketed account — and one way out to the agreement', async ({ page }) => {
