@@ -47,14 +47,14 @@ export async function handleContact(fd: FormData, { env, ip, now }: { env: Env; 
   if (String(fd.get(HONEYPOT) ?? '').trim()) return failed;
 
   const user = env.SMTP_USER?.trim();
-  const pass = env.SMTP_PASS?.trim();
-  if (!user || !pass) {
+  const pass = env.SMTP_PASS; // as given: a password may begin or end with a space
+  if (!user || !pass?.trim()) {
     console.error('[kontakt] SMTP_USER or SMTP_PASS is not set; the message was not sent');
     return failed;
   }
 
   if (!allow(ip, now)) {
-    console.error(`[kontakt] rate limit reached for ${ip}; the message was not sent`);
+    console.error('[kontakt] rate limit reached for one address; the message was not sent');
     return failed;
   }
 
