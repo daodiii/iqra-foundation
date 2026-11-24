@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import { HONEYPOT, LIMITS } from '@/lib/kontakt/skjema';
+import { HONEYPOT, LIMITS, TIMER } from '@/lib/kontakt/skjema';
 
 const { sendMessage } = vi.hoisted(() => ({ sendMessage: vi.fn() }));
 vi.mock('@/components/contact/send-action', () => ({ sendMessage }));
@@ -138,6 +138,15 @@ describe('Kontakt: after a send', () => {
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(t.form.invalid), wait);
     expect(screen.getByRole('textbox', { name: t.form.email })).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByRole('textbox', { name: t.form.name })).not.toHaveAttribute('aria-invalid');
+  });
+
+  test('a send tells the server how long the page has been open (the too-fast check)', async () => {
+    sendMessage.mockResolvedValueOnce({ status: 'sent' });
+    render(<Kontakt />);
+    fill();
+    await waitFor(() => expect(sendMessage).toHaveBeenCalled(), wait);
+    const fd = sendMessage.mock.calls.at(-1)?.[1] as FormData;
+    expect(Number(fd.get(TIMER))).toBeGreaterThan(0);
   });
 
   test('only a send the server confirms reads as sent', async () => {

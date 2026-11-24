@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
-import { type Contact, FIELDS, type FormState, HONEYPOT, validateContact } from './skjema';
+import { mailDomainOk } from './domene';
+import { type Contact, FIELDS, type FormState, HONEYPOT, MIN_MS, TIMER, validateContact } from './skjema';
 
 /**
  * Sends one message from the contact form to the foundation's inbox. Server only: the action in
@@ -34,7 +35,9 @@ function allow(ip: string, now: number) {
   return true;
 }
 
-export async function handleContact(fd: FormData, { env, ip, now }: { env: Env; ip: string; now: number }): Promise<FormState> {
+type Deps = { env: Env; ip: string; now: number; domainOk?: (domain: string) => Promise<boolean> };
+
+export async function handleContact(fd: FormData, { env, ip, now, domainOk = mailDomainOk }: Deps): Promise<FormState> {
   const v = validateContact(fd);
   if (!v.ok) {
     const values = Object.fromEntries(FIELDS.map((f) => [f, String(fd.get(f) ?? '')])) as Contact;
@@ -45,6 +48,15 @@ export async function handleContact(fd: FormData, { env, ip, now }: { env: Env; 
 
   // a person never sees this field; a bot fills it in. Tell it nothing went through.
   if (String(fd.get(HONEYPOT) ?? '').trim()) return failed;
+
+  // sent within a few seconds of the page opening, or posted without the form's timer: a script
+  const open = Number(fd.get(TIMER));
+  if (!Number.isFinite(open) || open < MIN_MS) return failed;
+
+  // a typo or a made-up domain (gmail.con) cannot be answered: say the e-mail is wrong
+  if (!(await domainOk(data.epost.slice(data.epost.lastIndexOf('@') + 1)))) {
+    return { status: 'invalid', invalid: ['epost'], values: data };
+  }
 
   const user = env.SMTP_USER?.trim();
   const pass = env.SMTP_PASS; // as given: a password may begin or end with a space

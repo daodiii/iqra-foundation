@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import k from '@/components/forside/knapp.module.css';
-import { type Contact, FIELDS, type Field, type FormState, HONEYPOT, initialState, LIMITS, REQUIRED } from '@/lib/kontakt/skjema';
+import { type Contact, FIELDS, type Field, type FormState, HONEYPOT, initialState, LIMITS, REQUIRED, TIMER } from '@/lib/kontakt/skjema';
 import { isPlaceholder } from '@/lib/placeholder';
 import { sendMessage } from './send-action';
 import styles from './kontakt-plater.module.css';
@@ -37,8 +37,10 @@ const INPUT: Record<Exclude<Field, 'melding'>, { type: string; autoComplete: str
  * The server action, guarded: if the call itself breaks (a dropped connection, an action ID gone with
  * a new deploy, a function cut off) the form reports a failure with the text kept, instead of falling
  * to the error page and losing what was typed. The cost: without JavaScript the form does not submit.
+ * It also tells the server how long the page has been open, so a form sent in a second is turned away.
  */
 async function send(prev: FormState, fd: FormData): Promise<FormState> {
+  fd.set(TIMER, String(Math.round(performance.now())));
   try {
     return await sendMessage(prev, fd);
   } catch {

@@ -16,6 +16,13 @@ export const REQUIRED: readonly Field[] = ['navn', 'epost', 'melding'];
 /** The hidden field a person never sees and a bot fills in. */
 export const HONEYPOT = 'nettsted';
 
+/**
+ * How long the page had been open when Send was pressed, in ms, set by the form as it submits.
+ * A person needs longer than MIN_MS to write a name, an address and a message; a script does not.
+ */
+export const TIMER = 'ms';
+export const MIN_MS = 3000;
+
 /** One address: something, an @, a domain with a dot, no spaces. The mail server has the last word. */
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

@@ -5,16 +5,19 @@ const createTransport = vi.fn<(options: unknown) => { sendMail: typeof sendMail 
 vi.mock('nodemailer', () => ({ default: { createTransport: (o: unknown) => createTransport(o) } }));
 
 const { handleContact, resetRateLimit, RATE } = await import('./handle');
+const { MIN_MS, TIMER } = await import('./skjema');
 
 const env = { SMTP_USER: 'skjema@iqrasti.no', SMTP_PASS: 'hemmelig' };
 const good = { navn: 'Kari Nordmann', epost: 'kari@example.no', mobil: '900 00 000', orgnr: '', melding: 'Hei!\nVi vil gjerne samarbeide.' };
-const form = (fields: Record<string, string> = good) => {
+// a person has had the page open for eight seconds when they press Send
+const form = (fields: Record<string, string> = good, extra: Record<string, string> = { [TIMER]: '8000' }) => {
   const fd = new FormData();
-  for (const [k, v] of Object.entries(fields)) fd.set(k, v);
+  for (const [k, v] of Object.entries({ ...fields, ...extra })) fd.set(k, v);
   return fd;
 };
-const run = (fd = form(), o: { env?: Record<string, string | undefined>; ip?: string; now?: number } = {}) =>
-  handleContact(fd, { env: o.env ?? env, ip: o.ip ?? '203.0.113.7', now: o.now ?? 1_000_000 });
+type Opts = { env?: Record<string, string | undefined>; ip?: string; now?: number; domainOk?: (d: string) => Promise<boolean> };
+const run = (fd = form(), o: Opts = {}) =>
+  handleContact(fd, { env: o.env ?? env, ip: o.ip ?? '203.0.113.7', now: o.now ?? 1_000_000, domainOk: o.domainOk ?? (async () => true) });
 
 beforeEach(() => {
   resetRateLimit();
@@ -82,5 +85,21 @@ describe('handleContact', () => {
   test('invalid tries do not count against the limit', async () => {
     for (let i = 0; i < RATE.max + 2; i++) await run(form({ ...good, navn: '' }));
     expect((await run()).status).toBe('sent');
+  });
+
+  test('an e-mail whose domain cannot receive mail is refused as a bad e-mail, nothing sent, the text kept', async () => {
+    const asked: string[] = [];
+    const r = await run(form({ ...good, epost: 'kari@gmail.con' }), { domainOk: async (d) => (asked.push(d), false) });
+    expect(asked).toEqual(['gmail.con']);
+    expect(r).toEqual({ status: 'invalid', invalid: ['epost'], values: { ...good, epost: 'kari@gmail.con' } });
+    expect(sendMail).not.toHaveBeenCalled();
+  });
+
+  test(`a form sent sooner than ${MIN_MS / 1000} s after the page opened, or without the timer, is a bot: nothing sent, reported as failed`, async () => {
+    for (const extra of [{ [TIMER]: String(MIN_MS - 1) }, {}, { [TIMER]: 'x' }] as Record<string, string>[]) {
+      expect(await run(form(good, extra))).toEqual({ status: 'failed', values: good });
+    }
+    expect(sendMail).not.toHaveBeenCalled();
+    expect((await run(form(good, { [TIMER]: String(MIN_MS) }))).status).toBe('sent');
   });
 });
