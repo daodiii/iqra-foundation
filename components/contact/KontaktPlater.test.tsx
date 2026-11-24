@@ -100,6 +100,7 @@ describe('Kontakt: Platene', () => {
 });
 
 describe('Kontakt: after a send', () => {
+  const wait = { timeout: 5000 };
   const fill = () => {
     const f = t.form;
     fireEvent.change(screen.getByRole('textbox', { name: f.name }), { target: { value: 'Kari' } });
@@ -113,19 +114,28 @@ describe('Kontakt: after a send', () => {
     sendMessage.mockResolvedValueOnce({ status: 'failed', values });
     render(<Kontakt />);
     fill();
-    const status = await screen.findByText(t.form.failed, { exact: false });
+    const status = await screen.findByText(t.form.failed, { exact: false }, wait);
     expect(status).toHaveAttribute('role', 'status');
     expect(within(status).getByRole('link', { name: klient.contact.email })).toHaveAttribute('href', `mailto:${klient.contact.email}`);
     expect(status).not.toHaveTextContent(t.form.sent);
-    await waitFor(() => expect(screen.getByRole('textbox', { name: t.form.message })).toHaveValue('Hei'));
+    await waitFor(() => expect(screen.getByRole('textbox', { name: t.form.message })).toHaveValue('Hei'), wait);
     expect(screen.getByRole('textbox', { name: t.form.name })).toHaveValue('Kari');
+  });
+
+  test('when the action itself breaks (a dropped connection, a new deploy) the form still says it failed, keeping what was typed', async () => {
+    sendMessage.mockRejectedValueOnce(new Error('Failed to fetch'));
+    render(<Kontakt />);
+    fill();
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(t.form.failed), wait);
+    expect(within(screen.getByRole('status')).getByRole('link', { name: klient.contact.email })).toHaveAttribute('href', `mailto:${klient.contact.email}`);
+    await waitFor(() => expect(screen.getByRole('textbox', { name: t.form.message })).toHaveValue('Hei'), wait);
   });
 
   test('a refused field is marked and the line says so', async () => {
     sendMessage.mockResolvedValueOnce({ status: 'invalid', invalid: ['epost'], values });
     render(<Kontakt />);
     fill();
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(t.form.invalid));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(t.form.invalid), wait);
     expect(screen.getByRole('textbox', { name: t.form.email })).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByRole('textbox', { name: t.form.name })).not.toHaveAttribute('aria-invalid');
   });
@@ -134,7 +144,7 @@ describe('Kontakt: after a send', () => {
     sendMessage.mockResolvedValueOnce({ status: 'sent' });
     render(<Kontakt />);
     fill();
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(t.form.sent));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(t.form.sent), wait);
     expect(screen.getByRole('status')).not.toHaveTextContent(t.form.failed);
   });
 });

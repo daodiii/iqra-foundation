@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import k from '@/components/forside/knapp.module.css';
-import { type Field, HONEYPOT, initialState, LIMITS, REQUIRED } from '@/lib/kontakt/skjema';
+import { type Contact, FIELDS, type Field, type FormState, HONEYPOT, initialState, LIMITS, REQUIRED } from '@/lib/kontakt/skjema';
 import { isPlaceholder } from '@/lib/placeholder';
 import { sendMessage } from './send-action';
 import styles from './kontakt-plater.module.css';
@@ -33,8 +33,22 @@ const INPUT: Record<Exclude<Field, 'melding'>, { type: string; autoComplete: str
  * or refused send the writer's text is put back, so nothing typed is lost. A failure always names
  * the e-mail address as the way round, and nothing here ever reports a send that did not happen.
  */
+/**
+ * The server action, guarded: if the call itself breaks (a dropped connection, an action ID gone with
+ * a new deploy, a function cut off) the form reports a failure with the text kept, instead of falling
+ * to the error page and losing what was typed. The cost: without JavaScript the form does not submit.
+ */
+async function send(prev: FormState, fd: FormData): Promise<FormState> {
+  try {
+    return await sendMessage(prev, fd);
+  } catch {
+    const values = Object.fromEntries(FIELDS.map((f) => [f, String(fd.get(f) ?? '')])) as Contact;
+    return { status: 'failed', values };
+  }
+}
+
 export function KontaktSkjema({ f, email }: { f: FormCopy; email: string }) {
-  const [state, action, pending] = useActionState(sendMessage, initialState);
+  const [state, action, pending] = useActionState(send, initialState);
   const values = state.status === 'invalid' || state.status === 'failed' ? state.values : undefined;
   const invalid = state.status === 'invalid' ? state.invalid : [];
   const label: Record<Field, string> = { navn: f.name, epost: f.email, mobil: f.mobile, orgnr: f.orgnr, melding: f.message };
