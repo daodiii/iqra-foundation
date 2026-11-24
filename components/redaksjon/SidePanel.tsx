@@ -38,7 +38,7 @@ export function SidePanel(p: Props) {
   ];
 
   return (
-    <aside className={s.side} aria-label="Innstillinger for nyheten">
+    <>
       <section>
         <h3>Publisering</h3>
         <label className={s.toggle}>
@@ -99,6 +99,6 @@ export function SidePanel(p: Props) {
           </li>
         </ul>
       </section>
-    </aside>
+    </>
   );
 }

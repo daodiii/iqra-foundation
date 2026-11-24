@@ -113,6 +113,17 @@ function usable(slug: string) {
   if (slug === 'ny') throw new EditorError(409, 'Nettadressen «ny» er opptatt. Velg en annen.', [{ key: 'slug', text: 'Nettadresse' }]);
 }
 
+/** An address in use. News shows its address and can change it; the others' comes from the title or name. */
+function taken(section: Section): EditorError {
+  const text: Record<Section, string> = {
+    nyheter: 'En annen nyhet har allerede denne nettadressen. Endre overskriften eller adressen.',
+    arrangementer: 'Det finnes allerede et arrangement med denne tittelen. Endre tittelen litt.',
+    ressurser: 'Det finnes allerede en ressurs med denne tittelen. Endre tittelen litt.',
+    menneskene: 'Det finnes allerede en person med dette navnet.',
+  };
+  return new EditorError(409, text[section], [{ key: section === 'nyheter' ? 'slug' : LABELS[section].titleKey, text: section === 'nyheter' ? 'Nettadresse' : section === 'menneskene' ? 'Navn' : 'Tittel' }]);
+}
+
 function check<S extends Section>(section: S, fields: EntryOf[S]) {
   const p = problems(section, fields);
   if (p.length) throw new EditorError(422, `Mangler: ${p.map((x) => x.text).join(', ')}.`, p);
@@ -138,7 +149,7 @@ export async function createEntry<S extends Section>(
   const slug = input.slug ?? slugify(titleOf(section, input.fields));
   usable(slug);
   if ((await readAll(store, section, slug)).exists) {
-    throw new EditorError(409, 'En annen nyhet har allerede denne nettadressen. Endre overskriften eller adressen.', [{ key: 'slug', text: 'Nettadresse' }]);
+    throw taken(section);
   }
   const files = toFiles(section, slug, { fields: input.fields, extra: {} });
   const changes: Change[] = [
@@ -166,7 +177,7 @@ export async function saveEntry<S extends Section>(
   const to = input.slug ?? slug;
   if (to !== slug) usable(to);
   if (to !== slug && (await readAll(store, section, to)).exists) {
-    throw new EditorError(409, 'En annen nyhet har allerede denne nettadressen. Endre overskriften eller adressen.', [{ key: 'slug', text: 'Nettadresse' }]);
+    throw taken(section);
   }
   const { extra } = fromFiles(section, slug, now.files);
   const files = toFiles(section, to, { fields: input.fields, extra });

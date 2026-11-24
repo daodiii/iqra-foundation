@@ -30,7 +30,7 @@ export async function route(section: string, run: (c: Ctx) => Promise<Response>)
 export function refusal(e: unknown): Response {
   if (e instanceof EditorError) return Response.json({ error: e.message, fields: e.fields ?? [] }, { status: e.status });
   if (e instanceof StaleError) {
-    return Response.json({ error: 'Noen andre har endret denne nyheten mens du hadde den åpen. Kopier teksten din, og last inn siden på nytt.' }, { status: 409 });
+    return Response.json({ error: 'Noen andre har endret dette mens du hadde det åpent. Kopier teksten din, og last inn siden på nytt.' }, { status: 409 });
   }
   if (e instanceof GitHubError) {
     console.error('[redaksjon]', e.message);
