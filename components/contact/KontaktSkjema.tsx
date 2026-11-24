@@ -50,7 +50,7 @@ export function KontaktSkjema({ f, email }: { f: FormCopy; email: string }) {
       'aria-describedby': invalid.includes(name) ? 'skjema-status' : undefined,
     };
     return name === 'melding' ? (
-      <textarea {...common} className={`${styles.box} ${styles.area}`} rows={4} />
+      <textarea {...common} className={`${styles.box} ${styles.area}`} rows={3} />
     ) : (
       <input {...common} {...INPUT[name]} className={styles.box} />
     );

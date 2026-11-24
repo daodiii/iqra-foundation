@@ -134,16 +134,24 @@ a.w:focus-visible {
 /* the textarea: its ruled lines (--rule at the same 32%), one under each line of text, scrolling with it */
 .area {
   --lh: calc(var(--fs) * 1.5 + 12px);
-  height: auto;
+  height: var(--ta);
   min-height: var(--ta);
   padding: 0;
   line-height: var(--lh);
-  resize: vertical;
+  resize: none;
   background-image: repeating-linear-gradient(
     transparent 0 calc(var(--lh) - 1px),
     color-mix(in srgb, var(--rule) 32%, transparent) calc(var(--lh) - 1px) var(--lh)
   );
   background-attachment: local;
+}
+/* where the browser can, the box grows with what is written, up to about a dozen lines, then scrolls */
+@supports (field-sizing: content) {
+  .area {
+    field-sizing: content;
+    height: auto;
+    max-height: calc(var(--lh) * 12);
+  }
 }
 /* the honeypot: off the page, not display:none, which some bots skip */
 .hp {
