@@ -156,4 +156,17 @@ describe('Kontakt: after a send', () => {
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(t.form.sent), wait);
     expect(screen.getByRole('status')).not.toHaveTextContent(t.form.failed);
   });
+
+  test('once sent, the fields step aside for the confirmation: out of reach, the sent line shown large', async () => {
+    sendMessage.mockResolvedValueOnce({ status: 'sent' });
+    const { container } = render(<Kontakt />);
+    expect(container.querySelector('[data-done]')).toBeNull();
+    fill();
+    await waitFor(() => expect(container.querySelector('[data-done]')).not.toBeNull(), wait);
+    const form = container.querySelector('form[data-form]') as HTMLElement;
+    expect(form).toHaveAttribute('data-sent');
+    expect(screen.getByRole('textbox', { name: t.form.name, hidden: true }).closest('[inert]')).not.toBeNull();
+    expect(container.querySelector('[data-done]')).toHaveTextContent(t.form.sent);
+    expect(screen.getByRole('status').closest('[inert]')).toBeNull();
+  });
 });

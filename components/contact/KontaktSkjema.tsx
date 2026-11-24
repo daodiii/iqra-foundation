@@ -72,46 +72,70 @@ export function KontaktSkjema({ f, email }: { f: FormCopy; email: string }) {
     );
   };
 
+  const sent = state.status === 'sent';
+
   return (
-    <form className={styles.kf} data-rise="" data-form="" action={action} aria-busy={pending || undefined}>
-      <div className={styles.fields}>
-        {(['navn', 'epost', 'mobil', 'orgnr'] as const).map((n) => (
-          <label key={n} className={styles.field} htmlFor={`skjema-${n}`}>
-            {label[n]}
-            {control(n)}
-          </label>
-        ))}
-        <label className={`${styles.field} ${styles.full}`} htmlFor="skjema-melding">
-          {label.melding}
-          {control('melding')}
-        </label>
+    <form
+      className={styles.kf}
+      data-rise=""
+      data-form=""
+      data-sent={sent || undefined}
+      action={action}
+      aria-busy={pending || undefined}
+    >
+      {/* the fields and the confirmation share one cell, so the plate keeps its height when one gives way to the other */}
+      <div className={styles.stage}>
+        <div className={styles.body} inert={sent || undefined}>
+          <div className={styles.fields}>
+            {(['navn', 'epost', 'mobil', 'orgnr'] as const).map((n) => (
+              <label key={n} className={styles.field} htmlFor={`skjema-${n}`}>
+                {label[n]}
+                {control(n)}
+              </label>
+            ))}
+            <label className={`${styles.field} ${styles.full}`} htmlFor="skjema-melding">
+              {label.melding}
+              {control('melding')}
+            </label>
+          </div>
+          {/* a person never sees this; a bot fills it in */}
+          <div className={styles.hp} aria-hidden="true">
+            <label>
+              Nettsted
+              <input name={HONEYPOT} type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
+            </label>
+          </div>
+          <div className={styles.send}>
+            <button type="submit" className={`${k.k} ${k.fill} ${styles.k}`} data-send="" data-knapp="fill" disabled={pending}>
+              <span className={k.label}>{f.send}</span>
+              <span className={k.arrow} aria-hidden="true">
+                <i>→</i>
+                <i>→</i>
+              </span>
+            </button>
+            {!isPlaceholder(f.privacy) && <p className={styles.notice}>{f.privacy}</p>}
+          </div>
+        </div>
+        {/* what the eye gets once the server confirms: a mark drawn in the accent, and the sent line large (the status line below carries it for a reader) */}
+        {sent && (
+          <div className={styles.done} data-done="" aria-hidden="true">
+            <svg className={styles.mark} viewBox="0 0 64 64" width="64" height="64">
+              <circle cx="32" cy="32" r="29" pathLength={1} transform="rotate(-90 32 32)" />
+              <path d="M19 33.5 28 42.5 45.5 23" pathLength={1} />
+            </svg>
+            <p className={styles.doneText}>{f.sent}</p>
+          </div>
+        )}
       </div>
-      {/* a person never sees this; a bot fills it in */}
-      <div className={styles.hp} aria-hidden="true">
-        <label>
-          Nettsted
-          <input name={HONEYPOT} type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
-        </label>
-      </div>
-      <div className={styles.send}>
-        <button type="submit" className={`${k.k} ${k.fill} ${styles.k}`} data-send="" data-knapp="fill" disabled={pending}>
-          <span className={k.label}>{f.send}</span>
-          <span className={k.arrow} aria-hidden="true">
-            <i>→</i>
-            <i>→</i>
-          </span>
-        </button>
-        <p className={styles.notice} id="skjema-status" role="status" data-status={state.status}>
-          {state.status === 'sent' && f.sent}
-          {state.status === 'invalid' && f.invalid}
-          {state.status === 'failed' && (
-            <>
-              {f.failed} <a href={`mailto:${email}`}>{email}</a>
-            </>
-          )}
-        </p>
-        {!isPlaceholder(f.privacy) && <p className={styles.notice}>{f.privacy}</p>}
-      </div>
+      <p className={`${styles.notice} ${sent ? styles.sr : ''}`} id="skjema-status" role="status" data-status={state.status}>
+        {sent && f.sent}
+        {state.status === 'invalid' && f.invalid}
+        {state.status === 'failed' && (
+          <>
+            {f.failed} <a href={`mailto:${email}`}>{email}</a>
+          </>
+        )}
+      </p>
     </form>
   );
 }
