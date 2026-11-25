@@ -60,11 +60,11 @@ describe('Støtt oss', () => {
     expect(container.querySelectorAll('form, input, button, select, textarea')).toHaveLength(0);
   });
 
-  test('no placeholder on the page: a bracketed account number waits for the client (Q6), a real one stands', () => {
+  test('no placeholder on the page: an account number not given (Q6) does not stand, nor its label; a real one stands', () => {
     const { container } = render(<StottOss />);
     expect(container.textContent).not.toMatch(/\[[^\]]*\]/);
     const account = site.support.account.value;
-    if (isPlaceholder(account)) expect(container.textContent).not.toContain(account);
+    if (!account || isPlaceholder(account)) expect(container.textContent).not.toContain(site.support.account.label);
     else expect(container.textContent).toContain(account);
   });
 

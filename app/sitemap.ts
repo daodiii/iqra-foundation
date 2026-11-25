@@ -9,8 +9,7 @@ const url = (href: string) => (href === '/' ? siteUrl : `${siteUrl}${href}`);
  * Every public page: the nine of the menu and the two legal pages, the Norwegian ones first and then
  * their English twins (2026-11-22), each entry naming both languages. No `lastModified`: the pages are
  * built from content that changes by the hour, and a date that is only the build's would tell a
- * crawler nothing true. While the site is `noindex` (app/(no)/layout.tsx, app/en/layout.tsx) a search
- * engine will report these as excluded; that is the intent until the real values land.
+ * crawler nothing true.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   // Styringsdokumenter is a section of Ressurser now (`/ressurser#styringsdokumenter`); a sitemap lists pages, not places on them.

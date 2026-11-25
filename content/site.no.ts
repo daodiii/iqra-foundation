@@ -118,15 +118,12 @@ export const site = {
     address: [klient.contact.postbox, klient.contact.postcode],
     phone: klient.contact.phone,
     /** Where to follow. Shown only once a handle is real. */
-    follow: [
-      { name: 'Instagram', href: '[INSTAGRAM]' },
-      { name: 'Facebook', href: '[FACEBOOK]' },
-    ],
+    follow: [] as { name: string; href: string }[],
   },
   support: {
     /** The foundation's own, given 2026-09-23. */
     vipps: { label: 'Vippsnummer', value: '26354' },
-    account: { label: 'Kontonummer', value: '[KONTO]' },
+    account: { label: 'Kontonummer', value: null as string | null },
     /** The three ways to give, as the owner listed them (2026-09-18) and in that order: the banners' names. */
     ways: { account: 'Direkte overføring', vipps: 'Vipps', avtale: 'AvtaleGiro' },
     /**
