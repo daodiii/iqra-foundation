@@ -1,6 +1,17 @@
 import { describe, expect, test } from 'vitest';
 import { contentPlaceholders, contentProblems, paymentPlaceholders } from './content-check.mjs';
 import { site } from '@/content/site.no';
+import { site as siteEn } from '@/content/site.en';
+
+/**
+ * The real content has no placeholders left (2026-11-25), so the gate's tests run on a copy with
+ * three put back: the shape the site had before, an account number and two social links.
+ */
+const unfinished = {
+  ...site,
+  contact: { ...site.contact, follow: [{ name: 'Instagram', href: '[INSTAGRAM]' }, { name: 'Facebook', href: '[FACEBOOK]' }] },
+  support: { ...site.support, account: { ...site.support.account, value: '[KONTO]' } },
+};
 
 describe('contentProblems', () => {
   test('the real content has no problems outside production', () => {
@@ -19,15 +30,15 @@ describe('contentProblems', () => {
    * which is the one day it ought to stay quiet.
    */
   test('flags every placeholder, and only in production', () => {
-    const found = contentPlaceholders(site);
+    const found = contentPlaceholders(unfinished);
     expect(found.length, 'nothing left to flag, so this test proves nothing').toBeGreaterThan(0);
 
-    const problems = contentProblems(site, { production: true });
+    const problems = contentProblems(unfinished, { production: true });
     expect(problems).toHaveLength(found.length);
     for (const { path, token } of found) {
       expect(problems).toContain(`${path} is still the ${token} placeholder`);
     }
-    expect(contentProblems(site, { production: false })).toEqual([]);
+    expect(contentProblems(unfinished, { production: false })).toEqual([]);
   });
 
   /**
@@ -35,14 +46,15 @@ describe('contentProblems', () => {
    * placeholders and nothing else: an empty string is a bug in any environment.
    */
   test('allowPlaceholders opens the gate in production, but only for placeholders', () => {
-    expect(contentProblems(site, { production: true, allowPlaceholders: true })).toEqual([]);
+    expect(contentProblems(unfinished, { production: true, allowPlaceholders: true })).toEqual([]);
 
     const broken = { ...site, header: { ...site.header, skip: '  ' } };
     expect(contentProblems(broken, { production: true, allowPlaceholders: true })).toEqual(['header.skip is empty']);
   });
 
   test('the gate still refuses by default, so the hatch has to be asked for', () => {
-    expect(contentProblems(site, { production: true }).length).toBeGreaterThan(0);
+    expect(contentProblems(unfinished, { production: true }).length).toBeGreaterThan(0);
+    expect(contentProblems(site, { production: true })).toEqual([]);
   });
 
   test('content with nothing left to fill in passes a production build', () => {
@@ -62,14 +74,14 @@ describe('paymentPlaceholders', () => {
    * is there to shout.
    */
   test('finds the payment details, and nothing that is merely unfinished', () => {
-    const paths = paymentPlaceholders(site).map((p) => p.path);
+    const paths = paymentPlaceholders(unfinished).map((p) => p.path);
     expect(paths).toEqual(['support.account.value']);
     expect(paths).not.toContain('contact.email');
   });
 
   test('it is a subset of every placeholder, not a separate list that can drift', () => {
-    const all = contentPlaceholders(site).map((p) => p.path);
-    for (const { path } of paymentPlaceholders(site)) expect(all).toContain(path);
+    const all = contentPlaceholders(unfinished).map((p) => p.path);
+    for (const { path } of paymentPlaceholders(unfinished)) expect(all).toContain(path);
   });
 });
 
@@ -86,18 +98,12 @@ describe('contentPlaceholders', () => {
   });
 
   /**
-   * What the site still lacks, exactly: the account number (the Vipps number arrived
-   * 2026-09-23) and the Facebook and Instagram handles the client's document names but has
-   * not supplied (2026-11-18). The rest of the contact line came with the document.
-   * Nothing else on the site is a stand-in, so anything more here is a placeholder someone
-   * added and should account for.
+   * None left (2026-11-25): what the foundation has not supplied (the account number, the
+   * Facebook and Instagram handles) is left out, not bracketed, so the site can be indexed and
+   * the production gate is back on. Anything here is a placeholder someone added.
    */
-  test('the facts the foundation has not supplied are the only placeholders', () => {
-    const paths = contentPlaceholders(site).map((p) => p.path).sort();
-    expect(paths).toEqual([
-      'contact.follow[0].href',
-      'contact.follow[1].href',
-      'support.account.value',
-    ]);
+  test('no placeholder in either language', () => {
+    expect(contentPlaceholders(site)).toEqual([]);
+    expect(contentPlaceholders(siteEn)).toEqual([]);
   });
 });

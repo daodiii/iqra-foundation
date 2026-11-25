@@ -318,6 +318,15 @@ test('Personvern and Vilkår, robots.txt, the sitemap and the security headers',
   const sitemap = await (await page.request.get('/sitemap.xml')).text();
   for (const item of [...site.links, ...site.legal].filter((i) => !i.href.includes('#'))) expect(sitemap).toContain(item.href === '/' ? '<loc>' : `${item.href}</loc>`);
   expect(sitemap).not.toContain('/styringsdokumenter</loc>');
+  // open to search (2026-11-25): no page tells a crawler to stay away, in either language
+  for (const href of ['/', '/kontakt', '/en', '/en/contact']) {
+    const html = await (await page.request.get(href)).text();
+    expect(html, href).not.toMatch(/<meta name="robots"[^>]*noindex/);
+    // the foundation as structured data on every page, the same entity in both languages
+    const ld = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1]);
+    expect(ld['@graph'].map((n: { '@type': string }) => n['@type']), href).toEqual(['NGO', 'WebSite']);
+    expect(ld['@graph'][0].identifier.value).toBe('817388752');
+  }
   const headers = (await page.request.get('/')).headers();
   expect(headers['strict-transport-security']).toMatch(/max-age=\d+/);
   expect(headers['x-content-type-options']).toBe('nosniff');
