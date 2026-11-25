@@ -56,7 +56,8 @@ for (const card of CARDS) {
   await page.close();
 
   writeFileSync(path.join(root, card.dir, 'opengraph-image.png'), png);
-  writeFileSync(path.join(root, card.dir, 'opengraph-image.alt.txt'), alt + '\n');
+  // no trailing newline: Next puts the file's text into the alt attribute as it is
+  writeFileSync(path.join(root, card.dir, 'opengraph-image.alt.txt'), alt);
   console.log(`${card.dir}/opengraph-image.png ${png.length} bytes; alt: ${alt}`);
 }
 
