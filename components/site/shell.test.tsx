@@ -111,4 +111,9 @@ describe('the footer', () => {
     const legal = screen.getByRole('navigation', { name: site.footer.legalLabel });
     expect(within(legal).getAllByRole('link').map((l) => [l.textContent, l.getAttribute('href')])).toEqual(site.legal.map((l) => [l.label, l.href]));
   });
+
+  test('the credit links to IDweb', () => {
+    render(<Footer />);
+    expect(screen.getByRole('link', { name: site.footer.credit.label }).getAttribute('href')).toBe('https://www.idweb.no');
+  });
 });

@@ -96,6 +96,9 @@ export function Fot({ lang = 'no' }: { lang?: Lang }) {
             <span className={styles.ul}>{l.label}</span>
           </Link>
         ))}
+        <a href={site.footer.credit.href}>
+          <span className={styles.ul}>{site.footer.credit.label}</span>
+        </a>
         <LangSwitch className={styles.lang} />
         <TilToppen className={styles.top} />
       </nav>

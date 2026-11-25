@@ -100,6 +100,8 @@ export const site = {
     addressLabel: 'Adresse',
     /** The front page's foot: back to the top. */
     toTop: 'Til toppen',
+    /** The web agency's credit (2026-11-25). */
+    credit: { label: 'Laget av IDweb', href: 'https://www.idweb.no' },
   },
   /**
    * The foundation's contact details, as the client's document gives them (D8, 2026-11-18).

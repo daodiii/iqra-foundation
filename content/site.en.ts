@@ -79,6 +79,7 @@ export const site = {
     phoneLabel: 'Phone',
     addressLabel: 'Address',
     toTop: 'Back to top',
+    credit: { label: 'Made by IDweb', href: 'https://www.idweb.no' },
   },
   contact: {
     name: klient.contact.name,
