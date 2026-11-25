@@ -3,6 +3,7 @@
 import { Children, isValidElement, useEffect, useRef, useState, type ReactNode } from 'react';
 import { clamp, eo, onScrollFrame } from '@/components/forside/frame';
 import f from '@/components/forside/forside.module.css';
+import { useCopy } from '@/components/site/Lang';
 import styles from './plater.module.css';
 
 /** The plates' grounds: white, navy, the deep navy of the foot, and burgundy (three colours, 2026-11-20). */
@@ -83,6 +84,7 @@ export function partsFrom(children: ReactNode): Part[] {
 
 export function Plater({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
+  const { site } = useCopy();
   const [parts, setParts] = useState<Part[]>(() => partsFrom(children));
   const [here, setHere] = useState<string>();
 
@@ -165,7 +167,7 @@ export function Plater({ children, className }: { children: ReactNode; className
       <aside className={styles.side}>
         {list[0]}
         {parts.length > 1 && (
-          <nav className={styles.toc} aria-label="På denne siden">
+          <nav className={styles.toc} aria-label={site.onThisPage}>
             {parts.map((p) => (
               <a key={p.id} href={`#${p.id}`} aria-current={here === p.id ? 'true' : undefined}>
                 {p.label}

@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'vitest';
+import { SEO } from '@/content/seo';
+import { ldJson } from './page-graph';
 import { pageGraphs } from './page-schema';
 import { siteUrl } from './site-url';
 
@@ -7,12 +9,31 @@ describe('pageGraphs: each page’s type and breadcrumb, as JSON-LD', () => {
   const en = pageGraphs('en');
   const crumbs = (g: (typeof no)[string]) => (g['@graph'][1] as { itemListElement: { position: number; name: string; item: string }[] }).itemListElement;
 
-  test('a page for every address the site lists except the home page, in both languages', () => {
+  test('a page for every address the site lists, in both languages', () => {
     expect(Object.keys(no).sort()).toEqual(
-      ['/om-oss', '/vart-arbeid', '/menneskene-bak', '/aktuelt', '/aktuelt/nyheter', '/aktuelt/arrangementer', '/aktuelt/arkiv', '/ressurser', '/kontakt', '/stott-oss', '/personvern', '/vilkar'].sort(),
+      ['/', '/om-oss', '/vart-arbeid', '/menneskene-bak', '/aktuelt', '/aktuelt/nyheter', '/aktuelt/arrangementer', '/aktuelt/arkiv', '/ressurser', '/kontakt', '/stott-oss', '/personvern', '/vilkar'].sort(),
     );
     expect(Object.keys(en)).toContain('/en/about-us');
-    expect(Object.keys(en)).toHaveLength(12);
+    expect(Object.keys(en)).toHaveLength(13);
+  });
+
+  test('the home page is a WebPage with its description and no breadcrumb of one', () => {
+    expect(no['/']['@graph']).toHaveLength(1);
+    expect(no['/']['@graph'][0]).toMatchObject({ '@type': 'WebPage', url: siteUrl, inLanguage: 'nb', description: SEO.no.home!.description });
+    expect(no['/']['@graph'][0]).not.toHaveProperty('breadcrumb');
+    expect(en['/en']['@graph'][0]).toMatchObject({ url: `${siteUrl}/en`, inLanguage: 'en' });
+  });
+
+  test('each page carries its search description', () => {
+    expect(no['/kontakt']['@graph'][0].description).toBe(SEO.no.contact!.description);
+    expect(en['/en/support-us']['@graph'][0].description).toBe(SEO.en.support!.description);
+  });
+
+  test('the JSON is escaped so no value can close the script tag', () => {
+    const out = ldJson({ a: '</script><b>' });
+    expect(out).not.toContain('<');
+    expect(out).toBe(String.raw`{"a":"\u003c/script>\u003cb>"}`);
+    expect(JSON.parse(out)).toEqual({ a: '</script><b>' });
   });
 
   test('the right type: Om oss an AboutPage, Kontakt a ContactPage, the lists CollectionPages, the rest WebPages', () => {

@@ -20,6 +20,7 @@ export function siteGraph(lang: 'nb' | 'en'): { '@context': string; '@graph': No
   const c = klient.contact;
   const [postalCode, ...place] = c.postcode.split(' ');
   const org = `${siteUrl}/#organization`;
+  const orgnr = c.orgnr.replace(/\s/g, '');
   return {
     '@context': 'https://schema.org',
     '@graph': [
@@ -41,7 +42,12 @@ export function siteGraph(lang: 'nb' | 'en'): { '@context': string; '@graph': No
           addressLocality: place.join(' '),
           addressCountry: 'NO',
         },
-        identifier: { '@type': 'PropertyValue', propertyID: 'Organisasjonsnummer', value: c.orgnr.replace(/\s/g, '') },
+        identifier: { '@type': 'PropertyValue', propertyID: 'Organisasjonsnummer', value: orgnr },
+        // ISO 6523 with 0192, Brønnøysund's organisasjonsnummer: the identifier Google's Organization docs list
+        iso6523Code: `0192:${orgnr}`,
+        contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', email: c.email, telephone: c.phone, availableLanguage: ['nb', 'en'] },
+        // the public register's own page for the foundation; the social profiles join when they are known
+        sameAs: [`https://virksomhet.brreg.no/nb/oppslag/enheter/${orgnr}`],
         knowsLanguage: ['nb', 'en'],
       },
       {

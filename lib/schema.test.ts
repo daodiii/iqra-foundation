@@ -27,6 +27,13 @@ describe('siteGraph: the foundation and the site, as JSON-LD', () => {
     expect(String((org.logo as { url: string }).url)).toBe(`${siteUrl}/brand/iqra-logo.svg`);
   });
 
+  test('the org number as Google lists it, a contact point, and the register entry as sameAs', () => {
+    const org = node(no, 'NGO');
+    expect(org.iso6523Code).toBe(`0192:${BRREG.orgnr}`);
+    expect(org.contactPoint).toEqual({ '@type': 'ContactPoint', contactType: 'customer support', email: 'post@iqrasti.no', telephone: '+47 941 43 585', availableLanguage: ['nb', 'en'] });
+    expect(org.sameAs).toEqual([`https://virksomhet.brreg.no/nb/oppslag/enheter/${BRREG.orgnr}`]);
+  });
+
   test('the description is in the page’s language', () => {
     expect(node(no, 'NGO').description).toMatch(/^Iqra Foundation er en allmennyttig stiftelse i Oslo/);
     expect(node(en, 'NGO').description).toMatch(/^Iqra Foundation is a/);

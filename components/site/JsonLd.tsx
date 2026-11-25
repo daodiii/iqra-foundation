@@ -1,3 +1,4 @@
+import { ldJson } from '@/lib/page-graph';
 import { siteGraph } from '@/lib/schema';
 
 /**
@@ -9,7 +10,7 @@ export function JsonLd({ lang }: { lang: 'nb' | 'en' }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(siteGraph(lang)).replace(/</g, '\\u003c') }}
+      dangerouslySetInnerHTML={{ __html: ldJson(siteGraph(lang)) }}
     />
   );
 }
