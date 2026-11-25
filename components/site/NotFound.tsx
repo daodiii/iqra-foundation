@@ -13,7 +13,7 @@ export function NotFound({ lang = 'no' }: { lang?: Lang }) {
   const { site } = copy(lang);
   return (
     <>
-      <Header lang={lang} />
+      <Header lang={lang} priority={false} />
       <main id="innhold">
         <article className={styles.page}>
           <h1 className={styles.title}>{site.pages.notFound.line}</h1>

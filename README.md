@@ -57,14 +57,13 @@ natively, so on an older Node the build fails in `prebuild`, before Next starts.
 
 ## Content
 
-### The four facts that are still placeholders
+### Placeholders
 
-`content/site.no.ts` carries `[EPOST]`, `[ORG.NR]`, `[NUMMER]` (Vipps) and `[KONTO]`.
-`prebuild` runs `scripts/check-content.mjs`, which lists them and, when
-`VERCEL_ENV === 'production'`, refuses the build — unless `ALLOW_PLACEHOLDERS=1`, which
-`vercel.json` sets on purpose so the site can be live while openly unfinished. Put the real
-values in, delete `build.env.ALLOW_PLACEHOLDERS` from `vercel.json` and the `robots` field in
-`app/layout.tsx` (the site is `noindex` until then), and the gate is back.
+A bracketed token such as `[KONTO]` is copy nobody has supplied yet. `prebuild` runs
+`scripts/check-content.mjs`, which lists them and, when `VERCEL_ENV === 'production'`,
+refuses the build. A value the foundation has not given is left out instead
+(`support.account.value` is `null`, `contact.follow` is empty) and the page shows nothing
+for it. The site has been open to search since 2026-11-25.
 
 ### Adding an item by hand
 

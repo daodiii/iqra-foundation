@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { JsonLd } from '@/components/site/JsonLd';
 import { LangProvider } from '@/components/site/Lang';
 import { EN } from '@/content/copy';
 import { copy } from '@/content/copy';
@@ -14,18 +15,15 @@ const { site } = copy('en');
  * One title pattern on every page — «Om oss – Iqra Foundation» — and the name alone on
  * the home page. Pages set only their own part.
  *
- * The site is live while the facts are still bracketed — the Vipps number, the account,
- * the address, the organisation number — so it is kept out of search rather than indexed
- * as it stands. `noindex` only works if crawlers may fetch the page, so there is
- * deliberately no robots.txt disallowing them. Delete `robots` here (in both languages'
- * root layouts) when the real values land, alongside `build.env.ALLOW_PLACEHOLDERS` in
- * vercel.json; `node scripts/check-content.mjs` lists what is still bracketed.
+ * Open to search since 2026-11-25. Until then every page was `noindex` while the facts were
+ * still bracketed; the last three (the account number, Instagram, Facebook) were left off
+ * rather than filled, so nothing bracketed reaches a page. The content gate is back on for
+ * production builds (`scripts/check-content.mjs`): a new placeholder now stops the deploy.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: site.name, template: `%s – ${site.name}` },
   description: site.pages.home.description,
-  robots: { index: false, follow: false },
   /** Each page names itself as the address to count, and its twin in the other language (lib/meta.ts). */
   alternates: { canonical: './' },
   openGraph: {
@@ -41,7 +39,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang={site.lang} className={`${generalSans.variable} ${supreme.variable}`}>
-      <body><LangProvider copy={EN}>{children}</LangProvider></body>
+      <body>
+        <JsonLd lang="en" />
+        <LangProvider copy={EN}>{children}</LangProvider>
+      </body>
     </html>
   );
 }

@@ -11,8 +11,9 @@ import { copy } from '@/content/copy';
 import { newsItemPath, PATHS, type Lang } from '@/content/paths';
 import { getNews } from '@/lib/content';
 import { writeDate } from '@/lib/dates';
-import { alternates } from '@/lib/meta';
+import { articleGraph } from '@/lib/article-schema';
 import { outline, readingMinutes } from '@/lib/outline';
+import { ldJson } from '@/lib/page-graph';
 
 const find = (slug: string) => getNews().find((n) => n.slug === slug && n.body);
 
@@ -22,9 +23,16 @@ export const newsItemSlugs = () =>
     .filter((n) => n.body)
     .map((n) => ({ slug: n.slug }));
 
+/**
+ * An article is written in Norwegian and the English page shows it as it is, in the English frame. So
+ * the Norwegian page is the one to index: both pages name it as canonical, and neither claims an
+ * English version (SEO audit, second run, 2026-11-25).
+ */
 export function newsItemMeta(slug: string, lang: Lang): Metadata {
   const n = find(slug);
-  return n ? { title: n.title, description: n.summary, alternates: alternates(newsItemPath(slug, 'no'), newsItemPath(slug, 'en'), lang) } : {};
+  void lang;
+  const no = newsItemPath(slug, 'no');
+  return n ? { title: n.title, description: n.summary, alternates: { canonical: no, languages: { nb: no, 'x-default': no } } } : {};
 }
 
 /** The few words this page has of its own, in both languages. */
@@ -58,6 +66,7 @@ export function NewsItemPage({ slug, lang }: { slug: string; lang: Lang }) {
 
   return (
     <article className={a.article}>
+      {lang === 'no' && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(articleGraph(n)) }} />}
       <header className={a.cover} data-plain={n.image ? undefined : true}>
         {n.image && <Image src={n.image.src} alt={n.image.alt} fill sizes="100vw" style={{ objectFit: 'cover', objectPosition: '50% 45%' }} loading="eager" fetchPriority="high" />}
         <div className={a.coverText}><h1 lang={foreign}>{n.title}</h1></div>

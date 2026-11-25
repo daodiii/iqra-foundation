@@ -39,7 +39,12 @@ type Props = {
    * hero's name lands on it. The owner, 2026-10-17: «use the one that has not turquoise, but red».
    */
   crimson?: boolean;
-  /** The header's logos: the page's first paint, fetched ahead of everything else. */
+  /**
+   * The header's logo: the page's first paint, fetched ahead of everything else. Every other logo is
+   * lazy: React preloads any eager <img> a server component renders, and the 404 page's header and
+   * foot sit in every page's not-found boundary, so without it every page preloaded logos it never
+   * shows (SEO audit, 2026-11-25).
+   */
   priority?: boolean;
 };
 
@@ -57,6 +62,7 @@ export function Logo({ ground = 'white', mark = false, height, className, decora
       height={height}
       className={className}
       decoding="async"
+      loading={priority ? undefined : 'lazy'}
       fetchPriority={priority ? 'high' : undefined}
       data-logo={mark ? 'mark' : ground}
     />

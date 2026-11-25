@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { SEO } from '../content/seo';
 import { site } from '../content/site.no';
 import { klient } from '../content/klient.no';
 import { getEvents, getNews, getResources, splitEvents, todayISO } from '../lib/content';
@@ -23,7 +24,7 @@ test('phone: the home page is never wider than the screen', async ({ page, isMob
 
 test('vårt arbeid: the client’s intro and every area of work, each a section reachable by its anchor', async ({ page }) => {
   await page.goto('/vart-arbeid');
-  await expect(page).toHaveTitle(T(site.pages.work.title));
+  await expect(page).toHaveTitle(SEO.no.work!.title);
   await expect(page.locator('h1')).toHaveText(klient.work.title);
   await expect(page.getByText(klient.work.intro, { exact: true })).toBeVisible();
   await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText(klient.work.areas.map((a) => a.title));
@@ -35,8 +36,8 @@ test('vårt arbeid: the client’s intro and every area of work, each a section 
 test('om iqra foundation: the client’s text, section by section', async ({ page }) => {
   const t = klient.about;
   await page.goto('/om-oss');
-  await expect(page).toHaveTitle(T(site.pages.about.title));
-  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', t.intro);
+  await expect(page).toHaveTitle(SEO.no.about!.title);
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', SEO.no.about!.description);
   await expect(page.locator('h1')).toHaveText(t.title);
   await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText([t.purpose.title, t.values.title, t.audience.title, t.independent.title]);
   for (const p of [t.intro, t.purpose.lead, ...t.purpose.points, t.values.lead, t.values.close, t.audience.text, ...t.independent.paragraphs]) {
@@ -93,8 +94,8 @@ test.describe('the collections are honest while empty', () => {
   test('ressurser: the client’s intro, then the four categories in their order, each with its text and what is published in it, or the empty line', async ({ page }) => {
     const r = klient.resources;
     await page.goto('/ressurser');
-    await expect(page).toHaveTitle(T(site.pages.resources.title));
-    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', r.intro);
+    await expect(page).toHaveTitle(SEO.no.resources!.title);
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', SEO.no.resources!.description);
     await expect(page.locator('h1')).toHaveText(r.title);
     const main = page.getByRole('main');
     await expect(main.getByRole('heading', { level: 2 })).toHaveText(r.categories.map((c) => c.title));
@@ -110,7 +111,7 @@ test.describe('the collections are honest while empty', () => {
   test('menneskene bak: the client’s text, the five board members by name and role, and how to reach the board', async ({ page }) => {
     const t = klient.people;
     await page.goto('/menneskene-bak');
-    await expect(page).toHaveTitle(T(t.title));
+    await expect(page).toHaveTitle(SEO.no.people!.title);
     await expect(page.locator('h1')).toHaveText(t.title);
     for (const p of [t.intro, t.board.text]) await expect(page.getByText(p, { exact: true })).toBeVisible();
     await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText([t.board.title, t.contact.title]);
@@ -142,9 +143,9 @@ test('phone: no page is wider than the screen at 320, 360 or 390, however long i
   }
 });
 
-test('kontakt: «Platene» — the title, then e-mail, phone and the address, the form under «Kontakt oss» — the client’s details, no placeholder, the form drawn', async ({ page }) => {
+test('kontakt: «Platene» — the title, then e-mail, phone and the address, the form under «Kontakt oss» — the client’s details, no placeholder, a real form', async ({ page }) => {
   await page.goto('/kontakt');
-  await expect(page).toHaveTitle(T(site.pages.contact.title));
+  await expect(page).toHaveTitle(SEO.no.contact!.title);
   const t = site.pages.contact;
   const main = page.getByRole('main');
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
@@ -162,17 +163,57 @@ test('kontakt: «Platene» — the title, then e-mail, phone and the address, th
     if (isPlaceholder(l.href)) await expect(main.getByText(l.name, { exact: true })).toHaveCount(0);
     else await expect(main.getByRole('link', { name: l.name })).toHaveAttribute('href', l.href);
   }
-  // the form is a drawing: its five fields as text, nothing to fill in, hidden from a reader, the honest line under it
-  await expect(main.locator('form, input, textarea, button, select')).toHaveCount(0);
-  await expect(main.locator('[data-form]')).toHaveAttribute('aria-hidden', 'true');
-  for (const word of [t.form.name, t.form.email, t.form.mobile, t.form.orgnr, t.form.message]) await expect(main.locator('[data-form]')).toContainText(word);
-  await expect(main.getByText(t.form.notice, { exact: true })).toBeVisible();
+  // the form is real: five labelled controls and Send, the status line empty until something is sent
+  const f = t.form;
+  const form = main.locator('form');
+  for (const word of [f.name, f.email, f.mobile, f.orgnr, f.message]) await expect(form.getByRole('textbox', { name: word, exact: true })).toBeEditable();
+  await expect(form.getByRole('button', { name: f.send })).toBeEnabled();
+  await expect(form.getByRole('status')).toBeEmpty();
+  await expect(main).not.toContainText('ikke koblet til');
+});
+
+/*
+ * Sending, without sending: both paths stop on the server before it opens a connection to the mail
+ * server, so a `.env.local` with the real mailbox in it never sends a mail from this suite. The
+ * paths that do send are vitest's (lib/kontakt/handle.test.ts), with nodemailer mocked.
+ */
+test.describe('kontakt: the form, sent', () => {
+  const t = site.pages.contact.form;
+  const fill = async (page: import('@playwright/test').Page, name: string) => {
+    await page.goto('/kontakt');
+    const main = page.getByRole('main').locator('form');
+    await main.getByRole('textbox', { name: t.name, exact: true }).fill(name);
+    await main.getByRole('textbox', { name: t.email, exact: true }).fill('test@example.invalid');
+    await main.getByRole('textbox', { name: t.message, exact: true }).fill('En prøve fra e2e.\nTo linjer.');
+    return main;
+  };
+
+  test('a name of spaces passes the browser but not the server: the name is marked, the line says so, nothing typed is lost', async ({ page }) => {
+    const main = await fill(page, '   ');
+    await main.getByRole('button', { name: t.send }).click();
+    await expect(main.getByRole('status')).toHaveText(t.invalid);
+    await expect(main.getByRole('textbox', { name: t.name, exact: true })).toHaveAttribute('aria-invalid', 'true');
+    await expect(main.getByRole('textbox', { name: t.email, exact: true })).not.toHaveAttribute('aria-invalid');
+    await expect(main.getByRole('textbox', { name: t.message, exact: true })).toHaveValue('En prøve fra e2e.\nTo linjer.');
+    await expect(main.getByRole('textbox', { name: t.email, exact: true })).toHaveValue('test@example.invalid');
+  });
+
+  test('a filled honeypot is refused as a failure, never a success, and points to the e-mail address', async ({ page }) => {
+    const main = await fill(page, 'Prøve');
+    await page.locator('input[name="nettsted"]').fill('http://spam.example', { force: true });
+    await main.getByRole('button', { name: t.send }).click();
+    const status = main.getByRole('status');
+    await expect(status).toContainText(t.failed);
+    await expect(status).not.toContainText(t.sent);
+    await expect(status.getByRole('link', { name: klient.contact.email })).toHaveAttribute('href', `mailto:${klient.contact.email}`);
+    await expect(main.getByRole('textbox', { name: t.message, exact: true })).toHaveValue('En prøve fra e2e.\nTo linjer.');
+  });
 });
 
 test('støtt oss: the client’s text in their order, the ways to give under «Gave» — Vipps real, no bracketed account — and one way out to the agreement', async ({ page }) => {
   const t = klient.support;
   await page.goto('/stott-oss');
-  await expect(page).toHaveTitle(T(site.pages.support.title));
+  await expect(page).toHaveTitle(SEO.no.support!.title);
   const main = page.getByRole('main');
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
   await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.uses.title, t.ways.title]);
@@ -278,6 +319,25 @@ test('Personvern and Vilkår, robots.txt, the sitemap and the security headers',
   const sitemap = await (await page.request.get('/sitemap.xml')).text();
   for (const item of [...site.links, ...site.legal].filter((i) => !i.href.includes('#'))) expect(sitemap).toContain(item.href === '/' ? '<loc>' : `${item.href}</loc>`);
   expect(sitemap).not.toContain('/styringsdokumenter</loc>');
+  // open to search (2026-11-25): no page tells a crawler to stay away, in either language
+  for (const href of ['/', '/kontakt', '/en', '/en/contact']) {
+    const html = await (await page.request.get(href)).text();
+    expect(html, href).not.toMatch(/<meta name="robots"[^>]*noindex/);
+    // the foundation as structured data on every page, the same entity in both languages
+    const ld = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1]);
+    expect(ld['@graph'].map((n: { '@type': string }) => n['@type']), href).toEqual(['NGO', 'WebSite']);
+    expect(ld['@graph'][0].identifier.value).toBe('817388752');
+  }
+  // each subpage also says what it is and where it sits (2026-11-25)
+  const kontakt = await (await page.request.get('/kontakt')).text();
+  const graphs = [...kontakt.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+  const own = graphs.find((g) => g['@graph'][0]['@type'] === 'ContactPage');
+  expect(own, 'Kontakt carries its ContactPage graph').toBeTruthy();
+  expect(own['@graph'][1].itemListElement.map((c: { name: string }) => c.name)).toEqual(['Hjem', 'Kontakt']);
+  expect(sitemap).toContain('/aktuelt/arkiv</loc>');
+  // the English pages share an English card
+  const enHtml = await (await page.request.get('/en')).text();
+  expect(enHtml).toMatch(/<meta property="og:image:alt" content="IQRA FOUNDATION\. Knowledge\./);
   const headers = (await page.request.get('/')).headers();
   expect(headers['strict-transport-security']).toMatch(/max-age=\d+/);
   expect(headers['x-content-type-options']).toBe('nosniff');

@@ -118,15 +118,12 @@ export const site = {
     address: [klient.contact.postbox, klient.contact.postcode],
     phone: klient.contact.phone,
     /** Where to follow. Shown only once a handle is real. */
-    follow: [
-      { name: 'Instagram', href: '[INSTAGRAM]' },
-      { name: 'Facebook', href: '[FACEBOOK]' },
-    ],
+    follow: [] as { name: string; href: string }[],
   },
   support: {
     /** The foundation's own, given 2026-09-23. */
     vipps: { label: 'Vippsnummer', value: '26354' },
-    account: { label: 'Kontonummer', value: '[KONTO]' },
+    account: { label: 'Kontonummer', value: null as string | null },
     /** The three ways to give, as the owner listed them (2026-09-18) and in that order: the banners' names. */
     ways: { account: 'Direkte overføring', vipps: 'Vipps', avtale: 'AvtaleGiro' },
     /**
@@ -151,6 +148,8 @@ export const site = {
     en: { short: 'EN', name: 'English' },
     inNorwegian: 'På norsk',
   },
+  /** A subpage's list of its own parts, named for a screen reader (the list itself is the headings). */
+  onThisPage: 'På denne siden',
   /** The months, in full: a date is written out as «24. september 2026». */
   months: ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'],
   pages: {
@@ -256,7 +255,10 @@ export const site = {
       /**
        * The form: its heading the owner's words (2026-09-22, «kontakt oss above the message form»), its fields what
        * they are called — the writer's name, e-mail, mobile number and organisation number (the owner's two of the same
-       * day), the message. It is drawn, not wired, and the notice under it says so (the sibling of the card form's line, 2026-09-12).
+       * day), the message. It sends to the foundation's inbox (2026-11-24). The four lines after `send` are what the
+       * writer sees once the message is sent, when a field is wrong, and when sending failed (the e-mail address
+       * follows that one as a link), and the privacy line beside Send. Drafted 2026-11-24 and approved by the user
+       * that day, for the owner to change if they wish.
        */
       form: {
         title: 'Kontakt oss',
@@ -266,7 +268,10 @@ export const site = {
         orgnr: 'Organisasjonsnummer',
         message: 'Melding',
         send: 'Send',
-        notice: 'Skjemaet er ikke koblet til ennå. Send en e-post så lenge.',
+        sent: 'Takk! Meldingen er sendt. Vi svarer så snart vi kan.',
+        invalid: 'Sjekk feltet som er markert.',
+        failed: 'Meldingen ble ikke sendt. Skriv til oss på',
+        privacy: 'Vi bruker opplysningene bare til å svare deg.',
       },
     },
     support: {

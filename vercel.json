@@ -1,8 +1,3 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "build": {
-    "env": {
-      "ALLOW_PLACEHOLDERS": "1"
-    }
-  }
+  "$schema": "https://openapi.vercel.sh/vercel.json"
 }

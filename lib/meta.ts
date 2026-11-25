@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { PATHS, type Lang, type PageKey } from '@/content/paths';
+import { SEO } from '@/content/seo';
 
 /**
  * A page's metadata in its language: its title and description, its own address as canonical, and
@@ -14,6 +15,12 @@ export function alternates(no: string, en: string, lang: Lang): NonNullable<Meta
   };
 }
 
+/**
+ * The search engine's title and description come from `content/seo.ts` where a page has them (whole,
+ * past the layout's «– Iqra Foundation» template); `text` is the page's own and stands where it has none.
+ */
 export function pageMeta(page: PageKey, lang: Lang, text: { title?: string; description?: string } = {}): Metadata {
-  return { ...text, alternates: alternates(PATHS[page].no, PATHS[page].en, lang) };
+  const seo = SEO[lang][page];
+  const own = seo ? { title: { absolute: seo.title }, description: seo.description } : text;
+  return { ...own, alternates: alternates(PATHS[page].no, PATHS[page].en, lang) };
 }

@@ -86,14 +86,11 @@ export const site = {
     orgnr: klient.contact.orgnr,
     address: [klient.contact.postbox, klient.contact.postcode],
     phone: klient.contact.phone,
-    follow: [
-      { name: 'Instagram', href: '[INSTAGRAM]' },
-      { name: 'Facebook', href: '[FACEBOOK]' },
-    ],
+    follow: [] as { name: string; href: string }[],
   },
   support: {
     vipps: { label: 'Vipps number', value: '26354' },
-    account: { label: 'Account number', value: '[KONTO]' },
+    account: { label: 'Account number', value: null as string | null },
     ways: { account: 'Bank transfer', vipps: 'Vipps', avtale: 'AvtaleGiro' },
     avtale: { button: 'Set up AvtaleGiro', href: 'https://nettbutikk.solidus.no/avtalestraks/D6E5B9EA-89CF-43F0-90F0-2BD4039EADD2' },
   },
@@ -104,6 +101,7 @@ export const site = {
     en: { short: 'EN', name: 'English' },
     inNorwegian: 'In Norwegian',
   },
+  onThisPage: 'On this page',
   months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   pages: {
     home: {
@@ -201,7 +199,10 @@ export const site = {
         orgnr: 'Organisation number',
         message: 'Message',
         send: 'Send',
-        notice: 'The form is not connected yet. Please send us an email in the meantime.',
+        sent: 'Thank you! Your message has been sent. We will reply as soon as we can.',
+        invalid: 'Please check the marked field.',
+        failed: 'Your message was not sent. Write to us at',
+        privacy: 'We use this information only to reply to you.',
       },
     },
     support: {

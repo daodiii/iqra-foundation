@@ -17,6 +17,9 @@ import localFont from 'next/font/local';
 export const generalSans = localFont({
   variable: '--font-general-sans',
   display: 'swap',
+  // The pages since the redesign are set in Instrument Sans; General Sans is left to the older
+  // shells (legal pages, articles) and loads when they use it, not ahead of every page (2026-11-25).
+  preload: false,
   src: [
     { path: '../brand/fonts/general-sans/GeneralSans-Medium.woff2', weight: '500', style: 'normal' },
     { path: '../brand/fonts/general-sans/GeneralSans-Semibold.woff2', weight: '600', style: 'normal' },

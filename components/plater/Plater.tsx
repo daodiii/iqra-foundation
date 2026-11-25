@@ -1,8 +1,9 @@
 'use client';
 
-import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Children, isValidElement, useEffect, useRef, useState, type ReactNode } from 'react';
 import { clamp, eo, onScrollFrame } from '@/components/forside/frame';
 import f from '@/components/forside/forside.module.css';
+import { useCopy } from '@/components/site/Lang';
 import styles from './plater.module.css';
 
 /** The plates' grounds: white, navy, the deep navy of the foot, and burgundy (three colours, 2026-11-20). */
@@ -39,9 +40,52 @@ export function inset(k: number, w: number, h: number) {
  */
 type Part = { id: string; label: string };
 
+type Props = { id?: string; text?: string; label?: string; children?: ReactNode };
+
+/** The text an element holds: its strings, and a `Lines` heading's `text`. */
+function textOf(node: ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join('');
+  if (!isValidElement<Props>(node)) return '';
+  return node.props.text ?? textOf(node.props.children);
+}
+
+/** The element with this id among `node`'s descendants. */
+function findId(node: ReactNode, id: string): ReactNode {
+  if (Array.isArray(node)) {
+    for (const n of node) {
+      const hit = findId(n, id);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  if (!isValidElement<Props>(node)) return null;
+  if (node.props.id === id) return node;
+  return findId(node.props.children, id);
+}
+
+/**
+ * The page's parts, read from the plates as they are rendered: every plate after the first, named by
+ * the heading its `label` points at. Done during render, not after loading, so on a phone (where the
+ * list stands over the content) the list is in the first paint and nothing below it moves (CLS 0.17 on
+ * /om-oss before, SEO audit 2026-11-25).
+ */
+export function partsFrom(children: ReactNode): Part[] {
+  return Children.toArray(children)
+    .slice(1)
+    .map((plate) => {
+      const id = isValidElement<Props>(plate) ? plate.props.label?.split(' ')[0] : undefined;
+      if (!id || !isValidElement<Props>(plate)) return null;
+      const label = textOf(findId(plate.props.children, id)).replace(/\s+/g, ' ').trim();
+      return label ? { id, label } : null;
+    })
+    .filter((x): x is Part => !!x);
+}
+
 export function Plater({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [parts, setParts] = useState<Part[]>([]);
+  const { site } = useCopy();
+  const [parts, setParts] = useState<Part[]>(() => partsFrom(children));
   const [here, setHere] = useState<string>();
 
   // the page's parts, named by their own headings, and which of them is being read
@@ -61,7 +105,8 @@ export function Plater({ children, className }: { children: ReactNode; className
         return id && h ? { id, label: (h.textContent ?? '').replace(/\s+/g, ' ').trim() } : null;
       })
       .filter((x): x is Part => !!x && !!x.label);
-    setParts(found);
+    // the page as it stands has the last word, but an unchanged list must not render again
+    setParts((had) => (JSON.stringify(had) === JSON.stringify(found) ? had : found));
     if (typeof IntersectionObserver === 'undefined') return () => window.removeEventListener('resize', measure);
     const io = new IntersectionObserver(
       (es) => es.forEach((e) => e.isIntersecting && setHere(e.target.getAttribute('aria-labelledby')?.split(' ')[0])),
@@ -122,7 +167,7 @@ export function Plater({ children, className }: { children: ReactNode; className
       <aside className={styles.side}>
         {list[0]}
         {parts.length > 1 && (
-          <nav className={styles.toc} aria-label="På denne siden">
+          <nav className={styles.toc} aria-label={site.onThisPage}>
             {parts.map((p) => (
               <a key={p.id} href={`#${p.id}`} aria-current={here === p.id ? 'true' : undefined}>
                 {p.label}
