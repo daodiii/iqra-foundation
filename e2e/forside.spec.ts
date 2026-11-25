@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { klient } from '../content/klient.no';
+import { SEO } from '../content/seo';
 import { site } from '../content/site.no';
 import { getEvents, getNews, splitEvents, todayISO } from '../lib/content';
 
@@ -22,7 +23,7 @@ async function to(page: Page, y: number) {
 
 test('the client’s front page in their order, every word theirs', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveTitle(site.name);
+  await expect(page).toHaveTitle(SEO.no.home!.title);
   const main = page.getByRole('main');
   await expect(main.locator('h1')).toHaveText(h.headline);
   for (const p of h.paragraphs) await expect(main.getByText(p, { exact: true })).toBeAttached();

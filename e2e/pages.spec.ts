@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { SEO } from '../content/seo';
 import { site } from '../content/site.no';
 import { klient } from '../content/klient.no';
 import { getEvents, getNews, getResources, splitEvents, todayISO } from '../lib/content';
@@ -23,7 +24,7 @@ test('phone: the home page is never wider than the screen', async ({ page, isMob
 
 test('vårt arbeid: the client’s intro and every area of work, each a section reachable by its anchor', async ({ page }) => {
   await page.goto('/vart-arbeid');
-  await expect(page).toHaveTitle(T(site.pages.work.title));
+  await expect(page).toHaveTitle(SEO.no.work!.title);
   await expect(page.locator('h1')).toHaveText(klient.work.title);
   await expect(page.getByText(klient.work.intro, { exact: true })).toBeVisible();
   await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText(klient.work.areas.map((a) => a.title));
@@ -35,8 +36,8 @@ test('vårt arbeid: the client’s intro and every area of work, each a section 
 test('om iqra foundation: the client’s text, section by section', async ({ page }) => {
   const t = klient.about;
   await page.goto('/om-oss');
-  await expect(page).toHaveTitle(T(site.pages.about.title));
-  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', t.intro);
+  await expect(page).toHaveTitle(SEO.no.about!.title);
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', SEO.no.about!.description);
   await expect(page.locator('h1')).toHaveText(t.title);
   await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText([t.purpose.title, t.values.title, t.audience.title, t.independent.title]);
   for (const p of [t.intro, t.purpose.lead, ...t.purpose.points, t.values.lead, t.values.close, t.audience.text, ...t.independent.paragraphs]) {
@@ -93,8 +94,8 @@ test.describe('the collections are honest while empty', () => {
   test('ressurser: the client’s intro, then the four categories in their order, each with its text and what is published in it, or the empty line', async ({ page }) => {
     const r = klient.resources;
     await page.goto('/ressurser');
-    await expect(page).toHaveTitle(T(site.pages.resources.title));
-    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', r.intro);
+    await expect(page).toHaveTitle(SEO.no.resources!.title);
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', SEO.no.resources!.description);
     await expect(page.locator('h1')).toHaveText(r.title);
     const main = page.getByRole('main');
     await expect(main.getByRole('heading', { level: 2 })).toHaveText(r.categories.map((c) => c.title));
@@ -110,7 +111,7 @@ test.describe('the collections are honest while empty', () => {
   test('menneskene bak: the client’s text, the five board members by name and role, and how to reach the board', async ({ page }) => {
     const t = klient.people;
     await page.goto('/menneskene-bak');
-    await expect(page).toHaveTitle(T(t.title));
+    await expect(page).toHaveTitle(SEO.no.people!.title);
     await expect(page.locator('h1')).toHaveText(t.title);
     for (const p of [t.intro, t.board.text]) await expect(page.getByText(p, { exact: true })).toBeVisible();
     await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toHaveText([t.board.title, t.contact.title]);
@@ -144,7 +145,7 @@ test('phone: no page is wider than the screen at 320, 360 or 390, however long i
 
 test('kontakt: «Platene» — the title, then e-mail, phone and the address, the form under «Kontakt oss» — the client’s details, no placeholder, a real form', async ({ page }) => {
   await page.goto('/kontakt');
-  await expect(page).toHaveTitle(T(site.pages.contact.title));
+  await expect(page).toHaveTitle(SEO.no.contact!.title);
   const t = site.pages.contact;
   const main = page.getByRole('main');
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
@@ -212,7 +213,7 @@ test.describe('kontakt: the form, sent', () => {
 test('støtt oss: the client’s text in their order, the ways to give under «Gave» — Vipps real, no bracketed account — and one way out to the agreement', async ({ page }) => {
   const t = klient.support;
   await page.goto('/stott-oss');
-  await expect(page).toHaveTitle(T(site.pages.support.title));
+  await expect(page).toHaveTitle(SEO.no.support!.title);
   const main = page.getByRole('main');
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(t.title);
   await expect(main.getByRole('heading', { level: 2 })).toHaveText([t.uses.title, t.ways.title]);
