@@ -8,6 +8,8 @@ import { Merke } from '@/components/forside/Merke';
 import { Topp } from '@/components/forside/Topp';
 import styles from '@/components/forside/forside.module.css';
 import type { Lang } from '@/content/paths';
+import { PageJsonLd } from '@/components/site/PageJsonLd';
+import { pageGraphs } from '@/lib/page-schema';
 
 /**
  * The site's two shells, shared by both languages (2026-11-22): each language is its own root
@@ -31,6 +33,7 @@ export function ForsideShell({ lang, mark = false, children }: { lang: Lang; mar
       <Merke />
       <Smooth />
       <Analytics />
+      <PageJsonLd graphs={pageGraphs(lang)} />
       <Topp mark={mark} />
       <main id="innhold" className={styles.main}>
         {children}
@@ -45,6 +48,7 @@ export function SiteShell({ lang, children }: { lang: Lang; children: React.Reac
     <>
       <Smooth />
       <Analytics />
+      <PageJsonLd graphs={pageGraphs(lang)} />
       <Header lang={lang} />
       <main id="innhold">{children}</main>
       <Footer lang={lang} />
