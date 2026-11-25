@@ -4,8 +4,12 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
-const user = vi.hoisted(() => ({ current: null as null | { primaryEmailAddress: { emailAddress: string; verification?: { status: string } } } }));
-vi.mock('@clerk/nextjs/server', () => ({ currentUser: async () => user.current }));
+// the login is a signed session cookie (lib/redaksjon/kode.ts); the jar stands in for the request's cookies
+const jar = vi.hoisted(() => ({ token: undefined as string | undefined }));
+vi.mock('next/headers', () => ({ cookies: async () => ({ get: (name: string) => (name === 'redaksjon_okt' && jar.token ? { value: jar.token } : undefined) }) }));
+const SECRET = 'k'.repeat(40);
+const { signSession } = await import('@/lib/redaksjon/kode');
+const loginAs = (email: string) => (jar.token = signSession(email, Date.now() + 60_000, SECRET));
 
 const list = await import('./[section]/route');
 const one = await import('./[section]/[slug]/route');
@@ -35,7 +39,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.unstubAllEnvs();
-  user.current = null;
+  jar.token = undefined;
   rmSync(root, { recursive: true, force: true });
 });
 
@@ -46,13 +50,14 @@ describe('the gate', () => {
     vi.stubEnv('REDAKSJON_LOCAL_ROOT', '');
     expect((await list.GET(new Request('http://x'), ctx({ section: 'nyheter' }))).status).toBe(404);
 
-    vi.stubEnv('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY', 'pk');
-    vi.stubEnv('CLERK_SECRET_KEY', 'sk');
+    vi.stubEnv('REDAKSJON_SECRET', SECRET);
+    vi.stubEnv('SMTP_USER', 'nettside@iqrasti.no');
+    vi.stubEnv('SMTP_PASS', 'x');
     vi.stubEnv('EDITOR_EMAILS', 'ola@example.org');
     vi.stubEnv('REDAKSJON_LOCAL_ROOT', root);
     expect((await POST('nyheter', nyhet())).status).toBe(401);
     expect((await GET1('nyheter', 'x')).status).toBe(401);
-    user.current = { primaryEmailAddress: { emailAddress: 'per@example.org', verification: { status: 'verified' } } };
+    loginAs('per@example.org');
     expect((await PUT('nyheter', 'x', nyhet())).status).toBe(403);
     expect((await DEL('nyheter', 'x', '')).status).toBe(403);
     expect(existsSync(path.join(root, 'content'))).toBe(false);

@@ -39,27 +39,19 @@ const csp = [
 ].join('; ');
 
 /**
- * The editor under /redaksjon logs in through Clerk, whose scripts and API live at the
- * instance's own address. That address is written into the publishable key (base64 after
- * `pk_test_` / `pk_live_`, ending in `$`), so the policy names exactly that host and no wildcard.
- * Cloudflare's check is Clerk's bot protection on sign-in.
+ * The editor under /redaksjon: its own pages and API, and Vercel Blob for files. Editors log in with a
+ * code by e-mail through the site's own endpoints (2026-11-25, in place of Clerk), so no outside
+ * script, frame or API needs a place here.
  */
-function clerkHost(key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ''): string | null {
-  const m = /^pk_(?:test|live)_([A-Za-z0-9+/=]+)$/.exec(key);
-  if (!m) return null;
-  const host = Buffer.from(m[1], 'base64').toString('utf8').replace(/\$$/, '');
-  return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(host) ? host : null;
-}
-const clerk = clerkHost();
 const editorCsp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}${clerk ? ` https://${clerk} https://challenges.cloudflare.com` : ''}`,
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob:${clerk ? ' https://img.clerk.com' : ''}`,
+  "img-src 'self' data: blob:",
   `media-src 'self' blob: ${BLOB_HOSTS}`,
   "font-src 'self' data:",
-  `connect-src 'self' https://vercel.com ${BLOB_HOSTS}${clerk ? ` https://${clerk}` : ''}`,
-  `frame-src${clerk ? ' https://challenges.cloudflare.com' : " 'none'"}`,
+  `connect-src 'self' https://vercel.com ${BLOB_HOSTS}`,
+  "frame-src 'none'",
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'self'",

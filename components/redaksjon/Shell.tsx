@@ -26,7 +26,7 @@ const GROUPS: { head: string; items: { href: string; icon: IconName; label: stri
  * The editor's frame (mockup A): the rail on the left with the way to write something new and
  * the sections; on a phone, a top bar whose menu opens the same rail over the page.
  */
-export function Shell({ email, counts: fromServer, clerk, children }: { email: string; counts: Counts; clerk: boolean; children: React.ReactNode }) {
+export function Shell({ email, counts: fromServer, canLogOut, children }: { email: string; counts: Counts; canLogOut: boolean; children: React.ReactNode }) {
   const path = usePathname();
   // The server's counts, plus what was saved or deleted on this page since.
   const [delta, setDelta] = useState<{ base: Counts; add: Partial<Counts> }>({ base: fromServer, add: {} });
@@ -83,7 +83,7 @@ export function Shell({ email, counts: fromServer, clerk, children }: { email: s
           <b aria-hidden="true">{initials}</b>
           <div>
             <span className={s.email}>{email}</span>
-            <LoggUt clerk={clerk} className={s.out} />
+            <LoggUt show={canLogOut} className={s.out} />
           </div>
         </div>
       </aside>

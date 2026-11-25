@@ -7,7 +7,7 @@ import { testEditor } from '@/lib/redaksjon/access';
 import { currentEditor } from '@/lib/redaksjon/session';
 
 /**
- * Everything behind the login. The proxy has already asked Clerk; this asks again, and checks the
+ * Everything behind the login. The proxy has already checked the session cookie; this asks again, and checks the
  * address against the foundation's list, so a page is never served on the proxy's word alone.
  */
 export default async function Innlogget({ children }: { children: React.ReactNode }) {
@@ -24,12 +24,12 @@ export default async function Innlogget({ children }: { children: React.ReactNod
               nettsiden om å legge deg til.
             </p>
             <div className={styles.doorActions}>
-              <LoggUt clerk={!testEditor()} className={styles.btn} />
+              <LoggUt show={!testEditor()} className={styles.btn} />
             </div>
           </div>
         </div>
       </main>
     );
   }
-  return <Shell email={who.email} counts={await counts()} clerk={!testEditor()}>{children}</Shell>;
+  return <Shell email={who.email} counts={await counts()} canLogOut={!testEditor()}>{children}</Shell>;
 }

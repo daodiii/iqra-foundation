@@ -49,6 +49,8 @@ go to Vercel Blob.
 - [x] T1 Section schemas and file mapping
 - [x] T2 The store: local and GitHub
 - [x] T3 Login: Clerk, proxy, the email list, the test seam, the login screen
+  (2026-11-25: Clerk replaced by a code by e-mail from the site's own mailbox, signed cookies,
+  no outside service; see README «Redaksjon» and `lib/redaksjon/kode.ts`)
 
 ### Checkpoint 1: foundation
 - [x] vitest (481), tsc and lint clean; `npm run build` passes without the editor's env vars

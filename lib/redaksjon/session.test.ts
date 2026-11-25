@@ -1,22 +1,28 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { editorEmails, editorEnabled, mayEdit, testEditor } from './access';
+import { SESSION_COOKIE, signSession } from './kode';
 
 vi.mock('server-only', () => ({}));
-const user = vi.hoisted(() => ({ current: null as null | { primaryEmailAddress: { emailAddress: string; verification?: { status: string } } | null } }));
-vi.mock('@clerk/nextjs/server', () => ({ currentUser: async () => user.current }));
+const jar = vi.hoisted(() => ({ token: undefined as string | undefined }));
+vi.mock('next/headers', () => ({ cookies: async () => ({ get: (name: string) => (name === 'redaksjon_okt' && jar.token ? { value: jar.token } : undefined) }) }));
 const { currentEditor, guard } = await import('./session');
 
+const SECRET = 'k'.repeat(40);
 const CONFIGURED = {
   NODE_ENV: 'production',
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk',
-  CLERK_SECRET_KEY: 'sk',
+  REDAKSJON_SECRET: SECRET,
+  SMTP_USER: 'nettside@iqrasti.no',
+  SMTP_PASS: 'x',
   EDITOR_EMAILS: 'Ola@Example.org, kari@example.org',
   REDAKSJON_GITHUB_TOKEN: 't',
 };
+const login = (email: string, expires = Date.now() + 60_000, secret = SECRET) => (jar.token = signSession(email, expires, secret));
 
 describe('whether the editor is on', () => {
-  test('production needs Clerk, the address list and a token; any one missing is off', () => {
+  test('production needs the login (a secret and the mailbox), the address list and a token; any one missing is off', () => {
+    expect(SESSION_COOKIE).toBe('redaksjon_okt');
     expect(editorEnabled(CONFIGURED)).toBe(true);
+    expect(editorEnabled({ ...CONFIGURED, REDAKSJON_SECRET: 'for-kort' }), 'a short secret').toBe(false);
     for (const k of Object.keys(CONFIGURED).filter((k) => k !== 'NODE_ENV')) {
       expect(editorEnabled({ ...CONFIGURED, [k]: undefined }), k).toBe(false);
     }
@@ -42,10 +48,10 @@ describe('whether the editor is on', () => {
 
 describe('the gate on every route', () => {
   const set = (env: Record<string, string | undefined>) => { for (const [k, v] of Object.entries(env)) vi.stubEnv(k, v as string); };
-  afterEach(() => { vi.unstubAllEnvs(); user.current = null; });
+  afterEach(() => { vi.unstubAllEnvs(); jar.token = undefined; });
 
   test('off is a 404', async () => {
-    set({ NODE_ENV: 'production', NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: '', CLERK_SECRET_KEY: '', EDITOR_EMAILS: '', REDAKSJON_GITHUB_TOKEN: '', REDAKSJON_TEST_EDITOR: '' });
+    set({ NODE_ENV: 'production', REDAKSJON_SECRET: '', SMTP_USER: '', SMTP_PASS: '', EDITOR_EMAILS: '', REDAKSJON_GITHUB_TOKEN: '', REDAKSJON_TEST_EDITOR: '' });
     const r = await guard();
     expect(r).toBeInstanceOf(Response);
     expect((r as Response).status).toBe(404);
@@ -53,17 +59,28 @@ describe('the gate on every route', () => {
   test('no session is 401, an address off the list 403, a listed one passes', async () => {
     set({ ...CONFIGURED, REDAKSJON_TEST_EDITOR: '' });
     expect(((await guard()) as Response).status).toBe(401);
-    user.current = { primaryEmailAddress: { emailAddress: 'per@example.org', verification: { status: 'verified' } } };
+    login('per@example.org');
     expect(((await guard()) as Response).status).toBe(403);
     expect(await currentEditor()).toEqual({ kind: 'denied', email: 'per@example.org' });
-    user.current = { primaryEmailAddress: { emailAddress: 'Ola@Example.org', verification: { status: 'verified' } } };
+    login('Ola@Example.org');
     expect(await guard()).toEqual({ email: 'ola@example.org' });
-    // A listed address Clerk has not verified does not count.
-    user.current = { primaryEmailAddress: { emailAddress: 'ola@example.org', verification: { status: 'unverified' } } };
+  });
+  test('an expired session, one signed with another secret, or a tampered one is no session', async () => {
+    set({ ...CONFIGURED, REDAKSJON_TEST_EDITOR: '' });
+    login('ola@example.org', Date.now() - 1);
+    expect(((await guard()) as Response).status).toBe(401);
+    login('ola@example.org', Date.now() + 60_000, 'z'.repeat(40));
+    expect(((await guard()) as Response).status).toBe(401);
+    jar.token = 'eyJlIjoib2xhQGV4YW1wbGUub3JnIiwieCI6OTk5OTk5OTk5OTk5OX0.forfalsket';
+    expect(((await guard()) as Response).status).toBe(401);
+  });
+  test('taken off the list, a valid session no longer opens anything', async () => {
+    set({ ...CONFIGURED, REDAKSJON_TEST_EDITOR: '', EDITOR_EMAILS: 'kari@example.org' });
+    login('ola@example.org');
     expect(((await guard()) as Response).status).toBe(403);
   });
-  test('the test editor needs no Clerk', async () => {
-    set({ NODE_ENV: 'development', REDAKSJON_TEST_EDITOR: 'test@example.org', NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: '', CLERK_SECRET_KEY: '' });
+  test('the test editor needs no code', async () => {
+    set({ NODE_ENV: 'development', REDAKSJON_TEST_EDITOR: 'test@example.org', REDAKSJON_SECRET: '', SMTP_USER: '', SMTP_PASS: '' });
     expect(await guard()).toEqual({ email: 'test@example.org' });
   });
 });

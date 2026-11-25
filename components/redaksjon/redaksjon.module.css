@@ -40,6 +40,13 @@
 .doorCard h1 { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
 .doorCard p { color: var(--ink-2); margin-top: 8px; }
 .doorActions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+/* the e-mail login (2026-11-25): one field at a time on the same card */
+.doorField { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.doorInput { height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font-size: 16px; color: var(--ink); }
+.doorInput:focus-visible { border-color: var(--ink-3); }
+.doorCode { letter-spacing: .12em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.doorError { min-height: 1.5em; margin-top: 12px; color: var(--danger); font-size: 14px; }
+.doorError:empty { margin-top: 0; }
 .btn { height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font-weight: 500; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; color: var(--ink); }
 .btn:hover { border-color: var(--ink-3); }
 .btnGo { background: var(--navy); color: var(--paper); border-color: var(--navy); font-weight: 600; }

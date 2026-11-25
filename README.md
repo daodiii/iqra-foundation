@@ -101,7 +101,7 @@ day of the build.
 ### Redaksjon: the foundation's own editor
 
 `/redaksjon` is where the foundation writes news, events, resources and board members. Editors
-log in with an email code (Clerk), not a GitHub account. Every save is one commit to `main`,
+log in with a code sent to their e-mail, not a GitHub account. Every save is one commit to `main`,
 made by the server with a token, and Vercel rebuilds the site in 2–3 minutes. PDFs and videos go
 to Vercel Blob, because a Vercel function takes at most 4.5 MB. Pictures are shrunk in the
 browser and committed under `/opplastet/`.
@@ -111,15 +111,15 @@ browser and committed under `/opplastet/`.
   The variable is ignored on Vercel and in a production build.
 - **In production:** `/redaksjon` and its API are a 404 until all of the following are set
   (`lib/redaksjon/access.ts`):
-  1. **Clerk** (clerk.com): an application with **Email** as the only way in. Under
-     Restrictions, set sign-up to **Restricted** if the plan offers it; `EDITOR_EMAILS` below
-     keeps others out either way. Create a **production** instance for the
-     site's domain, and add the DNS records Clerk's Domains page lists at the DNS host. Leave
-     the mail records alone. When the records are verified, **Deploy certificates**. Copy the
-     `pk_live_…` and `sk_live_…` keys into `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and
-     `CLERK_SECRET_KEY`.
-  2. **`EDITOR_EMAILS`**: the addresses that may edit, comma-separated. A Clerk login
-     whose address is not on the list is refused.
+  1. **The login**, no outside service (`lib/redaksjon/kode.ts`). An editor types their
+     address and gets an 8-character code from the site's own mailbox, the same Webhuset
+     `SMTP_USER`/`SMTP_PASS` the contact form uses. The code lives 10 minutes; the login 14 days.
+     Nothing is stored: both are signed cookies. Set **`REDAKSJON_SECRET`** to a random string of
+     at least 32 characters, for example the output of
+     `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`. Changing it
+     logs everyone out.
+  2. **`EDITOR_EMAILS`**: the addresses that may edit, comma-separated. Only these get a code,
+     and taking an address off the list locks that person out at their next click.
   3. **`REDAKSJON_GITHUB_TOKEN`**: a fine-grained token made by the repo's owner (`iqrasti`)
      for **only** `iqra-foundation`, with **Contents: Read and write**. Saves go to
      `iqrasti/iqra-foundation` on `main`. `REDAKSJON_REPO` and `REDAKSJON_BRANCH` override that.

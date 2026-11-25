@@ -1,23 +1,22 @@
 import 'server-only';
+import { cookies } from 'next/headers';
 import { editorEnabled, mayEdit, testEditor } from './access';
+import { SESSION_COOKIE, verifySession } from './kode';
 
 /** Who is asking: an editor, someone logged in who is not on the list, or nobody. */
 export type Who = { kind: 'editor'; email: string } | { kind: 'denied'; email: string } | { kind: 'anon' };
 
 /**
- * The person behind this request. The test editor when there is one (see `access.ts`);
- * otherwise Clerk's session, and the address must be on `EDITOR_EMAILS` as well.
+ * The person behind this request. The test editor when there is one (see `access.ts`); otherwise
+ * the signed session cookie the e-mail code gave (lib/redaksjon/kode.ts), and the address must still
+ * be on `EDITOR_EMAILS`: taking someone off the list locks them out at their next request.
  */
 export async function currentEditor(): Promise<Who> {
   const test = testEditor();
   if (test) return { kind: 'editor', email: test };
-  // Loaded only here, when the editor is configured, so Clerk never runs without its keys.
-  const { currentUser } = await import('@clerk/nextjs/server');
-  const user = await currentUser();
-  if (!user) return { kind: 'anon' };
-  // Only an address Clerk has verified counts: a sign-in method added later must not let someone claim an editor's address.
-  const primary = user.primaryEmailAddress;
-  const email = primary?.verification?.status === 'verified' ? primary.emailAddress.toLowerCase() : '';
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  const email = verifySession(token, Date.now(), process.env.REDAKSJON_SECRET);
+  if (!email) return { kind: 'anon' };
   return mayEdit(email) ? { kind: 'editor', email } : { kind: 'denied', email };
 }
 
