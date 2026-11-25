@@ -64,6 +64,11 @@ export function Footer({ lang = 'no' }: { lang?: Lang }) {
           ))}
         </ul>
       </nav>
+      <p className={styles.credit}>
+        <a href={site.footer.credit.href} className={styles.legalLink}>
+          {site.footer.credit.label}
+        </a>
+      </p>
       <LangSwitch className={styles.footerLang} />
     </footer>
   );
