@@ -148,6 +148,8 @@ export const site = {
     en: { short: 'EN', name: 'English' },
     inNorwegian: 'På norsk',
   },
+  /** A subpage's list of its own parts, named for a screen reader (the list itself is the headings). */
+  onThisPage: 'På denne siden',
   /** The months, in full: a date is written out as «24. september 2026». */
   months: ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'],
   pages: {

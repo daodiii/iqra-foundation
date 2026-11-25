@@ -8,7 +8,7 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: `${site.pages.notFound.title} – ${site.name}`,
-  robots: { index: false, follow: false },
+  // no `robots` here: Next marks a not-found page noindex itself, and a second tag only repeated it
 };
 
 /**

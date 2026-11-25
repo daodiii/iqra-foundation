@@ -101,6 +101,7 @@ export const site = {
     en: { short: 'EN', name: 'English' },
     inNorwegian: 'In Norwegian',
   },
+  onThisPage: 'On this page',
   months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   pages: {
     home: {

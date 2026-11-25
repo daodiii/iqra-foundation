@@ -1,17 +1,18 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { graphFor, ldJson, type PageRow } from '@/lib/page-graph';
 
 /**
- * The current page's type and breadcrumb (lib/page-schema.ts). The shells hand it every page's graph,
- * built on the server; this picks the one for the address, so it is in the server-rendered HTML a
- * crawler reads. The home page and an article have none here: the home page is the site itself
- * (lib/schema.ts), and an article's title is not known to the shell.
+ * The current page's type, description and breadcrumb (lib/page-schema.ts). The shells hand it the
+ * page table, built on the server; this builds the one graph for the address, so it is in the
+ * server-rendered HTML a crawler reads. An article has none here: its own page carries a NewsArticle
+ * (components/aktuelt/NewsItemPage.tsx).
  */
-export function PageJsonLd({ graphs }: { graphs: Record<string, object> }) {
+export function PageJsonLd({ table, siteUrl, inLanguage }: { table: Record<string, PageRow>; siteUrl: string; inLanguage: string }) {
   // null outside a router (the unit tests): then there is no page to describe
   const path = (usePathname() ?? '').replace(/(.)\/+$/, '$1');
-  const graph = graphs[path];
-  if (!graph) return null;
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(graph).replace(/</g, '\u003c') }} />;
+  const row = table[path];
+  if (!row) return null;
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(graphFor(path, row, siteUrl, inLanguage)) }} />;
 }

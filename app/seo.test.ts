@@ -32,20 +32,19 @@ describe('robots.txt and the sitemap', () => {
       ...[...siteEn.links, ...siteEn.legal].map((l) => abs(l.href)),
       abs('/en/news-and-events/archive'),
     ]);
-    for (const e of all) expect(Object.keys(e.alternates?.languages ?? {})).toEqual(['nb', 'en', 'x-default']);
+    for (const e of all.filter((x) => !x.lastModified)) expect(Object.keys(e.alternates?.languages ?? {})).toEqual(['nb', 'en', 'x-default']);
     for (const e of all) expect(e.alternates?.languages?.['x-default']).toBe(e.alternates?.languages?.nb);
     expect(new Set(urls).size).toBe(urls.length);
     for (const u of urls) expect(u).toMatch(/^https?:\/\//);
   });
 
-  test('each published news item in both languages, dated by its own date', () => {
-    const news = getNews();
+  test('each news item with a page, at its Norwegian address alone, dated by its own date', () => {
+    const news = getNews().filter((n) => n.body);
     const dated = sitemap().filter((e) => e.lastModified);
-    expect(dated).toHaveLength(news.length * 2);
-    for (const n of news) {
-      const mine = dated.filter((e) => e.url.endsWith(`/${n.slug}`));
-      expect(mine.map((e) => e.url)).toEqual([`${siteUrl}/aktuelt/nyheter/${n.slug}`, `${siteUrl}/en/news-and-events/news/${n.slug}`]);
-      for (const e of mine) expect(e.lastModified).toBe(n.date);
+    expect(dated.map((e) => e.url)).toEqual(news.map((n) => `${siteUrl}/aktuelt/nyheter/${n.slug}`));
+    for (const [i, n] of news.entries()) {
+      expect(dated[i].lastModified).toBe(n.date);
+      expect(Object.keys(dated[i].alternates?.languages ?? {})).toEqual(['nb', 'x-default']);
     }
   });
 });
