@@ -327,6 +327,16 @@ test('Personvern and Vilkår, robots.txt, the sitemap and the security headers',
     expect(ld['@graph'].map((n: { '@type': string }) => n['@type']), href).toEqual(['NGO', 'WebSite']);
     expect(ld['@graph'][0].identifier.value).toBe('817388752');
   }
+  // each subpage also says what it is and where it sits (2026-11-25)
+  const kontakt = await (await page.request.get('/kontakt')).text();
+  const graphs = [...kontakt.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+  const own = graphs.find((g) => g['@graph'][0]['@type'] === 'ContactPage');
+  expect(own, 'Kontakt carries its ContactPage graph').toBeTruthy();
+  expect(own['@graph'][1].itemListElement.map((c: { name: string }) => c.name)).toEqual(['Hjem', 'Kontakt']);
+  expect(sitemap).toContain('/aktuelt/arkiv</loc>');
+  // the English pages share an English card
+  const enHtml = await (await page.request.get('/en')).text();
+  expect(enHtml).toMatch(/<meta property="og:image:alt" content="IQRA FOUNDATION\. Knowledge\./);
   const headers = (await page.request.get('/')).headers();
   expect(headers['strict-transport-security']).toMatch(/max-age=\d+/);
   expect(headers['x-content-type-options']).toBe('nosniff');

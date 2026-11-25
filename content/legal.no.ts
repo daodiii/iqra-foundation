@@ -93,7 +93,7 @@ export const terms: Legal = {
     {
       id: 'nettsiden',
       heading: 'Om nettsiden',
-      paragraphs: [`Nettsiden drives av ${who} Den forteller om stiftelsen og arbeidet vår. Ved å bruke den godtar du disse vilkårene.`],
+      paragraphs: [`Nettsiden drives av ${who} Den forteller om stiftelsen og arbeidet vårt. Ved å bruke den godtar du disse vilkårene.`],
     },
     {
       id: 'innhold',
