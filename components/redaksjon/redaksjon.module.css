@@ -1,0 +1,53 @@
+/* The editor's ground: mockup A «Arket» (2026-11-19). Tokens here; each screen has its own module. */
+.root {
+  --navy: #2c394b;
+  --navy-deep: #1b2635;
+  --turq: #67c1bf;
+  --turq-deep: color-mix(in oklch, #67c1bf 62%, #2c394b);
+  --turq-pale: color-mix(in oklch, #67c1bf 14%, #fbfbfc);
+  --crimson: #ab5261;
+  --paper: oklch(99.2% 0.003 255);
+  --ground: oklch(97.2% 0.005 255);
+  --ground-2: oklch(95.2% 0.007 255);
+  --line: oklch(90.5% 0.01 255);
+  --line-soft: oklch(93.5% 0.008 255);
+  --ink: #2c394b;
+  --ink-2: oklch(48% 0.025 255);
+  --ink-3: oklch(58% 0.02 255);
+  --danger: oklch(52% 0.15 20);
+  --ui: var(--font-general-sans), 'Segoe UI', system-ui, sans-serif;
+  --text: var(--font-supreme), 'Segoe UI', system-ui, sans-serif;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--ui);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+.root :where(button, input, textarea, select) { font: inherit; color: inherit; }
+.root :where(*:focus-visible) { outline: 2px solid var(--turq-deep); outline-offset: 2px; }
+
+/* the login and «no access» screens: one sheet in the middle */
+.door { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 32px 16px; }
+.doorSheet { width: min(100%, 420px); display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.doorBrand { display: flex; align-items: center; gap: 10px; }
+.doorBrand img { height: 26px; width: auto; }
+.doorBrand span { font-size: 13px; color: var(--ink-3); padding-left: 10px; border-left: 1px solid var(--line); }
+.doorCard { width: 100%; background: var(--paper); border-radius: 16px; padding: 32px 28px; box-shadow: 0 1px 2px oklch(30% .03 255 / .05), 0 8px 32px oklch(30% .03 255 / .06); }
+.doorCard h1 { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+.doorCard p { color: var(--ink-2); margin-top: 8px; }
+.doorActions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+/* the e-mail login (2026-11-25): one field at a time on the same card */
+.doorField { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.doorInput { height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font-size: 16px; color: var(--ink); }
+.doorInput:focus-visible { border-color: var(--ink-3); }
+.doorCode { letter-spacing: .12em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.doorError { min-height: 1.5em; margin-top: 12px; color: var(--danger); font-size: 14px; }
+.doorError:empty { margin-top: 0; }
+.btn { height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font-weight: 500; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; color: var(--ink); }
+.btn:hover { border-color: var(--ink-3); }
+.btnGo { background: var(--navy); color: var(--paper); border-color: var(--navy); font-weight: 600; }
+.btnGo:hover { background: var(--navy-deep); border-color: var(--navy-deep); }

@@ -16,14 +16,43 @@ import type { NextConfig } from "next";
  * scripts, frames, plug-ins and form posts from anywhere else. Not applied to the content
  * editor under /keystatic, which loads GitHub's own scripts and talks to its API.
  */
+/**
+ * Where the editor's PDFs and videos live: Vercel Blob's public stores. A resource's video plays on
+ * /ressurser from there, so the site lets media come from it; the editor's browser uploads go to
+ * Blob's API at vercel.com (`app/api/redaksjon/fil/route.ts`).
+ */
+const BLOB_HOSTS = 'https://*.public.blob.vercel-storage.com';
+
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "media-src 'self'",
+  `media-src 'self' ${BLOB_HOSTS}`,
   "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+  'upgrade-insecure-requests',
+].join('; ');
+
+/**
+ * The editor under /redaksjon: its own pages and API, and Vercel Blob for files. Editors log in with a
+ * code by e-mail through the site's own endpoints (2026-11-25, in place of Clerk), so no outside
+ * script, frame or API needs a place here.
+ */
+const editorCsp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  `media-src 'self' blob: ${BLOB_HOSTS}`,
+  "font-src 'self' data:",
+  `connect-src 'self' https://vercel.com ${BLOB_HOSTS}`,
+  "frame-src 'none'",
+  "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -85,7 +114,15 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: '/((?!keystatic|api/keystatic).*)', headers: securityHeaders },
+      { source: '/((?!(?:keystatic|api/keystatic|redaksjon|api/redaksjon)(?:/|$)).*)', headers: securityHeaders },
+      {
+        source: '/:dir(redaksjon|api/redaksjon)/:rest*',
+        headers: [
+          ...securityHeaders.filter((h) => h.key !== 'Content-Security-Policy'),
+          { key: 'Content-Security-Policy', value: editorCsp },
+          { key: 'Cache-Control', value: 'private, no-store' },
+        ],
+      },
       {
         source: '/media/:file*',
         headers: [

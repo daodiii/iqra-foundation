@@ -1,0 +1,42 @@
+/* The frame: rail + main (mockup A «Arket»). Tokens come from redaksjon.module.css .root. */
+.app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; background: linear-gradient(to right, var(--paper) 235px, var(--line-soft) 235px 236px, transparent 236px); }
+.app :global(.i) { width: 18px; height: 18px; flex: none; }
+.main { min-width: 0; }
+
+.rail { background: var(--paper); border-right: 1px solid var(--line-soft); padding: 22px 14px; display: flex; flex-direction: column; gap: 26px; position: sticky; top: 0; height: 100vh; height: 100dvh; overflow-y: auto; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
+.brand img { height: 22px; width: auto; }
+.brand span { font-size: 12px; color: var(--ink-3); letter-spacing: .02em; padding-left: 10px; border-left: 1px solid var(--line); }
+.close { display: none; }
+.new { display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; border-radius: 10px; background: var(--navy); color: var(--paper); font-weight: 600; text-decoration: none; }
+.new:hover { background: var(--navy-deep); }
+
+.nav { display: flex; flex-direction: column; gap: 18px; }
+.nav a { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 8px; color: var(--ink-2); text-decoration: none; font-weight: 500; }
+.nav a em { margin-left: auto; font-style: normal; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.nav a:hover { background: var(--ground); color: var(--ink); }
+.nav a[aria-current] { background: var(--turq-pale); color: var(--ink); }
+.nav a[aria-current] :global(.i) { color: var(--turq-deep); }
+.group h2 { font-size: 11px; font-weight: 500; color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase; padding: 0 10px 6px; }
+
+.me { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; color: var(--ink-2); font-size: 13px; min-width: 0; }
+.me b { width: 30px; height: 30px; border-radius: 50%; background: var(--ground-2); display: grid; place-items: center; font-weight: 600; color: var(--ink); font-size: 12px; flex: none; }
+.me > div { min-width: 0; }
+.email { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.out { border: 0; background: none; padding: 0; color: var(--ink-3); font-size: 12px; cursor: pointer; }
+.out:hover { color: var(--ink); text-decoration: underline; }
+
+.mtop, .scrim { display: none; }
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; background: none; }
+  .mtop { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 8px; background: var(--paper); border-bottom: 1px solid var(--line-soft); position: sticky; top: 0; z-index: 20; }
+  .mtop button, .mnew { width: 44px; height: 44px; border-radius: 10px; border: 0; background: none; display: grid; place-items: center; color: var(--ink); }
+  .mlogo img { height: 20px; width: auto; }
+  .mnew { margin-left: auto; }
+  .rail { position: fixed; inset: 0 auto 0 0; width: min(300px, 86vw); z-index: 40; transform: translateX(-100%); visibility: hidden; transition: transform .32s cubic-bezier(.22, 1, .36, 1), visibility 0s .32s; }
+  .rail[data-open] { transform: none; visibility: visible; transition: transform .32s cubic-bezier(.22, 1, .36, 1); box-shadow: 0 0 40px oklch(30% .03 255 / .18); }
+  .scrim { display: block; position: fixed; inset: 0; z-index: 30; background: oklch(25% .03 255 / .32); }
+  .close { display: grid; place-items: center; margin-left: auto; width: 40px; height: 40px; border: 0; background: none; border-radius: 10px; color: var(--ink-2); }
+}
+@media (prefers-reduced-motion: reduce) { .rail { transition: none; } }

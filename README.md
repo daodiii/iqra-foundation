@@ -98,7 +98,43 @@ Files go under `public/`: pictures in `public/media/<collection>/`, PDFs in
 `public/files/<collection>/`. Arrangementer are split into kommende and tidligere by the
 day of the build.
 
+### Redaksjon: the foundation's own editor
+
+`/redaksjon` is where the foundation writes news, events, resources and board members. Editors
+log in with a code sent to their e-mail, not a GitHub account. Every save is one commit to `main`,
+made by the server with a token, and Vercel rebuilds the site in 2–3 minutes. PDFs and videos go
+to Vercel Blob, because a Vercel function takes at most 4.5 MB. Pictures are shrunk in the
+browser and committed under `/opplastet/`.
+
+- **On this machine:** `REDAKSJON_TEST_EDITOR=deg@example.org npm run dev`, then
+  http://localhost:3000/redaksjon. There's no login, and saves write this checkout's files.
+  The variable is ignored on Vercel and in a production build.
+- **In production:** `/redaksjon` and its API are a 404 until all of the following are set
+  (`lib/redaksjon/access.ts`):
+  1. **The login**, no outside service (`lib/redaksjon/kode.ts`). An editor types their
+     address and gets an 8-character code from the site's own mailbox, the same Webhuset
+     `SMTP_USER`/`SMTP_PASS` the contact form uses. The code lives 10 minutes; the login 14 days.
+     Nothing is stored: both are signed cookies. Set **`REDAKSJON_SECRET`** to a random string of
+     at least 32 characters, for example the output of
+     `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`. Changing it
+     logs everyone out.
+  2. **`EDITOR_EMAILS`**: the addresses that may edit, comma-separated. Only these get a code,
+     and taking an address off the list locks that person out at their next click.
+  3. **`REDAKSJON_GITHUB_TOKEN`**: a fine-grained token made by the repo's owner (`iqrasti`)
+     for **only** `iqra-foundation`, with **Contents: Read and write**. Saves go to
+     `iqrasti/iqra-foundation` on `main`. `REDAKSJON_REPO` and `REDAKSJON_BRANCH` override that.
+  4. **Vercel Blob**: Storage → Create → Blob → **Public**, with «Add a read-write token env
+     var» ticked. This sets `BLOB_READ_WRITE_TOKEN`. Without it, the editor says uploads are
+     off and offers a link instead. The free plan has 1 GB, and going over stops Blob for 30
+     days.
+  5. Redeploy, log in at `/redaksjon`, and save a test post.
+
+Every save, a draft included, is a deploy. Hobby's daily cap is far above a few saves a day.
+
 ### Editing in the browser (Keystatic)
+
+Keystatic is the stopgap Redaksjon replaces. Its setup below still applies while it is in the
+code.
 
 Keystatic is a git-based editor: every save is a file in the repository, so the site stays
 static and nothing needs a database.
@@ -108,10 +144,10 @@ static and nothing needs a database.
 - **In production (from the browser, for the foundation):** GitHub mode, which needs a
   one-time setup. The admin and its API are not served until it is done
   (`lib/keystatic.ts`), because a local-mode admin on Vercel has no disk to write to.
-  1. A GitHub account with write access to `daodiii/iqra-foundation` for each editor.
+  1. A GitHub account with write access to `iqrasti/iqra-foundation` for each editor.
   2. A GitHub App: with the variables below unset, open `/keystatic` on a local `npm run
      dev`, switch `keystatic.config.ts` to `storage: { kind: 'github', repo: { owner:
-     'daodiii', name: 'iqra-foundation' } }` and follow Keystatic's own setup screen, which
+     'iqrasti', name: 'iqra-foundation' } }` and follow Keystatic's own setup screen, which
      creates the app and prints the variables; or create the app by hand at
      github.com/settings/apps with the callback URL `https://<site>/api/keystatic/github/oauth/callback`
      and repository permission «Contents: read and write».
