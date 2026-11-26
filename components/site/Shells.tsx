@@ -8,6 +8,7 @@ import { Merke } from '@/components/forside/Merke';
 import { Topp } from '@/components/forside/Topp';
 import styles from '@/components/forside/forside.module.css';
 import type { Lang } from '@/content/paths';
+import { JsMark } from '@/components/site/JsMark';
 import { PageJsonLd } from '@/components/site/PageJsonLd';
 import { copy } from '@/content/copy';
 import { pageTable } from '@/lib/page-schema';
@@ -32,6 +33,7 @@ export function ForsideShell({ lang, mark = false, children }: { lang: Lang; mar
   return (
     <div id="topp" className={`${instrumentSans.variable} ${styles.page}`} data-forside data-solid={mark ? '' : undefined}>
       <script dangerouslySetInnerHTML={{ __html: "document.documentElement.dataset.js=''" }} />
+      <JsMark />
       <Merke />
       <Smooth />
       <Analytics />
